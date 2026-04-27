@@ -18,3 +18,12 @@ export { MBI_BILLING_FORECAST, FORECAST_ACCURACY } from './billingForecast';
 export { MBI_PROPOSALS } from './proposals';
 export { MBI_SPEC_CHECKS } from './specChecks';
 export { MBI_DESIGN_PROJECTS } from './designProjects';
+export {
+    MBI_PAIN_POINTS,
+    PAIN_POINTS_BY_MODULE,
+    getPainPointsByModule,
+    getPainPointsByPhase,
+    getCriticalAndHighByModule,
+    assertNoCETInAccounting,
+} from './painPoints';
+export type { PainModule, PainSeverity, RoadmapPhase, PainPoint } from './painPoints';
