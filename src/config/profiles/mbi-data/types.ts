@@ -141,6 +141,12 @@ export interface BudgetRequest {
     isHero?: boolean;             // the $18K scenario
 }
 
+// Workflow status — Christian's commitment to Matt on Apr 23 (transcript
+// 13:36): the AP queue must show pending / in-progress / done, not just
+// pending / done. Pending = needs Kathy's eyes. In-progress = agent is
+// reconciling or awaiting vendor reply. Done = auto-posted to CORE.
+export type InvoiceStatus = 'pending' | 'in-progress' | 'done';
+
 export interface Invoice {
     id: string;
     vendor: string;
@@ -153,6 +159,8 @@ export interface Invoice {
     hasException?: boolean;
     exceptionReason?: string;
     ocrConfidence: number;
+    status: InvoiceStatus;
+    inProgressReason?: string;   // shown on in-progress cards
 }
 
 export interface ARRecord {
