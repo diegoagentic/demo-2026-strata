@@ -1,0 +1,473 @@
+import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react';
+import { BellIcon, MagnifyingGlassIcon, XMarkIcon, Squares2X2Icon, ExclamationTriangleIcon, CreditCardIcon, ClipboardDocumentCheckIcon, TruckIcon, MegaphoneIcon, ChatBubbleLeftRightIcon, DocumentTextIcon, ShieldCheckIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { Fragment, useState, useMemo, useEffect } from 'react';
+import { clsx } from 'clsx';
+import { mockNotifications } from './data';
+import FilterTabs from './FilterTabs';
+import NotificationItem from './NotificationItem';
+import ChatView from './ChatView';
+import type { Notification, NotificationTab } from './types';
+import { useDemo } from '../../context/DemoContext';
+
+// Flow 2 notifications for Step 2.6
+const FLOW2_NOTIFICATIONS: Notification[] = [
+    {
+        id: 'f2-hat-confirmed', type: 'ack_received', priority: 'low',
+        title: 'Acknowledgement-7841 (HAT) — Confirmed',
+        message: '5 lines confirmed. AI vendor rule applied: part number match is sufficient per client directive.',
+        meta: 'ACKIngestionAgent', timestamp: 'Just now', unread: true,
+        actions: [{ label: 'View Acknowledgement', primary: true }], persona: 'dealer',
+    },
+    {
+        id: 'f2-ais-resolved', type: 'ack_received', priority: 'high',
+        title: 'Acknowledgement-7842 (AIS) — 3 Exceptions Resolved',
+        message: '50 lines processed. Grommet corrected (Line 41), dates accepted (+14/+11 days), backorder BO-1064B created for 6 units.',
+        meta: 'DiscrepResolverAgent', timestamp: 'Just now', unread: true,
+        actions: [{ label: 'View Details', primary: true }], persona: 'dealer',
+    },
+    {
+        id: 'f2-expert-queue', type: 'system', priority: 'medium',
+        title: 'Expert Queue Update',
+        message: 'Acknowledgement-7842 grommet auto-corrected (Line 41, X-DS6030 CB). Next queue: 2 pending Acknowledgements.',
+        meta: 'NotificationAgent', timestamp: '2 min ago', unread: true,
+        actions: [{ label: 'View Queue', primary: true }], persona: 'expert',
+    },
+    {
+        id: 'f2-crm-sync', type: 'system', priority: 'medium',
+        title: 'CRM Order Lifecycle — Ready to Sync',
+        message: 'ACK-7841 and ACK-7842 fully processed. Delivery dates, backorder status, and resolution data ready to sync to Premier Underground Design project timeline.',
+        meta: 'OrderSyncAgent', timestamp: 'Just now', unread: true,
+        actions: [{ label: 'Sync to CRM', primary: true }], persona: 'dealer',
+    },
+];
+
+// Flow 1 notification for Step 1.10 — single focused notification
+const FLOW1_NOTIFICATIONS: Notification[] = [
+    {
+        id: 'f1-po', type: 'po_created', priority: 'high',
+        title: 'PO Created from RFQ',
+        message: 'Order #PO-1029 generated for Home Exteriors — $134,250. Quote QT-1025 approved (2/2). Ready for pipeline.',
+        meta: 'POBuilderAgent', timestamp: 'Just now', unread: true,
+        actions: [{ label: 'View PO', primary: true }], persona: 'dealer',
+    },
+];
+
+export default function ActionCenter() {
+    const { isDemoActive, isSidebarCollapsed, currentStep, nextStep } = useDemo();
+    const sidebarExpanded = isDemoActive && !isSidebarCollapsed;
+    const [activeTab, setActiveTab] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentView, setCurrentView] = useState<'list' | 'chat'>('list');
+
+    // Step 1.10: Auto-open with single notification
+    const isStep19 = isDemoActive && currentStep?.id === '1.10';
+
+    // Step 2.7: Auto-open with animated delivery for Flow 2 Acknowledgement notifications
+    const isStep27 = isDemoActive && currentStep?.id === '2.7';
+    const [notifDelivered27, setNotifDelivered27] = useState<number[]>([]);
+
+    useEffect(() => {
+        if (!isStep27) { setNotifDelivered27([]); return; }
+        const timeouts: ReturnType<typeof setTimeout>[] = [];
+        timeouts.push(setTimeout(() => setNotifDelivered27([0]), 1500));
+        timeouts.push(setTimeout(() => setNotifDelivered27([0, 1]), 3000));
+        timeouts.push(setTimeout(() => setNotifDelivered27([0, 1, 2]), 4500));
+        timeouts.push(setTimeout(() => setNotifDelivered27([0, 1, 2, 3]), 6000));
+        return () => timeouts.forEach(clearTimeout);
+    }, [isStep27]);
+
+    const tabs: NotificationTab[] = [
+        {
+            id: 'all',
+            label: 'All',
+            count: mockNotifications.filter(n => n.unread).length,
+            icon: Squares2X2Icon,
+            colorTheme: {
+                activeBg: 'bg-gray-200 dark:bg-white/10',
+                activeText: 'text-zinc-900 dark:text-white',
+                activeBorder: 'border-gray-300 dark:border-white/10',
+                badgeBg: 'bg-zinc-500/20 dark:bg-white/20',
+                badgeText: 'text-zinc-900 dark:text-white'
+            },
+            filter: () => true
+        },
+        {
+            id: 'discrepancy',
+            label: 'Discrepancies',
+            count: mockNotifications.filter(n => n.type === 'discrepancy' && n.unread).length,
+            icon: ExclamationTriangleIcon,
+            colorTheme: {
+                activeBg: 'bg-red-500/15',
+                activeText: 'text-red-500',
+                activeBorder: 'border-red-500/20',
+                badgeBg: 'bg-red-500/20',
+                badgeText: 'text-red-500'
+            },
+            filter: (n) => n.type === 'discrepancy'
+        },
+        {
+            id: 'payment',
+            label: 'Payments',
+            count: mockNotifications.filter(n => n.type === 'payment' && n.unread).length,
+            icon: CreditCardIcon,
+            colorTheme: {
+                activeBg: 'bg-amber-500/15',
+                activeText: 'text-amber-500',
+                activeBorder: 'border-amber-500/20',
+                badgeBg: 'bg-amber-500/20',
+                badgeText: 'text-amber-500'
+            },
+            filter: (n) => n.type === 'payment'
+        },
+        {
+            id: 'approval',
+            label: 'Approvals',
+            count: mockNotifications.filter(n => n.type === 'approval' && n.unread).length,
+            icon: ClipboardDocumentCheckIcon,
+            colorTheme: {
+                activeBg: 'bg-blue-500/15',
+                activeText: 'text-blue-500',
+                activeBorder: 'border-blue-500/20',
+                badgeBg: 'bg-blue-500/20',
+                badgeText: 'text-blue-500'
+            },
+            filter: (n) => n.type === 'approval'
+        },
+        {
+            id: 'shipping',
+            label: 'Shipping',
+            count: mockNotifications.filter(n => (n.type === 'shipment' || n.type === 'backorder') && n.unread).length,
+            icon: TruckIcon,
+            colorTheme: {
+                activeBg: 'bg-green-500/15',
+                activeText: 'text-green-500',
+                activeBorder: 'border-green-500/20',
+                badgeBg: 'bg-green-500/20',
+                badgeText: 'text-green-500'
+            },
+            filter: (n) => n.type === 'shipment' || n.type === 'backorder'
+        },
+        {
+            id: 'announcement',
+            label: 'Announcements',
+            count: mockNotifications.filter(n => n.type === 'announcement' && n.unread).length,
+            icon: MegaphoneIcon,
+            colorTheme: {
+                activeBg: 'bg-indigo-500/15',
+                activeText: 'text-indigo-500',
+                activeBorder: 'border-indigo-500/20',
+                badgeBg: 'bg-indigo-500/20',
+                badgeText: 'text-indigo-500'
+            },
+            filter: (n) => n.type === 'announcement'
+        },
+        {
+            id: 'live_chat',
+            label: 'Live Chat',
+            count: mockNotifications.filter(n => n.type === 'live_chat' && n.unread).length,
+            icon: ChatBubbleLeftRightIcon,
+            colorTheme: {
+                activeBg: 'bg-indigo-500/15',
+                activeText: 'text-indigo-500',
+                activeBorder: 'border-indigo-500/20',
+                badgeBg: 'bg-indigo-500/20',
+                badgeText: 'text-indigo-500'
+            },
+            filter: (n) => n.type === 'live_chat'
+        },
+        {
+            id: 'quotes',
+            label: 'Quotes & POs',
+            count: mockNotifications.filter(n => (n.type === 'quote_update' || n.type === 'po_created' || n.type === 'ack_received') && n.unread).length,
+            icon: DocumentTextIcon,
+            colorTheme: {
+                activeBg: 'bg-blue-500/15',
+                activeText: 'text-blue-500',
+                activeBorder: 'border-blue-500/20',
+                badgeBg: 'bg-blue-500/20',
+                badgeText: 'text-blue-500'
+            },
+            filter: (n) => n.type === 'quote_update' || n.type === 'po_created' || n.type === 'ack_received'
+        },
+        {
+            id: 'warranty_mac',
+            label: 'Warranty & Service',
+            count: mockNotifications.filter(n => (n.type === 'warranty' || n.type === 'mac') && n.unread).length,
+            icon: ShieldCheckIcon,
+            colorTheme: {
+                activeBg: 'bg-amber-500/15',
+                activeText: 'text-amber-500',
+                activeBorder: 'border-amber-500/20',
+                badgeBg: 'bg-amber-500/20',
+                badgeText: 'text-amber-500'
+            },
+            filter: (n) => n.type === 'warranty' || n.type === 'mac'
+        },
+    ];
+
+    const filteredNotifications = useMemo(() => {
+        const currentTab = tabs.find(t => t.id === activeTab);
+        return mockNotifications
+            .filter(n => currentTab?.filter(n))
+            .filter(n =>
+                n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                n.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                n.meta.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+    }, [activeTab, searchQuery]);
+
+    const urgentCount = mockNotifications.filter(n => n.priority === 'high').length;
+    const totalCount = mockNotifications.filter(n => n.unread).length;
+
+    // Flow 1 tabs for step 1.10 — single tab since only 1 notification
+    const flow1Tabs: NotificationTab[] = [
+        { id: 'all', label: 'All', count: FLOW1_NOTIFICATIONS.length, icon: Squares2X2Icon, colorTheme: { activeBg: 'bg-gray-200 dark:bg-white/10', activeText: 'text-zinc-900 dark:text-white', activeBorder: 'border-gray-300 dark:border-white/10', badgeBg: 'bg-zinc-500/20 dark:bg-white/20', badgeText: 'text-zinc-900 dark:text-white' }, filter: () => true },
+        { id: 'quotes', label: 'Quotes & POs', count: FLOW1_NOTIFICATIONS.length, icon: DocumentTextIcon, colorTheme: { activeBg: 'bg-blue-500/15', activeText: 'text-blue-500', activeBorder: 'border-blue-500/20', badgeBg: 'bg-blue-500/20', badgeText: 'text-blue-500' }, filter: (n) => n.type === 'po_created' || n.type === 'quote_update' },
+    ];
+
+    // Flow 2 tabs for step 2.6
+    const flow2Tabs: NotificationTab[] = [
+        { id: 'all', label: 'All', count: FLOW2_NOTIFICATIONS.length, icon: Squares2X2Icon, colorTheme: { activeBg: 'bg-gray-200 dark:bg-white/10', activeText: 'text-zinc-900 dark:text-white', activeBorder: 'border-gray-300 dark:border-white/10', badgeBg: 'bg-zinc-500/20 dark:bg-white/20', badgeText: 'text-zinc-900 dark:text-white' }, filter: () => true },
+        { id: 'acks', label: 'Acknowledgements', count: FLOW2_NOTIFICATIONS.filter(n => n.type === 'ack_received').length, icon: DocumentTextIcon, colorTheme: { activeBg: 'bg-blue-500/15', activeText: 'text-blue-500', activeBorder: 'border-blue-500/20', badgeBg: 'bg-blue-500/20', badgeText: 'text-blue-500' }, filter: (n) => n.type === 'ack_received' },
+        { id: 'system', label: 'System', count: FLOW2_NOTIFICATIONS.filter(n => n.type === 'system').length, icon: SparklesIcon, colorTheme: { activeBg: 'bg-emerald-500/15', activeText: 'text-emerald-500', activeBorder: 'border-emerald-500/20', badgeBg: 'bg-emerald-500/20', badgeText: 'text-emerald-500' }, filter: (n) => n.type === 'system' },
+    ];
+
+    const isStepAutoOpen = isStep19 || isStep27;
+
+    return (
+        <>
+        <Popover className="relative">
+            {({ open }) => (
+                <>
+                    <PopoverButton className={clsx(
+                        "relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors outline-none",
+                        (open || isStepAutoOpen) ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    )}>
+                        <BellIcon className="w-5 h-5" />
+                        {isStepAutoOpen && (
+                            <span className="absolute inset-0 rounded-full ring-2 ring-green-500 animate-pulse" />
+                        )}
+                        {totalCount > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-400 dark:bg-red-500 ring-2 ring-white dark:ring-zinc-900" />
+                        )}
+                    </PopoverButton>
+
+                    {/* Normal popover - hidden when auto-open steps to avoid duplication */}
+                    {!isStepAutoOpen && <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-200"
+                        enterFrom="opacity-0 translate-y-2 scale-95"
+                        enterTo="opacity-100 translate-y-0 scale-100"
+                        leave="transition ease-in duration-150"
+                        leaveFrom="opacity-100 translate-y-0 scale-100"
+                        leaveTo="opacity-0 translate-y-2 scale-95"
+                    >
+                        <PopoverPanel className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 focus:outline-none transition-all duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                            <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
+
+                                {currentView === 'chat' ? (
+                                    <ChatView onBack={() => setCurrentView('list')} />
+                                ) : (
+                                    <>
+                                        {/* Header */}
+                                        <div className="px-5 pt-5 pb-3 shrink-0">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <button className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                                        <MagnifyingGlassIcon className="w-5 h-5" />
+                                                    </button>
+                                                    <button className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                                        <XMarkIcon className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Tabs */}
+                                            <FilterTabs
+                                                tabs={tabs}
+                                                activeTab={activeTab}
+                                                onTabChange={setActiveTab}
+                                            />
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-4 space-y-3 scrollbar-minimal">
+                                            {filteredNotifications.length > 0 ? (
+                                                filteredNotifications.map(notification => (
+                                                    <NotificationItem
+                                                        key={notification.id}
+                                                        notification={notification}
+                                                        onActionClick={notification.type === 'live_chat'
+                                                            ? (action) => {
+                                                                if (action === 'Reply') setCurrentView('chat');
+                                                            }
+                                                            : undefined
+                                                        }
+                                                    />
+                                                ))
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500 dark:text-gray-400">
+                                                    <BellIcon className="w-12 h-12 mb-3 text-gray-300 dark:text-gray-600" />
+                                                    <p className="text-sm font-medium">No updates found</p>
+                                                    <p className="text-xs mt-1">You're all caught up!</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Footer */}
+                                        <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
+                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                {filteredNotifications.length} actions
+                                            </p>
+                                            <p className="text-xs font-bold text-red-500 flex items-center gap-1.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                                {urgentCount} urgent
+                                            </p>
+                                        </div>
+                                    </>
+                                )}
+
+                            </div>
+                        </PopoverPanel>
+                    </Transition>}
+                </>
+            )}
+        </Popover>
+
+        {/* Step 1.10: Always-visible Action Center with Flow 1 notifications */}
+        {isStep19 && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-3 shrink-0">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 font-bold">Flow 1</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                    <MagnifyingGlassIcon className="w-5 h-5" />
+                                </button>
+                                <button className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                    <XMarkIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        <FilterTabs tabs={flow1Tabs} activeTab="all" onTabChange={() => {}} />
+                    </div>
+
+                    {/* Flow 1 — Single focused notification */}
+                    <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-4 space-y-3 scrollbar-minimal">
+                        {FLOW1_NOTIFICATIONS.map((notification) => (
+                            <div key={notification.id} className="animate-in fade-in slide-in-from-top-2 duration-500">
+                                <NotificationItem
+                                    notification={notification}
+                                    onActionClick={(action) => {
+                                        if (action === 'View PO') nextStep();
+                                    }}
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            1 action
+                        </p>
+                        <p className="text-xs font-bold text-green-500 flex items-center gap-1.5">
+                            <CheckCircleIcon className="w-3.5 h-3.5" />
+                            PO generated
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Step 2.6: Always-visible Action Center with Flow 2 Acknowledgement notifications */}
+        {isStep27 && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-3 shrink-0">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 font-bold">Flow 2</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                    <MagnifyingGlassIcon className="w-5 h-5" />
+                                </button>
+                                <button className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                    <XMarkIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        <FilterTabs tabs={flow2Tabs} activeTab="all" onTabChange={() => {}} />
+                    </div>
+
+                    {/* Flow 2 Notifications */}
+                    <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-4 space-y-3 scrollbar-minimal">
+                        {FLOW2_NOTIFICATIONS.map((notification, i) => {
+                            const isCRMSync = notification.id === 'f2-crm-sync';
+                            const isDelivered = notifDelivered27.includes(i);
+                            return (
+                                <div
+                                    key={notification.id}
+                                    className={clsx(
+                                        "transition-all duration-700",
+                                        isDelivered
+                                            ? 'opacity-100 translate-y-0'
+                                            : 'opacity-0 translate-y-4 h-0 overflow-hidden'
+                                    )}
+                                >
+                                    <div className={clsx(
+                                        "relative rounded-2xl transition-all duration-500",
+                                        isCRMSync && isDelivered && "ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-zinc-900 shadow-lg shadow-brand-500/20"
+                                    )}>
+                                        <NotificationItem
+                                            notification={notification}
+                                            onActionClick={isCRMSync ? () => nextStep() : undefined}
+                                        />
+                                        {isDelivered && !isCRMSync && (
+                                            <span className="absolute top-3 right-3 text-[9px] font-bold text-green-600 dark:text-green-400 flex items-center gap-1 bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full">
+                                                <CheckCircleIcon className="w-3 h-3" /> Delivered
+                                            </span>
+                                        )}
+                                        {isCRMSync && isDelivered && (
+                                            <span className="absolute top-3 right-3 text-[9px] font-bold text-brand-700 dark:text-brand-400 flex items-center gap-1 bg-brand-50 dark:bg-brand-500/15 px-2 py-0.5 rounded-full animate-pulse">
+                                                Next Step →
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            {notifDelivered27.length} actions
+                        </p>
+                        {notifDelivered27.includes(3) ? (
+                            <p className="text-xs font-bold text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
+                                CRM sync ready
+                            </p>
+                        ) : (
+                            <p className="text-xs font-bold text-red-500 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                {FLOW2_NOTIFICATIONS.filter(n => n.priority === 'high').length} urgent
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
+    );
+}
