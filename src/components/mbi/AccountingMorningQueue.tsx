@@ -16,19 +16,54 @@ import { useState } from 'react'
 import { Moon, Loader2, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import InvoiceDetailPanel from './InvoiceDetailPanel'
+import EmailInboxDropZone from './EmailInboxDropZone'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
+import type { Invoice } from '../../config/profiles/mbi-data'
+
+// Invoices that arrive during the demo via the EmailInboxDropZone.
+// Stored in component state · always land as 'pending' so they slot
+// into the same column the audience just saw "needs your eyes".
+function makeIngestedInvoice(filename: string, idx: number): Invoice {
+    const vendorFromName = filename.split('_')[0]?.replace(/([a-z])([A-Z])/g, '$1 $2') ?? 'Unknown vendor'
+    const ts = new Date().toISOString()
+    const amounts = [8400, 14250, 23800, 6900, 31100, 17600]
+    return {
+        id: `INV-LIVE-${String(idx + 1).padStart(3, '0')}`,
+        vendor: vendorFromName,
+        poNumber: `PO-2026-${9000 + idx}`,
+        amount: amounts[idx % amounts.length],
+        received: ts,
+        isEDI: false,
+        ocrConfidence: 88 + Math.floor(Math.random() * 10),
+        hasException: false,
+        status: 'pending',
+        exceptionReason: 'Newly received from inbox · awaiting your eyes',
+    }
+}
 
 export default function AccountingMorningQueue() {
-    const total = MBI_INVOICES.length
-    const pending = MBI_INVOICES.filter(i => i.status === 'pending').length
-    const inProgress = MBI_INVOICES.filter(i => i.status === 'in-progress').length
-    const done = MBI_INVOICES.filter(i => i.status === 'done').length
-    const healthTrust = MBI_INVOICES.filter(i => i.isHealthTrust).length
+    const [ingested, setIngested] = useState<Invoice[]>([])
+    const allInvoices = [...MBI_INVOICES, ...ingested]
+
+    const total = allInvoices.length
+    const pending = allInvoices.filter(i => i.status === 'pending').length
+    const inProgress = allInvoices.filter(i => i.status === 'in-progress').length
+    const done = allInvoices.filter(i => i.status === 'done').length
+    const healthTrust = allInvoices.filter(i => i.isHealthTrust).length
 
     // Default select the HealthTrust hero so Kathy sees the 3% royalty right away
     const defaultId = MBI_INVOICES.find(i => i.isHealthTrust)?.id ?? MBI_INVOICES[0].id
     const [selectedId, setSelectedId] = useState(defaultId)
-    const selected = MBI_INVOICES.find(i => i.id === selectedId) ?? MBI_INVOICES[0]
+    const selected = allInvoices.find(i => i.id === selectedId) ?? allInvoices[0]
+
+    const handleIngest = (filename: string) => {
+        setIngested(prev => {
+            const next = makeIngestedInvoice(filename, prev.length)
+            // Auto-select the newly ingested invoice so Kathy sees the detail
+            setSelectedId(next.id)
+            return [next, ...prev]
+        })
+    }
 
     return (
         <div className="space-y-4">
@@ -62,11 +97,16 @@ export default function AccountingMorningQueue() {
                 </div>
             </div>
 
+            {/* Email inbox dropzone — Apr 23 Matt highly-desired interactivity.
+                Drop a file (or click Simulate) → the new invoice lands in the
+                Pending column of the kanban below. */}
+            <EmailInboxDropZone onIngest={handleIngest} />
+
             {/* Queue + detail */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                 <div className="lg:col-span-3">
                     <InvoiceQueueTable
-                        invoices={MBI_INVOICES}
+                        invoices={allInvoices}
                         selectedId={selectedId}
                         onSelect={setSelectedId}
                     />
