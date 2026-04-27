@@ -15,8 +15,8 @@
 
 import { useDemo } from '../../context/DemoContext'
 import {
-    Calculator, Receipt, FileText, Palette, ArrowRight, Sparkles,
-    Clock, ShieldCheck, Award, Users, Building2, Network,
+    Receipt, FileText, Palette, ArrowRight, Sparkles,
+    Clock, Award, Users, Building2, Network,
 } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import { StatusBadge, type StatusTone } from '../shared'
@@ -41,10 +41,14 @@ interface FlowCard {
 }
 
 // Presentation order per Matt's Apr 23 approval: Accounting AI = Phase 1
-// (Mark explicitly requested it). Internal step IDs (m1.x for Budget,
-// m2.x for Accounting, etc.) intentionally remain unchanged so the demo
-// tour, per-page STEP_TO_WIZARD_INDEX maps, and useDemo navigation keep
-// working. Only the visual order + flow.number change.
+// (Mark explicitly requested it). Budget Builder removed from the Thursday
+// demo per Apr 23 stakeholder direction (Carlos): out of scope for now.
+// The MBIBudgetPage component + m1.x demo tour steps are intentionally left
+// in the codebase so re-enabling is a one-line change in App.tsx mbiNav.
+//
+// Internal step IDs (m2.x for Accounting, m3.x for Quotes, m4.x for Design)
+// intentionally remain unchanged so the demo tour, per-page
+// STEP_TO_WIZARD_INDEX maps, and useDemo navigation keep working.
 const FLOWS: FlowCard[] = [
     {
         number: 1,
@@ -65,22 +69,6 @@ const FLOWS: FlowCard[] = [
     },
     {
         number: 2,
-        title: 'Budget Builder',
-        persona: 'Amanda Renshaw',
-        personaRole: 'Account Manager',
-        personaInitials: 'AR',
-        isPrototype: true,
-        pain: 'A week of manual SIF parsing + scenario building per opportunity',
-        outcome: 'Parsed SIF, validated, Good/Better/Best ready, client PDF delivered',
-        timeBefore: '1 week',
-        timeAfter: '4 min',
-        scenes: 6,
-        entryStepId: 'm1.1',
-        icon: <Calculator className="h-5 w-5" />,
-        tint: 'primary',
-    },
-    {
-        number: 3,
         title: 'Quotes AI',
         persona: 'Marcia Ludwig',
         personaRole: 'Director of PM · 3.5 PCs for 29 staff',
@@ -95,7 +83,7 @@ const FLOWS: FlowCard[] = [
         tint: 'info',
     },
     {
-        number: 4,
+        number: 3,
         title: 'Design AI',
         persona: 'Beth Gianino',
         personaRole: 'Designer · 8/10 trust',
@@ -144,21 +132,20 @@ export default function MBIOverviewPage() {
                         The thesis
                     </div>
                     <div className="text-base font-bold text-foreground mt-0.5">
-                        4 AI modules, deployed module by module · Accounting first
+                        3 AI modules, deployed module by module · Accounting first
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
                         Phase 1 ships <strong className="text-foreground">Accounting AI</strong> — Mark's pick: cleanest metric, lowest risk, single owner (Kathy). Then upstream as the team builds trust:
-                        Budget catches errors before clients see them · Quotes eliminates re-keying · Design protects spec quality at the source. One platform, four AIs, priced by module.
+                        Quotes eliminates re-keying so Marcia's 3.5 PCs become reviewers, not builders · Design protects spec quality at the source so issues never reach the client. One platform, three AIs, priced by module.
                     </div>
                 </div>
             </div>
 
-            {/* Aggregate impact stats — order mirrors the new presentation flow:
-                Accounting morning, then Budget turnaround, then prevention, then pilots. */}
+            {/* Aggregate impact stats — one per module + Phase 1 pilots callout. */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <ImpactStat icon={<Clock className="h-4 w-4" />} value="4 hrs → 18 min" sub="Kathy · accounting morning" accent="text-ai" />
-                <ImpactStat icon={<Clock className="h-4 w-4" />} value="1 week → 4 min" sub="Amanda · budget turnaround" accent="text-success" />
-                <ImpactStat icon={<ShieldCheck className="h-4 w-4" />} value="$18,560" sub="caught by AI · one deal" accent="text-success" />
+                <ImpactStat icon={<Clock className="h-4 w-4" />} value="2 hrs → 12 min" sub="Marcia · quote turnaround" accent="text-info" />
+                <ImpactStat icon={<Award className="h-4 w-4" />} value="9.08/10" sub="Q10 spec check priority" accent="text-success" />
                 <ImpactStat icon={<Users className="h-4 w-4" />} value="2 pilots" sub="Phase 1 · Kathy + Beth" accent="text-ai" />
             </div>
 
@@ -166,9 +153,9 @@ export default function MBIOverviewPage() {
             {!isDemoActive && (
                 <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="min-w-0">
-                        <div className="text-sm font-bold text-foreground">Walk the whole story · 16 tour beats</div>
+                        <div className="text-sm font-bold text-foreground">Walk the whole story · 11 tour beats</div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
-                            Start from Kathy's morning — the cleanest win — then upstream to Amanda's budget, the PC team, and Beth's spec check pilot.
+                            Start from Kathy's morning — the cleanest win — then upstream to Marcia's PC team and Beth's spec check pilot.
                         </div>
                     </div>
                     <button
@@ -219,12 +206,12 @@ export default function MBIOverviewPage() {
             {/* 4-flow chain */}
             <div className="space-y-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-border">
-                    <div className="text-xs font-bold text-foreground uppercase tracking-wider">The 4 AIs</div>
+                    <div className="text-xs font-bold text-foreground uppercase tracking-wider">The 3 AIs</div>
                     <div className="flex-1 h-px bg-border" />
-                    <div className="text-[10px] text-muted-foreground">Accounting → Budget → Quotes → Design · the order we deploy</div>
+                    <div className="text-[10px] text-muted-foreground">Accounting → Quotes → Design · the order we deploy</div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {FLOWS.map(flow => (
                         <FlowCardView key={flow.entryStepId} flow={flow} onLaunch={() => jumpTo(flow.entryStepId)} />
                     ))}

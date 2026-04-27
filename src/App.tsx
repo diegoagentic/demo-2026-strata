@@ -200,10 +200,12 @@ function App() {
     // WRG profile: no center nav (demo auto-drives all steps)
     const wrgNav: { name: string; page: string; icon: any; badge?: string }[] = [];
 
-    // MBI profile: 4-tab primary nav (E2E Flow removed per user feedback —
-    // overview still accessible via mbi-overview app if needed later)
+    // MBI profile: 3-tab primary nav. Budget Builder removed per Apr 23
+    // stakeholder direction (Carlos): not in scope for the Thursday demo.
+    // The MBIBudgetPage component + 'mbi-budget' route + m1.x demo tour
+    // steps are intentionally left in the codebase (case 'mbi-budget' below,
+    // mbi.ts FLOW 1 block) so re-enabling is a one-line change here.
     const mbiNav = [
-      { name: 'Budget Builder', page: 'mbi-budget', icon: CalculatorIcon },
       { name: 'Accounting AI', page: 'mbi-accounting', icon: ReceiptIcon },
       { name: 'Quotes AI', page: 'mbi-quotes', icon: FileSearchIcon },
       { name: 'Design AI', page: 'mbi-design', icon: PaletteIcon },
