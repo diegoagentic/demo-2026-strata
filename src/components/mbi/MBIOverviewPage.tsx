@@ -13,14 +13,16 @@
  *          MBI without a demo tour active).
  */
 
+import { useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import {
     Receipt, FileText, Palette, ArrowRight, Sparkles,
-    Clock, Award, Users, Building2, Network,
+    Clock, Award, Users, Building2, Network, ExternalLink,
 } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import BudgetRequestFormPreview from './BudgetRequestFormPreview'
 import DemoScopeBanner from './DemoScopeBanner'
+import UpstreamPreviewSheet from './UpstreamPreviewSheet'
 import { StatusBadge, type StatusTone } from '../shared'
 import { MBI_TENANT } from '../../config/profiles/mbi-data'
 
@@ -111,6 +113,7 @@ const TINT_MAP = {
 
 export default function MBIOverviewPage() {
     const { steps, goToStep, isDemoActive } = useDemo()
+    const [upstreamPreview, setUpstreamPreview] = useState<'crm' | 'project' | null>(null)
 
     const jumpTo = (stepId: string) => {
         const idx = steps.findIndex(s => s.id === stepId)
@@ -191,12 +194,14 @@ export default function MBIOverviewPage() {
                         title="CRM · Lead capture"
                         meta="Sales · Account Manager"
                         body="Sales team logs the opportunity in CORE — client, vertical, contract context (HNI / Allsteel / HealthTrust), rough scope, expected ceiling."
+                        onClick={() => setUpstreamPreview('crm')}
                     />
                     <UpstreamCard
                         icon={<Building2 className="h-4 w-4" />}
                         title="Project Creation"
                         meta="PC · auto-numbered, contract-tagged"
                         body="Project record opens in CORE with auto-numbering, contract identified, scope locked, salesperson + healthcare-vertical flags set. Now Strata takes over."
+                        onClick={() => setUpstreamPreview('project')}
                     />
                 </div>
 
@@ -255,6 +260,11 @@ export default function MBIOverviewPage() {
                 </div>
                 <BudgetRequestFormPreview />
             </div>
+
+            <UpstreamPreviewSheet
+                kind={upstreamPreview}
+                onClose={() => setUpstreamPreview(null)}
+            />
         </MBIPageShell>
     )
 }
@@ -337,14 +347,23 @@ function UpstreamCard({
     title,
     meta,
     body,
+    onClick,
 }: {
     icon: React.ReactNode
     title: string
     meta: string
     body: string
+    onClick?: () => void
 }) {
+    const interactive = !!onClick
+    const Wrapper: React.ElementType = interactive ? 'button' : 'div'
     return (
-        <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl p-4 flex flex-col gap-2">
+        <Wrapper
+            onClick={onClick}
+            className={`text-left bg-card dark:bg-zinc-800 border border-border rounded-2xl p-4 flex flex-col gap-2 transition-all ${
+                interactive ? 'hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-sm cursor-pointer' : ''
+            }`}
+        >
             <div className="flex items-start gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-background/60 dark:bg-zinc-900/40 border border-border flex items-center justify-center text-muted-foreground shrink-0">
                     {icon}
@@ -354,9 +373,17 @@ function UpstreamCard({
                     <div className="text-sm font-bold text-foreground leading-tight mt-0.5">{title}</div>
                     <div className="text-[10px] text-muted-foreground mt-0.5">{meta}</div>
                 </div>
+                {interactive && (
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" aria-hidden="true" />
+                )}
             </div>
             <p className="text-[11px] text-foreground leading-snug">{body}</p>
-        </div>
+            {interactive && (
+                <div className="text-[10px] font-bold text-info uppercase tracking-wider">
+                    Click to preview the form →
+                </div>
+            )}
+        </Wrapper>
     )
 }
 

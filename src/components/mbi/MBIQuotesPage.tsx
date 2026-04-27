@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { FileSearch } from 'lucide-react'
+import { FileSearch, Sparkles } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
 import DemoScopeBanner from './DemoScopeBanner'
@@ -92,6 +92,14 @@ export default function MBIQuotesPage() {
             />
 
             <DemoScopeBanner />
+
+            <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl px-4 py-2.5 flex items-start gap-2.5">
+                <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
+                <div className="text-[11px] text-foreground leading-snug">
+                    <strong className="text-foreground">Future state context:</strong>
+                    <span className="text-muted-foreground"> the signed budget arriving in this scene will eventually originate upstream from the Budget Request Form (see Overview · Future state · what's coming). Today the budget arrives via the existing manual process — Strata still picks it up the same way.</span>
+                </div>
+            </div>
 
             {inWizard ? (
                 <MBIWizardShell

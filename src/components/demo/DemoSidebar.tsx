@@ -9,7 +9,16 @@ import {
     Play,
     Pause,
     Loader2,
+    Star,
 } from 'lucide-react';
+
+// Hero moments — emotional peak beats per profile. Surfaced in the sidebar
+// with a star marker so the audience knows which beats are the demo's
+// crescendo and the presenter doesn't accidentally rush past them.
+const HERO_STEP_IDS = new Set<string>([
+    'm2.2',  // MBI · HealthTrust GPO 3% royalty modal — the most interactive AP scene
+    'm4.3',  // MBI · Spec Check finding ("everything is blue, this one is green")
+]);
 import { useDemoProfile } from '../../context/useDemoProfile';
 
 // Apps belonging to Expert Hub — System steps in these show as "Expert"
@@ -304,6 +313,19 @@ export default function DemoSidebar() {
                                             <span className={`text-[9px] px-1 py-0.5 rounded flex items-center gap-0.5 ${isActive ? `${c.bgBadgeActive} ${c.textBadgeActive}` : `${c.bgBadge} ${c.textBadge}`}`}>
                                                 <Loader2 size={8} className={isActive ? 'animate-spin' : ''} />
                                                 AUTO
+                                            </span>
+                                        )}
+                                        {HERO_STEP_IDS.has(step.id) && (
+                                            <span
+                                                className={`text-[9px] px-1 py-0.5 rounded flex items-center gap-0.5 font-bold uppercase tracking-wider ${
+                                                    isActive
+                                                        ? 'bg-amber-500/30 text-amber-200'
+                                                        : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                                                }`}
+                                                title="Hero moment — the demo's emotional peak"
+                                            >
+                                                <Star size={8} className="fill-current" />
+                                                HERO
                                             </span>
                                         )}
                                     </div>

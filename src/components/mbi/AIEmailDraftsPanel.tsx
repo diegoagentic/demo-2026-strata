@@ -39,9 +39,9 @@ function buildDrafts(): EmailDraft[] {
             id: 'DRAFT-001',
             recordId: escalated.id,
             tone: 'escalation',
-            to: `${escalated.client} AP team + ${escalated.salesperson ?? 'Amanda Renshaw'}`,
+            to: `${escalated.client} AP team + ${escalated.salesperson ?? 'Account Manager'}`,
             subject: `${escalated.poNumber} — ${escalated.daysPastDue} days past due · escalating to salesperson`,
-            body: `Hello,\n\nPO ${escalated.poNumber} ($${escalated.amount.toLocaleString()}) is ${escalated.daysPastDue} days past due. We've escalated internally — ${escalated.salesperson ?? 'a sales representative'} will follow up within 72 hours.\n\nIf payment has already been sent, please reply with the reference number.\n\nBest,\nKathy Belleville · Controller · MBI`,
+            body: `Hello,\n\nPO ${escalated.poNumber} ($${escalated.amount.toLocaleString()}) is ${escalated.daysPastDue} days past due. We've escalated internally — your Account Manager will follow up within 72 hours.\n\nIf payment has already been sent, please reply with the reference number.\n\nBest,\nMBI · Accounting`,
         })
     }
     if (noResponse) {
@@ -51,7 +51,7 @@ function buildDrafts(): EmailDraft[] {
             tone: 'firm',
             to: `${noResponse.client} AP team`,
             subject: `Second follow-up: ${noResponse.poNumber} · $${(noResponse.amount / 1000).toFixed(0)}K past due`,
-            body: `Hi,\n\nWe haven't received a response to our first reminder on ${noResponse.poNumber} (sent ${noResponse.lastContact}). The balance of $${noResponse.amount.toLocaleString()} is now ${noResponse.daysPastDue} days past due.\n\nCan you confirm receipt of the invoice and expected payment date?\n\nThanks,\nKathy`,
+            body: `Hi,\n\nWe haven't received a response to our first reminder on ${noResponse.poNumber} (sent ${noResponse.lastContact}). The balance of $${noResponse.amount.toLocaleString()} is now ${noResponse.daysPastDue} days past due.\n\nCan you confirm receipt of the invoice and expected payment date?\n\nThanks,\nMBI · Accounting`,
         })
     }
     return drafts

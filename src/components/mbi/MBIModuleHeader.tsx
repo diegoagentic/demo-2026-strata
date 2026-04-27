@@ -32,6 +32,7 @@ import {
     type ModulePhase,
 } from '../../config/profiles/mbi-data'
 import { StatusBadge } from '../shared'
+import { useDemo } from '../../context/DemoContext'
 
 type Tint = 'ai' | 'primary' | 'info' | 'success'
 
@@ -64,24 +65,53 @@ export default function MBIModuleHeader({ module, outcome, tint = 'ai' }: MBIMod
     const [showAllPains, setShowAllPains] = useState(false)
     const visiblePains = showAllPains ? allPains : headlinePains
 
+    // Auto-compact when the demo tour is driving a step on this page —
+    // collapses the pain cluster + Phase 1-4 into expandable summaries so
+    // the wizard scene below isn't pushed off-fold on smaller laptops.
+    const { isDemoActive } = useDemo()
+    const [forceExpanded, setForceExpanded] = useState(false)
+    const compact = isDemoActive && !forceExpanded
+
     return (
         <div className="space-y-3">
-            {/* Outcome statement */}
+            {/* Outcome statement — the most vendible line, given visual priority */}
             <div className={`border rounded-2xl p-4 flex items-start gap-3 ${TINT_OUTCOME[tint]}`}>
-                <div className="h-8 w-8 rounded-lg bg-background/60 dark:bg-zinc-900/40 border border-border flex items-center justify-center text-foreground shrink-0">
-                    <Award className="h-4 w-4" />
+                <div className="h-9 w-9 rounded-lg bg-background/60 dark:bg-zinc-900/40 border border-border flex items-center justify-center text-foreground shrink-0">
+                    <Award className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                         Outcome for MBI
                     </div>
-                    <div className="text-sm text-foreground leading-snug mt-0.5">
+                    <div className="text-base font-semibold text-foreground leading-snug mt-1">
                         {outcome}
                     </div>
                 </div>
+                {compact && (
+                    <button
+                        onClick={() => setForceExpanded(true)}
+                        className="shrink-0 text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider flex items-center gap-1 self-center"
+                        aria-label="Show pain points and Phase 1-4 roadmap"
+                    >
+                        Details
+                        <ChevronDown className="h-3 w-3" />
+                    </button>
+                )}
             </div>
 
-            {/* Pain cluster + Phase 1-4 — two columns on md+, stacked on mobile */}
+            {/* Pain cluster + Phase 1-4 — hidden when compact (demo tour active).
+                Two columns on md+, stacked on mobile. */}
+            {!compact && <>
+            {isDemoActive && (
+                <div className="flex justify-end">
+                    <button
+                        onClick={() => setForceExpanded(false)}
+                        className="text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider"
+                    >
+                        Hide details
+                    </button>
+                </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
                 {/* Pain points (2/5) */}
                 <section className="lg:col-span-2 bg-card dark:bg-zinc-800 border border-border rounded-2xl p-4">
@@ -139,6 +169,7 @@ export default function MBIModuleHeader({ module, outcome, tint = 'ai' }: MBIMod
                     </div>
                 </section>
             </div>
+            </>}
         </div>
     )
 }
