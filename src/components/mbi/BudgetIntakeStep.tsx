@@ -25,8 +25,9 @@
 
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
-import { Upload, FileSpreadsheet, FileCode2, ClipboardList, Briefcase, Building2, GraduationCap, Landmark, Heart, CheckCircle2, Eye, RefreshCw, Trash2, Loader2, Plus, ShieldCheck, FileText, XCircle, Send, Ban, Undo2, AlertTriangle, X, Sparkles, ArrowRight, Replace, ChevronDown } from 'lucide-react'
+import { Upload, FileSpreadsheet, FileCode2, ClipboardList, Briefcase, Building2, GraduationCap, Landmark, Heart, CheckCircle2, Eye, RefreshCw, Trash2, Loader2, Plus, ShieldCheck, FileText, XCircle, Send, Ban, Undo2, AlertTriangle, X } from 'lucide-react'
 import MBIDetailSheet from './MBIDetailSheet'
+import BudgetRequestFormPreview from './BudgetRequestFormPreview'
 import { StatusBadge } from '../shared'
 import type { BudgetPath, Vertical, ContractType } from '../../config/profiles/mbi-data'
 import { MBI_CONTRACTS, getSIFSample } from '../../config/profiles/mbi-data'
@@ -83,7 +84,7 @@ export default function BudgetIntakeStep({
     if (!path) {
         return (
             <>
-                <BudgetRequestFormTrigger onUse={() => onPathChange('design-assisted')} />
+                <BudgetRequestFormPreview onUse={() => onPathChange('design-assisted')} />
 
                 <div className="mt-6 mb-2 flex items-center gap-2 pb-2 border-b border-border">
                     <span className="text-xs font-bold text-foreground uppercase tracking-wider">Or · today's MVP</span>
@@ -185,111 +186,6 @@ function PathCard({
                 ))}
             </ul>
         </button>
-    )
-}
-
-// ─── Budget Request Form trigger (future state · Apr 23 Matt feedback) ──────
-// This is a presentational preview of the future-state intake. The four inputs
-// (CET, CAP, template, substitution rules) are intentionally non-functional —
-// they exist so MBI can see and validate the proposed trigger shape in their
-// Phase 1 design session. Clicking "Use this trigger" hands off to the existing
-// Design-Assisted flow so the demo continues without forking implementation.
-function BudgetRequestFormTrigger({ onUse }: { onUse: () => void }) {
-    return (
-        <div className="bg-ai/5 dark:bg-ai/10 border-2 border-dashed border-ai/40 rounded-2xl p-5 space-y-4">
-            <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-ai/15 text-ai flex items-center justify-center shrink-0">
-                    <Sparkles className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <StatusBadge label="Future state" tone="ai" size="xs" icon={<Sparkles className="h-2.5 w-2.5" />} />
-                        <StatusBadge label="To validate with MBI" tone="warning" size="xs" />
-                    </div>
-                    <h3 className="text-base font-bold text-foreground mt-1.5 leading-tight">
-                        Budget Request Form · single trigger for the whole flow
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        In the future state every budget starts here: one form gathers the SIF, the CAP, the
-                        template and the substitution rules, and Strata routes to the correct engine without
-                        forcing the salesperson to know which path they're on. Validate the field set with
-                        MBI in the Phase 1 design session before we build this for real.
-                    </p>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <FutureFieldFile
-                    label="CET export (SIF)"
-                    icon={<FileCode2 className="h-4 w-4" />}
-                    placeholder="EnterpriseHoldings_HQF12_SIF_v5.xml"
-                />
-                <FutureFieldFile
-                    label="CAP worksheet"
-                    icon={<FileSpreadsheet className="h-4 w-4" />}
-                    placeholder="EnterpriseHoldings_CAP.xlsx"
-                />
-                <FutureFieldSelect
-                    label="Budget template"
-                    icon={<FileText className="h-4 w-4" />}
-                    value="Corporate · New Build"
-                    options={['Corporate · New Build', 'Healthcare · Clinic Refresh', 'Education · Library Refit', 'Government · Office Renovation']}
-                />
-                <FutureFieldSelect
-                    label="Substitution rules"
-                    icon={<Replace className="h-4 w-4" />}
-                    value="MBI default · Good/Better/Best"
-                    options={['MBI default · Good/Better/Best', 'High/Low only', 'Single tier · client-specified', 'Custom rule set…']}
-                />
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-ai/20">
-                <div className="text-[11px] text-muted-foreground italic flex items-start gap-1.5">
-                    <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                    <span>Field set illustrative only · final fields TBD with Mark + Amanda + Lisa.</span>
-                </div>
-                <button
-                    onClick={onUse}
-                    className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold text-zinc-900 bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm"
-                >
-                    Use this trigger
-                    <ArrowRight className="h-4 w-4" />
-                </button>
-            </div>
-        </div>
-    )
-}
-
-function FutureFieldFile({ label, icon, placeholder }: { label: string; icon: React.ReactNode; placeholder: string }) {
-    return (
-        <div className="bg-card dark:bg-zinc-800 border border-border rounded-xl p-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                {icon}
-                <span>{label}</span>
-            </div>
-            <div className="flex items-center gap-2 px-2.5 py-2 bg-background/60 dark:bg-zinc-900/40 border border-dashed border-border rounded-lg cursor-not-allowed opacity-90">
-                <Upload className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-[11px] text-muted-foreground truncate">{placeholder}</span>
-            </div>
-        </div>
-    )
-}
-
-function FutureFieldSelect({ label, icon, value, options }: { label: string; icon: React.ReactNode; value: string; options: string[] }) {
-    return (
-        <div className="bg-card dark:bg-zinc-800 border border-border rounded-xl p-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                {icon}
-                <span>{label}</span>
-            </div>
-            <div
-                className="flex items-center justify-between gap-2 px-2.5 py-2 bg-background/60 dark:bg-zinc-900/40 border border-border rounded-lg cursor-not-allowed opacity-90"
-                title={`Options: ${options.join(' · ')}`}
-            >
-                <span className="text-[11px] text-foreground truncate">{value}</span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            </div>
-        </div>
     )
 }
 

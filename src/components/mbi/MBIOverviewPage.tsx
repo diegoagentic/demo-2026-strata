@@ -19,6 +19,7 @@ import {
     Clock, Award, Users, Building2, Network,
 } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
+import BudgetRequestFormPreview from './BudgetRequestFormPreview'
 import { StatusBadge, type StatusTone } from '../shared'
 import { MBI_TENANT } from '../../config/profiles/mbi-data'
 
@@ -236,6 +237,20 @@ export default function MBIOverviewPage() {
                         <strong className="text-foreground"> Beth Gianino</strong> (8/10, Designer). Their visible wins unlock team-wide adoption in Phase 2.
                     </div>
                 </div>
+            </div>
+
+            {/* Future state preview — Apr 23 ask from Matt: show MBI the
+                Budget Request Form trigger they'll see in the future state.
+                Marked clearly as "to validate" so it doesn't read like a
+                promise. Lives here on the Overview because Budget Builder
+                itself is out of the Thursday demo (Carlos). */}
+            <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-border">
+                    <div className="text-xs font-bold text-foreground uppercase tracking-wider">Future state · what's coming</div>
+                    <div className="flex-1 h-px bg-border" />
+                    <div className="text-[10px] text-muted-foreground">Validate the field set with MBI in the Phase 1 design session</div>
+                </div>
+                <BudgetRequestFormPreview />
             </div>
         </MBIPageShell>
     )
