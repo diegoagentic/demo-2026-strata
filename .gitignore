@@ -42,3 +42,5 @@ wrg-read/
 diff_*.txt
 design-system-audit-report.json
 NUL
+
+.vercel
