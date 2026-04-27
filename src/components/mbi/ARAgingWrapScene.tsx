@@ -101,7 +101,6 @@ export default function ARAgingWrapScene() {
                         targetStepId: 'm3.1',
                     }}
                     secondaryCTAs={[
-                        { label: 'Design AI', icon: <Palette className="h-3 w-3" />, targetStepId: 'm4.1' },
                         { label: 'Restart from Accounting', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
                     ]}
                 />

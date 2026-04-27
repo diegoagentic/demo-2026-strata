@@ -34,6 +34,9 @@ interface FlowCard {
     personaInitials: string
     isPilot?: boolean
     isPrototype?: boolean
+    /** Caption when the flow is in the codebase but NOT in the active demo tour
+     *  (e.g. Design AI, removed from the tour Apr 27 but still navigable via tab). */
+    availabilityNote?: string
     pain: string
     outcome: string
     timeBefore: string
@@ -93,6 +96,10 @@ const FLOWS: FlowCard[] = [
         personaRole: 'Designer · 8/10 trust',
         personaInitials: 'BG',
         isPilot: true,
+        // Apr 27: Design removed from active tour (Matt: "primary and only
+        // necessary is accounting"). Card stays so the audience sees the
+        // module exists, marker explains it's available outside the tour.
+        availabilityNote: 'Available via the Design AI tab · not in the active tour',
         pain: '"Everything is blue, this one chair is green" — spec misses slip to the client',
         outcome: 'Scan 47 BOM items in 5 min · catch palette + finish + dimension + availability issues',
         timeBefore: 'manual · sometimes missed',
@@ -139,11 +146,12 @@ export default function MBIOverviewPage() {
                         The thesis
                     </div>
                     <div className="text-base font-bold text-foreground mt-0.5">
-                        3 AI modules, deployed module by module · Accounting first
+                        Phase 1 = Accounting AI · the rest is the roadmap
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Phase 1 ships <strong className="text-foreground">Accounting AI</strong> — Mark's pick: cleanest metric, lowest risk, single owner (Kathy). Then upstream as the team builds trust:
-                        Quotes eliminates re-keying so Marcia's 3.5 PCs become reviewers, not builders · Design protects spec quality at the source so issues never reach the client. One platform, three AIs, priced by module.
+                        The Thursday demo focuses on <strong className="text-foreground">Accounting AI</strong> — Mark's pick: cleanest metric, lowest risk, single owner (Kathy).
+                        <strong className="text-foreground"> Quotes AI</strong> is in the active tour as the natural Phase 4 follow-up that closes the morning's PC handoff.
+                        <strong className="text-foreground"> Design AI</strong> (Spec Check, Q10 #1 priority) lives in code and is one tab away if the conversation goes there — directional, not Phase 1.
                     </div>
                 </div>
             </div>
@@ -160,9 +168,9 @@ export default function MBIOverviewPage() {
             {!isDemoActive && (
                 <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="min-w-0">
-                        <div className="text-sm font-bold text-foreground">Walk the whole story · 11 tour beats</div>
+                        <div className="text-sm font-bold text-foreground">Walk the active tour · 9 beats</div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
-                            Start from Kathy's morning — the cleanest win — then upstream to Marcia's PC team and Beth's spec check pilot.
+                            Start from Kathy's morning (5 beats) and continue to Marcia's PC team (4 beats). Design AI lives outside the tour — open the Design AI tab if the conversation goes there.
                         </div>
                     </div>
                     <button
@@ -217,7 +225,7 @@ export default function MBIOverviewPage() {
                 <div className="flex items-center gap-2 pb-2 border-b border-border">
                     <div className="text-xs font-bold text-foreground uppercase tracking-wider">The 3 AIs</div>
                     <div className="flex-1 h-px bg-border" />
-                    <div className="text-[10px] text-muted-foreground">Accounting → Quotes → Design · the order we deploy</div>
+                    <div className="text-[10px] text-muted-foreground">Accounting (Phase 2 · live demo) → Quotes (Phase 4) → Design (Phase 4 · directional)</div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -284,6 +292,9 @@ function FlowCardView({ flow, onLaunch }: { flow: FlowCard; onLaunch: () => void
                         {flow.isPrototype && (
                             <StatusBadge label="Prototype" tone="primary" size="xs" />
                         )}
+                        {flow.availabilityNote && (
+                            <StatusBadge label="Outside tour" tone="warning" size="xs" />
+                        )}
                         <span className="text-[9px] text-muted-foreground">{flow.scenes} scenes</span>
                     </div>
                     <div className="text-base font-bold text-foreground leading-tight mt-0.5">{flow.title}</div>
@@ -310,6 +321,13 @@ function FlowCardView({ flow, onLaunch }: { flow: FlowCard; onLaunch: () => void
                     <div className="text-[10px] text-muted-foreground truncate">{flow.personaRole}</div>
                 </div>
             </div>
+
+            {/* Availability note for flows kept in code but excluded from the active tour */}
+            {flow.availabilityNote && (
+                <div className="bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 rounded-lg px-2.5 py-1.5 text-[10px] text-foreground leading-snug">
+                    <strong className="text-amber-700 dark:text-amber-400">Note:</strong> {flow.availabilityNote}
+                </div>
+            )}
 
             {/* Pain → Outcome */}
             <div className="space-y-1.5">

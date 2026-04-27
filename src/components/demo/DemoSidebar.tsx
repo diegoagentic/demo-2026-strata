@@ -15,9 +15,13 @@ import {
 // Hero moments — emotional peak beats per profile. Surfaced in the sidebar
 // with a star marker so the audience knows which beats are the demo's
 // crescendo and the presenter doesn't accidentally rush past them.
+//
+// Apr 27: m4.3 (Spec Check finding) was a hero, but Design AI was removed
+// from the active tour (Matt: "primary and only necessary is accounting").
+// MBIDesignPage stays navigable via tab so anyone can still see that scene
+// — but it's not in the guided tour so no sidebar marker.
 const HERO_STEP_IDS = new Set<string>([
     'm2.2',  // MBI · HealthTrust GPO 3% royalty modal — the most interactive AP scene
-    'm4.3',  // MBI · Spec Check finding ("everything is blue, this one is green")
 ]);
 import { useDemoProfile } from '../../context/useDemoProfile';
 

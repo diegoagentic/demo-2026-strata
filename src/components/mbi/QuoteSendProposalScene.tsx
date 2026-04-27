@@ -101,30 +101,28 @@ export default function QuoteSendProposalScene() {
                         { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'SIF → CORE auto-import', caption: '87 seconds, 0 keystrokes', flow: '—' },
                         { status: 'done', icon: <Send className="h-3.5 w-3.5" />, label: 'Proposal sent', caption: 'just now', flow: '—' },
                         { status: 'next', icon: <Truck className="h-3.5 w-3.5" />, label: 'Orders route to mfrs', caption: '5 EDI · 2 non-EDI', flow: '—' },
-                        { status: 'future', icon: <Palette className="h-3.5 w-3.5" />, label: 'Upstream: Design AI', caption: 'catch issues at source', flow: 'Flow 3 · Design AI', highlight: true },
+                        { status: 'future', icon: <Palette className="h-3.5 w-3.5" />, label: 'Phase 4 · Design AI', caption: 'available via the Design AI tab', flow: 'Phase 4 directional', highlight: false },
                     ]}
                     narrative={{
-                        eyebrow: 'Go upstream · root cause',
+                        eyebrow: 'Tour complete · what comes next',
                         icon: <Palette className="h-5 w-5" />,
-                        title: "The $18K worksurface catch was downstream. What if we caught it earlier?",
+                        title: "Phase 1 (Accounting) + Phase 3 (Quotes) are the active demo. Phase 4 is directional.",
                         body: (
                             <>
-                                Strata caught it in Flow 1's validation. But the real leverage is upstream —
-                                inside the designer's tool, before the SIF ever reaches Amanda. That's where
-                                <strong className="text-foreground"> Beth Gianino</strong> (Phase 1 Pilot · design
-                                early adopter) runs <strong className="text-foreground">Spec Check</strong> on the
-                                CET BOM and finds the same class of issue in 5 minutes, not a week later.
+                                The active tour ends here — <strong className="text-foreground">Phase 1 ships
+                                Accounting AI</strong> and the <strong className="text-foreground">Quotes
+                                AI</strong> module is the natural next step (Phase 4 of the roadmap). Spec
+                                Check (Q10 #1 priority for the design team) is built and available via the
+                                <strong className="text-foreground"> Design AI</strong> tab in the navbar
+                                if the conversation goes there — but it's not part of the Phase 1 demo focus.
                             </>
                         ),
                     }}
                     primaryCTA={{
-                        label: "Continue to Design AI · spec check pilot",
-                        icon: <Palette className="h-4 w-4" />,
-                        targetStepId: 'm4.1',
+                        label: "Restart from Accounting",
+                        icon: <Receipt className="h-4 w-4" />,
+                        targetStepId: 'm2.1',
                     }}
-                    secondaryCTAs={[
-                        { label: 'Restart from Accounting', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
-                    ]}
                 />
             )}
         </div>

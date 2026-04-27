@@ -22,12 +22,15 @@
 //   m3.1: Incoming budget — signed handoff from the Account Manager → PM queue
 //   m3.2: SIF → CORE auto-import — field-for-field, zero keystrokes
 //   m3.3: AI validation — audit loops collapse into 1 AI + 1 human review
-//   m3.4: Send proposal + handoff to Flow 3 (Design AI, upstream)
+//   m3.4: Send proposal — closes the active tour (Design AI is Phase 4
+//         directional context · available via Design AI tab outside the tour)
 //
-// FLOW 3 — Design AI (Phase 4, early-adopter Designer) · 3 scenes / 3 beats
-//   m4.1: Pick project — Designer selects an ICU project · Phase 1 Pilot context
-//   m4.2: Spec Check scan — four AI checks across the BOM
-//   m4.3: Findings review + demo recap — one swap catches "all blue except this"
+// DESIGN AI (Phase 4, early-adopter Designer · 3 scenes) — REMOVED FROM TOUR
+// per Apr 27 stakeholder direction (Matt: "primary and only necessary
+// demonstration is accounting" + Phase 4 modules are directional only).
+// MBIDesignPage stays navigable via the Design AI nav tab so anyone who
+// asks about Spec Check (Q10 #1 priority) can still see it. The m4.x
+// step definitions live in git history if the tour needs them back.
 //
 // HERO SCENARIO: HealthTrust Mercy invoice · 3% GPO royalty · pre-flagged by AI
 // (the $18K Allsteel worksurface story belonged to the Budget Builder flow that
@@ -133,43 +136,14 @@ export const MBI_STEPS: DemoStep[] = [
         id: 'm3.4',
         groupId: 1,
         groupTitle: 'Flow 2: Quotes AI',
-        title: 'Send proposal · route orders',
-        description: "One human review later, the PM sends the proposal. Orders auto-route: EDI manufacturers receive transmissions instantly, non-EDI vendors get drafted PO emails ready to send, and Compass reconciliation queues for the manufacturers that require it. Hours of manual routing happen in minutes.",
+        title: 'Send proposal · close the tour',
+        description: "One human review later, the PM sends the proposal. Orders auto-route: EDI manufacturers receive transmissions instantly, non-EDI vendors get drafted PO emails ready to send, and Compass reconciliation queues for the manufacturers that require it. Hours of manual routing happen in minutes — and that closes the active demo tour. Design AI (Spec Check, Phase 4) is available via its own tab if the audience asks.",
         app: 'mbi-quotes',
         role: 'Project Manager',
     },
 
-    // ═══════════════════════════════════════════
-    // FLOW 3: Design AI (Phase 4)
-    // Designer · early-adopter pilot · 3 scenes
-    // ═══════════════════════════════════════════
-    {
-        id: 'm4.1',
-        groupId: 2,
-        groupTitle: 'Flow 3: Design AI',
-        title: 'Pick project · pilot run',
-        description: "The design team's AI trust is the lowest in the company, so the rollout starts with a single early-adopter Designer running Spec Check on one of her own projects — a hospital ICU expansion with a locked palette. The visible win on this run is what unlocks team-wide adoption.",
-        app: 'mbi-design',
-        role: 'Designer',
-    },
-    {
-        id: 'm4.2',
-        groupId: 2,
-        groupTitle: 'Flow 3: Design AI',
-        title: 'Spec check scan · four AI checks',
-        description: 'Strata runs four AI checks against the BOM in sequence: dimensions match the CET footprint, finish consistency across upholstery and laminate, palette match against the project palette, and vendor availability against the install date. The full pass finishes faster than the team\'s manual line-by-line review — and catches what the eye misses.',
-        app: 'mbi-design',
-        role: 'Designer',
-    },
-    {
-        id: 'm4.3',
-        groupId: 2,
-        groupTitle: 'Flow 3: Design AI',
-        title: 'Findings review · "all blue except this"',
-        description: 'One finding surfaces: a chair finish lands outside the project palette — exactly the class of mistake that historically reaches the client first ("everything is blue, this one is green"). The Designer accepts the AI-suggested swap in one click. Caught before delivery. The proof point unlocks team-wide rollout.',
-        app: 'mbi-design',
-        role: 'Designer',
-    },
+    // Design AI (m4.x) intentionally removed from MBI_STEPS · MBIDesignPage
+    // remains navigable via the Design AI nav tab. See header comment.
 ];
 
 // ─── STEP BEHAVIOR ───────────────────────────────────────────────────────────
@@ -183,10 +157,7 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
     'm3.2': { mode: 'interactive', userAction: 'Watch the SIF flow into CORE · field-for-field · zero keystrokes' },
     'm3.3': { mode: 'interactive', userAction: 'Review Spec Check · audit loops collapse into one AI pass plus one human review' },
-    'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers' },
-    'm4.1': { mode: 'interactive', userAction: 'Confirm the early-adopter Designer as Phase 1 Pilot · select the ICU project for the spec scan' },
-    'm4.2': { mode: 'interactive', userAction: 'Run Spec Check · watch the four AI checks run against the BOM' },
-    'm4.3': { mode: 'interactive', userAction: 'Review the palette finding · accept the AI swap · close the demo arc' },
+    'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers · this closes the active tour' },
 };
 
 // ─── STEP MESSAGES (AI Agent Progress) ───────────────────────────────────────
@@ -247,26 +218,7 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'Transmitting EDI to manufacturers that support it',
         'Drafting non-EDI POs for the rest',
         'Compass reconciliation queued where required',
-        'Account Manager pinged · handoff complete',
-    ],
-    'm4.1': [
-        'Loading the Designer\'s active projects',
-        'ICU Expansion flagged as ready for Spec Check',
-        'Project palette locked · BOM ready to scan',
-        'Phase 1 Pilot mode · single early-adopter for now',
-    ],
-    'm4.2': [
-        'Running AI check 1 · dimensions match the CET footprint',
-        'Running AI check 2 · finish consistency across upholstery + laminate',
-        'Running AI check 3 · palette match against the project palette',
-        'Running AI check 4 · vendor availability against the install date',
-        'Most checks clean · one finding to review',
-    ],
-    'm4.3': [
-        'Finding · a chair finish lands outside the project palette',
-        'Suggesting an in-palette swap',
-        'Designer accepts · BOM palette fully clean',
-        'Proof point logged · ready for team rollout',
+        'Account Manager pinged · tour complete',
     ],
 };
 
@@ -275,5 +227,4 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 export const MBI_SELF_INDICATED: string[] = [
     'm2.1', 'm2.2', 'm2.3', 'm2.4', 'm2.5',
     'm3.1', 'm3.2', 'm3.3', 'm3.4',
-    'm4.1', 'm4.2', 'm4.3',
 ];
