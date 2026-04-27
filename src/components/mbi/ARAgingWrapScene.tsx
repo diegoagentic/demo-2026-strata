@@ -72,7 +72,7 @@ export default function ARAgingWrapScene() {
                 </div>
             ) : (
                 <FlowHandoff
-                    eyebrow="Flow 2 complete"
+                    eyebrow="Flow 1 complete"
                     recapHeading="Kathy's morning · done in 18 minutes"
                     recapSubheading="Vouchers posted, reconciliations cleared, AR emails out — everything Strata couldn't auto-handle routed through your eyes only."
                     recapStats={[
@@ -82,11 +82,11 @@ export default function ARAgingWrapScene() {
                         { icon: <TrendingDown className="h-4 w-4" />, value: `$${(committed / 1000).toFixed(0)}K`, sub: 'committed to pay', accent: 'text-success' },
                     ]}
                     timeline={[
-                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Morning queue', caption: '12 invoices triaged', flow: 'Flow 2 · Accounting AI' },
+                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Morning queue', caption: '12 invoices triaged', flow: 'Flow 1 · Accounting AI' },
                         { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'HealthTrust posted', caption: '3% royalty applied', flow: '—' },
                         { status: 'done', icon: <Package className="h-3.5 w-3.5" />, label: 'Non-EDI cleared', caption: 'Herman Miller reconciled', flow: '—' },
                         { status: 'next', icon: <Mail className="h-3.5 w-3.5" />, label: 'AR emails out', caption: `${escalated} escalated · ${MBI_AR_RECORDS.length - escalated} routine`, flow: '—' },
-                        { status: 'future', icon: <FileSignature className="h-3.5 w-3.5" />, label: 'Next Enterprise PO', caption: 'PC team picks up', flow: 'Flow 3 · Quotes AI', highlight: true },
+                        { status: 'future', icon: <FileSignature className="h-3.5 w-3.5" />, label: 'Next Enterprise PO', caption: 'PC team picks up', flow: 'Flow 2 · Quotes AI', highlight: true },
                     ]}
                     narrative={{
                         eyebrow: 'Meanwhile · upstream',
@@ -105,7 +105,7 @@ export default function ARAgingWrapScene() {
                     }}
                     secondaryCTAs={[
                         { label: 'Design AI', icon: <Palette className="h-3 w-3" />, targetStepId: 'm4.1' },
-                        { label: 'Restart Flow 1', icon: <Calculator className="h-3 w-3" />, targetStepId: 'm1.1' },
+                        { label: 'Restart from Accounting', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
                     ]}
                 />
             )}

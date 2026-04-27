@@ -235,15 +235,15 @@ export default function DesignFindingsReview() {
                     recapSubheading="From Beth catching a $18K-class mistake at the design source, to Amanda delivering in 4 min, to Kathy's 18-min morning, to the PC team sending a proposal in 12 min. The loop closes upstream."
                     recapStats={[
                         { icon: <Clock className="h-4 w-4" />, value: '4 min', sub: 'Amanda · Flow 1', accent: 'text-success' },
-                        { icon: <Clock className="h-4 w-4" />, value: '18 min', sub: 'Kathy · Flow 2', accent: 'text-success' },
-                        { icon: <Clock className="h-4 w-4" />, value: '12 min', sub: 'PC team · Flow 3', accent: 'text-success' },
-                        { icon: <Clock className="h-4 w-4" />, value: '< 5 min', sub: 'Beth · Flow 4', accent: 'text-success' },
+                        { icon: <Clock className="h-4 w-4" />, value: '18 min', sub: 'Kathy · Flow 1', accent: 'text-success' },
+                        { icon: <Clock className="h-4 w-4" />, value: '12 min', sub: 'PC team · Flow 2', accent: 'text-success' },
+                        { icon: <Clock className="h-4 w-4" />, value: '< 5 min', sub: 'Beth · Flow 3', accent: 'text-success' },
                     ]}
                     timeline={[
-                        { status: 'done', icon: <Palette className="h-3.5 w-3.5" />, label: 'Design caught at source', caption: 'Beth · Flow 4', flow: 'Flow 4 · Design AI' },
+                        { status: 'done', icon: <Palette className="h-3.5 w-3.5" />, label: 'Design caught at source', caption: 'Beth · Flow 3', flow: 'Flow 3 · Design AI' },
                         { status: 'done', icon: <Calculator className="h-3.5 w-3.5" />, label: 'Budget delivered fast', caption: 'Amanda · Flow 1', flow: 'Flow 1 · Budget Builder' },
-                        { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'PC queue unblocked', caption: 'Marcia · Flow 3', flow: 'Flow 3 · Quotes AI' },
-                        { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'Morning in 18 min', caption: 'Kathy · Flow 2', flow: 'Flow 2 · Accounting AI' },
+                        { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'PC queue unblocked', caption: 'Marcia · Flow 2', flow: 'Flow 2 · Quotes AI' },
+                        { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'Morning in 18 min', caption: 'Kathy · Flow 1', flow: 'Flow 1 · Accounting AI' },
                         { status: 'future', icon: <Send className="h-3.5 w-3.5" />, label: 'Run it again', caption: 'restart the loop', flow: '—', highlight: true },
                     ]}
                     narrative={{
@@ -259,13 +259,13 @@ export default function DesignFindingsReview() {
                         ),
                     }}
                     primaryCTA={{
-                        label: "Restart · Amanda's new opportunity",
+                        label: "Restart · Kathy's morning",
                         icon: <ArrowRight className="h-4 w-4" />,
-                        targetStepId: 'm1.1',
+                        targetStepId: 'm2.1',
                     }}
                     secondaryCTAs={[
-                        { label: 'Flow 2 · Kathy', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
-                        { label: 'Flow 3 · PC team', icon: <FileText className="h-3 w-3" />, targetStepId: 'm3.1' },
+                        { label: 'Flow 1 · Accounting', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
+                        { label: 'Flow 2 · PC team', icon: <FileText className="h-3 w-3" />, targetStepId: 'm3.1' },
                         { label: 'Re-run Spec Check', icon: <Palette className="h-3 w-3" />, targetStepId: 'm4.1' },
                     ]}
                 />

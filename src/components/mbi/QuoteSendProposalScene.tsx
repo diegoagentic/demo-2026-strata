@@ -87,7 +87,7 @@ export default function QuoteSendProposalScene() {
             {/* Post-send FlowHandoff to Flow 4 */}
             {sent && (
                 <FlowHandoff
-                    eyebrow="Flow 3 complete"
+                    eyebrow="Flow 2 complete"
                     recapHeading="PC bottleneck · collapsed"
                     recapSubheading="4 audit loops → 1 AI pass + 1 human review. What used to take 2 hours per proposal takes 12 minutes."
                     recapStats={[
@@ -97,11 +97,11 @@ export default function QuoteSendProposalScene() {
                         { icon: <Package className="h-4 w-4" />, value: '0', sub: 'manual re-keying', accent: 'text-success' },
                     ]}
                     timeline={[
-                        { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'Budget → PC queue', caption: 'signed last week', flow: 'Flow 3 · Quotes AI' },
+                        { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'Budget → PC queue', caption: 'signed last week', flow: 'Flow 2 · Quotes AI' },
                         { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'SIF → CORE auto-import', caption: '87 seconds, 0 keystrokes', flow: '—' },
                         { status: 'done', icon: <Send className="h-3.5 w-3.5" />, label: 'Proposal sent', caption: 'just now', flow: '—' },
                         { status: 'next', icon: <Truck className="h-3.5 w-3.5" />, label: 'Orders route to mfrs', caption: '5 EDI · 2 non-EDI', flow: '—' },
-                        { status: 'future', icon: <Palette className="h-3.5 w-3.5" />, label: 'Upstream: Design AI', caption: 'catch issues at source', flow: 'Flow 4 · Design AI', highlight: true },
+                        { status: 'future', icon: <Palette className="h-3.5 w-3.5" />, label: 'Upstream: Design AI', caption: 'catch issues at source', flow: 'Flow 3 · Design AI', highlight: true },
                     ]}
                     narrative={{
                         eyebrow: 'Go upstream · root cause',
@@ -123,8 +123,7 @@ export default function QuoteSendProposalScene() {
                         targetStepId: 'm4.1',
                     }}
                     secondaryCTAs={[
-                        { label: 'Restart Flow 1', icon: <Calculator className="h-3 w-3" />, targetStepId: 'm1.1' },
-                        { label: 'Accounting AI', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
+                        { label: 'Restart from Accounting', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
                     ]}
                 />
             )}
