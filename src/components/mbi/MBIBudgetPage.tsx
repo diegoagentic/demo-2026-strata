@@ -163,7 +163,7 @@ export default function MBIBudgetPage() {
     return (
         <MBIPageShell
             title="Budget Builder"
-            subtitle="Hero prototype · 1 week → <24 hours · Amanda Renshaw (Account Manager)"
+            subtitle="Prototype · Hero · 1 week → <24 hours · Amanda Renshaw (Account Manager)"
             icon={<Calculator className="h-5 w-5" />}
             activeApp="mbi-budget"
         >

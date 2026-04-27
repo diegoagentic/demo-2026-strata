@@ -78,7 +78,7 @@ export default function MBIAccountingPage() {
     return (
         <MBIPageShell
             title="Accounting AI"
-            subtitle="Phase 2 quick wins · Kathy Belleville (Controller) · morning routine · 4h → 18 min"
+            subtitle="Prototype · Phase 1 (Mark's pick) · Kathy Belleville (Controller) · morning routine · 4h → 18 min"
             icon={<Receipt className="h-5 w-5" />}
             activeApp="mbi-accounting"
         >
