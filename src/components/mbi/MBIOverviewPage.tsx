@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import BudgetRequestFormPreview from './BudgetRequestFormPreview'
+import DemoScopeBanner from './DemoScopeBanner'
 import { StatusBadge, type StatusTone } from '../shared'
 import { MBI_TENANT } from '../../config/profiles/mbi-data'
 
@@ -123,6 +124,8 @@ export default function MBIOverviewPage() {
             icon={<Network className="h-5 w-5" />}
             activeApp="mbi-overview"
         >
+            <DemoScopeBanner />
+
             {/* Pitch banner */}
             <div className="bg-gradient-to-br from-primary/5 to-ai/5 dark:from-primary/10 dark:to-ai/10 border border-primary/30 rounded-2xl p-5 flex items-start gap-4">
                 <div className="h-12 w-12 rounded-xl bg-primary/15 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
