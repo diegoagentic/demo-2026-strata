@@ -44,11 +44,15 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     3: 'm2.4',
 }
 
+// Hints emphasize the AP → AR continuity Matt asked for on Apr 23: scenes 0-2
+// are AP (invoices, royalties, reconciliation), scene 3 is the AR closure that
+// completes the morning. Step 2 nextLabel + step 3 opening explicitly mark
+// the handoff so the audience reads it as one cycle, not two unrelated bits.
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'Strata pre-processed 12 invoices overnight · you review only the 2 exceptions.', nextLabel: 'Review HealthTrust royalty' },
+    0: { hint: 'AP starts here · Strata pre-processed 12 invoices overnight · you review only the 2 exceptions.', nextLabel: 'Review HealthTrust royalty' },
     1: { hint: 'Approve the auto-calculated 3% royalty · or override with a logged reason · or escalate to Lynda.', nextLabel: 'Reconcile non-EDI' },
-    2: { hint: 'Line-by-line diff vs PO · accept variances that match your delivery, override with a reason for the rest.', nextLabel: 'Close with AR wrap' },
-    3: { hint: 'Live AR aging · collection emails pre-drafted · close the morning to continue.', nextLabel: 'Done' },
+    2: { hint: 'Last AP step · line-by-line diff vs PO · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to AR aging' },
+    3: { hint: 'AP closed · now AR. $240K open across MBI · live aging board · AI-drafted collection emails. Review · edit · send.', nextLabel: 'Close the morning' },
 }
 
 export default function MBIAccountingPage() {

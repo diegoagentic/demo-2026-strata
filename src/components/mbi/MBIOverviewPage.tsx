@@ -182,6 +182,40 @@ export default function MBIOverviewPage() {
                 </div>
             )}
 
+            {/* Where it starts — Apr 23 ask from Matt: E2E must include CRM +
+                project creation, otherwise the demo opens mid-flow. These two
+                cards are non-AI (existing CORE/CRM workflow); they sit upstream
+                of the 4 AI modules and explain where every project enters the
+                pipeline. Visual style is intentionally muted vs the AI flows. */}
+            <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-border">
+                    <div className="text-xs font-bold text-foreground uppercase tracking-wider">Where it starts · upstream of AI</div>
+                    <div className="flex-1 h-px bg-border" />
+                    <div className="text-[10px] text-muted-foreground">CORE + CRM · existing workflow · no AI changes here</div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <UpstreamCard
+                        icon={<Users className="h-4 w-4" />}
+                        title="CRM · Lead capture"
+                        meta="Sales · Account Manager"
+                        body="Sales team logs the opportunity in CORE — client, vertical, contract context (HNI / Allsteel / HealthTrust), rough scope, expected ceiling."
+                    />
+                    <UpstreamCard
+                        icon={<Building2 className="h-4 w-4" />}
+                        title="Project Creation"
+                        meta="PC · auto-numbered, contract-tagged"
+                        body="Project record opens in CORE with auto-numbering, contract identified, scope locked, salesperson + healthcare-vertical flags set. Now Strata takes over."
+                    />
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground py-1">
+                    <ArrowRight className="h-3 w-3 rotate-90" />
+                    <span className="uppercase tracking-wider font-bold">Strata picks up here</span>
+                    <ArrowRight className="h-3 w-3 rotate-90" />
+                </div>
+            </div>
+
             {/* 4-flow chain */}
             <div className="space-y-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-border">
@@ -289,6 +323,34 @@ function FlowCardView({ flow, onLaunch }: { flow: FlowCard; onLaunch: () => void
                     <ArrowRight className="h-3 w-3" />
                 </button>
             </div>
+        </div>
+    )
+}
+
+function UpstreamCard({
+    icon,
+    title,
+    meta,
+    body,
+}: {
+    icon: React.ReactNode
+    title: string
+    meta: string
+    body: string
+}) {
+    return (
+        <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl p-4 flex flex-col gap-2">
+            <div className="flex items-start gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-background/60 dark:bg-zinc-900/40 border border-border flex items-center justify-center text-muted-foreground shrink-0">
+                    {icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Pre-AI · existing</div>
+                    <div className="text-sm font-bold text-foreground leading-tight mt-0.5">{title}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{meta}</div>
+                </div>
+            </div>
+            <p className="text-[11px] text-foreground leading-snug">{body}</p>
         </div>
     )
 }
