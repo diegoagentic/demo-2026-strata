@@ -118,7 +118,7 @@ export default function QuoteSendProposalScene() {
                         ),
                     }}
                     primaryCTA={{
-                        label: "Continue to Design AI · Beth's spec check",
+                        label: "Continue to Design AI · spec check pilot",
                         icon: <Palette className="h-4 w-4" />,
                         targetStepId: 'm4.1',
                     }}

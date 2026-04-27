@@ -151,7 +151,7 @@ export default function OutputStep({ client, scenarioLabel, total, markup, preve
                         ),
                     }}
                     primaryCTA={{
-                        label: "Continue to Accounting AI · Kathy's queue",
+                        label: "Continue to Accounting AI · Controller's queue",
                         icon: <Receipt className="h-4 w-4" />,
                         targetStepId: 'm2.1',
                     }}

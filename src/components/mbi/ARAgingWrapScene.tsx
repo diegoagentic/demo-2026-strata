@@ -91,7 +91,7 @@ export default function ARAgingWrapScene() {
                     narrative={{
                         eyebrow: 'Meanwhile · upstream',
                         icon: <FileSignature className="h-5 w-5" />,
-                        title: `A new client just signed the budget Amanda sent last week. The PC team has work to do.`,
+                        title: `A new client just signed the budget the Account Manager sent last week. The PC team has work to do.`,
                         body: (
                             <>
                                 Marcia's team runs <strong className="text-foreground">3.5 PCs for 29 staff</strong> — the biggest bottleneck at MBI. Every approved budget used to trigger hours of manual SIF re-entry into CORE plus 4 audit loops. That's where <strong className="text-foreground">Quotes AI</strong> collapses the work.

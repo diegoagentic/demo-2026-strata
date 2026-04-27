@@ -46,7 +46,7 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
 }
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'Signed budget from Amanda · all 4 readiness checks pass · PC can pick up.', nextLabel: 'Watch SIF → CORE' },
+    0: { hint: 'Signed budget from the Account Manager · all 4 readiness checks pass · PC can pick up.', nextLabel: 'Watch SIF → CORE' },
     1: { hint: 'Zero keystrokes · 24 fields flow from SIF into a CORE proposal draft.', nextLabel: 'Run AI validation' },
     2: { hint: '4 audit loops → 1 AI pass + 1 human review · Spec Check is MBI\'s #1 Q10 priority.', nextLabel: 'Send the proposal' },
     3: { hint: 'Approve + send · orders route to each manufacturer · hand off upstream to Design AI.', nextLabel: 'Done' },

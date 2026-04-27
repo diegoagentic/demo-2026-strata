@@ -33,7 +33,7 @@ const OVERRIDE_CATEGORIES = [
 ]
 
 const ESCALATE_CATEGORIES = [
-    { id: 'lynda-review', label: 'Needs Lynda\'s GPO expertise' },
+    { id: 'director-review', label: 'Needs the Healthcare Director\'s GPO expertise' },
     { id: 'client-dispute', label: 'Client disputing royalty' },
     { id: 'audit-trigger', label: 'Potential audit trigger' },
     { id: 'other', label: 'Other (describe below)' },
@@ -164,7 +164,7 @@ export default function HealthTrustExceptionScene() {
                             className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-red-700 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-300 dark:border-red-500/40 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                         >
                             <Flag className="h-3.5 w-3.5" />
-                            Flag for Lynda
+                            Escalate
                         </button>
                         <button
                             onClick={() => setModalKind('override')}
@@ -286,25 +286,25 @@ export default function HealthTrustExceptionScene() {
                 })}
                 tone="danger"
                 icon={<Flag className="h-5 w-5" />}
-                title="Flag for Lynda Alexander"
-                subtitle={`Healthcare director · owns GPO contracts`}
+                title="Escalate to the Healthcare Director"
+                subtitle={`Owns GPO contracts · ~1 hour response in Teams`}
                 contextBanner={{
                     tone: 'info',
                     icon: <UserCheck className="h-4 w-4" />,
-                    title: 'Lynda will see this in Teams within the hour.',
-                    body: 'Pings her in #healthcare-gpo with invoice context + your reason. The royalty stays on hold until she responds.',
+                    title: 'The Healthcare Director will see this in Teams within the hour.',
+                    body: 'Posts to #healthcare-gpo with invoice context + your reason. The royalty stays on hold until they respond.',
                 }}
                 categories={ESCALATE_CATEGORIES}
-                defaultCategoryId="lynda-review"
+                defaultCategoryId="director-review"
                 categoryPrompt="Why escalate?"
-                notesPlaceholder="e.g. Mercy CFO emailed questioning the 3% — need Lynda to confirm whether the May addendum changes it."
+                notesPlaceholder="e.g. Mercy CFO emailed questioning the 3% — need the Healthcare Director to confirm whether the May addendum changes it."
                 notesRequiredForCategoryId="other"
                 notifyToggle={{
                     defaultOn: true,
                     title: 'Also ping Strata AI',
                     description: 'Escalation pattern trains the router · helps Strata catch this class of issue earlier next time.',
                 }}
-                confirmLabel="Escalate to Lynda"
+                confirmLabel="Escalate to Director"
                 confirmLabelWhenNotifying="Escalate & notify AI"
             />
         </div>

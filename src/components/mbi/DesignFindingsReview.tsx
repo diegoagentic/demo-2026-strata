@@ -249,7 +249,7 @@ export default function DesignFindingsReview() {
                     narrative={{
                         eyebrow: 'The loop closes upstream',
                         icon: <ShieldCheck className="h-5 w-5" />,
-                        title: "The $18K catch was downstream cleanup. The real leverage is Beth catching the class of issue before it ever reaches Amanda's SIF.",
+                        title: "Catching issues at the source — Design — is more leverage than catching them downstream. One palette finding here prevents days of rework once the SIF reaches Quotes.",
                         body: (
                             <>
                                 MBI's AI story is not 4 point solutions — it's <strong className="text-foreground">one chain that prevents work from piling up</strong>.
@@ -259,7 +259,7 @@ export default function DesignFindingsReview() {
                         ),
                     }}
                     primaryCTA={{
-                        label: "Restart · Kathy's morning",
+                        label: "Restart from Accounting AI",
                         icon: <ArrowRight className="h-4 w-4" />,
                         targetStepId: 'm2.1',
                     }}

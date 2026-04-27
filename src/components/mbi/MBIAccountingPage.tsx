@@ -50,7 +50,7 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
 // the handoff so the audience reads it as one cycle, not two unrelated bits.
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
     0: { hint: 'AP starts here · Strata pre-processed 12 invoices overnight · you review only the 2 exceptions.', nextLabel: 'Review HealthTrust royalty' },
-    1: { hint: 'Approve the auto-calculated 3% royalty · or override with a logged reason · or escalate to Lynda.', nextLabel: 'Reconcile non-EDI' },
+    1: { hint: 'Approve the auto-calculated 3% royalty · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile non-EDI' },
     2: { hint: 'Last AP step · line-by-line diff vs PO · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to AR aging' },
     3: { hint: 'AP closed · now AR. $240K open across MBI · live aging board · AI-drafted collection emails. Review · edit · send.', nextLabel: 'Close the morning' },
 }
