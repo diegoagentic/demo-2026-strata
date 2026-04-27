@@ -15,6 +15,7 @@
 import { useEffect, useState } from 'react'
 import { FileSearch } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
+import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import QuoteIncomingBudget from './QuoteIncomingBudget'
@@ -83,6 +84,12 @@ export default function MBIQuotesPage() {
             icon={<FileSearch className="h-5 w-5" />}
             activeApp="mbi-quotes"
         >
+            <MBIModuleHeader
+                module="quotes"
+                tint="info"
+                outcome="Marcia's team stops re-typing SIF into CORE — the PC role shifts from builder to reviewer, and 4 audit loops collapse into 1 AI + 1 human review."
+            />
+
             {inWizard ? (
                 <MBIWizardShell
                     steps={QUOTES_STEPS}

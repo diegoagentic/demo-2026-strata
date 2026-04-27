@@ -24,6 +24,7 @@
 import { useEffect, useState } from 'react'
 import { Calculator, Plus, Clock, DollarSign, TrendingUp, CheckCircle2 } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
+import MBIModuleHeader from './MBIModuleHeader'
 import BudgetQueueKanban from './BudgetQueueKanban'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
@@ -167,6 +168,12 @@ export default function MBIBudgetPage() {
             icon={<Calculator className="h-5 w-5" />}
             activeApp="mbi-budget"
         >
+            <MBIModuleHeader
+                module="budget"
+                tint="primary"
+                outcome="Amanda answers 'what will this cost?' in 4 minutes instead of a week — Good/Better/Best ready, $18K-class errors caught before the client ever sees them."
+            />
+
             {inWizard ? (
                 <MBIWizardShell
                     steps={BUDGET_WIZARD_STEPS}

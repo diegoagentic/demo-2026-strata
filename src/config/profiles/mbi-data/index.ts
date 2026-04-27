@@ -27,3 +27,9 @@ export {
     assertNoCETInAccounting,
 } from './painPoints';
 export type { PainModule, PainSeverity, RoadmapPhase, PainPoint } from './painPoints';
+export {
+    MBI_MODULE_PHASES,
+    MODULE_PHASES_BY_MODULE,
+    getPhasesForModule,
+} from './modulePhases';
+export type { ModulePhase, ModulePhaseNumber } from './modulePhases';

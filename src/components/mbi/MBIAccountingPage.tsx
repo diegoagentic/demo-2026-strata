@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react'
 import { Receipt, Heart, GitCompare, DollarSign } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
+import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import AccountingMorningQueue from './AccountingMorningQueue'
@@ -82,6 +83,12 @@ export default function MBIAccountingPage() {
             icon={<Receipt className="h-5 w-5" />}
             activeApp="mbi-accounting"
         >
+            <MBIModuleHeader
+                module="accounting"
+                tint="ai"
+                outcome="Kathy gets her morning back — exception-only review, HealthTrust royalties auto-flagged, AR collected on time, billing forecast live for leadership."
+            />
+
             {inWizard ? (
                 <MBIWizardShell
                     steps={ACCOUNTING_STEPS}

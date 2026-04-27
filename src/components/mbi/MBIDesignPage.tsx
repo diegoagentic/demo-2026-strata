@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react'
 import { Palette } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
+import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import DesignProjectPick from './DesignProjectPick'
@@ -77,6 +78,12 @@ export default function MBIDesignPage() {
             icon={<Palette className="h-5 w-5" />}
             activeApp="mbi-design"
         >
+            <MBIModuleHeader
+                module="design"
+                tint="success"
+                outcome="Beth's spec checks land in 5 minutes — finishes match, dimensions cleared, palette consistent before the client ever sees the proposal."
+            />
+
             {inWizard ? (
                 <MBIWizardShell
                     steps={DESIGN_STEPS}
