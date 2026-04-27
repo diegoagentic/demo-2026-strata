@@ -1,13 +1,19 @@
 /**
  * COMPONENT: MBIAccountingPage
- * PURPOSE: Flow 2 — Accounting AI, packaged in MBIWizardShell with 4 scenes
- *          that follow Kathy Belleville's morning: queue → HealthTrust
- *          exception → Non-EDI reconciliation → AR wrap-up + Flow 3 handoff.
+ * PURPOSE: Flow 1 — Accounting AI, packaged in MBIWizardShell with 5 scenes
+ *          that follow Kathy Belleville's morning end-to-end:
+ *            1. Morning queue (AP)
+ *            2. HealthTrust exception (AP · GPO royalty)
+ *            3. Non-EDI reconciliation (AP · line-by-line)
+ *            4. AR aging review (AR · live board + analytics)
+ *            5. Collection drafts + close (AR · review · send · close)
  *
- *          Mirrors Flow 1's wizard pattern — shared stepper, persona badge,
- *          per-step CTA, FlowHandoff at the end.
+ *          Mirrors the wizard pattern with shared stepper, persona badge,
+ *          per-step CTA, and FlowHandoff at the end. AR was split from a
+ *          single wrap-up into two scenes (4 + 5) per Apr 23 Matt's "keep
+ *          AP, ADD AR" — gives AR parity with the 3 AP scenes.
  *
- * DEMO TOUR: m2.1 → m2.4 map 1:1 to wizard scenes 0–3. Outside a demo step
+ * DEMO TOUR: m2.1 → m2.5 map 1:1 to wizard scenes 0–4. Outside a demo step
  * the user navigates freely via the stepper chips + Back/Next.
  */
 
@@ -20,6 +26,7 @@ import MBIPersonaBadge from './MBIPersonaBadge'
 import AccountingMorningQueue from './AccountingMorningQueue'
 import HealthTrustExceptionScene from './HealthTrustExceptionScene'
 import NonEDIReconcilerScene from './NonEDIReconcilerScene'
+import ARAgingReviewScene from './ARAgingReviewScene'
 import ARAgingWrapScene from './ARAgingWrapScene'
 import { useDemo } from '../../context/DemoContext'
 
@@ -27,7 +34,8 @@ const ACCOUNTING_STEPS: WizardStepSpec[] = [
     { id: 'morning', label: 'Morning queue', shortLabel: '1. Queue' },
     { id: 'healthtrust', label: 'HealthTrust', shortLabel: '2. HealthTrust' },
     { id: 'non-edi', label: 'Non-EDI recon', shortLabel: '3. Non-EDI' },
-    { id: 'ar-wrap', label: 'AR wrap-up', shortLabel: '4. AR wrap' },
+    { id: 'ar-aging', label: 'AR aging', shortLabel: '4. AR aging' },
+    { id: 'ar-close', label: 'Drafts + close', shortLabel: '5. Close' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
@@ -35,6 +43,7 @@ const STEP_TO_WIZARD_INDEX: Record<string, number> = {
     'm2.2': 1,
     'm2.3': 2,
     'm2.4': 3,
+    'm2.5': 4,
 }
 
 const WIZARD_INDEX_TO_STEP: Record<number, string> = {
@@ -42,17 +51,19 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     1: 'm2.2',
     2: 'm2.3',
     3: 'm2.4',
+    4: 'm2.5',
 }
 
 // Hints emphasize the AP → AR continuity Matt asked for on Apr 23: scenes 0-2
-// are AP (invoices, royalties, reconciliation), scene 3 is the AR closure that
-// completes the morning. Step 2 nextLabel + step 3 opening explicitly mark
+// are AP (invoices, royalties, reconciliation), 3-4 are AR (aging analytics,
+// then drafts + close). Step 2 nextLabel + step 3 opening explicitly mark
 // the handoff so the audience reads it as one cycle, not two unrelated bits.
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'AP starts here · Strata pre-processed 12 invoices overnight · you review only the 2 exceptions.', nextLabel: 'Review HealthTrust royalty' },
+    0: { hint: 'AP starts here · Strata pre-processed 12 invoices overnight · you review only the exceptions.', nextLabel: 'Review HealthTrust royalty' },
     1: { hint: 'Approve the auto-calculated 3% royalty · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile non-EDI' },
     2: { hint: 'Last AP step · line-by-line diff vs PO · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to AR aging' },
-    3: { hint: 'AP closed · now AR. $240K open across MBI · live aging board · AI-drafted collection emails. Review · edit · send.', nextLabel: 'Close the morning' },
+    3: { hint: 'AP closed · now AR. $240K open across MBI · live aging board replaces the bi-weekly Excel · scan the open accounts by status.', nextLabel: 'Review collection drafts' },
+    4: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then close the morning.', nextLabel: 'Close the morning' },
 }
 
 export default function MBIAccountingPage() {
@@ -115,7 +126,8 @@ export default function MBIAccountingPage() {
                     {activeStep === 0 && <AccountingMorningQueue />}
                     {activeStep === 1 && <HealthTrustExceptionScene />}
                     {activeStep === 2 && <NonEDIReconcilerScene />}
-                    {activeStep === 3 && <ARAgingWrapScene />}
+                    {activeStep === 3 && <ARAgingReviewScene />}
+                    {activeStep === 4 && <ARAgingWrapScene />}
                 </MBIWizardShell>
             ) : (
                 <OverviewStub />

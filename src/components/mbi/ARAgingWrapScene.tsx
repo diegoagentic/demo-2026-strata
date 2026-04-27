@@ -1,26 +1,26 @@
 /**
  * COMPONENT: ARAgingWrapScene
- * PURPOSE: Flow 2 · Scene 4 — Kathy's morning wraps with AR aging review +
- *          one-click collection emails. Shows the live billing forecast
- *          (replaces bi-weekly Excel) and AR status taxonomy, then surfaces
- *          the FlowHandoff to Flow 3 (Quotes AI).
+ * PURPOSE: Flow 1 · Scene 5 — second half of the AR cycle. Drafts, send,
+ *          close the morning. The aging board + analytics moved to
+ *          ARAgingReviewScene (scene 4) so the audience reads the analytics
+ *          moment and the action moment as two distinct beats — gives AR
+ *          parity with the 3 AP scenes (Fase H, Apr 23 Matt's "add the AR
+ *          flow").
  *
- *          Three zones:
- *            1. AR status taxonomy board (existing component)
- *            2. Collection emails (existing AIEmailDraftsPanel)
- *            3. FlowHandoff → Quotes AI
+ *          Two zones on this scene:
+ *            1. AI email drafts panel (review · edit · send each)
+ *            2. Close morning CTA → FlowHandoff (recap + handoff to Quotes AI)
  *
- * DS TOKENS: bg-card · AR severity accents · brand-300 CTA in handoff
+ * USED BY: MBIAccountingPage (wizard scene 4 · demo step m2.5)
  *
- * USED BY: MBIAccountingPage (wizard scene 3)
+ * DS TOKENS: bg-card · brand-300 CTA in handoff
  */
 
 import { useState } from 'react'
 import {
-    TrendingDown, CheckCircle2, Clock, Mail, FileSignature,
-    Receipt, Package, FileText, Calculator, Palette, Sparkles,
+    Mail, CheckCircle2, Clock, FileSignature,
+    Receipt, Package, FileText, Palette, Sparkles,
 } from 'lucide-react'
-import ARStatusBoard from './ARStatusBoard'
 import AIEmailDraftsPanel from './AIEmailDraftsPanel'
 import FlowHandoff from './FlowHandoff'
 import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
@@ -28,7 +28,6 @@ import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
 export default function ARAgingWrapScene() {
     const [morningClosed, setMorningClosed] = useState(false)
 
-    const totalAR = MBI_AR_RECORDS.reduce((acc, r) => acc + r.amount, 0)
     const escalated = MBI_AR_RECORDS.filter(r => r.status === 'escalated').length
     const committed = MBI_AR_RECORDS
         .filter(r => r.status === 'committed-to-pay')
@@ -36,19 +35,16 @@ export default function ARAgingWrapScene() {
 
     return (
         <div className="space-y-4">
-            {/* Wrap intro */}
-            <div className="bg-success/5 dark:bg-success/10 border border-success/30 rounded-xl p-3 flex items-start gap-2.5">
-                <TrendingDown className="h-4 w-4 text-success shrink-0 mt-0.5" />
+            {/* Drafts intro */}
+            <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
+                <Mail className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">Morning wrap · AR aging stays live</div>
+                    <div className="font-bold text-foreground">Collection emails · pre-drafted overnight</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Exceptions cleared, vouchers posted. Before you log off: review AR aging and send the auto-drafted collection emails so nothing ages past 60 days.
+                        Strata wrote each follow-up in the client's tone history. Review, edit if needed, send. Once they're out you can close the morning and hand off to the PC team.
                     </div>
                 </div>
             </div>
-
-            {/* AR status board (existing component, already renders taxonomy) */}
-            <ARStatusBoard records={MBI_AR_RECORDS} />
 
             {/* AI email drafts */}
             <AIEmailDraftsPanel />
@@ -77,15 +73,16 @@ export default function ARAgingWrapScene() {
                     recapSubheading="Vouchers posted, reconciliations cleared, AR emails out — everything Strata couldn't auto-handle routed through your eyes only."
                     recapStats={[
                         { icon: <Clock className="h-4 w-4" />, value: '18 min', sub: 'vs 4h before', accent: 'text-success' },
-                        { icon: <Sparkles className="h-4 w-4" />, value: '10 / 12', sub: 'invoices auto-posted', accent: 'text-success' },
+                        { icon: <Sparkles className="h-4 w-4" />, value: '5 / 12', sub: 'invoices auto-posted', accent: 'text-success' },
                         { icon: <Mail className="h-4 w-4" />, value: '3', sub: 'collection emails sent' },
-                        { icon: <TrendingDown className="h-4 w-4" />, value: `$${(committed / 1000).toFixed(0)}K`, sub: 'committed to pay', accent: 'text-success' },
+                        { icon: <Receipt className="h-4 w-4" />, value: `$${(committed / 1000).toFixed(0)}K`, sub: 'committed to pay', accent: 'text-success' },
                     ]}
                     timeline={[
                         { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Morning queue', caption: '12 invoices triaged', flow: 'Flow 1 · Accounting AI' },
                         { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'HealthTrust posted', caption: '3% royalty applied', flow: '—' },
                         { status: 'done', icon: <Package className="h-3.5 w-3.5" />, label: 'Non-EDI cleared', caption: 'Herman Miller reconciled', flow: '—' },
-                        { status: 'next', icon: <Mail className="h-3.5 w-3.5" />, label: 'AR emails out', caption: `${escalated} escalated · ${MBI_AR_RECORDS.length - escalated} routine`, flow: '—' },
+                        { status: 'done', icon: <Mail className="h-3.5 w-3.5" />, label: 'AR aging reviewed', caption: `${MBI_AR_RECORDS.length} accounts · ${escalated} escalated`, flow: '—' },
+                        { status: 'next', icon: <Mail className="h-3.5 w-3.5" />, label: 'Collection emails sent', caption: '3 follow-ups out', flow: '—' },
                         { status: 'future', icon: <FileSignature className="h-3.5 w-3.5" />, label: 'Next Enterprise PO', caption: 'PC team picks up', flow: 'Flow 2 · Quotes AI', highlight: true },
                     ]}
                     narrative={{
@@ -109,24 +106,6 @@ export default function ARAgingWrapScene() {
                     ]}
                 />
             )}
-
-            {/* Static stats footer for context */}
-            {!morningClosed && (
-                <div className="grid grid-cols-3 gap-3">
-                    <SummaryTile label="Total AR" value={`$${totalAR.toLocaleString()}`} accent="text-foreground" />
-                    <SummaryTile label="Escalated" value={`${escalated}`} accent="text-red-600 dark:text-red-400" />
-                    <SummaryTile label="Committed" value={`$${committed.toLocaleString()}`} accent="text-success" />
-                </div>
-            )}
-        </div>
-    )
-}
-
-function SummaryTile({ label, value, accent }: { label: string; value: string; accent: string }) {
-    return (
-        <div className="bg-card dark:bg-zinc-800 border border-border rounded-xl p-3">
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</div>
-            <div className={`text-lg font-bold tabular-nums mt-0.5 ${accent}`}>{value}</div>
         </div>
     )
 }

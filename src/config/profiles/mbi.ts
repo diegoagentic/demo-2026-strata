@@ -11,11 +11,12 @@
 //                 stakeholder direction (Carlos). The MBIBudgetPage component +
 //                 m1.x history live in git in case priorities shift.
 //
-// FLOW 1 — Accounting AI (Phase 2, Controller · Phase 1 Pilot) · 4 scenes / 4 beats
+// FLOW 1 — Accounting AI (Phase 2, Controller · Phase 1 Pilot) · 5 scenes / 5 beats
 //   m2.1: Morning queue — 3-column kanban (pending · in-progress · done)
 //   m2.2: HealthTrust exception — GPO royalty · approve / override / escalate
 //   m2.3: Non-EDI reconciliation — PO vs invoice line-by-line diff
-//   m2.4: AR wrap-up — taxonomy + collection emails + handoff to Flow 2
+//   m2.4: AR aging review — live status taxonomy + analytics (Apr 23 split)
+//   m2.5: Collection drafts + close — review/edit/send + handoff to Flow 2
 //
 // FLOW 2 — Quotes AI (Phase 4, PM bottleneck resolution) · 4 scenes / 4 beats
 //   m3.1: Incoming budget — signed handoff from the Account Manager → PM queue
@@ -82,8 +83,17 @@ export const MBI_STEPS: DemoStep[] = [
         id: 'm2.4',
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
-        title: 'AR wrap-up — forecast + collection emails',
-        description: 'AP closed · now AR. The taxonomy shows every open account by state. Strata has pre-drafted collection emails for the escalated accounts using each client\'s tone history. The Controller reviews and sends. The live billing forecast replaces the bi-weekly Excel — leadership reads real-time numbers.',
+        title: 'AR aging — live board replaces the bi-weekly Excel',
+        description: 'AP closed · now AR. The taxonomy shows every open account by state — paid, committed-to-pay, escalated. The live billing forecast replaces the bi-weekly Excel so leadership reads real-time numbers instead of stale snapshots.',
+        app: 'mbi-accounting',
+        role: 'Dealer',
+    },
+    {
+        id: 'm2.5',
+        groupId: 0,
+        groupTitle: 'Flow 1: Accounting AI',
+        title: 'Collection drafts + close the morning',
+        description: 'Strata pre-drafted a follow-up for every open account using each client\'s tone history. The Controller reviews, edits if needed, sends. With AP posted, AR collected, and the forecast live, the morning closes — and the next signed budget queues up the PC team.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -168,7 +178,8 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.1': { mode: 'interactive', userAction: 'Review the overnight queue · pre-processed invoices ready · exceptions flagged for human decision' },
     'm2.2': { mode: 'interactive', userAction: 'Approve the GPO royalty · override with a reason · or escalate to the Director of Healthcare' },
     'm2.3': { mode: 'interactive', userAction: 'Reconcile the non-EDI invoice line-by-line · accept or override each variance' },
-    'm2.4': { mode: 'interactive', userAction: 'Close the morning with AR review + collection emails · hand off to Quotes AI' },
+    'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
+    'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then close the morning' },
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
     'm3.2': { mode: 'interactive', userAction: 'Watch the SIF flow into CORE · field-for-field · zero keystrokes' },
     'm3.3': { mode: 'interactive', userAction: 'Review Spec Check · audit loops collapse into one AI pass plus one human review' },
@@ -202,8 +213,14 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'm2.4': [
         'Generating AR aging report (live, not bi-weekly)',
-        'Drafting collection emails by account tone + history',
+        'Routing accounts by status · paid · committed-to-pay · escalated',
         'Updating leadership billing forecast in real-time',
+        'AR analytics ready · drafts queued for the next scene',
+    ],
+    'm2.5': [
+        'Drafting collection emails by account tone + history',
+        'Loading client past-conversation context per draft',
+        'Awaiting Controller review · send · close',
         'Morning complete · ready for handoff to Quotes AI',
     ],
     'm3.1': [
@@ -256,7 +273,7 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const MBI_SELF_INDICATED: string[] = [
-    'm2.1', 'm2.2', 'm2.3', 'm2.4',
+    'm2.1', 'm2.2', 'm2.3', 'm2.4', 'm2.5',
     'm3.1', 'm3.2', 'm3.3', 'm3.4',
     'm4.1', 'm4.2', 'm4.3',
 ];
