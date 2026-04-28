@@ -1,7 +1,7 @@
-/**
+﻿/**
  * COMPONENT: DesignSpecCheckScan
  * PURPOSE: Flow 4 · Scene 1 — Animated Spec Check running across the 47
- *          line items of Beth's BJC ICU project. 4 checks run sequentially
+ *          line items of Beth's Lakeside ICU project. 4 checks run sequentially
  *          with live progress, then a complete state invites Beth to review
  *          the 1 finding that surfaced.
  *
@@ -108,7 +108,7 @@ export default function DesignSpecCheckScan() {
                             ? 'Spec Check complete · 1 finding ready for review'
                             : scanning
                                 ? `Scanning · ${runningCheck?.label ?? 'Running'}…`
-                                : "Ready to run Spec Check on BJC ICU Expansion"}
+                                : "Ready to run Spec Check on Lakeside ICU Expansion"}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                         {done
@@ -203,7 +203,7 @@ export default function DesignSpecCheckScan() {
                 <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3 animate-in fade-in duration-300">
                     <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                     <span className="flex-1 text-foreground">
-                        Next: Beth reviews the palette finding on <strong>Line 23</strong> (HON Ignition chair · Forest Green vs Marine Blue). One click to swap — the exact class of mistake that used to slip to the client.
+                        Next: Beth reviews the palette finding on <strong>Line 23</strong> (Meridian Sync chair · Forest Green vs Marine Blue). One click to swap — the exact class of mistake that used to slip to the client.
                     </span>
                 </div>
             )}

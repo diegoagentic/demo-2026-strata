@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: EmailInboxDropZone
  * PURPOSE: Apr 23 stakeholder ask (Matt, "highly desired but not no-go"):
  *          "we need a way to show … me opening up like an email inbox …
@@ -132,9 +132,9 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
 
             {/* Faux inbox items */}
             <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40">
-                <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted />
-                <FauxEmailRow vendor="HealthTrust Mercy · ap@mercyhealth.example" subject="Royalty + bill INV-0486" attached time="8:00 AM" muted />
-                <FauxEmailRow vendor="The HON Company · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted />
+                <FauxEmailRow vendor="Vertex Office · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted />
+                <FauxEmailRow vendor="HealthTrust Riverside · ap@mercyhealth.example" subject="Royalty + bill INV-0486" attached time="8:00 AM" muted />
+                <FauxEmailRow vendor="Meridian Office · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted />
             </div>
 
             {/* Dropzone */}

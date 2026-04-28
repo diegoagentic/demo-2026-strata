@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: DesignFindingsReview
  * PURPOSE: Flow 4 · Scene 2 — Beth reviews the 1 palette finding from the
  *          Spec Check scan, applies the swap, then the demo closes with a
@@ -105,10 +105,10 @@ export default function DesignFindingsReview() {
                             <span className="text-[10px] text-muted-foreground">AI 92%</span>
                         </div>
                         <h3 className="text-lg font-bold text-foreground leading-tight mt-1">
-                            Finish inconsistency <span className="text-muted-foreground font-normal text-sm">on HON Ignition chair</span>
+                            Finish inconsistency <span className="text-muted-foreground font-normal text-sm">on Meridian Sync chair</span>
                         </h3>
                         <div className="text-[11px] text-muted-foreground">
-                            <span className="font-mono text-foreground">Line 23</span> · HON Ignition task chair · BJC ICU
+                            <span className="font-mono text-foreground">Line 23</span> · Meridian Sync task chair · Lakeside ICU
                         </div>
                     </div>
                 </div>
@@ -279,7 +279,7 @@ export default function DesignFindingsReview() {
                 tone="info"
                 icon={<Pencil className="h-5 w-5" />}
                 title="Keep Forest Green?"
-                subtitle="Line 23 · HON Ignition · BJC ICU"
+                subtitle="Line 23 · Meridian Sync · Lakeside ICU"
                 contextBanner={{
                     tone: 'warning',
                     icon: <AlertTriangle className="h-4 w-4" />,

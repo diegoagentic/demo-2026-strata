@@ -1,8 +1,8 @@
-/**
+﻿/**
  * COMPONENT: ValidationStep
  * PURPOSE: ⭐ HERO MOMENT of the entire demo. Shows AI-detected validations
  *          that the Budget Builder catches BEFORE the budget reaches the client.
- *          Primary: the $18,240 Allsteel Further worksurface mismatch — the story
+ *          Primary: the $18,240 Vertex Modular worksurface mismatch — the story
  *          Mark Kielhafner cited during the MBI AI Readiness assessment.
  *
  *          Secondary: a warning-level finish inconsistency ($320 impact).
@@ -237,7 +237,7 @@ export default function ValidationStep({ validations, statusById, onStatusChange
                     defaultCategoryId="false-positive"
                     categoryPrompt="Why reject?"
                     notesLabel="Notes for Strata"
-                    notesPlaceholder="e.g. The 72×36 is valid — we verified with Allsteel that this config ships with a reinforced panel mount."
+                    notesPlaceholder="e.g. The 72×36 is valid — we verified with Vertex Office that this config ships with a reinforced panel mount."
                     notesRequiredForCategoryId="other"
                     notifyToggle={{
                         defaultOn: true,
@@ -640,8 +640,8 @@ function ValidationCard({
 
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-// Splits a field like "Line 5: Allsteel Further — Worksurface Size" into
-// { lineRef: "Line 5", product: "Allsteel Further", attribute: "Worksurface Size" }.
+// Splits a field like "Line 5: Vertex Modular — Worksurface Size" into
+// { lineRef: "Line 5", product: "Vertex Modular", attribute: "Worksurface Size" }.
 // Falls back gracefully when the expected delimiters aren't present.
 function parseValidationField(field: string): { lineRef: string; product: string; attribute: string } {
     const [left, right] = field.split(':').map(s => s.trim())

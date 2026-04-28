@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: AISpecCheckSimulation
  * PURPOSE: Step 2.3 (Quotes AI · AI validation) used to jump straight to
  *          the audit-loop diagram + the finished Spec Check report. The
@@ -189,7 +189,7 @@ function QuestionsView({
             {/* Q1 · Finish ambiguity */}
             <QuestionCard
                 index={1}
-                context="Item 12 of 143 · HBF Aspire lounge chair · qty 6 · finish 'Charcoal Heather'"
+                context="Item 12 of 143 · Pacific Fabrics Aspire lounge chair · qty 6 · finish 'Charcoal Heather'"
                 question={`"This chair finish is visually within the project palette but the spec sheet calls for the exact match ('Charcoal Tweed'). Designer didn't list a substitution rule. Accept as compatible swap, or flag it so the designer signs off explicitly?"`}
                 rationale='History: Enterprise Holdings has accepted "close enough" finishes 7 of last 9 times — but their last project rejected one. Risk is real but small.'
                 options={[
@@ -202,7 +202,7 @@ function QuestionsView({
             {/* Q2 · Non-catalog lead time */}
             <QuestionCard
                 index={2}
-                context="Item 41 of 143 · Custom 84&quot; walnut conference table · Knoll · non-catalog"
+                context="Item 41 of 143 · Custom 84&quot; walnut conference table · Pinnacle · non-catalog"
                 question={`"Vendor confirmed pricing but their AP rep is on PTO and lead time isn't locked in. Past 3 similar custom tables shipped in 8 weeks ± 1. Use the 8-week estimate so we can send the proposal today, or hold the proposal until vendor confirms?"`}
                 rationale='Install date is 14 weeks out. 8-week estimate has 6-week buffer · low risk. Holding the proposal would slip 2-3 days waiting for vendor.'
                 options={[
@@ -309,7 +309,7 @@ export function SpecCheckDecisionsApplied({
                 <li className="flex items-start gap-1.5">
                     <Sparkles className="h-3 w-3 text-ai shrink-0 mt-0.5" />
                     <span>
-                        <strong>Finish ambiguity (HBF Aspire chairs):</strong>{' '}
+                        <strong>Finish ambiguity (Pacific Fabrics Aspire chairs):</strong>{' '}
                         {decisions.finishAmbiguity === 'accept-as-compatible'
                             ? 'accepted as compatible swap · no designer sign-off needed'
                             : 'flagged for designer sign-off · 1-day delay added to schedule'}

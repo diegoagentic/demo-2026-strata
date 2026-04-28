@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: NonCatalogValidatorTable
  * PURPOSE: Cross-checks manually-entered (non-catalog) items against manufacturer
  *          price books + historical project data. MBI spec sheets are 80-90%
@@ -31,10 +31,10 @@ interface NonCatalogItem {
 
 const MOCK_ITEMS: NonCatalogItem[] = [
     { id: 'NC-001', description: 'Custom walnut laminate credenza 84×24', manufacturer: 'HNI', qty: 3, priceQuoted: 2800, priceBook: 2800, match: 'exact', confidence: 100 },
-    { id: 'NC-002', description: 'COM fabric upgrade · marine blue', manufacturer: 'Herman Miller', qty: 8, priceQuoted: 450, priceBook: 425, match: 'close', confidence: 92 },
+    { id: 'NC-002', description: 'COM fabric upgrade · marine blue', manufacturer: 'Apex Workspace', qty: 8, priceQuoted: 450, priceBook: 425, match: 'close', confidence: 92 },
     { id: 'NC-003', description: 'Built-in reception millwork', manufacturer: 'Custom', qty: 1, priceQuoted: 8500, priceBook: 0, match: 'exact', confidence: 85 },
-    { id: 'NC-004', description: 'Acoustic panel · oak veneer 48×24', manufacturer: 'Allsteel', qty: 16, priceQuoted: 180, priceBook: 215, match: 'mismatch', confidence: 88 },
-    { id: 'NC-005', description: 'Custom finish · teal powdercoat', manufacturer: 'Steelcase', qty: 12, priceQuoted: 65, priceBook: 65, match: 'exact', confidence: 99 },
+    { id: 'NC-004', description: 'Acoustic panel · oak veneer 48×24', manufacturer: 'Vertex Office', qty: 16, priceQuoted: 180, priceBook: 215, match: 'mismatch', confidence: 88 },
+    { id: 'NC-005', description: 'Custom finish · teal powdercoat', manufacturer: 'CaseWorks', qty: 12, priceQuoted: 65, priceBook: 65, match: 'exact', confidence: 99 },
 ]
 
 export default function NonCatalogValidatorTable() {

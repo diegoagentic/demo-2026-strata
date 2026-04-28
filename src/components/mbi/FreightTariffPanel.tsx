@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: FreightTariffPanel
  * PURPOSE: Q10 #2 priority (7.7/10 avg, BD + PC teams: 10/10) — auto-checks
  *          CORE orders for missing freight + tariff lines. CORE does not pull
@@ -30,11 +30,11 @@ interface OpenOrder {
 }
 
 const MOCK_ORDERS: OpenOrder[] = [
-    { id: 'PO-2026-0067', vendor: 'Allsteel', amount: 41400, hasFreight: true, hasTariff: true },
-    { id: 'PO-2026-0068', vendor: 'The HON Company', amount: 17850, hasFreight: false, hasTariff: true, freightSuggested: 1785 },
-    { id: 'PO-2026-0069', vendor: 'Steelcase', amount: 38250, hasFreight: false, hasTariff: false, freightSuggested: 3825, tariffSuggested: 765 },
-    { id: 'PO-2026-0070', vendor: 'Knoll', amount: 16800, hasFreight: true, hasTariff: false, tariffSuggested: 336 },
-    { id: 'PO-2026-0071', vendor: 'Herman Miller', amount: 12900, hasFreight: true, hasTariff: true },
+    { id: 'PO-2026-0067', vendor: 'Vertex Office', amount: 41400, hasFreight: true, hasTariff: true },
+    { id: 'PO-2026-0068', vendor: 'Meridian Office', amount: 17850, hasFreight: false, hasTariff: true, freightSuggested: 1785 },
+    { id: 'PO-2026-0069', vendor: 'CaseWorks', amount: 38250, hasFreight: false, hasTariff: false, freightSuggested: 3825, tariffSuggested: 765 },
+    { id: 'PO-2026-0070', vendor: 'Pinnacle', amount: 16800, hasFreight: true, hasTariff: false, tariffSuggested: 336 },
+    { id: 'PO-2026-0071', vendor: 'Apex Workspace', amount: 12900, hasFreight: true, hasTariff: true },
 ]
 
 export default function FreightTariffPanel() {

@@ -1,13 +1,13 @@
-import type { SpecCheckReport } from './types';
+﻿import type { SpecCheckReport } from './types';
 
 export const MBI_SPEC_CHECKS: SpecCheckReport[] = [
     {
         id: 'SC-001',
-        projectId: 'BJC-ICU-2026',
+        projectId: 'Lakeside-ICU-2026',
         runAt: '2026-04-19T10:00:00Z',
         lineItemsScanned: 47,
         flags: [
-            { type: 'finish', severity: 'warning', description: 'Line 23: HON Ignition finish "Forest Green" inconsistent with project palette "Marine Blue"', lineRef: 'L23' },
+            { type: 'finish', severity: 'warning', description: 'Line 23: Meridian Sync finish "Forest Green" inconsistent with project palette "Marine Blue"', lineRef: 'L23' },
         ],
         status: 'needs-review',
     },
@@ -17,8 +17,8 @@ export const MBI_SPEC_CHECKS: SpecCheckReport[] = [
         runAt: '2026-04-18T14:30:00Z',
         lineItemsScanned: 143,
         flags: [
-            { type: 'quantity', severity: 'critical', description: 'Allsteel Further worksurface size mismatch — see Budget validation', lineRef: 'L5' },
-            { type: 'finish', severity: 'warning', description: 'HON Ignition Forest Green inconsistent with palette', lineRef: 'L11' },
+            { type: 'quantity', severity: 'critical', description: 'Vertex Modular worksurface size mismatch — see Budget validation', lineRef: 'L5' },
+            { type: 'finish', severity: 'warning', description: 'Meridian Sync Forest Green inconsistent with palette', lineRef: 'L11' },
             { type: 'non-catalog', severity: 'info', description: '8 line items entered manually — recommend non-catalog validator review' },
         ],
         status: 'needs-review',

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: ParsingDiscrepanciesPanel
  * PURPOSE: Compact summary of parse-time issues with a "Review" CTA that
  *          opens a side sheet containing the full discrepancy cards. Keeps
@@ -72,7 +72,7 @@ export const DEFAULT_PARSING_DISCREPANCIES: ParsingDiscrepancy[] = [
         id: 'inventory-knoll-propeller',
         kind: 'inventory',
         title: 'Cheaper match in inventory',
-        context: 'Knoll Propeller 84" is in Strata warehouse at a lower price.',
+        context: 'Pinnacle Orbit 84" is in Strata warehouse at a lower price.',
         confidence: 92,
         current: { label: 'SIF line (KNOLL-PROP-84)', value: '2 × $8,400 · new from vendor' },
         suggestion: { label: 'Strata inventory match', value: '2 × $6,900 · in-stock · Birmingham DC' },
@@ -587,11 +587,11 @@ function ReviewDiscrepancySheet({
 
 function FieldReconcilerDetail() {
     const deltaRows = [
-        { line: 'L-12', desc: 'Allsteel Further panel override', delta: 1250 },
-        { line: 'L-15', desc: 'Allsteel Further desk override', delta: 2100 },
-        { line: 'L-18', desc: 'HON Ignition chair override', delta: 820 },
-        { line: 'L-22', desc: 'Knoll Propeller custom pricing', delta: 2400 },
-        { line: 'L-25', desc: 'Herman Miller Embody override', delta: 780 },
+        { line: 'L-12', desc: 'Vertex Modular panel override', delta: 1250 },
+        { line: 'L-15', desc: 'Vertex Modular desk override', delta: 2100 },
+        { line: 'L-18', desc: 'Meridian Sync chair override', delta: 820 },
+        { line: 'L-22', desc: 'Pinnacle Orbit custom pricing', delta: 2400 },
+        { line: 'L-25', desc: 'Apex Embody override', delta: 780 },
     ]
     const total = deltaRows.reduce((acc, r) => acc + r.delta, 0)
 
@@ -649,7 +649,7 @@ function InventoryCompareDetail() {
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vendor new</span>
                     </div>
                     <div>
-                        <div className="text-xs font-bold text-foreground">Knoll Propeller 84"</div>
+                        <div className="text-xs font-bold text-foreground">Pinnacle Orbit 84"</div>
                         <div className="text-[10px] text-muted-foreground">SKU KNOLL-PROP-84 · SIF line</div>
                     </div>
                     <div className="mt-auto pt-2 border-t border-border space-y-0.5 text-[11px]">
@@ -670,7 +670,7 @@ function InventoryCompareDetail() {
                         <span className="text-[10px] font-bold text-info uppercase tracking-wider">Strata inventory</span>
                     </div>
                     <div>
-                        <div className="text-xs font-bold text-foreground">Knoll Propeller 84" · refurb'd</div>
+                        <div className="text-xs font-bold text-foreground">Pinnacle Orbit 84" · refurb'd</div>
                         <div className="text-[10px] text-muted-foreground">Birmingham DC · stock #INV-04521</div>
                     </div>
                     <div className="mt-auto pt-2 border-t border-info/20 space-y-0.5 text-[11px]">

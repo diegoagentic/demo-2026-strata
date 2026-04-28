@@ -1,18 +1,18 @@
-import type { BudgetRequest, Scenario, Validation } from './types';
+﻿import type { BudgetRequest, Scenario, Validation } from './types';
 
 // ═══ HERO BUDGET — Enterprise Holdings · Mark Kielhafner's $18K story ═══
-// This is the demo's emotional peak. The validation step catches an Allsteel
+// This is the demo's emotional peak. The validation step catches an Vertex Office
 // worksurface mismatch with $18,240 prevented impact (94% AI confidence).
 
 export const HERO_VALIDATION: Validation = {
     id: 'VAL-001',
     budgetId: 'BDG-2026-002',
-    field: 'Line 5: Allsteel Further — Worksurface Size',
+    field: 'Line 5: Vertex Modular — Worksurface Size',
     severity: 'critical',
     confidence: 94,
     expected: '20 units · 60×30 worksurface (matches CET panel config)',
     actual: '20 units · 72×36 worksurface (current SIF — incompatible)',
-    aiSuggestion: 'Worksurface 72×36 does not fit the selected Allsteel Further panel system. Recommend swap to Allsteel Shape (compatible 72×36). Alternative: adjust panel spec.',
+    aiSuggestion: 'Worksurface 72×36 does not fit the selected Vertex Modular panel system. Recommend swap to Vertex Profile (compatible 72×36). Alternative: adjust panel spec.',
     estimatedImpact: 18240,
     status: 'pending',
 };
@@ -20,7 +20,7 @@ export const HERO_VALIDATION: Validation = {
 export const HERO_VALIDATION_SECONDARY: Validation = {
     id: 'VAL-002',
     budgetId: 'BDG-2026-002',
-    field: 'Line 11: HON Ignition Task Chair — Finish',
+    field: 'Line 11: Meridian Sync Task Chair — Finish',
     severity: 'warning',
     confidence: 88,
     expected: 'Onyx Black (matches project palette)',
@@ -42,9 +42,9 @@ export const HERO_SCENARIOS: Scenario[] = [
         contingency: 12095,
         lineItemCount: 38,
         swaps: [
-            { from: 'Allsteel Further panel system', to: 'Allsteel Beyond (entry tier)', delta: -18200 },
-            { from: 'HON Ignition task chair', to: 'HON Basyx VL502', delta: -6800 },
-            { from: 'Herman Miller Jarvis desk', to: 'Allsteel Altitude A6', delta: -4300 },
+            { from: 'Vertex Modular panel system', to: 'Vertex Essential (entry tier)', delta: -18200 },
+            { from: 'Meridian Sync task chair', to: 'Meridian Base VL502', delta: -6800 },
+            { from: 'Apex Sit-Stand desk', to: 'Vertex Altitude A6', delta: -4300 },
         ],
     },
     {
@@ -72,9 +72,9 @@ export const HERO_SCENARIOS: Scenario[] = [
         contingency: 15170,
         lineItemCount: 45,
         swaps: [
-            { from: 'Allsteel Further (standard)', to: 'Allsteel Further Premium finish', delta: 8200 },
-            { from: 'HON Ignition task chair', to: 'Herman Miller Aeron Remastered', delta: 14800 },
-            { from: 'Standard conference table', to: 'Knoll Propeller height-adjust', delta: 9400 },
+            { from: 'Vertex Modular (standard)', to: 'Vertex Modular Premium finish', delta: 8200 },
+            { from: 'Meridian Sync task chair', to: 'Apex Aeron Pro', delta: 14800 },
+            { from: 'Standard conference table', to: 'Pinnacle Orbit height-adjust', delta: 9400 },
         ],
     },
 ];
@@ -111,7 +111,7 @@ export const MBI_BUDGET_REQUESTS: BudgetRequest[] = [
     },
     {
         id: 'BDG-2026-003',
-        client: { name: 'BJC HealthCare', project: 'ICU Expansion', vertical: 'healthcare' },
+        client: { name: 'Lakeside Health', project: 'ICU Expansion', vertical: 'healthcare' },
         scope: { privateOffices: 30, conferenceRooms: 0, lounge: 2 },
         contract: 'HealthTrust',
         budgetCeiling: 425000,

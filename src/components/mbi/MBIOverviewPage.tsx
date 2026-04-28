@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: MBIOverviewPage
  * PURPOSE: Landing hub for the MBI demo. Shows the 4 AI flows as a chain
  *          (Design → Budget → Quotes → Accounting) with each card surfacing:
@@ -199,7 +199,7 @@ export default function MBIOverviewPage() {
                         icon={<Users className="h-4 w-4" />}
                         title="CRM · Lead capture"
                         meta="Sales · Account Manager"
-                        body="Sales team logs the opportunity in CORE — client, vertical, contract context (HNI / Allsteel / HealthTrust), rough scope, expected ceiling."
+                        body="Sales team logs the opportunity in CORE — client, vertical, contract context (HNI / Vertex Office / HealthTrust), rough scope, expected ceiling."
                         onClick={() => setUpstreamPreview('crm')}
                     />
                     <UpstreamCard

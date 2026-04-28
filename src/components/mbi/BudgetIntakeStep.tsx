@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: BudgetIntakeStep
  * PURPOSE: Wizard Step 1 — Intake. Dual-path selector:
  *          - Design-Assisted (SIF/CAP upload)
@@ -932,11 +932,11 @@ function RowAction({
 // Inline tabular preview for the CAP worksheet
 function CapPreviewTable() {
     const rows = [
-        { line: 'L-12', sku: 'ALS-FUR-PNL-60', desc: 'Allsteel Further panel system', list: 1245, override: 920, type: 'Override' },
-        { line: 'L-15', sku: 'ALS-FUR-DSK-60', desc: 'Allsteel Further desk 60×30', list: 1490, override: 1180, type: 'Override' },
-        { line: 'L-18', sku: 'HON-IGN-TASK',    desc: 'HON Ignition task chair',     list: 612,  override: 425,  type: 'Override' },
-        { line: 'L-22', sku: 'KNOLL-PROP-84',   desc: 'Knoll Propeller table 84"',   list: 4900, override: 4200, type: 'Custom' },
-        { line: 'L-25', sku: 'HM-EMB-LNG',      desc: 'Herman Miller Embody lounge', list: 2480, override: 2150, type: 'Override' },
+        { line: 'L-12', sku: 'ALS-FUR-PNL-60', desc: 'Vertex Modular panel system', list: 1245, override: 920, type: 'Override' },
+        { line: 'L-15', sku: 'ALS-FUR-DSK-60', desc: 'Vertex Modular desk 60×30', list: 1490, override: 1180, type: 'Override' },
+        { line: 'L-18', sku: 'HON-IGN-TASK',    desc: 'Meridian Sync task chair',     list: 612,  override: 425,  type: 'Override' },
+        { line: 'L-22', sku: 'KNOLL-PROP-84',   desc: 'Pinnacle Orbit table 84"',   list: 4900, override: 4200, type: 'Custom' },
+        { line: 'L-25', sku: 'HM-EMB-LNG',      desc: 'Apex Embody lounge', list: 2480, override: 2150, type: 'Override' },
     ]
     return (
         <div className="border border-border rounded-xl overflow-hidden">

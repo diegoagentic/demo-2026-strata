@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: InvoiceQueueTable (Kanban)
  * PURPOSE: Kathy's morning AP queue rendered as a 3-column kanban
  *          (Pending · In Progress · Done). Apr 23 transcript commitment from
@@ -183,7 +183,7 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
 // needing background knowledge.
 const FLAG_TOOLTIPS: Record<string, string> = {
     EDI: 'EDI · Electronic Data Interchange. Vendor sends the invoice straight into CORE — no manual entry, no OCR.',
-    HT: 'HealthTrust · Group Purchasing Organization for healthcare clients. MBI owes a 3% royalty on every invoice tied to a HealthTrust member (e.g. Mercy Hospital, BJC).',
+    HT: 'HealthTrust · Group Purchasing Organization for healthcare clients. MBI owes a 3% royalty on every invoice tied to a HealthTrust member (e.g. Riverside Medical, Lakeside).',
     Fix: 'Exception flagged · the line items, quantities or amounts don\'t match the matching purchase order. Needs a human decision.',
 }
 

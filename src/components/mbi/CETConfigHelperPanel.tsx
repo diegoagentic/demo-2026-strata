@@ -1,10 +1,10 @@
-/**
+﻿/**
  * COMPONENT: CETConfigHelperPanel
  * PURPOSE: Chat-style AI assistant for CET configuration questions. Replaces
  *          today's Teams-channel-pinging that interrupts senior designers
  *          (Lisa, Amy) every time someone needs config help.
  *
- *          Mock conversation: junior designer asks Strata about Allsteel
+ *          Mock conversation: junior designer asks Strata about Vertex Office
  *          panel + worksurface compatibility (the same class of issue caught
  *          in the $18K Budget Builder validation).
  *
@@ -26,16 +26,16 @@ interface Message {
 }
 
 const CONVERSATION: Message[] = [
-    { role: 'user', text: "I'm specifying Allsteel Further panels (60\" spine) for Enterprise. Will a 72×36 worksurface fit?", timestamp: '10:14 AM' },
+    { role: 'user', text: "I'm specifying Vertex Modular panels (60\" spine) for Enterprise. Will a 72×36 worksurface fit?", timestamp: '10:14 AM' },
     {
         role: 'assistant',
-        text: "Heads up — 72×36 won't fit Allsteel Further 60\" spine. Recommended swaps:\n\n1. **Allsteel Shape 72×36** — designed for the same panel system, $1,485/ea\n2. Reduce to **Allsteel Further 60×30** — fits the spine, $1,180/ea\n\nContext: 20 of these mismatched once cost MBI ~$18K to retrofit. Tagging this in the spec check report so PC catches it if it slips.",
+        text: "Heads up — 72×36 won't fit Vertex Modular 60\" spine. Recommended swaps:\n\n1. **Vertex Profile 72×36** — designed for the same panel system, $1,485/ea\n2. Reduce to **Vertex Modular 60×30** — fits the spine, $1,180/ea\n\nContext: 20 of these mismatched once cost MBI ~$18K to retrofit. Tagging this in the spec check report so PC catches it if it slips.",
         timestamp: '10:14 AM',
     },
     { role: 'user', text: 'Use option 1 for 20 units — keep the bigger surface.', timestamp: '10:15 AM' },
     {
         role: 'assistant',
-        text: "Done. Updated CET config:\n\n• 20 × Allsteel Shape 72×36 ($29,700)\n• Logged compatibility check in spec audit\n• Notified PC team in #handoff channel\n\nNothing else to do — you can keep working.",
+        text: "Done. Updated CET config:\n\n• 20 × Vertex Profile 72×36 ($29,700)\n• Logged compatibility check in spec audit\n• Notified PC team in #handoff channel\n\nNothing else to do — you can keep working.",
         timestamp: '10:15 AM',
     },
 ]

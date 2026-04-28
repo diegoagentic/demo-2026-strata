@@ -1,11 +1,11 @@
-/**
+﻿/**
  * COMPONENT: DesignProjectPick
  * PURPOSE: Flow 4 · Scene 0 — Beth Gianino (Phase 1 Pilot · early adopter
  *          8/10) selects a project and launches Spec Check. The pilot
  *          sequencing narrative is visible: only Beth uses this first, the
  *          rest of the design team adopts after her success.
  *
- *          BJC ICU Expansion picked as the hero project (47 line items,
+ *          Lakeside ICU Expansion picked as the hero project (47 line items,
  *          Marine Blue palette). Card shows palette preview, line count,
  *          CET version. 'Launch Spec Check' advances to scene 1.
  *
@@ -62,7 +62,7 @@ export default function DesignProjectPick() {
                         <div>
                             <div className="text-xs font-bold text-foreground">Beth's active projects</div>
                             <div className="text-[10px] text-muted-foreground">
-                                Pick one to run Spec Check · BJC ICU is today's pilot target
+                                Pick one to run Spec Check · Lakeside ICU is today's pilot target
                             </div>
                         </div>
                     </div>
@@ -118,7 +118,7 @@ export default function DesignProjectPick() {
                 </div>
             </div>
 
-            {/* Hero project card — BJC ICU detail */}
+            {/* Hero project card — Lakeside ICU detail */}
             <div className="bg-gradient-to-br from-primary/5 to-ai/5 dark:from-primary/10 dark:to-ai/10 border border-primary/30 rounded-2xl p-5">
                 <div className="flex items-start gap-3 mb-4">
                     <div className="h-10 w-10 rounded-xl bg-ai/15 text-ai flex items-center justify-center shrink-0">

@@ -1,11 +1,11 @@
-import type { ARRecord } from './types';
+﻿import type { ARRecord } from './types';
 
 export const MBI_AR_RECORDS: ARRecord[] = [
     { id: 'AR-001', client: 'Enterprise Holdings', poNumber: 'PO-2025-0892', amount: 42500, daysPastDue: 12, status: 'pending-approval', salesperson: 'Amanda Renshaw' },
     { id: 'AR-002', client: 'Commerce Bank', poNumber: 'PO-2025-0901', amount: 18200, daysPastDue: 18, status: 'no-response', lastContact: '2026-04-10', salesperson: 'Nicky Wesemann' },
-    { id: 'AR-003', client: 'BJC HealthCare', poNumber: 'PO-2025-0915', amount: 88400, daysPastDue: 5, status: 'committed-to-pay', lastContact: '2026-04-18', salesperson: 'Lynda Alexander' },
+    { id: 'AR-003', client: 'Lakeside Health', poNumber: 'PO-2025-0915', amount: 88400, daysPastDue: 5, status: 'committed-to-pay', lastContact: '2026-04-18', salesperson: 'Lynda Alexander' },
     { id: 'AR-004', client: 'Lindenwood University', poNumber: 'PO-2025-0928', amount: 24600, daysPastDue: 32, status: 'escalated', lastContact: '2026-04-12', salesperson: 'Keyla Gettings' },
-    { id: 'AR-005', client: 'Mercy Hospital Fort Smith', poNumber: 'PO-2025-0934', amount: 156800, daysPastDue: 8, status: 'committed-to-pay', salesperson: 'Lynda Alexander' },
+    { id: 'AR-005', client: 'Riverside Medical Fort Smith', poNumber: 'PO-2025-0934', amount: 156800, daysPastDue: 8, status: 'committed-to-pay', salesperson: 'Lynda Alexander' },
     { id: 'AR-006', client: 'City of St. Charles', poNumber: 'PO-2025-0942', amount: 32100, daysPastDue: 14, status: 'pending-approval', salesperson: 'Amanda Renshaw' },
     { id: 'AR-007', client: 'Ranken Technical College', poNumber: 'PO-2025-0951', amount: 14800, daysPastDue: 22, status: 'no-response', lastContact: '2026-04-08', salesperson: 'Stacey' },
     { id: 'AR-008', client: 'Boeing St. Louis', poNumber: 'PO-2025-0966', amount: 78400, daysPastDue: 3, status: 'pending-approval', salesperson: 'Justin Laramie' },

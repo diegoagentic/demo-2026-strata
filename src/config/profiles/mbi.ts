@@ -1,8 +1,8 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // MBI — Modern Business Interiors · Strata AI Demo Profile
 //
 // CLIENT: Modern Business Interiors (St. Charles, MO + Lenexa, KS · ~42 employees
-//         · ~$17M · 30+ manufacturer partners · Allsteel dealer)
+//         · ~$17M · 30+ manufacturer partners · Vertex Office dealer)
 // PREPARED BY: Avanto
 // DATE: April 2026 · revised Apr 27 2026
 //
@@ -32,8 +32,8 @@
 // asks about Spec Check (Q10 #1 priority) can still see it. The m4.x
 // step definitions live in git history if the tour needs them back.
 //
-// HERO SCENARIO: HealthTrust Mercy invoice · 3% GPO royalty · pre-flagged by AI
-// (the $18K Allsteel worksurface story belonged to the Budget Builder flow that
+// HERO SCENARIO: HealthTrust Riverside invoice · 3% GPO royalty · pre-flagged by AI
+// (the $18K Vertex Office worksurface story belonged to the Budget Builder flow that
 // is no longer in this demo)
 //
 // Note on step IDs: m2.x / m3.x / m4.x are kept verbatim from the original

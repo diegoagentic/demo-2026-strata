@@ -1,10 +1,10 @@
-/**
+﻿/**
  * COMPONENT: FileManagementPanel
  * PURPOSE: Phase 1 prerequisites visualized — addresses MBI's file infrastructure
  *          gaps that block all Design AI value:
  *
  *          1. ProjectNumberGenerator — replaces designer-opens-Excel-and-scrolls
- *             with auto-increment by location (STL: 2000-3000, KC: 5000, Mercy: <1000)
+ *             with auto-increment by location (STL: 2000-3000, KC: 5000, Riverside: <1000)
  *          2. FolderTemplateTree — SharePoint folder template (replaces ad-hoc
  *             iDrive folders inconsistently named)
  *          3. VersionHistoryTimeline — every CET/CAP/Budget change versioned
@@ -53,7 +53,7 @@ function ProjectNumberGenerator() {
                     {[
                         { label: 'St. Louis (STL)', range: '2000–3000', next: 'STL-2847' },
                         { label: 'Kansas City', range: '5000+', next: 'KC-5193' },
-                        { label: 'Mercy Hospital', range: '< 1000', next: 'MRC-0428' },
+                        { label: 'Riverside Medical', range: '< 1000', next: 'MRC-0428' },
                     ].map(s => (
                         <div key={s.label} className="flex items-center justify-between bg-muted/20 border border-border rounded-lg px-3 py-2">
                             <div>
@@ -126,7 +126,7 @@ function TreeRow({ indent = 0, icon, text, bold, muted }: { indent?: number; ico
 // ─── 3. VersionHistoryTimeline ───────────────────────────────────────────────
 function VersionHistoryTimeline() {
     const versions = [
-        { v: 'v5', author: 'Beth Gianino', timestamp: 'Apr 18 · 10:20 AM', note: 'Allsteel Shape 72×36 swap (per CET assistant)', current: true },
+        { v: 'v5', author: 'Beth Gianino', timestamp: 'Apr 18 · 10:20 AM', note: 'Vertex Profile 72×36 swap (per CET assistant)', current: true },
         { v: 'v4', author: 'Beth Gianino', timestamp: 'Apr 16 · 4:12 PM', note: 'Added 6 lounge seats · client request' },
         { v: 'v3', author: 'Amy Shoemaker', timestamp: 'Apr 14 · 11:30 AM', note: 'Initial floor plan import' },
     ]

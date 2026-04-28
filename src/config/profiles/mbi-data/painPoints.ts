@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // MBI — Pain Points (Apr 23 reorganization)
 //
 // Structured dataset for the 4-AI demo. Each pain point is tagged with:
@@ -61,7 +61,7 @@ export const MBI_PAIN_POINTS: PainPoint[] = [
         severity: 'high',
         resolvedInPhase: 2,
         area: 'Healthcare · Lynda + Kathy',
-        before: 'Manual penny-match + 3% royalty calc per Mercy/BJC bill',
+        before: 'Manual penny-match + 3% royalty calc per Riverside/Lakeside bill',
         after: 'Auto-flagged with 3% royalty pre-calculated; review/approve/escalate',
     },
     {

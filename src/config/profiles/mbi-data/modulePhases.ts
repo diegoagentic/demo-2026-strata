@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // MBI — Module Phases (Apr 23 modular pricing structure)
 //
 // Matt's Apr 23 ask: each AI module presented as a header with its own
@@ -159,7 +159,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
             'SIF/BOM → CORE auto-import (largest manual step eliminated)',
             'Freight & tariff agent (EDI + non-EDI flagging)',
             'AI proposal draft from SIF + customer + shipping context',
-            'EDI transmission for HNI/Allsteel/Gunlocke/HON/Kimball',
+            'EDI transmission for HNI/Vertex Office/Northgate/HON/Kimball',
         ],
         estimatedDuration: '6-7 weeks',
     },
@@ -182,7 +182,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         title: 'Reconciliation + Closure',
         summary: 'Compass for all 4 manufacturers + complete proposal automation.',
         deliverables: [
-            'Compass reconciliation (HNI · Allsteel · Gunlocke · HON)',
+            'Compass reconciliation (HNI · Vertex Office · Northgate · HON)',
             'Non-EDI PO agent (email generation for non-EDI vendors)',
             'Teams spec check bot (M365-native)',
             'PC role shift from builder → reviewer',

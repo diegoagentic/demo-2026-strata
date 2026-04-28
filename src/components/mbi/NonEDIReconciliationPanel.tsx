@@ -1,7 +1,7 @@
-/**
+﻿/**
  * COMPONENT: NonEDIReconciliationPanel
  * PURPOSE: Non-EDI PO vs Invoice reconciliation view. For the ~50% of MBI's
- *          manufacturers without EDI (Herman Miller, Steelcase, Knoll, etc.),
+ *          manufacturers without EDI (Apex Workspace, CaseWorks, Pinnacle, etc.),
  *          Strata compares PO to invoice line-by-line and routes clean matches
  *          automatically. Only exceptions surface for Kathy.
  *

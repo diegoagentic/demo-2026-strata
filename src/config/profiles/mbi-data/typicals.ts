@@ -1,4 +1,4 @@
-import type { Typical } from './types';
+﻿import type { Typical } from './types';
 
 // Furniture packages by space type and tier — used for Quick Budget mode
 // "Typicals library" defined with Lisa/Amy in Phase 1
@@ -8,7 +8,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Workstation — Economy',
         spaceType: 'workstation',
         tier: 'good',
-        manufacturer: 'Allsteel',
+        manufacturer: 'Vertex Office',
         lineItems: [
             { sku: 'ALS-BEY-PNL-60', qty: 1 },
             { sku: 'ALS-ALT-DSK-60', qty: 1 },
@@ -21,7 +21,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Workstation — Mid-Range',
         spaceType: 'workstation',
         tier: 'better',
-        manufacturer: 'Allsteel',
+        manufacturer: 'Vertex Office',
         lineItems: [
             { sku: 'ALS-FUR-PNL-60', qty: 1 },
             { sku: 'ALS-FUR-DSK-60', qty: 1 },
@@ -34,7 +34,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Workstation — Premium',
         spaceType: 'workstation',
         tier: 'best',
-        manufacturer: 'Allsteel',
+        manufacturer: 'Vertex Office',
         lineItems: [
             { sku: 'ALS-FUR-PNL-60', qty: 1 },
             { sku: 'HM-JRV-DSK-60', qty: 1 },
@@ -47,7 +47,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Conference Room — 8 person',
         spaceType: 'conference',
         tier: 'better',
-        manufacturer: 'Knoll',
+        manufacturer: 'Pinnacle',
         lineItems: [
             { sku: 'KNOLL-PROP-84', qty: 1 },
             { sku: 'HON-IGN-TASK', qty: 8 },
@@ -59,7 +59,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Lounge — Standard',
         spaceType: 'lounge',
         tier: 'better',
-        manufacturer: 'Herman Miller',
+        manufacturer: 'Apex Workspace',
         lineItems: [
             { sku: 'HM-EMB-LNG', qty: 4 },
         ],

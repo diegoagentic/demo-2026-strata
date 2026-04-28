@@ -1,7 +1,7 @@
-/**
+﻿/**
  * COMPONENT: NonEDIReconcilerScene
  * PURPOSE: Flow 2 · Scene 3 — Line-by-line reconciliation for non-EDI vendors.
- *          Shows the Herman Miller exception flagged in the morning queue
+ *          Shows the Apex Workspace exception flagged in the morning queue
  *          (quantity mismatch: PO 6, invoice 5). Kathy approves each line,
  *          overrides with a reason, or flags for vendor contact.
  *
@@ -51,7 +51,7 @@ const OVERRIDE_CATEGORIES = [
 type RowStatus = 'pending' | 'accepted' | 'overridden' | 'flagged'
 
 export default function NonEDIReconcilerScene() {
-    const invoice = MBI_INVOICES.find(i => i.id === 'INV-0484')!  // Herman Miller exception
+    const invoice = MBI_INVOICES.find(i => i.id === 'INV-0484')!  // Apex Workspace exception
     const [statuses, setStatuses] = useState<Record<string, RowStatus>>({})
     const [metaById, setMetaById] = useState<Record<string, { reasonCategory?: string; notes?: string }>>({})
     const [modalRow, setModalRow] = useState<LineRow | null>(null)
@@ -224,7 +224,7 @@ export default function NonEDIReconcilerScene() {
                     <Sparkles className="h-4 w-4" />
                 </div>
                 <div className="text-[11px] text-muted-foreground flex-1">
-                    <strong className="text-foreground">Every override trains the matcher.</strong> Strata learns your acceptable variance thresholds per vendor — next time Herman Miller ships 5-of-6 on Jarvis, it'll auto-approve without asking.
+                    <strong className="text-foreground">Every override trains the matcher.</strong> Strata learns your acceptable variance thresholds per vendor — next time Apex Workspace ships 5-of-6 on Jarvis, it'll auto-approve without asking.
                 </div>
             </div>
 
@@ -251,7 +251,7 @@ export default function NonEDIReconcilerScene() {
                     categories={OVERRIDE_CATEGORIES}
                     defaultCategoryId="vendor-confirmed"
                     categoryPrompt="Why accept the variance?"
-                    notesPlaceholder="e.g. Herman Miller emailed 04/17 confirming short ship on Jarvis — backorder coming on next PO."
+                    notesPlaceholder="e.g. Apex Workspace emailed 04/17 confirming short ship on Jarvis — backorder coming on next PO."
                     notesRequiredForCategoryId="other"
                     confirmLabel="Post with override"
                 />

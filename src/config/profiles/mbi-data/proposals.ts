@@ -1,4 +1,4 @@
-import type { Proposal } from './types';
+﻿import type { Proposal } from './types';
 
 export const MBI_PROPOSALS: Proposal[] = [
     {
@@ -6,7 +6,7 @@ export const MBI_PROPOSALS: Proposal[] = [
         budgetId: 'BDG-2026-006',
         coreStatus: 'approved',
         lineItemCount: 38,
-        manufacturers: ['Allsteel', 'The HON Company'],
+        manufacturers: ['Vertex Office', 'Meridian Office'],
         createdBy: 'amy-behl',
         updatedAt: '2026-04-16T15:00:00Z',
     },
@@ -15,7 +15,7 @@ export const MBI_PROPOSALS: Proposal[] = [
         budgetId: 'BDG-2026-005',
         coreStatus: 'approved',
         lineItemCount: 12,
-        manufacturers: ['HBF', 'Knoll'],
+        manufacturers: ['Pacific Fabrics', 'Pinnacle'],
         createdBy: 'mario',
         updatedAt: '2026-04-15T13:00:00Z',
     },
@@ -24,7 +24,7 @@ export const MBI_PROPOSALS: Proposal[] = [
         budgetId: 'BDG-2026-002',
         coreStatus: 'pending-review',
         lineItemCount: 42,
-        manufacturers: ['Allsteel', 'The HON Company', 'Knoll', 'Herman Miller'],
+        manufacturers: ['Vertex Office', 'Meridian Office', 'Pinnacle', 'Apex Workspace'],
         createdBy: 'amy-behl',
         updatedAt: '2026-04-19T11:30:00Z',
     },

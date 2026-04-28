@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: AdoptionProgressStrip
  * PURPOSE: Visualizes Rogers Diffusion of Innovations applied to MBI's design
  *          team. Sets the story: AI trust 3.3/10 avg in Design — careful
@@ -104,7 +104,7 @@ export default function AdoptionProgressStrip() {
                 <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-ai/5 border border-ai/10 rounded-xl p-3">
                     <Sparkles className="h-4 w-4 text-ai shrink-0" />
                     <span>
-                        <strong className="text-foreground">{beth?.name ?? 'Early Adopter'}</strong> pilots Spec Check Engine on her Mercy ICU project.
+                        <strong className="text-foreground">{beth?.name ?? 'Early Adopter'}</strong> pilots Spec Check Engine on her Riverside ICU project.
                         Visible success unlocks team-wide rollout. 1:1 onboarding for low-trust members <strong className="text-foreground">after</strong> early adopter success — never before.
                     </span>
                 </div>

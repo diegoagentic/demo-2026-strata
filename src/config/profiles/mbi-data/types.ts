@@ -1,9 +1,9 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // MBI — Shared TypeScript types for all mock data
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export type Vertical = 'corporate' | 'healthcare' | 'education' | 'government';
-export type ContractType = 'HNI' | 'Allsteel' | 'HealthTrust' | 'Omnia' | 'none';
+export type ContractType = 'HNI' | 'Vertex Office' | 'HealthTrust' | 'Omnia' | 'none';
 export type BudgetPath = 'design-assisted' | 'quick-budget';
 export type BudgetStatus = 'intake' | 'parsing' | 'validation' | 'review' | 'approved';
 export type ScenarioTier = 'good' | 'better' | 'best';
@@ -40,7 +40,7 @@ export interface Manufacturer {
     id: string;
     name: string;
     isEDI: boolean;
-    compassValidated?: boolean;   // HNI/Allsteel/Gunlocke/HON require Compass
+    compassValidated?: boolean;   // HNI/Vertex Office/Northgate/HON require Compass
     color?: string;               // brand color for UI
 }
 

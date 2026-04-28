@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: AccountingMorningQueue
  * PURPOSE: Flow 2 · Scene 1 — Kathy opens Strata and sees the morning queue
  *          already pre-processed overnight. Exception-centric: highlights that
@@ -120,7 +120,7 @@ export default function AccountingMorningQueue() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    First up: the HealthTrust Mercy bill · Strata auto-calculated the <strong>3% royalty</strong> per MBI's GPO contract — needs your approval to post.
+                    First up: the HealthTrust Riverside bill · Strata auto-calculated the <strong>3% royalty</strong> per MBI's GPO contract — needs your approval to post.
                 </span>
             </div>
         </div>

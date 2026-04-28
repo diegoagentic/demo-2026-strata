@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: HealthTrustExceptionScene
  * PURPOSE: Flow 2 · Scene 2 — the HealthTrust GPO 3% royalty moment. Strata
  *          detects a healthcare invoice against an MBI HealthTrust contract
@@ -40,7 +40,7 @@ const ESCALATE_CATEGORIES = [
 ]
 
 export default function HealthTrustExceptionScene() {
-    const invoice = MBI_INVOICES.find(i => i.id === 'INV-0486')!  // Mercy HealthTrust hero
+    const invoice = MBI_INVOICES.find(i => i.id === 'INV-0486')!  // Riverside HealthTrust hero
     const royalty = Math.round(invoice.amount * 0.03)
     const totalDue = invoice.amount + royalty
 
@@ -87,7 +87,7 @@ export default function HealthTrustExceptionScene() {
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">HealthTrust GPO contract triggered</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Mercy is a HealthTrust GPO member. Per MBI's master agreement, a 3% royalty line auto-appends to every healthcare bill and posts to the GPO payable account.
+                        Riverside is a HealthTrust GPO member. Per MBI's master agreement, a 3% royalty line auto-appends to every healthcare bill and posts to the GPO payable account.
                     </div>
                 </div>
             </div>
@@ -245,7 +245,7 @@ export default function HealthTrustExceptionScene() {
                     <div className="text-xs min-w-0">
                         <div className="font-bold text-foreground">HealthTrust Master Agreement</div>
                         <div className="text-[10px] text-muted-foreground">Signed Feb 2024 · 3% royalty on all GPO member orders</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">Covers Mercy, BJC, 14 other hospitals</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Covers Riverside, Lakeside, 14 other hospitals</div>
                     </div>
                 </div>
             </div>
@@ -297,7 +297,7 @@ export default function HealthTrustExceptionScene() {
                 categories={ESCALATE_CATEGORIES}
                 defaultCategoryId="director-review"
                 categoryPrompt="Why escalate?"
-                notesPlaceholder="e.g. Mercy CFO emailed questioning the 3% — need the Healthcare Director to confirm whether the May addendum changes it."
+                notesPlaceholder="e.g. Riverside CFO emailed questioning the 3% — need the Healthcare Director to confirm whether the May addendum changes it."
                 notesRequiredForCategoryId="other"
                 notifyToggle={{
                     defaultOn: true,

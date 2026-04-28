@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: InstallerPanel
  * PURPOSE: Installer Invoice vs PO Agent — compares installer invoices against
  *          CORE POs to detect undocumented scope changes (change orders that
@@ -49,7 +49,7 @@ const MOCK_INSTALLER_INVOICES: InstallerInvoice[] = [
     },
     {
         id: 'INST-2026-0044',
-        installer: 'Mercy In-House',
+        installer: 'Riverside In-House',
         poId: 'PO-2026-0061',
         poAmount: 6200,
         invoiceAmount: 7800,
