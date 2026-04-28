@@ -79,7 +79,7 @@ export default function ARAgingWrapScene() {
                     ]}
                     timeline={[
                         { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Morning queue', caption: '12 invoices triaged', flow: 'Flow 1 · Accounting AI' },
-                        { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'HealthTrust posted', caption: '3% royalty applied', flow: '—' },
+                        { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'HealthTrust posted', caption: '3% rebate applied', flow: '—' },
                         { status: 'done', icon: <Package className="h-3.5 w-3.5" />, label: 'Non-EDI cleared', caption: 'Apex Workspace reconciled', flow: '—' },
                         { status: 'done', icon: <Mail className="h-3.5 w-3.5" />, label: 'AR aging reviewed', caption: `${MBI_AR_RECORDS.length} accounts · ${escalated} escalated`, flow: '—' },
                         { status: 'next', icon: <Mail className="h-3.5 w-3.5" />, label: 'Collection emails sent', caption: '3 follow-ups out', flow: '—' },

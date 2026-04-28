@@ -1,8 +1,8 @@
-/**
+﻿/**
  * COMPONENT: InvoiceDetailPanel
  * PURPOSE: Detail view for the currently-selected invoice. Shows an OCR-style
  *          document preview mockup, extracted fields with per-field confidence,
- *          and (for HealthTrust invoices) the specific 3% royalty flag that
+ *          and (for HealthTrust invoices) the specific 3% rebate flag that
  *          Strata applies automatically per MBI's contract logic.
  *
  *          This is the trust-building moment for Kathy: she sees AI reading
@@ -13,7 +13,7 @@
  *
  * STATES:
  *   - default — show preview + extracted fields
- *   - HealthTrust — extra ribbon + 3% royalty callout
+ *   - HealthTrust — extra ribbon + 3% rebate callout
  *   - exception — warning card at top
  *
  * DS TOKENS: bg-card · border-border · amber (HealthTrust) · red (exception) ·
@@ -22,7 +22,7 @@
  * USED BY: MBIAccountingPage (Document AI section, right column)
  */
 
-import { FileText, Heart, AlertTriangle, ShieldCheck, Building2, Calendar, DollarSign, Send, ArrowRight, Sparkles } from 'lucide-react'
+import { FileText, Heart, AlertTriangle, ShieldCheck, Building2, Calendar, DollarSign, Send, ArrowRight, Sparkles, Clock, CreditCard } from 'lucide-react'
 import type { Invoice } from '../../config/profiles/mbi-data'
 
 interface InvoiceDetailPanelProps {
@@ -31,7 +31,7 @@ interface InvoiceDetailPanelProps {
 
 export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps) {
     const received = new Date(invoice.received)
-    const royaltyAmount = invoice.has3PctRoyalty ? Math.round(invoice.amount * 0.03) : 0
+    const rebateAmount = invoice.has3PctRebate ? Math.round(invoice.amount * 0.03) : 0
 
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
@@ -82,7 +82,7 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
             <div className="p-4">
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Source document</div>
                 <div className="aspect-[5/4] bg-white dark:bg-zinc-900 border border-border rounded-xl p-4 text-[9px] text-zinc-900 dark:text-zinc-100 overflow-hidden">
-                    <InvoiceMockup invoice={invoice} royalty={royaltyAmount} />
+                    <InvoiceMockup invoice={invoice} rebate={rebateAmount} />
                 </div>
             </div>
 
@@ -95,27 +95,38 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
 
                 <div className="space-y-1.5">
                     <FieldRow icon={<Building2 className="h-3 w-3" />} label="Vendor" value={invoice.vendor} confidence={99} />
+                    {invoice.clientName && (
+                        <FieldRow icon={<Heart className="h-3 w-3" />} label="Project" value={invoice.clientName} confidence={99} />
+                    )}
                     <FieldRow icon={<FileText className="h-3 w-3" />} label="PO Number" value={invoice.poNumber} confidence={invoice.ocrConfidence} />
                     <FieldRow icon={<DollarSign className="h-3 w-3" />} label="Amount" value={`$${invoice.amount.toLocaleString()}`} confidence={invoice.ocrConfidence} />
-                    <FieldRow icon={<Calendar className="h-3 w-3" />} label="Received" value={received.toLocaleString()} confidence={100} />
+                    {invoice.invoiceDate && (
+                        <FieldRow icon={<Calendar className="h-3 w-3" />} label="Bill Date" value={new Date(invoice.invoiceDate).toLocaleDateString()} confidence={invoice.ocrConfidence} />
+                    )}
+                    {invoice.paymentTerms && (
+                        <FieldRow icon={<CreditCard className="h-3 w-3" />} label="Terms" value={invoice.paymentTerms} confidence={invoice.ocrConfidence} />
+                    )}
+                    {invoice.dueDate && (
+                        <FieldRow icon={<Clock className="h-3 w-3" />} label="Due Date" value={new Date(invoice.dueDate).toLocaleDateString()} confidence={100} highlight={new Date(invoice.dueDate) < new Date(Date.now() + 7 * 86400000)} />
+                    )}
                 </div>
             </div>
 
-            {/* HealthTrust 3% royalty callout */}
-            {invoice.has3PctRoyalty && (
+            {/* HealthTrust 3% rebate callout */}
+            {invoice.has3PctRebate && (
                 <div className="mx-4 mb-4 bg-amber-500/5 border border-amber-300 dark:border-amber-500/30 rounded-xl p-3">
                     <div className="flex items-start gap-2">
                         <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                             <ShieldCheck className="h-3.5 w-3.5" />
                         </div>
                         <div className="flex-1">
-                            <div className="text-xs font-bold text-foreground">HealthTrust 3% royalty — auto-flagged</div>
+                            <div className="text-xs font-bold text-foreground">HealthTrust 3% rebate — auto-flagged</div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">
-                                Per HealthTrust GPO contract, 3% royalty line required on this invoice before voucher posts.
+                                Per HealthTrust GPO contract, 3% rebate line required on this invoice before voucher posts.
                             </div>
                             <div className="mt-2 flex items-center justify-between bg-background border border-border rounded-lg px-3 py-2">
-                                <span className="text-[10px] font-semibold text-foreground">Royalty line (3% of ${invoice.amount.toLocaleString()})</span>
-                                <span className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">+${royaltyAmount.toLocaleString()}</span>
+                                <span className="text-[10px] font-semibold text-foreground">Rebate line (3% of ${invoice.amount.toLocaleString()})</span>
+                                <span className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">+${rebateAmount.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
@@ -157,24 +168,26 @@ function FieldRow({
     label,
     value,
     confidence,
+    highlight,
 }: {
     icon: React.ReactNode
     label: string
     value: string
     confidence: number
+    highlight?: boolean
 }) {
     return (
-        <div className="flex items-center gap-2 text-xs bg-muted/20 rounded-lg px-3 py-2 border border-border">
-            <div className="text-muted-foreground shrink-0">{icon}</div>
+        <div className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 border ${highlight ? 'bg-amber-50/60 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30' : 'bg-muted/20 border-border'}`}>
+            <div className={`shrink-0 ${highlight ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>{icon}</div>
             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-20 shrink-0">{label}</div>
-            <div className="flex-1 text-foreground font-semibold truncate">{value}</div>
+            <div className={`flex-1 font-semibold truncate ${highlight ? 'text-amber-700 dark:text-amber-400' : 'text-foreground'}`}>{value}</div>
             <div className="text-[9px] font-bold text-ai tabular-nums">{confidence}%</div>
         </div>
     )
 }
 
 // ─── Mini invoice mockup ─────────────────────────────────────────────────────
-function InvoiceMockup({ invoice, royalty }: { invoice: Invoice; royalty: number }) {
+function InvoiceMockup({ invoice, rebate }: { invoice: Invoice; rebate: number }) {
     return (
         <div className="h-full w-full font-mono flex flex-col">
             <div className="flex items-center justify-between border-b border-zinc-300 dark:border-zinc-700 pb-1">
@@ -202,15 +215,15 @@ function InvoiceMockup({ invoice, royalty }: { invoice: Invoice; royalty: number
                     <span className="text-zinc-500">Subtotal</span>
                     <span className="tabular-nums">${invoice.amount.toLocaleString()}</span>
                 </div>
-                {royalty > 0 && (
+                {rebate > 0 && (
                     <div className="flex justify-between text-amber-700 font-bold">
-                        <span>3% Royalty</span>
-                        <span className="tabular-nums">${royalty.toLocaleString()}</span>
+                        <span>3% Rebate</span>
+                        <span className="tabular-nums">${rebate.toLocaleString()}</span>
                     </div>
                 )}
                 <div className="flex justify-between font-bold pt-1 border-t border-zinc-200 dark:border-zinc-700">
                     <span>Total Due</span>
-                    <span className="tabular-nums">${(invoice.amount + royalty).toLocaleString()}</span>
+                    <span className="tabular-nums">${(invoice.amount + rebate).toLocaleString()}</span>
                 </div>
             </div>
             <div className="mt-auto text-[7px] text-zinc-400 italic">

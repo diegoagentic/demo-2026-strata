@@ -237,7 +237,7 @@ export default function ValidationStep({ validations, statusById, onStatusChange
                     defaultCategoryId="false-positive"
                     categoryPrompt="Why reject?"
                     notesLabel="Notes for Strata"
-                    notesPlaceholder="e.g. The 72×36 is valid — we verified with Vertex Office that this config ships with a reinforced panel mount."
+                    notesPlaceholder="e.g. The 72×36 is valid — we verified with Allsteel that this config ships with a reinforced panel mount."
                     notesRequiredForCategoryId="other"
                     notifyToggle={{
                         defaultOn: true,

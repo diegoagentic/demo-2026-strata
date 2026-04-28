@@ -8,7 +8,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Workstation — Economy',
         spaceType: 'workstation',
         tier: 'good',
-        manufacturer: 'Vertex Office',
+        manufacturer: 'Allsteel',
         lineItems: [
             { sku: 'ALS-BEY-PNL-60', qty: 1 },
             { sku: 'ALS-ALT-DSK-60', qty: 1 },
@@ -21,7 +21,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Workstation — Mid-Range',
         spaceType: 'workstation',
         tier: 'better',
-        manufacturer: 'Vertex Office',
+        manufacturer: 'Allsteel',
         lineItems: [
             { sku: 'ALS-FUR-PNL-60', qty: 1 },
             { sku: 'ALS-FUR-DSK-60', qty: 1 },
@@ -34,7 +34,7 @@ export const MBI_TYPICALS: Typical[] = [
         name: 'Workstation — Premium',
         spaceType: 'workstation',
         tier: 'best',
-        manufacturer: 'Vertex Office',
+        manufacturer: 'Allsteel',
         lineItems: [
             { sku: 'ALS-FUR-PNL-60', qty: 1 },
             { sku: 'HM-JRV-DSK-60', qty: 1 },

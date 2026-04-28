@@ -5,7 +5,7 @@
  *          10/12 invoices were auto-posted and only 2 need her review.
  *
  *          Hero surface = invoice queue + detail panel. Footer cue invites
- *          Kathy to review the HealthTrust royalty exception first.
+ *          Kathy to review the HealthTrust rebate exception first.
  *
  * DS TOKENS: bg-card · bg-ai/5 · success / amber accents
  *
@@ -51,7 +51,7 @@ export default function AccountingMorningQueue() {
     const done = allInvoices.filter(i => i.status === 'done').length
     const healthTrust = allInvoices.filter(i => i.isHealthTrust).length
 
-    // Default select the HealthTrust hero so Kathy sees the 3% royalty right away
+    // Default select the HealthTrust hero so Kathy sees the 3% rebate right away
     const defaultId = MBI_INVOICES.find(i => i.isHealthTrust)?.id ?? MBI_INVOICES[0].id
     const [selectedId, setSelectedId] = useState(defaultId)
     const selected = allInvoices.find(i => i.id === selectedId) ?? allInvoices[0]
@@ -77,7 +77,7 @@ export default function AccountingMorningQueue() {
                     <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                         Read <strong className="text-foreground">{total} vendor bills</strong> ·
                         extracted fields with Document AI · matched to open POs in CORE ·
-                        applied HealthTrust 3% royalty logic on <strong className="text-foreground">{healthTrust} GPO bills</strong>.
+                        applied HealthTrust 3% rebate logic on <strong className="text-foreground">{healthTrust} GPO bills</strong>.
                         The queue below shows what's done, what agents are still working on, and what only you can decide.
                     </div>
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
@@ -120,7 +120,7 @@ export default function AccountingMorningQueue() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    First up: the HealthTrust Riverside bill · Strata auto-calculated the <strong>3% royalty</strong> per MBI's GPO contract — needs your approval to post.
+                    First up: the Allsteel bill · Strata auto-calculated the <strong>3% rebate</strong> per MBI's GPO contract — needs your approval to post.
                 </span>
             </div>
         </div>

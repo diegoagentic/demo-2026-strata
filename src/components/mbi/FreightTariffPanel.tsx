@@ -30,8 +30,8 @@ interface OpenOrder {
 }
 
 const MOCK_ORDERS: OpenOrder[] = [
-    { id: 'PO-2026-0067', vendor: 'Vertex Office', amount: 41400, hasFreight: true, hasTariff: true },
-    { id: 'PO-2026-0068', vendor: 'Meridian Office', amount: 17850, hasFreight: false, hasTariff: true, freightSuggested: 1785 },
+    { id: 'PO-2026-0067', vendor: 'Allsteel', amount: 41400, hasFreight: true, hasTariff: true },
+    { id: 'PO-2026-0068', vendor: 'HON', amount: 17850, hasFreight: false, hasTariff: true, freightSuggested: 1785 },
     { id: 'PO-2026-0069', vendor: 'CaseWorks', amount: 38250, hasFreight: false, hasTariff: false, freightSuggested: 3825, tariffSuggested: 765 },
     { id: 'PO-2026-0070', vendor: 'Pinnacle', amount: 16800, hasFreight: true, hasTariff: false, tariffSuggested: 336 },
     { id: 'PO-2026-0071', vendor: 'Apex Workspace', amount: 12900, hasFreight: true, hasTariff: true },

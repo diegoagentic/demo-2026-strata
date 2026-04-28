@@ -15,7 +15,7 @@
  *   - onSelect: (id: string) => void
  *
  * COLUMN STATES per invoice:
- *   - pending      → red/amber accent, exception or HealthTrust royalty needs review
+ *   - pending      → red/amber accent, exception or HealthTrust rebate needs review
  *   - in-progress  → ai accent + spinner-like dot, agent reconciling
  *   - done         → success accent, auto-posted to CORE
  *
@@ -35,7 +35,7 @@ const COLUMN_ORDER: InvoiceStatus[] = ['pending', 'in-progress', 'done']
 
 const COLUMN_META: Record<InvoiceStatus, { label: string; sub: string; tone: string; chip: string }> = {
     'pending': {
-        label: 'Pending',
+        label: 'Pending Review',
         sub: 'Needs your eyes',
         tone: 'border-amber-500/40 bg-amber-50/40 dark:bg-amber-500/5',
         chip: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
@@ -66,7 +66,7 @@ export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: In
             {/* Header */}
             <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center justify-between">
                 <div>
-                    <div className="text-xs font-bold text-foreground">Morning invoice queue · 12 invoices</div>
+                    <div className="text-xs font-bold text-foreground">Morning bill queue · 12 bills</div>
                     <div className="text-[10px] text-muted-foreground">AI extracted overnight · workflow in 3 columns · click any card</div>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px]">
@@ -137,7 +137,15 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
             <div className="flex items-start justify-between gap-1 mb-1">
                 <div className="min-w-0 flex-1">
                     <div className="text-[11px] font-bold text-foreground truncate leading-tight">{invoice.vendor}</div>
-                    <div className="text-[9px] text-muted-foreground truncate">{invoice.id}</div>
+                    <div className="text-[9px] text-muted-foreground truncate">
+                        {invoice.id}
+                        {invoice.invoiceDate && (
+                            <span className="ml-1 text-[8.5px] opacity-70">· {new Date(invoice.invoiceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        )}
+                    </div>
+                    {invoice.paymentTerms && (
+                        <div className="text-[8.5px] text-muted-foreground/70 truncate">{invoice.paymentTerms}{invoice.dueDate ? ` · due ${new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}</div>
+                    )}
                 </div>
                 <div className="text-[11px] font-bold text-foreground tabular-nums shrink-0">
                     ${(invoice.amount / 1000).toFixed(1)}K
@@ -171,7 +179,7 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
             )}
             {invoice.status === 'pending' && invoice.isHealthTrust && !invoice.hasException && (
                 <div className="text-[9.5px] text-amber-700 dark:text-amber-400 mt-1 leading-tight">
-                    HealthTrust royalty · approve 3%
+                    HealthTrust GPO · 3% rebate pending
                 </div>
             )}
         </button>
@@ -183,7 +191,7 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
 // needing background knowledge.
 const FLAG_TOOLTIPS: Record<string, string> = {
     EDI: 'EDI · Electronic Data Interchange. Vendor sends the invoice straight into CORE — no manual entry, no OCR.',
-    HT: 'HealthTrust · Group Purchasing Organization for healthcare clients. MBI owes a 3% royalty on every invoice tied to a HealthTrust member (e.g. Riverside Medical, Lakeside).',
+    HT: 'HealthTrust · Group Purchasing Organization for healthcare clients. MBI reports a 3% rebate to HealthTrust on every bill tied to a GPO member project (e.g. Riverside Medical Center, Lakeside Health System).',
     Fix: 'Exception flagged · the line items, quantities or amounts don\'t match the matching purchase order. Needs a human decision.',
 }
 

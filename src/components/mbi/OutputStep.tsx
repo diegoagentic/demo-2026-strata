@@ -1,4 +1,4 @@
-/**
+﻿/**
  * COMPONENT: OutputStep
  * PURPOSE: Wizard step 6 — Output / Client Delivery. Shown after user approves
  *          the budget in Review step. Displays the generated artifacts (Excel
@@ -146,7 +146,7 @@ export default function OutputStep({ client, scenarioLabel, total, markup, preve
                         title: `Construction is underway at ${client.name}. Vendor invoices start flowing in.`,
                         body: (
                             <>
-                                HealthTrust contracts trigger royalty logic, non-EDI manufacturers need line-by-line reconciliation, and the AR aging report needs to stay live for leadership. That's where <strong className="text-foreground">Kathy Belleville</strong>, MBI's Controller, takes over.
+                                HealthTrust contracts trigger rebate logic, non-EDI manufacturers need line-by-line reconciliation, and the AR aging report needs to stay live for leadership. That's where <strong className="text-foreground">Kathy Belleville</strong>, MBI's Controller, takes over.
                             </>
                         ),
                     }}

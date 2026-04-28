@@ -2,7 +2,7 @@
 // MBI — Modern Business Interiors · Strata AI Demo Profile
 //
 // CLIENT: Modern Business Interiors (St. Charles, MO + Lenexa, KS · ~42 employees
-//         · ~$17M · 30+ manufacturer partners · Vertex Office dealer)
+//         · ~$17M · 30+ manufacturer partners · Allsteel dealer)
 // PREPARED BY: Avanto
 // DATE: April 2026 · revised Apr 27 2026
 //
@@ -13,7 +13,7 @@
 //
 // FLOW 1 — Accounting AI (Phase 2, Controller · Phase 1 Pilot) · 5 scenes / 5 beats
 //   m2.1: Morning queue — 3-column kanban (pending · in-progress · done)
-//   m2.2: HealthTrust exception — GPO royalty · approve / override / escalate
+//   m2.2: HealthTrust exception — GPO rebate · approve / override / escalate
 //   m2.3: Non-EDI reconciliation — PO vs invoice line-by-line diff
 //   m2.4: AR aging review — live status taxonomy + analytics (Apr 23 split)
 //   m2.5: Collection drafts + close — review/edit/send + handoff to Flow 2
@@ -32,8 +32,8 @@
 // asks about Spec Check (Q10 #1 priority) can still see it. The m4.x
 // step definitions live in git history if the tour needs them back.
 //
-// HERO SCENARIO: HealthTrust Riverside invoice · 3% GPO royalty · pre-flagged by AI
-// (the $18K Vertex Office worksurface story belonged to the Budget Builder flow that
+// HERO SCENARIO: Allsteel invoice · 3% GPO rebate · pre-flagged by AI
+// (the $18K Allsteel worksurface story belonged to the Budget Builder flow that
 // is no longer in this demo)
 //
 // Note on step IDs: m2.x / m3.x / m4.x are kept verbatim from the original
@@ -60,7 +60,7 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
         title: 'Morning queue — overnight processing complete',
-        description: 'The Controller opens Strata to find the overnight queue laid out in three columns: 5 bills auto-posted to CORE, 3 still being worked by reconciliation agents, and 4 that need her eyes — two clean exceptions plus two HealthTrust GPO royalty approvals.',
+        description: 'The Controller opens Strata to find the overnight queue laid out in three columns: 5 bills auto-posted to CORE, 3 still being worked by reconciliation agents, and 4 that need her eyes — two clean exceptions plus two HealthTrust GPO rebate approvals.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -68,8 +68,8 @@ export const MBI_STEPS: DemoStep[] = [
         id: 'm2.2',
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
-        title: 'HealthTrust exception — GPO royalty',
-        description: 'A hospital bill hits the HealthTrust GPO contract. Strata recognizes the membership, calculates the royalty line, and stages it as a separate GL entry. The Controller reviews the calculation, then approves to post, overrides with a reason, or escalates to the Director of Healthcare via Teams.',
+        title: 'HealthTrust exception — GPO rebate',
+        description: 'A hospital bill hits the HealthTrust GPO contract. Strata recognizes the membership, calculates the rebate line, and stages it as a separate GL entry. The Controller reviews the calculation, then approves to post, overrides with a reason, or escalates to the Director of Healthcare via Teams.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -150,7 +150,7 @@ export const MBI_STEPS: DemoStep[] = [
 
 export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.1': { mode: 'interactive', userAction: 'Review the overnight queue · pre-processed bills ready · exceptions flagged for human decision' },
-    'm2.2': { mode: 'interactive', userAction: 'Approve the GPO royalty · override with a reason · or escalate to the Director of Healthcare' },
+    'm2.2': { mode: 'interactive', userAction: 'Approve the GPO rebate · override with a reason · or escalate to the Director of Healthcare' },
     'm2.3': { mode: 'interactive', userAction: 'Reconcile the non-EDI bill line-by-line · accept or override each variance' },
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then close the morning' },
@@ -172,8 +172,8 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'm2.2': [
         'Detected HealthTrust GPO member on this bill',
-        'Computing GPO royalty against the bill subtotal',
-        'Staging royalty line as a separate GL entry',
+        'Computing GPO rebate against the bill subtotal',
+        'Staging rebate line as a separate GL entry',
         'Awaiting Controller approval before posting to GPO payable',
     ],
     'm2.3': [

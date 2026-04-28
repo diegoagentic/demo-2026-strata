@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useDemo } from '../../context/DemoContext';
 import { useTheme } from 'strata-design-system';
 import {
@@ -21,7 +21,7 @@ import {
 // MBIDesignPage stays navigable via tab so anyone can still see that scene
 // — but it's not in the guided tour so no sidebar marker.
 const HERO_STEP_IDS = new Set<string>([
-    'm2.2',  // MBI · HealthTrust GPO 3% royalty modal — the most interactive AP scene
+    'm2.2',  // MBI · HealthTrust GPO 3% rebate modal — the most interactive AP scene
 ]);
 import { useDemoProfile } from '../../context/useDemoProfile';
 

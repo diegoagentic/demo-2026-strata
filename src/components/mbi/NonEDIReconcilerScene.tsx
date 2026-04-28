@@ -110,7 +110,7 @@ export default function NonEDIReconcilerScene() {
 
             {/* Line-by-line diff table */}
             <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border bg-muted/20 dark:bg-zinc-900/40 grid grid-cols-[3rem_1fr_5rem_5rem_5rem_auto] gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider items-center">
+                <div className="px-4 py-3 border-b border-border bg-muted/20 dark:bg-zinc-900/40 grid grid-cols-[3rem_1fr_5rem_5rem_5rem_7rem] gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider items-center">
                     <div>Line</div>
                     <div>Item</div>
                     <div className="text-right">PO</div>
@@ -129,7 +129,7 @@ export default function NonEDIReconcilerScene() {
                             <div
                                 key={row.id}
                                 className={`
-                                    grid grid-cols-[3rem_1fr_5rem_5rem_5rem_auto] gap-3 px-4 py-2.5 items-center text-xs transition-colors border-l-4
+                                    grid grid-cols-[3rem_1fr_5rem_5rem_5rem_7rem] gap-3 px-4 py-2.5 items-center text-xs transition-colors border-l-4
                                     ${status === 'accepted' ? 'border-l-success/60 bg-success/5 dark:bg-success/10' : ''}
                                     ${status === 'overridden' ? 'border-l-info/60 bg-info/5 dark:bg-info/10' : ''}
                                     ${status === 'pending' && row.match !== 'ok' ? 'border-l-amber-500 bg-amber-50/40 dark:bg-amber-500/5' : ''}

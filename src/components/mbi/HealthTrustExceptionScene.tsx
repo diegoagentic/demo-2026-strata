@@ -1,8 +1,8 @@
 ﻿/**
  * COMPONENT: HealthTrustExceptionScene
- * PURPOSE: Flow 2 · Scene 2 — the HealthTrust GPO 3% royalty moment. Strata
+ * PURPOSE: Flow 2 · Scene 2 — the HealthTrust GPO 3% rebate moment. Strata
  *          detects a healthcare invoice against an MBI HealthTrust contract
- *          and auto-calculates the royalty line. Kathy approves, overrides,
+ *          and auto-calculates the rebate line. Kathy approves, overrides,
  *          or escalates to Lynda Alexander (Director of Healthcare).
  *
  *          Reuses the ValidationCard grammar: Expected vs Actual (with AI
@@ -27,22 +27,22 @@ type ExceptionStatus = 'pending' | 'approved' | 'overridden' | 'escalated'
 
 const OVERRIDE_CATEGORIES = [
     { id: 'contract-ambiguous', label: 'GPO contract clause ambiguous' },
-    { id: 'different-rate', label: 'Different royalty rate applies' },
-    { id: 'exempt-line', label: 'Line items are exempt from royalty' },
+    { id: 'different-rate', label: 'Different rebate rate applies' },
+    { id: 'exempt-line', label: 'Line items are exempt from rebate' },
     { id: 'other', label: 'Other (describe below)' },
 ]
 
 const ESCALATE_CATEGORIES = [
     { id: 'director-review', label: 'Needs the Healthcare Director\'s GPO expertise' },
-    { id: 'client-dispute', label: 'Client disputing royalty' },
+    { id: 'client-dispute', label: 'Client disputing rebate' },
     { id: 'audit-trigger', label: 'Potential audit trigger' },
     { id: 'other', label: 'Other (describe below)' },
 ]
 
 export default function HealthTrustExceptionScene() {
     const invoice = MBI_INVOICES.find(i => i.id === 'INV-0486')!  // Riverside HealthTrust hero
-    const royalty = Math.round(invoice.amount * 0.03)
-    const totalDue = invoice.amount + royalty
+    const rebate = Math.round(invoice.amount * 0.03)
+    const totalDue = invoice.amount + rebate
 
     const [status, setStatus] = useState<ExceptionStatus>('pending')
     const [meta, setMeta] = useState<{ reasonCategory?: string; notes?: string; notifyAI?: boolean } | null>(null)
@@ -57,14 +57,14 @@ export default function HealthTrustExceptionScene() {
     const handleApprove = () => {
         setStatus('approved')
         setMeta(null)
-        pushToast(`Royalty approved · $${royalty.toLocaleString()} posted to voucher in CORE`)
+        pushToast(`Rebate approved · $${rebate.toLocaleString()} posted to voucher in CORE`)
     }
 
     const handleOverrideSubmit = (payload: { reasonCategory: string; notes: string }) => {
         setStatus('overridden')
         setMeta({ ...payload, notifyAI: false })
         setModalKind(null)
-        pushToast(`Royalty overridden · reason logged to audit trail`)
+        pushToast(`Rebate overridden · reason logged to audit trail`)
     }
 
     const handleEscalateSubmit = (payload: { reasonCategory: string; notes: string; notifyAI: boolean }) => {
@@ -87,7 +87,7 @@ export default function HealthTrustExceptionScene() {
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">HealthTrust GPO contract triggered</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Riverside is a HealthTrust GPO member. Per MBI's master agreement, a 3% royalty line auto-appends to every healthcare bill and posts to the GPO payable account.
+                        <strong className="text-foreground">{invoice.clientName ?? 'Riverside Medical Center'}</strong> is a HealthTrust GPO member. Per MBI's master agreement, a 3% rebate line auto-appends to every healthcare bill and posts to the GPO payable account.
                     </div>
                 </div>
             </div>
@@ -120,15 +120,15 @@ export default function HealthTrustExceptionScene() {
                             <span className="text-[10px] text-muted-foreground">AI 97% · auto-calculated</span>
                         </div>
                         <h3 className="text-lg font-bold text-foreground leading-tight mt-1">
-                            3% royalty <span className="text-muted-foreground font-normal text-sm">on {invoice.vendor}</span>
+                            3% GPO rebate <span className="text-muted-foreground font-normal text-sm">· {invoice.vendor} bill</span>
                         </h3>
                         <div className="text-[11px] text-muted-foreground">
-                            <span className="font-mono text-foreground">{invoice.id}</span> · {invoice.poNumber} · contract: HealthTrust Master (signed 2024)
+                            Project: <strong className="text-foreground">{invoice.clientName ?? 'Riverside Medical Center'}</strong> · <span className="font-mono">{invoice.id}</span> · {invoice.poNumber}
                         </div>
                     </div>
                     <div className="text-right shrink-0">
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Royalty amount</div>
-                        <div className="text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">+${royalty.toLocaleString()}</div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Rebate amount</div>
+                        <div className="text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">+${rebate.toLocaleString()}</div>
                     </div>
                 </div>
 
@@ -145,9 +145,9 @@ export default function HealthTrustExceptionScene() {
                         <div className="px-3 py-2 flex justify-between items-center bg-amber-50/40 dark:bg-amber-500/5">
                             <span className="text-amber-700 dark:text-amber-400 font-semibold inline-flex items-center gap-1.5">
                                 <Sparkles className="h-3 w-3" />
-                                3% GPO royalty (auto-applied)
+                                3% GPO rebate (auto-applied)
                             </span>
-                            <span className="text-amber-700 dark:text-amber-400 font-bold tabular-nums">+${royalty.toLocaleString()}</span>
+                            <span className="text-amber-700 dark:text-amber-400 font-bold tabular-nums">+${rebate.toLocaleString()}</span>
                         </div>
                         <div className="px-3 py-2 flex justify-between bg-muted/20 dark:bg-zinc-900/40">
                             <span className="font-bold text-foreground">Total due</span>
@@ -190,8 +190,8 @@ export default function HealthTrustExceptionScene() {
                                 {status === 'escalated' && <Flag className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />}
                                 <div className="min-w-0">
                                     <div className="text-foreground font-semibold">
-                                        {status === 'approved' && <>Royalty posted · <span className="text-success tabular-nums">${royalty.toLocaleString()}</span> to GPO payable</>}
-                                        {status === 'overridden' && <>Royalty overridden · audit trail logged</>}
+                                        {status === 'approved' && <>Rebate posted · <span className="text-success tabular-nums">${rebate.toLocaleString()}</span> to GPO payable</>}
+                                        {status === 'overridden' && <>Rebate overridden · audit trail logged</>}
                                         {status === 'escalated' && <>Escalated to Lynda Alexander · awaiting GPO review</>}
                                     </div>
                                     {meta?.reasonCategory && (
@@ -244,7 +244,7 @@ export default function HealthTrustExceptionScene() {
                     </div>
                     <div className="text-xs min-w-0">
                         <div className="font-bold text-foreground">HealthTrust Master Agreement</div>
-                        <div className="text-[10px] text-muted-foreground">Signed Feb 2024 · 3% royalty on all GPO member orders</div>
+                        <div className="text-[10px] text-muted-foreground">Signed Feb 2024 · 3% rebate on all GPO member orders</div>
                         <div className="text-[10px] text-muted-foreground mt-0.5">Covers Riverside, Lakeside, 14 other hospitals</div>
                     </div>
                 </div>
@@ -257,24 +257,24 @@ export default function HealthTrustExceptionScene() {
                 onSubmit={payload => handleOverrideSubmit({ reasonCategory: payload.categoryId, notes: payload.notes })}
                 tone="info"
                 icon={<Pencil className="h-5 w-5" />}
-                title="Override the 3% royalty"
+                title="Override the 3% rebate"
                 subtitle={`${invoice.vendor} · ${invoice.id}`}
                 contextBanner={{
                     tone: 'warning',
                     icon: <AlertTriangle className="h-4 w-4" />,
-                    title: 'Royalty won\'t be applied to this bill.',
+                    title: 'Rebate won\'t be applied to this bill.',
                     body: (
                         <>
-                            The <strong className="tabular-nums">${royalty.toLocaleString()}</strong> stays off the GPO payable. Audit trail captures your reason so finance can trace it later.
+                            The <strong className="tabular-nums">${rebate.toLocaleString()}</strong> stays off the GPO payable. Audit trail captures your reason so finance can trace it later.
                         </>
                     ),
                 }}
                 categories={OVERRIDE_CATEGORIES}
                 defaultCategoryId="contract-ambiguous"
-                categoryPrompt="Why override the royalty?"
-                notesPlaceholder="e.g. Per HealthTrust amendment dated 03/04, this line item is exempt from royalty..."
+                categoryPrompt="Why override the rebate?"
+                notesPlaceholder="e.g. Per HealthTrust amendment dated 03/04, this line item is exempt from rebate..."
                 notesRequiredForCategoryId="other"
-                confirmLabel="Skip royalty · log override"
+                confirmLabel="Skip rebate · log override"
             />
             <MBIReasonModal
                 isOpen={modalKind === 'escalate'}
@@ -292,7 +292,7 @@ export default function HealthTrustExceptionScene() {
                     tone: 'info',
                     icon: <UserCheck className="h-4 w-4" />,
                     title: 'The Healthcare Director will see this in Teams within the hour.',
-                    body: 'Posts to #healthcare-gpo with bill context + your reason. The royalty stays on hold until they respond.',
+                    body: 'Posts to #healthcare-gpo with bill context + your reason. The rebate stays on hold until they respond.',
                 }}
                 categories={ESCALATE_CATEGORIES}
                 defaultCategoryId="director-review"

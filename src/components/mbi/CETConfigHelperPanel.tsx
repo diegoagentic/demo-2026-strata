@@ -4,7 +4,7 @@
  *          today's Teams-channel-pinging that interrupts senior designers
  *          (Lisa, Amy) every time someone needs config help.
  *
- *          Mock conversation: junior designer asks Strata about Vertex Office
+ *          Mock conversation: junior designer asks Strata about Allsteel
  *          panel + worksurface compatibility (the same class of issue caught
  *          in the $18K Budget Builder validation).
  *

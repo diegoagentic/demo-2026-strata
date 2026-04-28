@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export type Vertical = 'corporate' | 'healthcare' | 'education' | 'government';
-export type ContractType = 'HNI' | 'Vertex Office' | 'HealthTrust' | 'Omnia' | 'none';
+export type ContractType = 'HNI' | 'Allsteel' | 'HealthTrust' | 'Omnia' | 'none';
 export type BudgetPath = 'design-assisted' | 'quick-budget';
 export type BudgetStatus = 'intake' | 'parsing' | 'validation' | 'review' | 'approved';
 export type ScenarioTier = 'good' | 'better' | 'best';
@@ -40,7 +40,7 @@ export interface Manufacturer {
     id: string;
     name: string;
     isEDI: boolean;
-    compassValidated?: boolean;   // HNI/Vertex Office/Northgate/HON require Compass
+    compassValidated?: boolean;   // HNI/Allsteel/Gunlocke/HON require Compass
     color?: string;               // brand color for UI
 }
 
@@ -150,12 +150,16 @@ export type InvoiceStatus = 'pending' | 'in-progress' | 'done';
 export interface Invoice {
     id: string;
     vendor: string;
+    clientName?: string;         // end client (hospital, etc.) for GPO bills
     poNumber: string;
     amount: number;
+    invoiceDate?: string;        // date on the vendor's bill (ISO)
+    paymentTerms?: string;       // e.g. 'Net 30', '2/10 Net 30'
+    dueDate?: string;            // ISO date, calculated from invoiceDate + terms
     received: string;
     isEDI: boolean;
     isHealthTrust?: boolean;
-    has3PctRoyalty?: boolean;
+    has3PctRebate?: boolean;
     hasException?: boolean;
     exceptionReason?: string;
     ocrConfidence: number;

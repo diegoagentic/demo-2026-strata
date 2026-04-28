@@ -61,8 +61,8 @@ export const MBI_PAIN_POINTS: PainPoint[] = [
         severity: 'high',
         resolvedInPhase: 2,
         area: 'Healthcare · Lynda + Kathy',
-        before: 'Manual penny-match + 3% royalty calc per Riverside/Lakeside bill',
-        after: 'Auto-flagged with 3% royalty pre-calculated; review/approve/escalate',
+        before: 'Manual penny-match + 3% rebate calc per Riverside/Lakeside bill',
+        after: 'Auto-flagged with 3% rebate pre-calculated; review/approve/escalate',
     },
     {
         id: 'ar-collection-manual',

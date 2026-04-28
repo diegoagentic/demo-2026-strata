@@ -10,7 +10,7 @@ export const MBI_TENANT: Tenant = {
     revenue: '~$17M',
     founded: 1987,
     verticals: ['corporate', 'healthcare', 'education', 'government'],
-    primaryDealer: 'Vertex Office',
+    primaryDealer: 'Allsteel',
     manufacturerCount: 30,
     aiReadiness: {
         current: 2.35,

@@ -14,10 +14,9 @@
 
 import { useState } from 'react'
 import {
-    Send, CheckCircle2, FileText, Clock, Package, Truck, Palette,
-    Receipt, Calculator, Zap, Sparkles,
+    Send, CheckCircle2, FileText, Clock, Palette,
+    Receipt, Zap, Sparkles,
 } from 'lucide-react'
-import OrderExecutionPanel from './OrderExecutionPanel'
 import FlowHandoff from './FlowHandoff'
 
 export default function QuoteSendProposalScene() {
@@ -81,9 +80,6 @@ export default function QuoteSendProposalScene() {
                 </div>
             )}
 
-            {/* Order execution — existing component, shows EDI + non-EDI + Compass */}
-            <OrderExecutionPanel />
-
             {/* Post-send FlowHandoff to Flow 4 */}
             {sent && (
                 <FlowHandoff
@@ -99,8 +95,7 @@ export default function QuoteSendProposalScene() {
                     timeline={[
                         { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'Budget → PC queue', caption: 'signed last week', flow: 'Flow 2 · Quotes AI' },
                         { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'SIF → CORE auto-import', caption: '87 seconds, 0 keystrokes', flow: '—' },
-                        { status: 'done', icon: <Send className="h-3.5 w-3.5" />, label: 'Proposal sent', caption: 'just now', flow: '—' },
-                        { status: 'next', icon: <Truck className="h-3.5 w-3.5" />, label: 'Orders route to mfrs', caption: '5 EDI · 2 non-EDI', flow: '—' },
+                        { status: 'done', icon: <Send className="h-3.5 w-3.5" />, label: 'Proposal delivered to client', caption: 'just now', flow: '—' },
                         { status: 'future', icon: <Palette className="h-3.5 w-3.5" />, label: 'Phase 4 · Design AI', caption: 'available via the Design AI tab', flow: 'Phase 4 directional', highlight: false },
                     ]}
                     narrative={{

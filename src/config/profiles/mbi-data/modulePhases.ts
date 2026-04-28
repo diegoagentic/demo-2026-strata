@@ -61,7 +61,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         title: 'AR + Exception Agents',
         summary: 'Healthcare royalties, aging alerts, AI-drafted collections.',
         deliverables: [
-            'HealthTrust 3% royalty auto-flag + escalation',
+            'HealthTrust 3% rebate auto-flag + escalation',
             'AR aging alerts + status taxonomy dashboard',
             'AI-drafted collection emails (review → send)',
             'Installer bill vs PO via Teams workflow',
@@ -159,7 +159,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
             'SIF/BOM → CORE auto-import (largest manual step eliminated)',
             'Freight & tariff agent (EDI + non-EDI flagging)',
             'AI proposal draft from SIF + customer + shipping context',
-            'EDI transmission for HNI/Vertex Office/Northgate/HON/Kimball',
+            'EDI transmission for HNI/Allsteel/Gunlocke/HON/Kimball',
         ],
         estimatedDuration: '6-7 weeks',
     },
@@ -182,7 +182,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         title: 'Reconciliation + Closure',
         summary: 'Compass for all 4 manufacturers + complete proposal automation.',
         deliverables: [
-            'Compass reconciliation (HNI · Vertex Office · Northgate · HON)',
+            'Compass reconciliation (HNI · Allsteel · Gunlocke · HON)',
             'Non-EDI PO agent (email generation for non-EDI vendors)',
             'Teams spec check bot (M365-native)',
             'PC role shift from builder → reviewer',

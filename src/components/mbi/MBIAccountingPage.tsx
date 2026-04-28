@@ -1,9 +1,9 @@
-/**
+﻿/**
  * COMPONENT: MBIAccountingPage
  * PURPOSE: Flow 1 — Accounting AI, packaged in MBIWizardShell with 5 scenes
  *          that follow Kathy Belleville's morning end-to-end:
  *            1. Morning queue (AP)
- *            2. HealthTrust exception (AP · GPO royalty)
+ *            2. HealthTrust exception (AP · GPO rebate)
  *            3. Non-EDI reconciliation (AP · line-by-line)
  *            4. AR aging review (AR · live board + analytics)
  *            5. Collection drafts + close (AR · review · send · close)
@@ -66,8 +66,8 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
 // First mention of each acronym/jargon word includes a plain-language
 // gloss so a non-finance audience can follow.
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'AP starts here (AP = Accounts Payable, the bills MBI owes to vendors). Strata pre-processed 12 bills overnight · you review only the exceptions.', nextLabel: 'Review healthcare royalty' },
-    1: { hint: 'Approve the auto-calculated 3% royalty (paid to HealthTrust, the healthcare group purchasing organization) · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile paper bills' },
+    0: { hint: 'AP starts here (AP = Accounts Payable, the bills MBI owes to vendors). Strata pre-processed 12 bills overnight · you review only the exceptions.', nextLabel: 'Review healthcare rebate' },
+    1: { hint: 'Approve the auto-calculated 3% rebate (paid to HealthTrust, the healthcare group purchasing organization) · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile paper bills' },
     2: { hint: 'Last AP step · line-by-line diff vs PO for non-EDI vendors (paper / PDF bills, no electronic feed) · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to receivables' },
     3: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
     4: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then close the morning.', nextLabel: 'Close the morning' },
@@ -147,7 +147,7 @@ function OverviewStub() {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard icon={<Receipt className="h-4 w-4" />} value="12" label="Bills processed overnight" accent="text-foreground" />
-            <StatCard icon={<Heart className="h-4 w-4" />} value="2" label="HealthTrust royalty flagged" accent="text-zinc-900 dark:text-primary" />
+            <StatCard icon={<Heart className="h-4 w-4" />} value="2" label="HealthTrust rebate flagged" accent="text-zinc-900 dark:text-primary" />
             <StatCard icon={<GitCompare className="h-4 w-4" />} value="2" label="Non-EDI exceptions" accent="text-amber-600 dark:text-amber-400" />
             <StatCard icon={<DollarSign className="h-4 w-4" />} value="$240K" label="AR live · forecast refreshed" accent="text-success" />
         </div>

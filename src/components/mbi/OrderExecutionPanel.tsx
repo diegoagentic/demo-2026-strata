@@ -1,10 +1,10 @@
 ﻿/**
  * COMPONENT: OrderExecutionPanel
  * PURPOSE: Phase 4.C output — EDI transmission preview for the 5 EDI-enabled
- *          MBI manufacturers (HNI, Vertex Office, Northgate, HON, Kimball) plus
+ *          MBI manufacturers (HNI, Allsteel, Gunlocke, HON, Kimball) plus
  *          non-EDI PO email generation, plus Compass reconciliation summary
  *          for the 4 manufacturers that require Compass validation
- *          (HNI, Vertex Office, Northgate, HON).
+ *          (HNI, Allsteel, Gunlocke, HON).
  *
  * PROPS: none — uses MBI_MANUFACTURERS
  *
@@ -93,7 +93,7 @@ export default function OrderExecutionPanel() {
                         <div>
                             <div className="text-xs font-bold text-foreground">Compass reconciliation · all 4 manufacturers</div>
                             <div className="text-[10px] text-muted-foreground">
-                                Confirmed: HNI / Vertex Office / Northgate / HON all require Compass validation. CORE EDI is downstream — not a substitute.
+                                Confirmed: HNI / Allsteel / Gunlocke / HON all require Compass validation. CORE EDI is downstream — not a substitute.
                             </div>
                         </div>
                     </div>
