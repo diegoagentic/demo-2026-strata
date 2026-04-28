@@ -46,7 +46,7 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                             <div>
                                 <div className="text-xs font-bold text-foreground">{invoice.id} · {invoice.vendor}</div>
                                 <div className="text-[10px] text-muted-foreground">
-                                    Received {received.toLocaleDateString()} · {received.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    Received {received.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} · {received.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                             </div>
                         </div>
@@ -101,13 +101,13 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                     <FieldRow icon={<FileText className="h-3 w-3" />} label="PO Number" value={invoice.poNumber} confidence={invoice.ocrConfidence} />
                     <FieldRow icon={<DollarSign className="h-3 w-3" />} label="Amount" value={`$${invoice.amount.toLocaleString()}`} confidence={invoice.ocrConfidence} />
                     {invoice.invoiceDate && (
-                        <FieldRow icon={<Calendar className="h-3 w-3" />} label="Bill Date" value={new Date(invoice.invoiceDate).toLocaleDateString()} confidence={invoice.ocrConfidence} />
+                        <FieldRow icon={<Calendar className="h-3 w-3" />} label="Bill Date" value={new Date(invoice.invoiceDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} confidence={invoice.ocrConfidence} />
                     )}
                     {invoice.paymentTerms && (
                         <FieldRow icon={<CreditCard className="h-3 w-3" />} label="Terms" value={invoice.paymentTerms} confidence={invoice.ocrConfidence} />
                     )}
                     {invoice.dueDate && (
-                        <FieldRow icon={<Clock className="h-3 w-3" />} label="Due Date" value={new Date(invoice.dueDate).toLocaleDateString()} confidence={100} highlight={new Date(invoice.dueDate) < new Date(Date.now() + 7 * 86400000)} />
+                        <FieldRow icon={<Clock className="h-3 w-3" />} label="Due Date" value={new Date(invoice.dueDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} confidence={100} highlight={new Date(invoice.dueDate) < new Date(Date.now() + 7 * 86400000)} />
                     )}
                 </div>
             </div>
@@ -193,11 +193,11 @@ function InvoiceMockup({ invoice, rebate }: { invoice: Invoice; rebate: number }
             <div className="flex items-center justify-between border-b border-zinc-300 dark:border-zinc-700 pb-1">
                 <div>
                     <div className="font-bold text-[10px]">{invoice.vendor.toUpperCase()}</div>
-                    <div className="text-zinc-400">Invoice</div>
+                    <div className="text-zinc-400">Bill</div>
                 </div>
                 <div className="text-right">
                     <div className="font-bold text-[10px]">{invoice.id}</div>
-                    <div className="text-zinc-400">{new Date(invoice.received).toLocaleDateString()}</div>
+                    <div className="text-zinc-400">{new Date(invoice.received).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
                 </div>
             </div>
             <div className="mt-2 space-y-0.5">
