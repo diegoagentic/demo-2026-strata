@@ -81,6 +81,14 @@ export default function HealthTrustExceptionScene() {
 
     return (
         <div className="space-y-4">
+            {/* Breadcrumb — context from morning queue */}
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
+                <FileText className="h-3 w-3 shrink-0" />
+                <span>Morning Bill Queue</span>
+                <span className="text-border">›</span>
+                <span className="font-bold text-foreground">{invoice.id} · {invoice.vendor} · HealthTrust rebate review</span>
+            </div>
+
             {/* Intro strip — what Strata detected */}
             <div className="bg-amber-50/70 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Heart className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />

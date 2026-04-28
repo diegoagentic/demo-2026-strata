@@ -18,9 +18,46 @@ import {
 } from 'lucide-react'
 import QuoteReadinessGate from './QuoteReadinessGate'
 
+const PC_QUEUE = [
+    { id: 'BDG-2026-001', client: 'Mosaic Creative', project: 'Studio Renovation · Floor 3', amount: '$84.2K', status: 'done', statusLabel: 'Proposal sent' },
+    { id: 'BDG-2026-002', client: 'Enterprise Holdings', project: 'New HQ Floor 12', amount: '$372.5K', status: 'active', statusLabel: 'In progress' },
+    { id: 'BDG-2026-003', client: 'Gateway Financial', project: 'Executive Suite Refresh', amount: '$127.0K', status: 'queued', statusLabel: 'Queued' },
+    { id: 'BDG-2026-004', client: 'Nexus Health', project: 'Lobby + Reception', amount: '$58.8K', status: 'queued', statusLabel: 'Queued' },
+]
+
 export default function QuoteIncomingBudget() {
     return (
         <div className="space-y-4">
+            {/* PC morning queue — list first, then drill into the active project */}
+            <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center justify-between">
+                    <div>
+                        <div className="text-xs font-bold text-foreground">PC quote queue · 4 projects</div>
+                        <div className="text-[10px] text-muted-foreground">Signed budgets ready for CORE proposal conversion</div>
+                    </div>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-zinc-900 dark:text-primary uppercase tracking-wider">Marcia's view</span>
+                </div>
+                <div className="divide-y divide-border">
+                    {PC_QUEUE.map(item => (
+                        <div
+                            key={item.id}
+                            className={`flex items-center gap-3 px-4 py-2.5 text-xs ${item.status === 'active' ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
+                        >
+                            <div className="min-w-0 flex-1">
+                                <div className={`font-bold truncate ${item.status === 'active' ? 'text-foreground' : 'text-muted-foreground'}`}>{item.client}</div>
+                                <div className="text-[10px] text-muted-foreground truncate">{item.project} · {item.id}</div>
+                            </div>
+                            <div className={`tabular-nums font-bold shrink-0 ${item.status === 'active' ? 'text-foreground' : 'text-muted-foreground'}`}>{item.amount}</div>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                item.status === 'active' ? 'bg-primary/15 text-zinc-900 dark:text-primary' :
+                                item.status === 'done' ? 'bg-success/15 text-success' :
+                                'bg-muted text-muted-foreground'
+                            }`}>{item.statusLabel}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {/* Handoff card — continuity with Flow 1 output */}
             <div className="bg-gradient-to-br from-success/5 to-primary/5 dark:from-success/10 dark:to-primary/10 border border-success/30 rounded-2xl p-5">
                 <div className="flex items-start gap-3 mb-4">
