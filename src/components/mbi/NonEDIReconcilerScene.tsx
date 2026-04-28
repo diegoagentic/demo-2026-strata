@@ -92,7 +92,7 @@ export default function NonEDIReconcilerScene() {
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">Non-EDI reconciliation · {invoice.vendor}</div>
                     <div className="text-muted-foreground mt-0.5">
-                        {invoice.vendor} doesn't ship EDI — Strata OCR'd the paper invoice and matched it line-by-line to <span className="font-mono text-foreground">{invoice.poNumber}</span>. <strong className="text-foreground">{flaggedRows.length} lines</strong> differ. Approve what matches your delivery, override what doesn't.
+                        {invoice.vendor} doesn't ship EDI — Strata OCR'd the paper bill and matched it line-by-line to <span className="font-mono text-foreground">{invoice.poNumber}</span>. <strong className="text-foreground">{flaggedRows.length} lines</strong> differ. Approve what matches your delivery, override what doesn't.
                     </div>
                 </div>
             </div>
@@ -100,7 +100,7 @@ export default function NonEDIReconcilerScene() {
             {/* Summary stats */}
             <div className="grid grid-cols-3 gap-3">
                 <SummaryTile label="PO total" value={`$${totalPO.toLocaleString()}`} accent="text-foreground" />
-                <SummaryTile label="Invoice total" value={`$${totalInv.toLocaleString()}`} accent="text-foreground" />
+                <SummaryTile label="Bill total" value={`$${totalInv.toLocaleString()}`} accent="text-foreground" />
                 <SummaryTile
                     label="Delta"
                     value={`${diff >= 0 ? '+' : '−'}$${Math.abs(diff).toLocaleString()}`}
@@ -114,7 +114,7 @@ export default function NonEDIReconcilerScene() {
                     <div>Line</div>
                     <div>Item</div>
                     <div className="text-right">PO</div>
-                    <div className="text-right">Invoice</div>
+                    <div className="text-right">Bill</div>
                     <div className="text-right">Delta</div>
                     <div className="text-right">Action</div>
                 </div>
@@ -201,7 +201,7 @@ export default function NonEDIReconcilerScene() {
                     <div className="text-xs flex-1">
                         <div className="font-bold text-foreground">Reconciliation complete</div>
                         <div className="text-muted-foreground">
-                            {invoice.vendor} invoice posted · variance logged in audit trail · GL updated.
+                            {invoice.vendor} bill posted · variance logged in audit trail · GL updated.
                         </div>
                     </div>
                 </div>
@@ -244,7 +244,7 @@ export default function NonEDIReconcilerScene() {
                         title: `${modalRow.match === 'qty' ? 'Quantity' : 'Price'} differs from PO.`,
                         body: (
                             <>
-                                PO says <span className="font-mono">{modalRow.poQty} × ${modalRow.poUnitPrice}</span>, invoice says <span className="font-mono">{modalRow.invQty} × ${modalRow.invUnitPrice}</span>. Your reason is logged to the vendor's audit trail and to Strata's matcher.
+                                PO says <span className="font-mono">{modalRow.poQty} × ${modalRow.poUnitPrice}</span>, bill says <span className="font-mono">{modalRow.invQty} × ${modalRow.invUnitPrice}</span>. Your reason is logged to the vendor's audit trail and to Strata's matcher.
                             </>
                         ),
                     }}

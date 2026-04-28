@@ -125,16 +125,16 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
                 <Inbox className="h-4 w-4 text-foreground" />
                 <div className="flex-1 min-w-0">
                     <div className="text-xs font-bold text-foreground">Vendor inbox · ap@mbi.example</div>
-                    <div className="text-[10px] text-muted-foreground">Strata watches this inbox · invoices land in the queue automatically</div>
+                    <div className="text-[10px] text-muted-foreground">Strata watches this inbox · bills land in the queue automatically</div>
                 </div>
                 <span className="text-[10px] text-muted-foreground">3 unread · 12 today</span>
             </div>
 
             {/* Faux inbox items */}
             <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40">
-                <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Invoice INV-0482 · PO-2026-0047" attached time="6:14 AM" muted />
-                <FauxEmailRow vendor="HealthTrust Mercy · ap@mercyhealth.example" subject="Royalty + invoice INV-0486" attached time="8:00 AM" muted />
-                <FauxEmailRow vendor="The HON Company · billing@hon.example" subject="Invoice INV-0493 · service line" attached time="9:55 AM" muted />
+                <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted />
+                <FauxEmailRow vendor="HealthTrust Mercy · ap@mercyhealth.example" subject="Royalty + bill INV-0486" attached time="8:00 AM" muted />
+                <FauxEmailRow vendor="The HON Company · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted />
             </div>
 
             {/* Dropzone */}
@@ -157,7 +157,7 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
                             <Mail className="h-5 w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-foreground">Drop a vendor invoice here</div>
+                            <div className="text-sm font-bold text-foreground">Drop a vendor bill here</div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">
                                 PDF, image, .eml — Strata processes it like any other inbound email. No file at hand? Simulate one →
                             </div>

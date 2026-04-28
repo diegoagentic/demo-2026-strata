@@ -36,12 +36,12 @@ export const MBI_PAIN_POINTS: PainPoint[] = [
     // ═══ ACCOUNTING AI ═══════════════════════════════════════════════════════
     {
         id: 'ap-invoice-manual',
-        title: 'AP Invoice — Manual upload to CORE',
+        title: 'AP Bill — Manual upload to CORE',
         module: 'accounting',
         severity: 'high',
         resolvedInPhase: 2,
         area: 'Accounting · Kathy',
-        before: '15-30 min per invoice, manual for every PDF',
+        before: '15-30 min per bill, manual for every PDF',
         after: '<5 min · AI extracts fields and pre-fills CORE voucher',
     },
     {
@@ -51,7 +51,7 @@ export const MBI_PAIN_POINTS: PainPoint[] = [
         severity: 'high',
         resolvedInPhase: 2,
         area: 'Accounting · Kathy',
-        before: 'Line-by-line manual comparison PO vs invoice',
+        before: 'Line-by-line manual comparison PO vs bill',
         after: 'Exception-only review · clean docs auto-reconciled',
     },
     {
@@ -61,7 +61,7 @@ export const MBI_PAIN_POINTS: PainPoint[] = [
         severity: 'high',
         resolvedInPhase: 2,
         area: 'Healthcare · Lynda + Kathy',
-        before: 'Manual penny-match + 3% royalty calc per Mercy/BJC invoice',
+        before: 'Manual penny-match + 3% royalty calc per Mercy/BJC bill',
         after: 'Auto-flagged with 3% royalty pre-calculated; review/approve/escalate',
     },
     {

@@ -60,7 +60,7 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
         title: 'Morning queue — overnight processing complete',
-        description: 'The Controller opens Strata to find the overnight queue laid out in three columns: 5 invoices auto-posted to CORE, 3 still being worked by reconciliation agents, and 4 that need her eyes — two clean exceptions plus two HealthTrust GPO royalty approvals.',
+        description: 'The Controller opens Strata to find the overnight queue laid out in three columns: 5 bills auto-posted to CORE, 3 still being worked by reconciliation agents, and 4 that need her eyes — two clean exceptions plus two HealthTrust GPO royalty approvals.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -69,7 +69,7 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
         title: 'HealthTrust exception — GPO royalty',
-        description: 'A hospital invoice hits the HealthTrust GPO contract. Strata recognizes the membership, calculates the royalty line, and stages it as a separate GL entry. The Controller reviews the calculation, then approves to post, overrides with a reason, or escalates to the Director of Healthcare via Teams.',
+        description: 'A hospital bill hits the HealthTrust GPO contract. Strata recognizes the membership, calculates the royalty line, and stages it as a separate GL entry. The Controller reviews the calculation, then approves to post, overrides with a reason, or escalates to the Director of Healthcare via Teams.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -78,7 +78,7 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
         title: 'Non-EDI reconciliation — line-by-line',
-        description: 'A non-EDI vendor sends a paper invoice. Strata OCRs it and compares it line-by-line to the matching PO. The Controller sees the flagged variances surfaced inline — a short-shipped item and a finish upcharge — and resolves each with an accept or an override and reason. Every override trains the vendor-specific matcher.',
+        description: 'A non-EDI vendor sends a paper bill. Strata OCRs it and compares it line-by-line to the matching PO. The Controller sees the flagged variances surfaced inline — a short-shipped item and a finish upcharge — and resolves each with an accept or an override and reason. Every override trains the vendor-specific matcher.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -149,9 +149,9 @@ export const MBI_STEPS: DemoStep[] = [
 // ─── STEP BEHAVIOR ───────────────────────────────────────────────────────────
 
 export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
-    'm2.1': { mode: 'interactive', userAction: 'Review the overnight queue · pre-processed invoices ready · exceptions flagged for human decision' },
+    'm2.1': { mode: 'interactive', userAction: 'Review the overnight queue · pre-processed bills ready · exceptions flagged for human decision' },
     'm2.2': { mode: 'interactive', userAction: 'Approve the GPO royalty · override with a reason · or escalate to the Director of Healthcare' },
-    'm2.3': { mode: 'interactive', userAction: 'Reconcile the non-EDI invoice line-by-line · accept or override each variance' },
+    'm2.3': { mode: 'interactive', userAction: 'Reconcile the non-EDI bill line-by-line · accept or override each variance' },
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then close the morning' },
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
@@ -164,21 +164,21 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
 
 export const MBI_STEP_MESSAGES: Record<string, string[]> = {
     'm2.1': [
-        'Fetching overnight invoice queue',
-        'Document AI extracting fields from each vendor invoice',
-        'Matching invoice lines to open POs in CORE',
+        'Fetching overnight bill queue',
+        'Document AI extracting fields from each vendor bill',
+        'Matching bill lines to open POs in CORE',
         'Applying HealthTrust exception logic',
-        'Clean invoices auto-posted · agents reconciling non-EDI · exceptions surfaced',
+        'Clean bills auto-posted · agents reconciling non-EDI · exceptions surfaced',
     ],
     'm2.2': [
-        'Detected HealthTrust GPO member on this invoice',
-        'Computing GPO royalty against the invoice subtotal',
+        'Detected HealthTrust GPO member on this bill',
+        'Computing GPO royalty against the bill subtotal',
         'Staging royalty line as a separate GL entry',
         'Awaiting Controller approval before posting to GPO payable',
     ],
     'm2.3': [
         'Vendor flagged as non-EDI · falling back to OCR',
-        'Matching invoice to its source PO line-by-line',
+        'Matching bill to its source PO line-by-line',
         'Surfacing variances inline · short-shipped item + finish upcharge',
         'Training the vendor-specific matcher from each decision',
     ],

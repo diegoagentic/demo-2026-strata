@@ -75,9 +75,9 @@ export default function AccountingMorningQueue() {
                 <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-foreground">Strata worked overnight</div>
                     <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                        Read <strong className="text-foreground">{total} vendor invoices</strong> ·
+                        Read <strong className="text-foreground">{total} vendor bills</strong> ·
                         extracted fields with Document AI · matched to open POs in CORE ·
-                        applied HealthTrust 3% royalty logic on <strong className="text-foreground">{healthTrust} GPO invoices</strong>.
+                        applied HealthTrust 3% royalty logic on <strong className="text-foreground">{healthTrust} GPO bills</strong>.
                         The queue below shows what's done, what agents are still working on, and what only you can decide.
                     </div>
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
@@ -120,7 +120,7 @@ export default function AccountingMorningQueue() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    First up: the HealthTrust Mercy invoice · Strata auto-calculated the <strong>3% royalty</strong> per MBI's GPO contract — needs your approval to post.
+                    First up: the HealthTrust Mercy bill · Strata auto-calculated the <strong>3% royalty</strong> per MBI's GPO contract — needs your approval to post.
                 </span>
             </div>
         </div>

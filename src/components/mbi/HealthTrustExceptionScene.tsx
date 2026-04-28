@@ -87,7 +87,7 @@ export default function HealthTrustExceptionScene() {
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">HealthTrust GPO contract triggered</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Mercy is a HealthTrust GPO member. Per MBI's master agreement, a 3% royalty line auto-appends to every healthcare invoice and posts to the GPO payable account.
+                        Mercy is a HealthTrust GPO member. Per MBI's master agreement, a 3% royalty line auto-appends to every healthcare bill and posts to the GPO payable account.
                     </div>
                 </div>
             </div>
@@ -139,7 +139,7 @@ export default function HealthTrustExceptionScene() {
                     </div>
                     <div className="divide-y divide-border text-xs">
                         <div className="px-3 py-2 flex justify-between">
-                            <span className="text-muted-foreground">Invoice subtotal</span>
+                            <span className="text-muted-foreground">Bill subtotal</span>
                             <span className="text-foreground tabular-nums">${invoice.amount.toLocaleString()}</span>
                         </div>
                         <div className="px-3 py-2 flex justify-between items-center bg-amber-50/40 dark:bg-amber-500/5">
@@ -262,7 +262,7 @@ export default function HealthTrustExceptionScene() {
                 contextBanner={{
                     tone: 'warning',
                     icon: <AlertTriangle className="h-4 w-4" />,
-                    title: 'Royalty won\'t be applied to this invoice.',
+                    title: 'Royalty won\'t be applied to this bill.',
                     body: (
                         <>
                             The <strong className="tabular-nums">${royalty.toLocaleString()}</strong> stays off the GPO payable. Audit trail captures your reason so finance can trace it later.
@@ -292,7 +292,7 @@ export default function HealthTrustExceptionScene() {
                     tone: 'info',
                     icon: <UserCheck className="h-4 w-4" />,
                     title: 'The Healthcare Director will see this in Teams within the hour.',
-                    body: 'Posts to #healthcare-gpo with invoice context + your reason. The royalty stays on hold until they respond.',
+                    body: 'Posts to #healthcare-gpo with bill context + your reason. The royalty stays on hold until they respond.',
                 }}
                 categories={ESCALATE_CATEGORIES}
                 defaultCategoryId="director-review"
