@@ -16,7 +16,6 @@ import { useEffect, useState } from 'react'
 import { FileSearch, Sparkles } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
-import DemoScopeBanner from './DemoScopeBanner'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import QuoteIncomingBudget from './QuoteIncomingBudget'
@@ -90,8 +89,6 @@ export default function MBIQuotesPage() {
                 tint="info"
                 outcome="Marcia's team stops re-typing SIF into CORE — the PC role shifts from builder to reviewer, and 4 audit loops collapse into 1 AI + 1 human review."
             />
-
-            <DemoScopeBanner />
 
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl px-4 py-2.5 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />

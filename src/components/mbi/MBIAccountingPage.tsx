@@ -21,7 +21,6 @@ import { useEffect, useState } from 'react'
 import { Receipt, Heart, GitCompare, DollarSign } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
-import DemoScopeBanner from './DemoScopeBanner'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import AccountingMorningQueue from './AccountingMorningQueue'
@@ -111,8 +110,6 @@ export default function MBIAccountingPage() {
                 tint="ai"
                 outcome="Kathy gets her morning back — exception-only review, HealthTrust royalties auto-flagged, AR collected on time, billing forecast live for leadership."
             />
-
-            <DemoScopeBanner />
 
             {inWizard ? (
                 <MBIWizardShell
