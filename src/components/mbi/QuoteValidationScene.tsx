@@ -6,6 +6,10 @@
  *          validator + COM workflow) gated behind detail sheets so the scene
  *          stays focused on the loop-collapse story.
  *
+ *          Layout: simulation runs as a TOP SECTION (not a gate). The audit
+ *          loop + report are always visible below. Once the simulation
+ *          completes the top section flips to a decisions-applied recap.
+ *
  * DS TOKENS: bg-card · ai / primary accents
  *
  * USED BY: MBIQuotesPage (wizard scene 2)
@@ -13,8 +17,7 @@
 
 import { useState } from 'react'
 import {
-    Search, Package, Palette, ArrowRight, Sparkles, ChevronRight,
-    ShieldCheck, RotateCcw,
+    Search, Package, Palette, ArrowRight, Sparkles, ChevronRight, RotateCcw,
 } from 'lucide-react'
 import AuditLoopDiagram from './AuditLoopDiagram'
 import SpecCheckReport from './SpecCheckReport'
@@ -29,12 +32,8 @@ import AISpecCheckSimulation, {
 export default function QuoteValidationScene() {
     const [nonCatalogOpen, setNonCatalogOpen] = useState(false)
     const [comOpen, setComOpen] = useState(false)
-    // Spec Check simulation gates the rest of the scene — the audit-loop +
-    // report only appear once the AI has shown its work and the PM has
-    // answered the 2 ambiguity questions. Decisions persist after, so
-    // re-navigating doesn't replay the simulation.
+    // null = simulation running · set = decisions applied, recap shown
     const [decisions, setDecisions] = useState<SpecCheckDecisions | null>(null)
-    const isReady = decisions !== null
 
     return (
         <div className="space-y-4">
@@ -53,22 +52,23 @@ export default function QuoteValidationScene() {
                 </div>
             </div>
 
-            {/* AI processing simulation · gates the report below */}
-            {!isReady && (
+            {/* AI simulation OR decisions recap — top section, always present */}
+            {decisions === null ? (
                 <AISpecCheckSimulation onComplete={setDecisions} />
+            ) : (
+                <SpecCheckDecisionsApplied
+                    decisions={decisions}
+                    onRerun={() => setDecisions(null)}
+                />
             )}
 
-            {/* Everything below renders ONLY after the simulation completes */}
-            {isReady && (
-                <>
-                    {/* Hero — audit loop diagram */}
-                    <AuditLoopDiagram />
+            {/* ── Original step 2.3 content — always visible ── */}
 
-                    {/* Decisions recap so the trust moment from the questions stays visible */}
-                    <SpecCheckDecisionsApplied decisions={decisions} />
+            {/* Hero — audit loop collapse diagram */}
+            <AuditLoopDiagram />
 
-                    {/* Spec Check report */}
-                    <SpecCheckReport />
+            {/* Spec Check report */}
+            <SpecCheckReport />
 
             {/* Two deep-dive triggers: Non-Catalog + COM */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -82,7 +82,7 @@ export default function QuoteValidationScene() {
                     <div className="flex-1 min-w-0">
                         <div className="text-xs font-bold text-foreground">Non-catalog validator</div>
                         <div className="text-[10px] text-muted-foreground">
-                            80-90% of MBI spec sheets have manual items · 5 validated, 1 flagged
+                            80-90% of MBI spec sheets have manual items · 8 validated, 1 flagged
                         </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -105,23 +105,23 @@ export default function QuoteValidationScene() {
                 </button>
             </div>
 
-                    {/* Forward cue */}
-                    <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
-                        <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
-                        <span className="flex-1 text-foreground">
-                            AI pass complete · your decisions applied · no blocking flags. One human review left, then the proposal goes to the client and orders route to vendors.
-                        </span>
-                        <button
-                            onClick={() => setDecisions(null)}
-                            className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider"
-                            title="Re-run the Spec Check simulation from the top"
-                        >
-                            <RotateCcw className="h-3 w-3" />
-                            Re-run
-                        </button>
-                    </div>
-                </>
-            )}
+            {/* Forward cue */}
+            <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
+                <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
+                <span className="flex-1 text-foreground">
+                    AI pass complete · no blocking flags. One human review left, then the proposal goes to the client and orders route to vendors.
+                </span>
+                {decisions !== null && (
+                    <button
+                        onClick={() => setDecisions(null)}
+                        className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider"
+                        title="Re-run the Spec Check simulation from the top"
+                    >
+                        <RotateCcw className="h-3 w-3" />
+                        Re-run
+                    </button>
+                )}
+            </div>
 
             {/* Deep-dive sheets */}
             <MBIDetailSheet

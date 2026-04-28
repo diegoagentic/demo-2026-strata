@@ -27,7 +27,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-    Sparkles, Loader2, CheckCircle2, HelpCircle, ArrowRight, Wand2, MessageCircle, Search,
+    Sparkles, Loader2, CheckCircle2, HelpCircle, ArrowRight, Wand2, MessageCircle, Search, RotateCcw,
 } from 'lucide-react'
 import { StatusBadge } from '../shared'
 
@@ -52,12 +52,12 @@ interface Step {
 }
 
 const PROCESSING_STEPS: Step[] = [
-    { label: 'Loading BOM', detail: '47 items · Enterprise Holdings HQ Floor 12', durationMs: 600 },
-    { label: 'Cross-checking dimensions vs the CET footprint', detail: '47 of 47 within tolerance', durationMs: 700 },
+    { label: 'Loading BOM', detail: '143 items · ENT-HQ-F12 · Enterprise Holdings HQ Floor 12', durationMs: 600 },
+    { label: 'Cross-checking dimensions vs the CET footprint', detail: '143 of 143 within tolerance', durationMs: 700 },
     { label: 'Validating finish consistency', detail: 'Upholstery + laminate · 1 ambiguity to flag', durationMs: 700 },
     { label: 'Matching palette across surfaces', detail: 'Project palette: charcoal + warm walnut accents', durationMs: 700 },
-    { label: 'Checking vendor availability vs install date', detail: '46 confirmed · 1 lead time unconfirmed', durationMs: 700 },
-    { label: 'Cross-checking non-catalog items', detail: '5 verified vs price books · 1 needs your call', durationMs: 700 },
+    { label: 'Checking vendor availability vs install date', detail: '142 confirmed · 1 lead time unconfirmed', durationMs: 700 },
+    { label: 'Cross-checking non-catalog items', detail: '8 verified vs price books · 1 needs your call', durationMs: 700 },
 ]
 
 const FINALIZING_STEPS: Step[] = [
@@ -113,7 +113,7 @@ export default function AISpecCheckSimulation({ onComplete }: AISpecCheckSimulat
                     <div className="text-sm font-bold text-foreground">{headerLabel}</div>
                     <div className="text-[10px] text-muted-foreground">
                         {phase === 'processing'
-                            ? '5 checks against the assembled BOM · Strata will pause if it needs a human call'
+                            ? '5 checks across 143 line items · Strata will pause if it needs a human call'
                             : 'Re-running the affected checks · this is fast'}
                     </div>
                 </div>
@@ -189,8 +189,8 @@ function QuestionsView({
             {/* Q1 · Finish ambiguity */}
             <QuestionCard
                 index={1}
-                context="Item 12 of 47 · HBF Aspire lounge chair · qty 6 · finish 'Charcoal Heather'"
-                question='"This chair finish is visually within the project palette but the spec sheet calls for the exact match (\'Charcoal Tweed\'). Designer didn\'t list a substitution rule. Accept as compatible swap, or flag it so the designer signs off explicitly?"'
+                context="Item 12 of 143 · HBF Aspire lounge chair · qty 6 · finish 'Charcoal Heather'"
+                question={`"This chair finish is visually within the project palette but the spec sheet calls for the exact match ('Charcoal Tweed'). Designer didn't list a substitution rule. Accept as compatible swap, or flag it so the designer signs off explicitly?"`}
                 rationale='History: Enterprise Holdings has accepted "close enough" finishes 7 of last 9 times — but their last project rejected one. Risk is real but small.'
                 options={[
                     { value: 'accept', label: 'Accept as compatible', detail: 'Faster · matches recent pattern (7 of 9)', selected: decisions.finishAmbiguity === 'accept-as-compatible' },
@@ -202,8 +202,8 @@ function QuestionsView({
             {/* Q2 · Non-catalog lead time */}
             <QuestionCard
                 index={2}
-                context="Item 41 of 47 · Custom 84&quot; walnut conference table · Knoll · non-catalog"
-                question='"Vendor confirmed pricing but their AP rep is on PTO and lead time isn\'t locked in. Past 3 similar custom tables shipped in 8 weeks ± 1. Use the 8-week estimate so we can send the proposal today, or hold the proposal until vendor confirms?"'
+                context="Item 41 of 143 · Custom 84&quot; walnut conference table · Knoll · non-catalog"
+                question={`"Vendor confirmed pricing but their AP rep is on PTO and lead time isn't locked in. Past 3 similar custom tables shipped in 8 weeks ± 1. Use the 8-week estimate so we can send the proposal today, or hold the proposal until vendor confirms?"`}
                 rationale='Install date is 14 weeks out. 8-week estimate has 6-week buffer · low risk. Holding the proposal would slip 2-3 days waiting for vendor.'
                 options={[
                     { value: 'estimate', label: 'Use the 8-week estimate', detail: '6-week buffer · proposal goes today', selected: decisions.nonCatalogLeadTime === 'use-estimate' },
@@ -282,12 +282,28 @@ function QuestionCard({
 // Helper exported for parents to render a small "applied decisions" recap
 // next to the spec check report. Keeps the trust moment visible after the
 // simulation hands off the scene.
-export function SpecCheckDecisionsApplied({ decisions }: { decisions: SpecCheckDecisions }) {
+export function SpecCheckDecisionsApplied({
+    decisions,
+    onRerun,
+}: {
+    decisions: SpecCheckDecisions
+    onRerun?: () => void
+}) {
     return (
         <div className="bg-success/5 dark:bg-success/10 border border-success/30 rounded-xl p-3 space-y-1.5">
             <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                <span className="text-[10px] font-bold text-success uppercase tracking-wider">Your guidance applied</span>
+                <span className="text-[10px] font-bold text-success uppercase tracking-wider flex-1">Your guidance applied</span>
+                {onRerun && (
+                    <button
+                        onClick={onRerun}
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider"
+                        title="Re-run the Spec Check simulation"
+                    >
+                        <RotateCcw className="h-3 w-3" />
+                        Re-run
+                    </button>
+                )}
             </div>
             <ul className="text-[11px] text-foreground space-y-1">
                 <li className="flex items-start gap-1.5">
