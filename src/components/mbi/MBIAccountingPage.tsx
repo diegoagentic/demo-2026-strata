@@ -31,12 +31,18 @@ import ARAgingReviewScene from './ARAgingReviewScene'
 import ARAgingWrapScene from './ARAgingWrapScene'
 import { useDemo } from '../../context/DemoContext'
 
+// Step labels written so a non-finance audience can read them. Acronyms
+// are kept (MBI uses them internally) but with a friendlier first word
+// where it helps:
+//   "Non-EDI" → "Paper invoices (Non-EDI)"     — non-EDI = no electronic feed
+//   "AR aging" → "AR aging (open accounts)"    — AR = Accounts Receivable
+//   "HealthTrust" → "Healthcare contract (HealthTrust GPO)" — GPO context inline
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
-    { id: 'morning', label: 'Morning queue', shortLabel: '1. Queue' },
-    { id: 'healthtrust', label: 'HealthTrust', shortLabel: '2. HealthTrust' },
-    { id: 'non-edi', label: 'Non-EDI recon', shortLabel: '3. Non-EDI' },
-    { id: 'ar-aging', label: 'AR aging', shortLabel: '4. AR aging' },
-    { id: 'ar-close', label: 'Drafts + close', shortLabel: '5. Close' },
+    { id: 'morning', label: 'Morning queue · invoices to review', shortLabel: '1. Queue' },
+    { id: 'healthtrust', label: 'Healthcare contract (HealthTrust GPO)', shortLabel: '2. Healthcare GPO' },
+    { id: 'non-edi', label: 'Paper invoices reconciliation (Non-EDI)', shortLabel: '3. Paper invoices' },
+    { id: 'ar-aging', label: 'AR aging · open accounts to collect', shortLabel: '4. AR aging' },
+    { id: 'ar-close', label: 'Collection emails + close the morning', shortLabel: '5. Close' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
@@ -55,15 +61,16 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     4: 'm2.5',
 }
 
-// Hints emphasize the AP → AR continuity Matt asked for on Apr 23: scenes 0-2
-// are AP (invoices, royalties, reconciliation), 3-4 are AR (aging analytics,
-// then drafts + close). Step 2 nextLabel + step 3 opening explicitly mark
-// the handoff so the audience reads it as one cycle, not two unrelated bits.
+// Hints emphasize the AP → AR continuity Matt asked for on Apr 23.
+// Scenes 0-2 are AP (Accounts Payable · what MBI owes to vendors).
+// Scenes 3-4 are AR (Accounts Receivable · what clients owe MBI).
+// First mention of each acronym/jargon word includes a plain-language
+// gloss so a non-finance audience can follow.
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'AP starts here · Strata pre-processed 12 invoices overnight · you review only the exceptions.', nextLabel: 'Review HealthTrust royalty' },
-    1: { hint: 'Approve the auto-calculated 3% royalty · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile non-EDI' },
-    2: { hint: 'Last AP step · line-by-line diff vs PO · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to AR aging' },
-    3: { hint: 'AP closed · now AR. $240K open across MBI · live aging board replaces the bi-weekly Excel · scan the open accounts by status.', nextLabel: 'Review collection drafts' },
+    0: { hint: 'AP starts here (AP = Accounts Payable, the invoices MBI owes to vendors). Strata pre-processed 12 invoices overnight · you review only the exceptions.', nextLabel: 'Review healthcare royalty' },
+    1: { hint: 'Approve the auto-calculated 3% royalty (paid to HealthTrust, the healthcare group purchasing organization) · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile paper invoices' },
+    2: { hint: 'Last AP step · line-by-line diff vs PO for non-EDI vendors (paper / PDF invoices, no electronic feed) · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to receivables' },
+    3: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
     4: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then close the morning.', nextLabel: 'Close the morning' },
 }
 
@@ -129,7 +136,7 @@ export default function MBIAccountingPage() {
                     {activeStep === 0 && <AccountingMorningQueue />}
                     {activeStep === 1 && <HealthTrustExceptionScene />}
                     {activeStep === 2 && <NonEDIReconcilerScene />}
-                    {activeStep === 3 && <ARAgingReviewScene />}
+                    {activeStep === 3 && <ARAgingReviewScene onContinue={() => navigateWizard(4)} />}
                     {activeStep === 4 && <ARAgingWrapScene />}
                 </MBIWizardShell>
             ) : (

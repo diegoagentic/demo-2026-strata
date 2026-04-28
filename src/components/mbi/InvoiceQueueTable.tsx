@@ -178,13 +178,25 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
     )
 }
 
+// Plain-language tooltips for the acronym badges so a non-finance audience
+// (and MBI's own team during the demo) can hover and understand without
+// needing background knowledge.
+const FLAG_TOOLTIPS: Record<string, string> = {
+    EDI: 'EDI · Electronic Data Interchange. Vendor sends the invoice straight into CORE — no manual entry, no OCR.',
+    HT: 'HealthTrust · Group Purchasing Organization for healthcare clients. MBI owes a 3% royalty on every invoice tied to a HealthTrust member (e.g. Mercy Hospital, BJC).',
+    Fix: 'Exception flagged · the line items, quantities or amounts don\'t match the matching purchase order. Needs a human decision.',
+}
+
 function CardFlag({ tone, icon, label }: { tone: 'blue' | 'amber' | 'red'; icon: React.ReactNode; label: string }) {
     const cls =
         tone === 'blue' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400' :
         tone === 'amber' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400' :
         'bg-red-500/15 text-red-700 dark:text-red-400'
     return (
-        <span className={`text-[8.5px] font-bold px-1 py-0.5 rounded inline-flex items-center gap-0.5 ${cls}`}>
+        <span
+            className={`text-[8.5px] font-bold px-1 py-0.5 rounded inline-flex items-center gap-0.5 ${cls}`}
+            title={FLAG_TOOLTIPS[label]}
+        >
             {icon}
             {label}
         </span>

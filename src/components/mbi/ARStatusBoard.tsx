@@ -64,9 +64,15 @@ const STATUS_META = {
 
 interface ARStatusBoardProps {
     records: ARRecord[]
+    /** IDs of records that already have an AI-drafted email queued for the
+     *  next step. Marked with a "Draft ready" badge + amber ring so the
+     *  audience can see the continuity between the aging board (this scene)
+     *  and the drafts panel (next scene). */
+    highlightedIds?: string[]
 }
 
-export default function ARStatusBoard({ records }: ARStatusBoardProps) {
+export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoardProps) {
+    const highlightSet = new Set(highlightedIds ?? [])
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [actionToast, setActionToast] = useState<string | null>(null)
 
@@ -139,8 +145,23 @@ export default function ARStatusBoard({ records }: ARStatusBoardProps) {
                                 ) : (
                                     items.map(r => {
                                         const isOpen = expandedId === r.id
+                                        const hasDraft = highlightSet.has(r.id)
                                         return (
-                                            <div key={r.id} className={`bg-zinc-50/50 dark:bg-zinc-800 border border-border rounded-lg border-l-4 ${meta.leftBar} text-xs transition-colors ${isOpen ? 'border-zinc-400 dark:border-zinc-500' : 'hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
+                                            <div key={r.id} className={`bg-zinc-50/50 dark:bg-zinc-800 border rounded-lg border-l-4 ${meta.leftBar} text-xs transition-all ${
+                                                hasDraft
+                                                    ? 'border-amber-400 dark:border-amber-500 ring-2 ring-amber-300/40 dark:ring-amber-500/30 shadow-md'
+                                                    : isOpen
+                                                        ? 'border-zinc-400 dark:border-zinc-500'
+                                                        : 'border-border hover:border-zinc-300 dark:hover:border-zinc-700'
+                                            }`}>
+                                                {hasDraft && (
+                                                    <div className="px-2.5 py-1 bg-amber-50/80 dark:bg-amber-500/10 border-b border-amber-300/40 dark:border-amber-500/30 flex items-center gap-1.5">
+                                                        <Mail className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400" />
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                                                            Draft ready · review next
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 <button
                                                     onClick={() => setExpandedId(isOpen ? null : r.id)}
                                                     className="w-full text-left px-2.5 py-2"
