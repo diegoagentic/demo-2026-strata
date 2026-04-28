@@ -14,17 +14,27 @@
 import { useState } from 'react'
 import {
     Search, Package, Palette, ArrowRight, Sparkles, ChevronRight,
-    ShieldCheck,
+    ShieldCheck, RotateCcw,
 } from 'lucide-react'
 import AuditLoopDiagram from './AuditLoopDiagram'
 import SpecCheckReport from './SpecCheckReport'
 import NonCatalogValidatorTable from './NonCatalogValidatorTable'
 import COMWorkflowTimeline from './COMWorkflowTimeline'
 import MBIDetailSheet from './MBIDetailSheet'
+import AISpecCheckSimulation, {
+    SpecCheckDecisionsApplied,
+    type SpecCheckDecisions,
+} from './AISpecCheckSimulation'
 
 export default function QuoteValidationScene() {
     const [nonCatalogOpen, setNonCatalogOpen] = useState(false)
     const [comOpen, setComOpen] = useState(false)
+    // Spec Check simulation gates the rest of the scene — the audit-loop +
+    // report only appear once the AI has shown its work and the PM has
+    // answered the 2 ambiguity questions. Decisions persist after, so
+    // re-navigating doesn't replay the simulation.
+    const [decisions, setDecisions] = useState<SpecCheckDecisions | null>(null)
+    const isReady = decisions !== null
 
     return (
         <div className="space-y-4">
@@ -43,11 +53,22 @@ export default function QuoteValidationScene() {
                 </div>
             </div>
 
-            {/* Hero — audit loop diagram */}
-            <AuditLoopDiagram />
+            {/* AI processing simulation · gates the report below */}
+            {!isReady && (
+                <AISpecCheckSimulation onComplete={setDecisions} />
+            )}
 
-            {/* Spec Check report */}
-            <SpecCheckReport />
+            {/* Everything below renders ONLY after the simulation completes */}
+            {isReady && (
+                <>
+                    {/* Hero — audit loop diagram */}
+                    <AuditLoopDiagram />
+
+                    {/* Decisions recap so the trust moment from the questions stays visible */}
+                    <SpecCheckDecisionsApplied decisions={decisions} />
+
+                    {/* Spec Check report */}
+                    <SpecCheckReport />
 
             {/* Two deep-dive triggers: Non-Catalog + COM */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -84,13 +105,23 @@ export default function QuoteValidationScene() {
                 </button>
             </div>
 
-            {/* Forward cue */}
-            <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
-                <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
-                <span className="flex-1 text-foreground">
-                    AI pass complete · no blocking flags. One human review left, then the proposal goes to the client and orders route to vendors.
-                </span>
-            </div>
+                    {/* Forward cue */}
+                    <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
+                        <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
+                        <span className="flex-1 text-foreground">
+                            AI pass complete · your decisions applied · no blocking flags. One human review left, then the proposal goes to the client and orders route to vendors.
+                        </span>
+                        <button
+                            onClick={() => setDecisions(null)}
+                            className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider"
+                            title="Re-run the Spec Check simulation from the top"
+                        >
+                            <RotateCcw className="h-3 w-3" />
+                            Re-run
+                        </button>
+                    </div>
+                </>
+            )}
 
             {/* Deep-dive sheets */}
             <MBIDetailSheet
