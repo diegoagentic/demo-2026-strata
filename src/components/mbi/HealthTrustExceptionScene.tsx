@@ -57,7 +57,7 @@ export default function HealthTrustExceptionScene() {
     const handleApprove = () => {
         setStatus('approved')
         setMeta(null)
-        pushToast(`Rebate approved · $${rebate.toLocaleString()} posted to voucher in CORE`)
+        pushToast(`Rebate approved · $${rebate.toLocaleString()} posted to GPO payable`)
     }
 
     const handleOverrideSubmit = (payload: { reasonCategory: string; notes: string }) => {
@@ -191,7 +191,7 @@ export default function HealthTrustExceptionScene() {
                             </button>
                         </div>
                         <div className="text-[10px] text-muted-foreground text-center">
-                            Syncs rebate line to CORE · not a bank payment
+                            Posts to GPO payable · handled outside CORE · not a bank payment
                         </div>
                     </div>
                 ) : (

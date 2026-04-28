@@ -52,9 +52,14 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                         </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        {invoice.isEDI && (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                                EDI
+                        {/* Data path chip — EDI = CORE native, non-EDI = Strata OCR + RPA */}
+                        {invoice.isEDI ? (
+                            <span title="Vendor sends directly into CORE — no OCR, no re-keying" className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                                EDI · CORE native
+                            </span>
+                        ) : (
+                            <span title="Paper bill — Strata OCR extracts fields, RPA posts to CORE" className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
+                                OCR + RPA
                             </span>
                         )}
                         {invoice.isHealthTrust && (

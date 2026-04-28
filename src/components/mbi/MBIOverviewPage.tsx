@@ -129,7 +129,7 @@ export default function MBIOverviewPage() {
 
     return (
         <MBIPageShell
-            title="MBI · 4 AIs · one platform"
+            title="MBI · 3 AI modules · one platform"
             subtitle={`${MBI_TENANT.name} · ${MBI_TENANT.hq} + ${MBI_TENANT.satellite} · ${MBI_TENANT.revenue} revenue · ${MBI_TENANT.manufacturerCount}+ manufacturers`}
             icon={<Network className="h-5 w-5" />}
             activeApp="mbi-overview"
@@ -144,12 +144,12 @@ export default function MBIOverviewPage() {
                         The thesis
                     </div>
                     <div className="text-base font-bold text-foreground mt-0.5">
-                        Phase 1 = Accounting AI · the rest is the roadmap
+                        Phase 2 = Accounting AI prototype · Quotes + Design are the roadmap
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        The Thursday demo focuses on <strong className="text-foreground">Accounting AI</strong> — Mark's pick: cleanest metric, lowest risk, single owner (Kathy).
+                        The Thursday demo focuses on <strong className="text-foreground">Accounting AI</strong> — Mark's pick: cleanest metric, lowest risk, single owner (Kathy). Uses RPA to interact with CORE — no direct API yet.
                         <strong className="text-foreground"> Quotes AI</strong> is in the active tour as the natural Phase 4 follow-up that closes the morning's PC handoff.
-                        <strong className="text-foreground"> Design AI</strong> (Spec Check, Q10 #1 priority) lives in code and is one tab away if the conversation goes there — directional, not Phase 1.
+                        <strong className="text-foreground"> Design AI</strong> (Spec Check, Q10 #1 priority) lives in code and is one tab away if the conversation goes there — directional, not Phase 2.
                     </div>
                 </div>
             </div>
@@ -221,9 +221,9 @@ export default function MBIOverviewPage() {
             {/* 4-flow chain */}
             <div className="space-y-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-border">
-                    <div className="text-xs font-bold text-foreground uppercase tracking-wider">The 3 AIs</div>
+                    <div className="text-xs font-bold text-foreground uppercase tracking-wider">The 3 AI modules</div>
                     <div className="flex-1 h-px bg-border" />
-                    <div className="text-[10px] text-muted-foreground">Accounting (Phase 2 · live demo) → Quotes (Phase 4) → Design (Phase 4 · directional)</div>
+                    <div className="text-[10px] text-muted-foreground">Accounting AI (Phase 2 · active demo) → Quotes AI (Phase 4) → Design AI (Phase 4 · directional)</div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

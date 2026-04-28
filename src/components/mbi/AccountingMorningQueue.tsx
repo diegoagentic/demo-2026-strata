@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { Moon, Loader2, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Moon, Loader2, AlertTriangle, CheckCircle2, ArrowRight, Sparkles, FileSignature, X } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import InvoiceDetailPanel from './InvoiceDetailPanel'
 import EmailInboxDropZone from './EmailInboxDropZone'
@@ -41,8 +41,20 @@ function makeIngestedInvoice(filename: string, idx: number): Invoice {
     }
 }
 
+// AI-detected billing trigger — project hit installation milestone overnight
+const BILLING_TRIGGER = {
+    project: 'Riverside Medical Center',
+    projectId: 'PROJ-2026-017',
+    milestone: 'Installation complete',
+    amount: 180000,
+    invoiceRef: 'BDG-2026-017',
+    note: 'All delivery milestones met · 100% installation confirmed · client sign-off received',
+}
+
 export default function AccountingMorningQueue() {
     const [ingested, setIngested] = useState<Invoice[]>([])
+    const [billingDismissed, setBillingDismissed] = useState(false)
+    const [billingCreated, setBillingCreated] = useState(false)
     const allInvoices = [...MBI_INVOICES, ...ingested]
 
     const total = allInvoices.length
@@ -67,6 +79,60 @@ export default function AccountingMorningQueue() {
 
     return (
         <div className="space-y-4">
+            {/* AI billing trigger — Strata detected a project ready to invoice */}
+            {!billingDismissed && (
+                <div className={`
+                    border-2 rounded-2xl p-4 flex items-start gap-3 transition-all
+                    ${billingCreated
+                        ? 'border-success/40 bg-success/5 dark:bg-success/10'
+                        : 'border-ai/40 bg-ai/5 dark:bg-ai/10 ring-2 ring-ai/20'}
+                `}>
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${billingCreated ? 'bg-success/15 text-success' : 'bg-ai/15 text-ai'}`}>
+                        {billingCreated ? <CheckCircle2 className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <div className={`text-[10px] font-bold uppercase tracking-wider ${billingCreated ? 'text-success' : 'text-ai'}`}>
+                                {billingCreated ? 'Invoice created' : 'Strata AI · ready to invoice'}
+                            </div>
+                            {!billingCreated && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-ai/20 text-ai animate-pulse">NEW</span>
+                            )}
+                        </div>
+                        <div className="text-sm font-bold text-foreground mt-0.5">
+                            {BILLING_TRIGGER.project} · ${BILLING_TRIGGER.amount.toLocaleString()}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                            {BILLING_TRIGGER.milestone} · {BILLING_TRIGGER.note}
+                        </div>
+                        {billingCreated && (
+                            <div className="text-[11px] text-success font-semibold mt-1 inline-flex items-center gap-1">
+                                <FileSignature className="h-3 w-3" />
+                                Invoice drafted · {BILLING_TRIGGER.invoiceRef} · ready for Kathy's review
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {!billingCreated && (
+                            <button
+                                onClick={() => setBillingCreated(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                            >
+                                <FileSignature className="h-3.5 w-3.5" />
+                                Create invoice
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setBillingDismissed(true)}
+                            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                            title="Dismiss"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Overnight work summary — 3-column workflow story (Apr 23 commitment) */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-2xl p-4 flex items-start gap-3">
                 <div className="h-10 w-10 rounded-xl bg-ai/15 text-ai flex items-center justify-center shrink-0">
