@@ -86,6 +86,14 @@ export default function NonEDIReconcilerScene() {
 
     return (
         <div className="space-y-4">
+            {/* Breadcrumb — context from morning queue */}
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
+                <GitCompare className="h-3 w-3 shrink-0" />
+                <span>Morning Bill Queue</span>
+                <span className="text-border">›</span>
+                <span className="font-bold text-foreground">{invoice.id} · {invoice.vendor} · line-by-line reconciliation</span>
+            </div>
+
             {/* Total delta banner — lead with the number, then explain */}
             <div className={`rounded-xl border p-4 flex items-center gap-4 ${diff < 0 ? 'bg-success/5 border-success/30 dark:bg-success/10' : diff > 0 ? 'bg-amber-500/5 border-amber-300 dark:border-amber-500/30' : 'bg-info/5 border-info/30'}`}>
                 <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${diff < 0 ? 'bg-success/15 text-success' : diff > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-info/15 text-info'}`}>

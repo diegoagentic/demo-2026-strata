@@ -25,8 +25,8 @@ export default function DemoScopeBanner() {
         <div className="bg-info/5 dark:bg-info/10 border border-info/30 rounded-xl px-4 py-2.5 flex items-start gap-2.5">
             <Info className="h-4 w-4 text-info shrink-0 mt-0.5" />
             <div className="text-[11px] text-foreground leading-snug">
-                <strong className="text-foreground">Prototype · interactive but not functional.</strong>
-                <span className="text-muted-foreground"> Click around to explore — the goal is for MBI to see the solution shape and engage with it. No backend, no real data writes, no production wiring yet.</span>
+                <strong className="text-foreground">Interactive prototype · no live backend.</strong>
+                <span className="text-muted-foreground"> Accounting AI uses RPA to interact with CORE — no direct API yet. Click to explore the solution shape; data resets on reload.</span>
             </div>
         </div>
     )

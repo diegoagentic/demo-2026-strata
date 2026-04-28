@@ -73,7 +73,10 @@ export default function AccountingMorningQueue() {
                     <Moon className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-foreground">Strata worked overnight</div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <div className="text-sm font-bold text-foreground">Strata worked overnight</div>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">Kathy · AP Accountant</span>
+                    </div>
                     <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                         Read <strong className="text-foreground">{total} vendor bills</strong> ·
                         extracted fields with Document AI · matched to open POs in CORE ·

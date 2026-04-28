@@ -148,6 +148,11 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                                 ? 'Kathy review required — no auto-post.'
                                 : 'All fields extracted · HealthTrust logic applied · 3-way match ready.'}
                         </div>
+                        {!invoice.hasException && (
+                            <div className="text-[9px] text-muted-foreground/70 mt-0.5">
+                                Queues voucher via RPA · not a live payment
+                            </div>
+                        )}
                     </div>
                     <button
                         disabled={invoice.hasException}
