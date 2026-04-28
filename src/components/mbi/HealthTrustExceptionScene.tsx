@@ -158,28 +158,33 @@ export default function HealthTrustExceptionScene() {
 
                 {/* Footer — actions or resolved state */}
                 {status === 'pending' ? (
-                    <div className="mt-4 grid grid-cols-3 gap-2">
-                        <button
-                            onClick={() => setModalKind('escalate')}
-                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-red-700 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-300 dark:border-red-500/40 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                        >
-                            <Flag className="h-3.5 w-3.5" />
-                            Escalate
-                        </button>
-                        <button
-                            onClick={() => setModalKind('override')}
-                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-foreground bg-background dark:bg-zinc-800 border border-border rounded-lg hover:bg-muted hover:border-info/40 transition-colors"
-                        >
-                            <Pencil className="h-3.5 w-3.5" />
-                            Override
-                        </button>
-                        <button
-                            onClick={handleApprove}
-                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-                        >
-                            <Check className="h-3.5 w-3.5" />
-                            Approve & post
-                        </button>
+                    <div className="mt-4 space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                            <button
+                                onClick={() => setModalKind('escalate')}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-red-700 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-300 dark:border-red-500/40 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                            >
+                                <Flag className="h-3.5 w-3.5" />
+                                Escalate
+                            </button>
+                            <button
+                                onClick={() => setModalKind('override')}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-foreground bg-background dark:bg-zinc-800 border border-border rounded-lg hover:bg-muted hover:border-info/40 transition-colors"
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Override
+                            </button>
+                            <button
+                                onClick={handleApprove}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                            >
+                                <Check className="h-3.5 w-3.5" />
+                                Approve & post
+                            </button>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground text-center">
+                            Syncs rebate line to CORE · not a bank payment
+                        </div>
                     </div>
                 ) : (
                     <div className="mt-4 pt-3 border-t border-current/10 space-y-1.5">

@@ -38,7 +38,7 @@ export default function QuoteAutoImportScene() {
                     <div className="text-xs min-w-0">
                         <div className="font-bold text-foreground">Now · zero keystrokes</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Strata reads the signed SIF · validates every field against contract + pricing · builds the CORE proposal in <strong className="text-foreground">under 90 seconds.</strong>
+                            Strata's automation layer picks up the signed SIF · maps each field to CORE · builds the proposal draft in <strong className="text-foreground">under 90 seconds.</strong>
                         </div>
                     </div>
                 </div>
@@ -53,7 +53,7 @@ export default function QuoteAutoImportScene() {
                     What Strata just did · no PC intervention
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <AutoImportCheck label="Parsed SIF schema" caption="24 fields · 7 line items" />
+                    <AutoImportCheck label="SIF fields mapped to CORE" caption="24 fields · 7 line items" />
                     <AutoImportCheck label="Matched contract pricing" caption="HNI Corporate · 55%" />
                     <AutoImportCheck label="Built CORE proposal draft" caption="PROP-2026-003 · v1" />
                     <AutoImportCheck label="Customer context added" caption="Enterprise · corporate · floor 12" />

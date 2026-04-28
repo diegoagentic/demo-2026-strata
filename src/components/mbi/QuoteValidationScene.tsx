@@ -17,12 +17,11 @@
 
 import { useState } from 'react'
 import {
-    Search, Package, Palette, ArrowRight, Sparkles, ChevronRight, RotateCcw,
+    Search, Package, ArrowRight, Sparkles, ChevronRight, RotateCcw,
 } from 'lucide-react'
 import AuditLoopDiagram from './AuditLoopDiagram'
 import SpecCheckReport from './SpecCheckReport'
 import NonCatalogValidatorTable from './NonCatalogValidatorTable'
-import COMWorkflowTimeline from './COMWorkflowTimeline'
 import MBIDetailSheet from './MBIDetailSheet'
 import AISpecCheckSimulation, {
     SpecCheckDecisionsApplied,
@@ -31,7 +30,6 @@ import AISpecCheckSimulation, {
 
 export default function QuoteValidationScene() {
     const [nonCatalogOpen, setNonCatalogOpen] = useState(false)
-    const [comOpen, setComOpen] = useState(false)
     // null = simulation running · set = decisions applied, recap shown
     const [decisions, setDecisions] = useState<SpecCheckDecisions | null>(null)
 
@@ -70,40 +68,22 @@ export default function QuoteValidationScene() {
             {/* Spec Check report */}
             <SpecCheckReport />
 
-            {/* Two deep-dive triggers: Non-Catalog + COM */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button
-                    onClick={() => setNonCatalogOpen(true)}
-                    className="bg-card dark:bg-zinc-800 border border-border rounded-xl p-3 hover:border-primary/40 transition-colors text-left flex items-center gap-3"
-                >
-                    <div className="h-9 w-9 rounded-xl bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
-                        <Search className="h-4 w-4" />
+            {/* Deep-dive: Non-Catalog validator */}
+            <button
+                onClick={() => setNonCatalogOpen(true)}
+                className="w-full bg-card dark:bg-zinc-800 border border-border rounded-xl p-3 hover:border-primary/40 transition-colors text-left flex items-center gap-3"
+            >
+                <div className="h-9 w-9 rounded-xl bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
+                    <Search className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-foreground">Non-catalog validator</div>
+                    <div className="text-[10px] text-muted-foreground">
+                        80-90% of MBI spec sheets have manual items · 8 validated, 1 flagged
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold text-foreground">Non-catalog validator</div>
-                        <div className="text-[10px] text-muted-foreground">
-                            80-90% of MBI spec sheets have manual items · 8 validated, 1 flagged
-                        </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </button>
-
-                <button
-                    onClick={() => setComOpen(true)}
-                    className="bg-card dark:bg-zinc-800 border border-border rounded-xl p-3 hover:border-primary/40 transition-colors text-left flex items-center gap-3"
-                >
-                    <div className="h-9 w-9 rounded-xl bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
-                        <Palette className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold text-foreground">COM · special product tracker</div>
-                        <div className="text-[10px] text-muted-foreground">
-                            Fabric approval workflow · replaces verbal approvals + forgotten confirmations
-                        </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </button>
-            </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </button>
 
             {/* Forward cue */}
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
@@ -135,16 +115,6 @@ export default function QuoteValidationScene() {
                 <NonCatalogValidatorTable />
             </MBIDetailSheet>
 
-            <MBIDetailSheet
-                isOpen={comOpen}
-                onClose={() => setComOpen(false)}
-                title="COM workflow · fabric approval tracker"
-                subtitle="Structured flow · replaces verbal approvals + forgotten receipt confirmations"
-                icon={<Palette className="h-4 w-4" />}
-                width="md"
-            >
-                <COMWorkflowTimeline />
-            </MBIDetailSheet>
         </div>
     )
 }

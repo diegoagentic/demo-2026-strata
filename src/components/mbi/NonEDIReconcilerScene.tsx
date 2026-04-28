@@ -86,26 +86,27 @@ export default function NonEDIReconcilerScene() {
 
     return (
         <div className="space-y-4">
-            {/* Intro strip */}
-            <div className="bg-info/5 dark:bg-info/10 border border-info/30 rounded-xl p-3 flex items-start gap-2.5">
-                <GitCompare className="h-4 w-4 text-info shrink-0 mt-0.5" />
-                <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">Non-EDI reconciliation · {invoice.vendor}</div>
-                    <div className="text-muted-foreground mt-0.5">
-                        {invoice.vendor} doesn't ship EDI — Strata OCR'd the paper bill and matched it line-by-line to <span className="font-mono text-foreground">{invoice.poNumber}</span>. <strong className="text-foreground">{flaggedRows.length} lines</strong> differ. Approve what matches your delivery, override what doesn't.
+            {/* Total delta banner — lead with the number, then explain */}
+            <div className={`rounded-xl border p-4 flex items-center gap-4 ${diff < 0 ? 'bg-success/5 border-success/30 dark:bg-success/10' : diff > 0 ? 'bg-amber-500/5 border-amber-300 dark:border-amber-500/30' : 'bg-info/5 border-info/30'}`}>
+                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${diff < 0 ? 'bg-success/15 text-success' : diff > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-info/15 text-info'}`}>
+                    <GitCompare className="h-6 w-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-foreground">
+                        Bill is{' '}
+                        <span className={diff < 0 ? 'text-success' : 'text-amber-600 dark:text-amber-400'}>
+                            {diff < 0 ? `$${Math.abs(diff).toLocaleString()} less` : diff > 0 ? `$${Math.abs(diff).toLocaleString()} more` : 'equal to'}
+                        </span>
+                        {' '}than the PO
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                        {invoice.vendor} · <span className="font-mono">{invoice.poNumber}</span> · <strong className="text-foreground">{flaggedRows.length} of {LINES.length} lines differ</strong> · review each below and approve or override
                     </div>
                 </div>
-            </div>
-
-            {/* Summary stats */}
-            <div className="grid grid-cols-3 gap-3">
-                <SummaryTile label="PO total" value={`$${totalPO.toLocaleString()}`} accent="text-foreground" />
-                <SummaryTile label="Bill total" value={`$${totalInv.toLocaleString()}`} accent="text-foreground" />
-                <SummaryTile
-                    label="Delta"
-                    value={`${diff >= 0 ? '+' : '−'}$${Math.abs(diff).toLocaleString()}`}
-                    accent={diff < 0 ? 'text-success' : diff > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}
-                />
+                <div className="text-right shrink-0">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">PO → Bill</div>
+                    <div className="text-base font-bold tabular-nums text-foreground">${totalPO.toLocaleString()} → ${totalInv.toLocaleString()}</div>
+                </div>
             </div>
 
             {/* Line-by-line diff table */}
@@ -256,15 +257,6 @@ export default function NonEDIReconcilerScene() {
                     confirmLabel="Post with override"
                 />
             )}
-        </div>
-    )
-}
-
-function SummaryTile({ label, value, accent }: { label: string; value: string; accent: string }) {
-    return (
-        <div className="bg-card dark:bg-zinc-800 border border-border rounded-xl p-3">
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</div>
-            <div className={`text-lg font-bold tabular-nums mt-0.5 ${accent}`}>{value}</div>
         </div>
     )
 }
