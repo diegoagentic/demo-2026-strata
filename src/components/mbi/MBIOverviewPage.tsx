@@ -96,10 +96,11 @@ const FLOWS: FlowCard[] = [
         personaRole: 'Designer · 8/10 trust',
         personaInitials: 'BG',
         isPilot: true,
-        // Apr 27: Design removed from active tour (Matt: "primary and only
-        // necessary is accounting"). Card stays so the audience sees the
-        // module exists, marker explains it's available outside the tour.
-        availabilityNote: 'Available via the Design AI tab · not in the active tour',
+        // Apr 27: Design removed from active tour AND from the navbar (was
+        // briefly available via tab; the user removed it after seeing it
+        // only added confusion). Card stays so MBI sees the module exists
+        // in the roadmap, marker frames it as Phase 4 directional context.
+        availabilityNote: 'Phase 4 · roadmap context · not navigable in this demo',
         pain: '"Everything is blue, this one chair is green" — spec misses slip to the client',
         outcome: 'Scan 47 BOM items in 5 min · catch palette + finish + dimension + availability issues',
         timeBefore: 'manual · sometimes missed',
@@ -170,7 +171,7 @@ export default function MBIOverviewPage() {
                     <div className="min-w-0">
                         <div className="text-sm font-bold text-foreground">Walk the active tour · 9 beats</div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
-                            Start from Kathy's morning (5 beats) and continue to Marcia's PC team (4 beats). Design AI lives outside the tour — open the Design AI tab if the conversation goes there.
+                            Start from Kathy's morning (5 beats) and continue to Marcia's PC team (4 beats). Design AI is built but kept off the navigable surface for this demo — see the Phase 4 card below for context.
                         </div>
                     </div>
                     <button

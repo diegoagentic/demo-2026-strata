@@ -200,15 +200,16 @@ function App() {
     // WRG profile: no center nav (demo auto-drives all steps)
     const wrgNav: { name: string; page: string; icon: any; badge?: string }[] = [];
 
-    // MBI profile: 3-tab primary nav. Budget Builder removed per Apr 23
-    // stakeholder direction (Carlos): not in scope for the Thursday demo.
-    // The MBIBudgetPage component + 'mbi-budget' route + m1.x demo tour
-    // steps are intentionally left in the codebase (case 'mbi-budget' below,
-    // mbi.ts FLOW 1 block) so re-enabling is a one-line change here.
+    // MBI profile: 2-tab primary nav (Accounting + Quotes).
+    // - Budget Builder: removed per Apr 23 (Carlos · not in scope).
+    // - Design AI: removed from nav per Apr 27 user decision (was already
+    //   removed from the active tour — keeping the tab open after the
+    //   tour shrunk caused confusion). MBIDesignPage component + the
+    //   'mbi-design' route handler + appToTab entry stay in the codebase
+    //   for fast re-enable: paste the entry below back in.
     const mbiNav = [
       { name: 'Accounting AI', page: 'mbi-accounting', icon: ReceiptIcon },
       { name: 'Quotes AI', page: 'mbi-quotes', icon: FileSearchIcon },
-      { name: 'Design AI', page: 'mbi-design', icon: PaletteIcon },
     ];
 
     // Leland profile: 4-tab primary nav (PO Workspace · Inbox · Order System · Review)
