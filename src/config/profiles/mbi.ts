@@ -59,7 +59,7 @@ export const MBI_STEPS: DemoStep[] = [
         id: 'm2.1',
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
-        title: 'Bill queue — continuous · recent &amp; pending',
+        title: 'AP · Pending Review',
         description: 'Strata processes vendor bills continuously throughout the day as they arrive. Kathy opens her queue and sees the current state: 5 recently auto-posted to CORE, 3 being worked by reconciliation agents, and 4 pending her decision — two flagged exceptions and two HealthTrust GPO bills awaiting review.',
         app: 'mbi-accounting',
         role: 'Dealer',
