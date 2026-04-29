@@ -16,31 +16,8 @@ import { useState } from 'react'
 import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight, RefreshCw, Sparkles, Heart } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import InvoiceDetailPanel from './InvoiceDetailPanel'
-import EmailInboxDropZone from './EmailInboxDropZone'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
-import type { Invoice } from '../../config/profiles/mbi-data'
-
-// Invoices that arrive during the demo via the EmailInboxDropZone.
-// Stored in component state · always land as 'pending' so they slot
-// into the same column the audience just saw "needs your eyes".
-function makeIngestedInvoice(filename: string, idx: number): Invoice {
-    const vendorFromName = filename.split('_')[0]?.replace(/([a-z])([A-Z])/g, '$1 $2') ?? 'Unknown vendor'
-    const ts = new Date().toISOString()
-    const amounts = [8400, 14250, 23800, 6900, 31100, 17600]
-    return {
-        id: `INV-LIVE-${String(idx + 1).padStart(3, '0')}`,
-        vendor: vendorFromName,
-        poNumber: `PO-2026-${9000 + idx}`,
-        amount: amounts[idx % amounts.length],
-        received: ts,
-        isEDI: false,
-        ocrConfidence: 88 + Math.floor(Math.random() * 10),
-        hasException: false,
-        status: 'pending',
-        exceptionReason: 'Newly received from inbox · awaiting your eyes',
-    }
-}
 
 const RECHECK_STEPS = [
     'Detecting PO change in CORE',
@@ -117,11 +94,10 @@ function POAutoRecheckDemo({ onAutoResolved }: { onAutoResolved: (id: string) =>
 type BillFilter = 'all' | 'exception' | 'healthtrust' | 'edi' | 'non-edi'
 
 export default function AccountingMorningQueue() {
-    const [ingested, setIngested] = useState<Invoice[]>([])
     const [autoResolved, setAutoResolved] = useState<Set<string>>(new Set())
     const [billFilter, setBillFilter] = useState<BillFilter>('all')
 
-    const allInvoices = [...MBI_INVOICES, ...ingested].map(inv =>
+    const allInvoices = MBI_INVOICES.map(inv =>
         autoResolved.has(inv.id) ? { ...inv, status: 'done' as const } : inv
     )
 
@@ -144,15 +120,6 @@ export default function AccountingMorningQueue() {
 
     const handleAutoResolved = (id: string) => {
         setAutoResolved(prev => new Set([...prev, id]))
-    }
-
-    const handleIngest = (filename: string) => {
-        setIngested(prev => {
-            const next = makeIngestedInvoice(filename, prev.length)
-            // Auto-select the newly ingested invoice so Kathy sees the detail
-            setSelectedId(next.id)
-            return [next, ...prev]
-        })
     }
 
     return (
@@ -190,9 +157,9 @@ export default function AccountingMorningQueue() {
                 </div>
             </div>
 
-            {/* Shared filter chips — controls both the email inbox below and the bill queue further down */}
+            {/* Filter chips — controls the bill queue */}
             <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Filter inbox + queue:</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Filter queue:</span>
                 {([
                     { key: 'all',         label: 'All',            icon: null,                                    count: allInvoices.length },
                     { key: 'exception',   label: 'Exceptions',     icon: <AlertTriangle className="h-3 w-3" />,   count: allInvoices.filter(i => i.hasException).length },
@@ -215,9 +182,6 @@ export default function AccountingMorningQueue() {
                     </button>
                 ))}
             </div>
-
-            {/* Email inbox dropzone */}
-            <EmailInboxDropZone onIngest={handleIngest} activeFilter={billFilter} />
 
             {/* PO auto-recheck demo */}
             <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
