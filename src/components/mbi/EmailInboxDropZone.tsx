@@ -30,9 +30,28 @@ import { Mail, Inbox, Upload, Sparkles, CheckCircle2, Loader2, Paperclip, FileTe
 
 interface EmailInboxDropZoneProps {
     onIngest: (filename: string) => void
+    activeFilter?: string
 }
 
 type Stage = 'idle' | 'dragover' | 'processing' | 'done'
+type EmailCategory = 'edi' | 'non-edi' | 'healthtrust' | 'exception' | 'statement'
+
+interface FauxEmail {
+    vendor: string
+    subject: string
+    attached?: boolean
+    time: string
+    emailType?: EmailType
+    category: EmailCategory
+}
+
+const FAUX_EMAILS: FauxEmail[] = [
+    { vendor: 'Allsteel · billing@allsteel.example', subject: 'Bill INV-0482 · PO-2026-0047', attached: true, time: '6:14 AM', emailType: 'bill', category: 'edi' },
+    { vendor: 'HON · billing@hon.example',           subject: 'Bill INV-0493 · service line',  attached: true, time: '9:55 AM', emailType: 'bill', category: 'edi' },
+    { vendor: 'Allsteel · statements@allsteel.example', subject: 'Q1 2026 Statement · account summary', time: '8:22 AM', emailType: 'statement', category: 'statement' },
+]
+
+const NEW_EMAIL: FauxEmail = { vendor: 'HON · billing@hon.example', subject: 'Invoice INV-0498 · service line', attached: true, time: '10:02 AM', emailType: 'bill', category: 'non-edi' }
 
 const SIMULATED_FILENAMES = [
     'AceContract_INV_4421.pdf',
@@ -48,7 +67,7 @@ const PROCESSING_STEPS = [
     'Routing to the queue',
 ]
 
-export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps) {
+export default function EmailInboxDropZone({ onIngest, activeFilter = 'all' }: EmailInboxDropZoneProps) {
     const [stage, setStage] = useState<Stage>('idle')
     const [activeFilename, setActiveFilename] = useState<string | null>(null)
     const [processStepIdx, setProcessStepIdx] = useState(0)
@@ -145,16 +164,28 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
             </div>
 
             {/* Faux inbox items */}
-            <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40">
-                {newEmailVisible && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                        <FauxEmailRow vendor="HON · billing@hon.example" subject="Invoice INV-0498 · service line" attached time="10:02 AM" emailType="bill" highlight />
+            {(() => {
+                const newVisible = newEmailVisible && (activeFilter === 'all' || activeFilter === 'non-edi')
+                const visible = FAUX_EMAILS.filter(e => activeFilter === 'all' || e.category === activeFilter)
+                const isEmpty = !newVisible && visible.length === 0
+                return (
+                    <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40">
+                        {newVisible && (
+                            <div className="animate-in slide-in-from-top-2 duration-300">
+                                <FauxEmailRow {...NEW_EMAIL} highlight />
+                            </div>
+                        )}
+                        {visible.map(e => (
+                            <FauxEmailRow key={e.subject} {...e} muted />
+                        ))}
+                        {isEmpty && (
+                            <div className="text-center text-[10px] text-muted-foreground py-3">
+                                No emails in this category
+                            </div>
+                        )}
                     </div>
-                )}
-                <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted emailType="bill" />
-                <FauxEmailRow vendor="HON · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted emailType="bill" />
-                <FauxEmailRow vendor="Allsteel · statements@allsteel.example" subject="Q1 2026 Statement · account summary" time="8:22 AM" muted emailType="statement" />
-            </div>
+                )
+            })()}
 
             {/* Dropzone */}
             <div

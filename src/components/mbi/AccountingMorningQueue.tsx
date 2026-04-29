@@ -190,23 +190,18 @@ export default function AccountingMorningQueue() {
                 </div>
             </div>
 
-            {/* Email inbox dropzone — Apr 23 Matt highly-desired interactivity.
-                Drop a file (or click Simulate) → the new invoice lands in the
-                Pending column of the kanban below. */}
-            <EmailInboxDropZone onIngest={handleIngest} />
+            {/* Email inbox dropzone */}
+            <EmailInboxDropZone onIngest={handleIngest} activeFilter={billFilter} />
 
-            {/* PO auto-recheck demo — Danny feedback #6: shows Strata re-evaluating
-                exceptions when CORE POs change, clearing mismatches without Kathy. */}
-            <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
-
-            {/* Bill filter chips */}
-            <div className="flex flex-wrap gap-2">
+            {/* Shared filter chips — controls both the email inbox above and the bill queue below */}
+            <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Filter inbox + queue:</span>
                 {([
-                    { key: 'all',         label: 'All bills',      icon: null,                                                         count: allInvoices.length },
-                    { key: 'exception',   label: 'Exceptions',     icon: <AlertTriangle className="h-3 w-3" />,                        count: allInvoices.filter(i => i.hasException).length },
-                    { key: 'healthtrust', label: 'HealthTrust GPO',icon: <Heart className="h-3 w-3" />,                               count: allInvoices.filter(i => i.isHealthTrust).length },
-                    { key: 'edi',         label: 'EDI',            icon: <Zap className="h-3 w-3" />,                                count: allInvoices.filter(i => i.isEDI).length },
-                    { key: 'non-edi',     label: 'Non-EDI',        icon: <Sparkles className="h-3 w-3" />,                           count: allInvoices.filter(i => !i.isEDI).length },
+                    { key: 'all',         label: 'All',            icon: null,                                    count: allInvoices.length },
+                    { key: 'exception',   label: 'Exceptions',     icon: <AlertTriangle className="h-3 w-3" />,   count: allInvoices.filter(i => i.hasException).length },
+                    { key: 'healthtrust', label: 'HealthTrust GPO',icon: <Heart className="h-3 w-3" />,          count: allInvoices.filter(i => i.isHealthTrust).length },
+                    { key: 'edi',         label: 'EDI',            icon: <Zap className="h-3 w-3" />,            count: allInvoices.filter(i => i.isEDI).length },
+                    { key: 'non-edi',     label: 'Non-EDI',        icon: <Sparkles className="h-3 w-3" />,       count: allInvoices.filter(i => !i.isEDI).length },
                 ] as { key: BillFilter; label: string; icon: React.ReactNode; count: number }[]).map(chip => (
                     <button
                         key={chip.key}
@@ -223,6 +218,9 @@ export default function AccountingMorningQueue() {
                     </button>
                 ))}
             </div>
+
+            {/* PO auto-recheck demo */}
+            <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
 
             {/* Queue + detail */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
