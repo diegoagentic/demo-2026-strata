@@ -103,7 +103,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         summary: 'Two paths: SIF/CAP design-assisted, or salesperson Quick Budget.',
         deliverables: [
             'Budget Request Form (CET, CAP, template, substitution rules) — to validate',
-            'SIF + CAP parser with field-by-field extraction',
+            'CET export → CORE direct import · contract pricing + markup applied automatically',
             'Quick Budget form for salesperson-only path',
             'Pre-flight validation chain (5 checks)',
         ],

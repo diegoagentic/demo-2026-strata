@@ -19,11 +19,11 @@ import { StatusBadge } from '../shared'
 import { getSIFSample, MBI_PROPOSALS } from '../../config/profiles/mbi-data'
 
 const EXTRACTION_STEPS = [
-    'Schema fields mapped',
+    'CET export validated · 24 fields confirmed',
     'Contract matched · HNI Corporate 55%',
     'Customer context added',
     'Shipping params applied',
-    'Line items transferred',
+    'CORE proposal draft created',
 ]
 
 const STEP_DELAY_MS = 600
