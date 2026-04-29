@@ -15,7 +15,7 @@
 import { useState } from 'react'
 import {
     Send, CheckCircle2, FileText, Clock, Palette,
-    Receipt, Zap, Sparkles,
+    Receipt, Zap, Sparkles, Package,
 } from 'lucide-react'
 import FlowHandoff from './FlowHandoff'
 

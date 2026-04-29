@@ -4,24 +4,58 @@
  *          largest manual step — SIF re-entry into CORE by the PC team.
  *          Left: SIF source · Middle: AI extraction · Right: CORE proposal draft.
  *
- *          Shows arrows flowing left-to-right, 'AI auto-import' badge in middle.
- *
- * PROPS: none — uses hero SIF + proposal data from mock
+ *          Idle: SIF column shown, AI + CORE columns greyed out.
+ *          Running: extraction steps appear one-by-one in column 2, then
+ *          CORE column reveals with a success flash (column 3).
  *
  * DS TOKENS: bg-card · border-border · ai (AI column) · primary (CORE output)
  *
  * USED BY: MBIQuotesPage
  */
 
-import { FileCode2, Sparkles, FileText, ArrowRight, Check } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { FileCode2, Sparkles, FileText, ArrowRight, Check, Play, Loader2 } from 'lucide-react'
 import { StatusBadge } from '../shared'
 import { getSIFSample, MBI_PROPOSALS } from '../../config/profiles/mbi-data'
+
+const EXTRACTION_STEPS = [
+    'Schema fields mapped',
+    'Contract matched · HNI Corporate 55%',
+    'Customer context added',
+    'Shipping params applied',
+    'Line items transferred',
+]
+
+const STEP_DELAY_MS = 600
 
 export default function SIFToCOREPreview() {
     const sif = getSIFSample('SIF-ENTERPRISE-001')
     const proposal = MBI_PROPOSALS.find(p => p.budgetId === 'BDG-2026-002') ?? MBI_PROPOSALS[0]
 
+    const [phase, setPhase] = useState<'idle' | 'running' | 'done'>('idle')
+    const [stepsVisible, setStepsVisible] = useState(0)
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const runImport = () => {
+        if (phase !== 'idle') return
+        setPhase('running')
+        setStepsVisible(0)
+    }
+
+    useEffect(() => {
+        if (phase !== 'running') return
+        if (stepsVisible < EXTRACTION_STEPS.length) {
+            timerRef.current = setTimeout(() => setStepsVisible(s => s + 1), STEP_DELAY_MS)
+        } else {
+            timerRef.current = setTimeout(() => setPhase('done'), 400)
+        }
+        return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+    }, [phase, stepsVisible])
+
     if (!sif) return null
+
+    const isDone = phase === 'done'
+    const isRunning = phase === 'running'
 
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
@@ -37,12 +71,29 @@ export default function SIFToCOREPreview() {
                         </div>
                     </div>
                 </div>
-                <StatusBadge label="Auto-built" tone="success" size="sm" icon={<Check className="h-3 w-3" />} />
+                <div className="flex items-center gap-2">
+                    {isDone && <StatusBadge label="Auto-built" tone="success" size="sm" icon={<Check className="h-3 w-3" />} />}
+                    {phase === 'idle' && (
+                        <button
+                            onClick={runImport}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                        >
+                            <Play className="h-3 w-3" />
+                            Run import
+                        </button>
+                    )}
+                    {isRunning && (
+                        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-ai">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Importing…
+                        </span>
+                    )}
+                </div>
             </div>
 
             <div className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-3">
-                    {/* Column 1: SIF source */}
+                    {/* Column 1: SIF source — always visible */}
                     <div className="bg-muted/40 dark:bg-zinc-900/40 border border-border rounded-xl p-3 flex flex-col">
                         <div className="flex items-center gap-1.5 mb-2">
                             <FileCode2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -57,43 +108,57 @@ export default function SIFToCOREPreview() {
                         </div>
                     </div>
 
-                    {/* Arrow */}
+                    {/* Arrow 1 */}
                     <div className="hidden md:flex items-center justify-center">
                         <div className="flex flex-col items-center gap-1">
-                            <ArrowRight className="h-4 w-4 text-ai" />
-                            <span className="text-[9px] font-bold text-ai uppercase tracking-wider">Auto</span>
+                            <ArrowRight className={`h-4 w-4 transition-colors duration-300 ${phase !== 'idle' ? 'text-ai' : 'text-border'}`} />
+                            <span className={`text-[9px] font-bold uppercase tracking-wider transition-colors duration-300 ${phase !== 'idle' ? 'text-ai' : 'text-border'}`}>Auto</span>
                         </div>
                     </div>
 
                     {/* Column 2: AI extraction */}
-                    <div className="bg-ai/10 dark:bg-ai/15 border border-ai/30 rounded-xl p-3 flex flex-col">
+                    <div className={`border rounded-xl p-3 flex flex-col transition-colors duration-300 ${phase !== 'idle' ? 'bg-ai/10 dark:bg-ai/15 border-ai/30' : 'bg-muted/20 border-border opacity-50'}`}>
                         <div className="flex items-center gap-1.5 mb-2">
-                            <Sparkles className="h-3.5 w-3.5 text-ai" />
+                            {isRunning
+                                ? <Loader2 className="h-3.5 w-3.5 text-ai animate-spin" />
+                                : <Sparkles className="h-3.5 w-3.5 text-ai" />
+                            }
                             <span className="text-[10px] font-bold text-ai uppercase tracking-wider">AI extraction</span>
                         </div>
-                        <div className="space-y-1">
-                            <ExtractionRow label="Schema parsed" done />
-                            <ExtractionRow label="Contract matched" done />
-                            <ExtractionRow label="Customer context added" done />
-                            <ExtractionRow label="Shipping params applied" done />
-                            <ExtractionRow label="Line items mapped" done />
+                        <div className="space-y-1 flex-1">
+                            {EXTRACTION_STEPS.map((step, i) => {
+                                const visible = phase === 'done' || (phase === 'running' && i < stepsVisible)
+                                const current = phase === 'running' && i === stepsVisible
+                                return (
+                                    <div
+                                        key={i}
+                                        className={`flex items-center gap-1.5 text-[11px] transition-opacity duration-200 ${visible || current ? 'opacity-100' : 'opacity-0'}`}
+                                    >
+                                        {visible
+                                            ? <Check className="h-3 w-3 text-ai shrink-0" />
+                                            : <Loader2 className="h-3 w-3 text-ai shrink-0 animate-spin" />
+                                        }
+                                        <span className="text-foreground">{step}</span>
+                                    </div>
+                                )
+                            })}
                         </div>
-                        <div className="mt-auto pt-2 border-t border-ai/20 text-[10px]">
+                        <div className={`mt-2 pt-2 border-t border-ai/20 text-[10px] transition-opacity duration-300 ${isDone ? 'opacity-100' : 'opacity-0'}`}>
                             <div className="font-semibold text-foreground">Confidence</div>
                             <div className="text-sm font-bold text-ai tabular-nums">96%</div>
                         </div>
                     </div>
 
-                    {/* Arrow */}
+                    {/* Arrow 2 */}
                     <div className="hidden md:flex items-center justify-center">
                         <div className="flex flex-col items-center gap-1">
-                            <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary" />
-                            <span className="text-[9px] font-bold text-zinc-900 dark:text-primary uppercase tracking-wider">Build</span>
+                            <ArrowRight className={`h-4 w-4 transition-colors duration-300 ${isDone ? 'text-zinc-900 dark:text-primary' : 'text-border'}`} />
+                            <span className={`text-[9px] font-bold uppercase tracking-wider transition-colors duration-300 ${isDone ? 'text-zinc-900 dark:text-primary' : 'text-border'}`}>Build</span>
                         </div>
                     </div>
 
-                    {/* Column 3: CORE output */}
-                    <div className="bg-primary/10 dark:bg-primary/15 border border-primary/30 rounded-xl p-3 flex flex-col">
+                    {/* Column 3: CORE output — reveals on done */}
+                    <div className={`border rounded-xl p-3 flex flex-col transition-all duration-500 ${isDone ? 'bg-primary/10 dark:bg-primary/15 border-primary/30 opacity-100' : 'bg-muted/20 border-border opacity-40'}`}>
                         <div className="flex items-center gap-1.5 mb-2">
                             <FileText className="h-3.5 w-3.5 text-zinc-900 dark:text-primary" />
                             <span className="text-[10px] font-bold text-zinc-900 dark:text-primary uppercase tracking-wider">CORE proposal</span>
@@ -112,15 +177,6 @@ export default function SIFToCOREPreview() {
                     </div>
                 </div>
             </div>
-        </div>
-    )
-}
-
-function ExtractionRow({ label, done }: { label: string; done?: boolean }) {
-    return (
-        <div className="flex items-center gap-1.5 text-[11px]">
-            {done ? <Check className="h-3 w-3 text-ai" /> : <div className="h-3 w-3 rounded-full border border-muted-foreground" />}
-            <span className="text-foreground">{label}</span>
         </div>
     )
 }
