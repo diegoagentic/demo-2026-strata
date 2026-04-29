@@ -49,6 +49,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         deliverables: [
             'Document AI bill ingestion → CORE pre-fill',
             'Non-EDI line-by-line reconciliation agent',
+            'Installer bill vs PO reconciliation agent (Teams workflow)',
             'Exception-only review queue for Kathy',
             'Freight & tariff missing-line flagging when exceeding the agreed threshold',
         ],
@@ -64,7 +65,6 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
             'HealthTrust 3% rebate auto-flag + escalation',
             'AR aging alerts + status taxonomy dashboard',
             'AI-drafted collection emails (review → send)',
-            'Installer bill vs PO via Teams workflow',
         ],
         estimatedDuration: '4-5 weeks',
     },
