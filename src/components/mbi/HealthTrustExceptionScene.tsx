@@ -143,10 +143,6 @@ export default function HealthTrustExceptionScene() {
                             <span className="text-[11px] font-semibold text-foreground">
                                 Strata found 1 consideration
                             </span>
-                            <span className="text-[10px] text-muted-foreground">·</span>
-                            <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
-                                3% GPO rebate · +${rebate.toLocaleString()}
-                            </span>
                             <span className="text-[9px] bg-ai/10 text-ai font-bold px-1.5 py-0.5 rounded-full">97%</span>
                         </div>
                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
@@ -194,10 +190,6 @@ export default function HealthTrustExceptionScene() {
                                 <div className="px-4 py-2 flex justify-between">
                                     <span className="text-muted-foreground">Bill subtotal</span>
                                     <span className="text-foreground tabular-nums">${invoice.amount.toLocaleString()}</span>
-                                </div>
-                                <div className="px-4 py-2 flex justify-between items-center">
-                                    <span className="text-muted-foreground">GPO rebate rate</span>
-                                    <span className="text-foreground tabular-nums">3% (Master Agreement §4.2)</span>
                                 </div>
                                 <div className="px-4 py-2 flex justify-between bg-muted/20 dark:bg-zinc-900/40">
                                     <span className="font-bold text-foreground">Total due</span>
