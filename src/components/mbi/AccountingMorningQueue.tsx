@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { Zap, Loader2, AlertTriangle, CheckCircle2, RefreshCw, Sparkles, Clock } from 'lucide-react'
+import { Zap, Loader2, AlertTriangle, CheckCircle2, RefreshCw, Sparkles } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import { InvoiceDocPreview, InvoiceExtractedFields } from './InvoiceDetailPanel'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
@@ -98,30 +98,18 @@ function isDueSoon(inv: { dueDate?: string }) {
     return days >= 0 && days <= 20
 }
 
-type BillFilter = 'all' | 'exception' | 'pending' | 'due-soon' | 'edi' | 'non-edi'
-
 export default function AccountingMorningQueue() {
     const [autoResolved, setAutoResolved] = useState<Set<string>>(new Set())
-    const [billFilter, setBillFilter] = useState<BillFilter>('all')
 
     const allInvoices = MBI_INVOICES.map(inv =>
         autoResolved.has(inv.id) ? { ...inv, status: 'done' as const } : inv
     )
 
-    const filteredInvoices = billFilter === 'all' ? allInvoices
-        : billFilter === 'exception' ? allInvoices.filter(i => i.hasException)
-        : billFilter === 'pending' ? allInvoices.filter(i => i.status === 'pending')
-        : billFilter === 'due-soon' ? allInvoices.filter(isDueSoon)
-        : billFilter === 'edi' ? allInvoices.filter(i => i.isEDI)
-        : allInvoices.filter(i => !i.isEDI)
-
     const total = allInvoices.length
     const pending = allInvoices.filter(i => i.status === 'pending').length
     const inProgress = allInvoices.filter(i => i.status === 'in-progress').length
     const done = allInvoices.filter(i => i.status === 'done').length
-    const healthTrust = allInvoices.filter(i => i.isHealthTrust).length
 
-    // Default select the HealthTrust hero so Kathy sees the 3% rebate right away
     const defaultId = MBI_INVOICES.find(i => i.status === 'pending')?.id ?? MBI_INVOICES[0].id
     const [selectedId, setSelectedId] = useState(defaultId)
     const selected = allInvoices.find(i => i.id === selectedId) ?? allInvoices[0]
@@ -163,40 +151,13 @@ export default function AccountingMorningQueue() {
                 </div>
             </div>
 
-            {/* Filter chips — controls the bill queue */}
-            <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Filter queue:</span>
-                {([
-                    { key: 'all',       label: 'All',          icon: null,                                    count: allInvoices.length },
-                    { key: 'exception', label: 'Exceptions',   icon: <AlertTriangle className="h-3 w-3" />,   count: allInvoices.filter(i => i.hasException).length },
-                    { key: 'pending',   label: 'Pending',      icon: <Clock className="h-3 w-3" />,           count: allInvoices.filter(i => i.status === 'pending').length },
-                    { key: 'due-soon',  label: 'Due soon',     icon: <Clock className="h-3 w-3" />,           count: allInvoices.filter(isDueSoon).length },
-                    { key: 'edi',       label: 'EDI',          icon: <Zap className="h-3 w-3" />,             count: allInvoices.filter(i => i.isEDI).length },
-                    { key: 'non-edi',   label: 'Non-EDI',      icon: <Sparkles className="h-3 w-3" />,        count: allInvoices.filter(i => !i.isEDI).length },
-                ] as { key: BillFilter; label: string; icon: React.ReactNode; count: number }[]).map(chip => (
-                    <button
-                        key={chip.key}
-                        onClick={() => setBillFilter(chip.key)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
-                            billFilter === chip.key
-                                ? 'bg-primary text-zinc-900 border-primary/50'
-                                : 'bg-card dark:bg-zinc-800 border-border text-muted-foreground hover:text-foreground hover:border-zinc-300 dark:hover:border-zinc-600'
-                        }`}
-                    >
-                        {chip.icon}
-                        {chip.label}
-                        <span className={`tabular-nums ${billFilter === chip.key ? 'opacity-70' : 'opacity-60'}`}>{chip.count}</span>
-                    </button>
-                ))}
-            </div>
-
             {/* PO auto-recheck demo */}
             <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
 
             {/* Queue + document preview + extracted fields — 3-panel grid */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.7fr_1.1fr] gap-4 items-start">
                 <InvoiceQueueTable
-                    invoices={filteredInvoices}
+                    invoices={allInvoices}
                     selectedId={selectedId}
                     onSelect={setSelectedId}
                 />
