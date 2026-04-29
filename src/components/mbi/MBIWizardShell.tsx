@@ -42,6 +42,7 @@ interface MBIWizardShellProps {
     nextLabel?: string
     actionHint?: string
     persona?: ReactNode
+    secondaryAction?: ReactNode
     children: ReactNode
 }
 
@@ -55,6 +56,7 @@ export default function MBIWizardShell({
     nextLabel,
     actionHint,
     persona,
+    secondaryAction,
     children,
 }: MBIWizardShellProps) {
     const visibleSteps = steps
@@ -162,14 +164,17 @@ export default function MBIWizardShell({
                             Step {visiblePos} of {visibleTotal}
                         </div>
 
-                        <button
-                            onClick={onNext}
-                            disabled={!onNext || !canAdvance}
-                            className="flex-1 sm:flex-none min-w-[180px] flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
-                        >
-                            <span>{isLast ? 'Done' : resolvedNextLabel}</span>
-                            <ChevronRight className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {secondaryAction}
+                            <button
+                                onClick={onNext}
+                                disabled={!onNext || !canAdvance}
+                                className="flex-1 sm:flex-none min-w-[120px] flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                            >
+                                <span>{isLast ? 'Done' : resolvedNextLabel}</span>
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                     {!canAdvance && (
                         <div className="text-[11px] text-amber-600 dark:text-amber-400 text-center italic">

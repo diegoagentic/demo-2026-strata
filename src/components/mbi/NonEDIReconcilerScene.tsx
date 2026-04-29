@@ -62,14 +62,7 @@ const OVERRIDE_CATEGORIES = [
     { id: 'other', label: 'Other (describe below)' },
 ]
 
-type RowStatus = 'pending' | 'accepted' | 'overridden' | 'escalated'
-
-const ESCALATE_ROW_CATEGORIES = [
-    { id: 'vendor-dispute', label: 'Vendor disputing the variance' },
-    { id: 'manager-review', label: 'Needs manager approval' },
-    { id: 'contract-issue', label: 'Potential contract discrepancy' },
-    { id: 'other', label: 'Other (describe below)' },
-]
+type RowStatus = 'pending' | 'accepted' | 'overridden'
 type HtStatus = 'pending' | 'approved' | 'overridden' | 'escalated'
 
 const HT_OVERRIDE_CATEGORIES = [
@@ -262,7 +255,6 @@ export default function NonEDIReconcilerScene() {
     const [statuses, setStatuses] = useState<Record<string, RowStatus>>({})
     const [metaById, setMetaById] = useState<Record<string, { reasonCategory?: string; notes?: string }>>({})
     const [modalRow, setModalRow] = useState<LineRow | null>(null)
-    const [escalateRow, setEscalateRow] = useState<LineRow | null>(null)
     const [freightAdded, setFreightAdded] = useState(false)
     const [toast, setToast] = useState<{ id: string; message: string; tone: 'success' | 'info' } | null>(null)
 
@@ -284,13 +276,6 @@ export default function NonEDIReconcilerScene() {
         setMetaById(prev => ({ ...prev, [row.id]: payload }))
         setModalRow(null)
         pushToast(row.id, 'info', `${row.line} · override logged to audit trail`)
-    }
-
-    const handleEscalateSubmit = (row: LineRow, payload: { reasonCategory: string; notes: string }) => {
-        setRowStatus(row, 'escalated')
-        setMetaById(prev => ({ ...prev, [row.id]: payload }))
-        setEscalateRow(null)
-        pushToast(row.id, 'info', `${row.line} · escalated · manager notified`)
     }
 
     const handleAddFreight = () => {
@@ -480,13 +465,6 @@ export default function NonEDIReconcilerScene() {
                                     {isException && status === 'pending' && (
                                         <>
                                             <button
-                                                onClick={() => setEscalateRow(row)}
-                                                title="Escalate to manager"
-                                                className="h-7 w-7 flex items-center justify-center text-red-600 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-200 dark:border-red-500/30 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                                            >
-                                                <Flag className="h-3 w-3" />
-                                            </button>
-                                            <button
                                                 onClick={() => setModalRow(row)}
                                                 title="Override with reason"
                                                 className="h-7 w-7 flex items-center justify-center text-foreground bg-background dark:bg-zinc-800 border border-border rounded-md hover:bg-muted hover:border-info/40 transition-colors"
@@ -508,9 +486,6 @@ export default function NonEDIReconcilerScene() {
                                     )}
                                     {status === 'overridden' && (
                                         <StatusBadge label="Override" tone="info" size="sm" icon={<Pencil className="h-3 w-3" />} />
-                                    )}
-                                    {status === 'escalated' && (
-                                        <StatusBadge label="Escalated" tone="danger" size="sm" icon={<Flag className="h-3 w-3" />} />
                                     )}
                                 </div>
                             </div>
@@ -599,35 +574,6 @@ export default function NonEDIReconcilerScene() {
                 { sources: [SOURCES.CORE_PO, SOURCES.INVOICE_HISTORY] },
                 { sources: [SOURCES.CORE_GL, SOURCES.CORE_RPA] },
             ]} />
-
-            {/* Escalate modal */}
-            {escalateRow && (
-                <MBIReasonModal
-                    isOpen
-                    onClose={() => setEscalateRow(null)}
-                    onSubmit={payload => handleEscalateSubmit(escalateRow, { reasonCategory: payload.categoryId, notes: payload.notes })}
-                    tone="danger"
-                    icon={<Flag className="h-5 w-5" />}
-                    title="Escalate line variance"
-                    subtitle={`${escalateRow.line} · ${escalateRow.desc}`}
-                    contextBanner={{
-                        tone: 'info',
-                        icon: <AlertTriangle className="h-4 w-4" />,
-                        title: 'Manager will be notified.',
-                        body: (
-                            <>
-                                {getMismatchLabel(escalateRow)} — this line will be held pending manager review. The bill won't auto-post until resolved.
-                            </>
-                        ),
-                    }}
-                    categories={ESCALATE_ROW_CATEGORIES}
-                    defaultCategoryId="vendor-dispute"
-                    categoryPrompt="Why escalate?"
-                    notesPlaceholder="e.g. Apex confirmed by email they shipped 5 but billed 6 — need manager to approve the PO amendment."
-                    notesRequiredForCategoryId="other"
-                    confirmLabel="Escalate to manager"
-                />
-            )}
 
             {/* Override modal */}
             {modalRow && (

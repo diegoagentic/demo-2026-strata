@@ -15,7 +15,8 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Receipt, GitCompare, DollarSign } from 'lucide-react'
+import { Receipt, GitCompare, DollarSign, Flag, AlertTriangle, UserCheck } from 'lucide-react'
+import { ReasonDialog as MBIReasonModal } from '../shared'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
@@ -102,6 +103,7 @@ export default function MBIAccountingPage() {
                     canAdvance
                     actionHint={stepMeta.hint}
                     nextLabel={stepMeta.nextLabel}
+                    secondaryAction={activeStep === 1 ? <EscalateAllButton /> : undefined}
                     persona={
                         <MBIPersonaBadge
                             name="Kathy Belleville"
@@ -120,6 +122,58 @@ export default function MBIAccountingPage() {
                 <OverviewStub />
             )}
         </MBIPageShell>
+    )
+}
+
+const ESCALATE_ALL_CATEGORIES = [
+    { id: 'vendor-dispute', label: 'Vendor disputing the variances' },
+    { id: 'manager-review', label: 'Needs manager approval' },
+    { id: 'contract-issue', label: 'Potential contract discrepancy' },
+    { id: 'other', label: 'Other (describe below)' },
+]
+
+function EscalateAllButton() {
+    const [open, setOpen] = useState(false)
+    const [done, setDone] = useState(false)
+
+    if (done) return (
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 dark:text-red-400 px-3 py-2 rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10">
+            <Flag className="h-3.5 w-3.5" />
+            Escalated
+        </span>
+    )
+
+    return (
+        <>
+            <button
+                onClick={() => setOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-red-600 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-200 dark:border-red-500/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            >
+                <Flag className="h-3.5 w-3.5" />
+                Escalate
+            </button>
+            <MBIReasonModal
+                isOpen={open}
+                onClose={() => setOpen(false)}
+                onSubmit={() => { setOpen(false); setDone(true) }}
+                tone="danger"
+                icon={<Flag className="h-5 w-5" />}
+                title="Escalate flagged line items"
+                subtitle="Apex Workspace · INV-0484 · 2 exceptions pending"
+                contextBanner={{
+                    tone: 'info',
+                    icon: <UserCheck className="h-4 w-4" />,
+                    title: 'Manager will be notified.',
+                    body: 'All pending exceptions will be held for manager review. The bill won\'t auto-post until resolved.',
+                }}
+                categories={ESCALATE_ALL_CATEGORIES}
+                defaultCategoryId="vendor-dispute"
+                categoryPrompt="Why escalate?"
+                notesPlaceholder="e.g. Apex confirmed short ship by email — need manager to approve the PO amendment before posting."
+                notesRequiredForCategoryId="other"
+                confirmLabel="Escalate to manager"
+            />
+        </>
     )
 }
 
