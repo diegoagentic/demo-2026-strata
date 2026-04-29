@@ -48,11 +48,11 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     3: 'm2.5',
 }
 
-const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: '', nextLabel: 'Review' },
-    1: { hint: 'Line-by-line diff vs PO for non-EDI vendors (paper / PDF bills, no electronic feed) · accept variances that match your delivery, override the rest. HealthTrust rebate flagged inline. Then we move to AR.', nextLabel: 'Post' },
-    2: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
-    3: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then wrap up the queue.', nextLabel: 'Wrap up' },
+const STEP_NEXT_LABELS: Record<number, string> = {
+    0: 'Review',
+    1: 'Post',
+    2: 'Review collection drafts',
+    3: 'Wrap up',
 }
 
 export default function MBIAccountingPage() {
@@ -78,8 +78,6 @@ export default function MBIAccountingPage() {
         if (tourIdx >= 0) goToStep(tourIdx)
     }
 
-    const stepMeta = STEP_HINTS[activeStep] ?? { hint: '', nextLabel: undefined }
-
     return (
         <MBIPageShell
             title="Accounting AI"
@@ -101,8 +99,7 @@ export default function MBIAccountingPage() {
                     onPrev={() => navigateWizard(Math.max(0, activeStep - 1))}
                     onNext={() => navigateWizard(Math.min(ACCOUNTING_STEPS.length - 1, activeStep + 1))}
                     canAdvance
-                    actionHint={stepMeta.hint}
-                    nextLabel={stepMeta.nextLabel}
+                    nextLabel={STEP_NEXT_LABELS[activeStep]}
                     secondaryAction={activeStep === 1 ? <EscalateAllButton /> : undefined}
                     persona={
                         <MBIPersonaBadge

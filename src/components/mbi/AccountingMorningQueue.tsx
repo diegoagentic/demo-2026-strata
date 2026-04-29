@@ -122,7 +122,7 @@ export default function AccountingMorningQueue() {
     const healthTrust = allInvoices.filter(i => i.isHealthTrust).length
 
     // Default select the HealthTrust hero so Kathy sees the 3% rebate right away
-    const defaultId = MBI_INVOICES.find(i => i.isHealthTrust)?.id ?? MBI_INVOICES[0].id
+    const defaultId = MBI_INVOICES.find(i => i.status === 'pending')?.id ?? MBI_INVOICES[0].id
     const [selectedId, setSelectedId] = useState(defaultId)
     const selected = allInvoices.find(i => i.id === selectedId) ?? allInvoices[0]
 

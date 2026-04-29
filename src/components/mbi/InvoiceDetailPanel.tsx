@@ -22,7 +22,7 @@
  * USED BY: MBIAccountingPage (Document AI section, right column)
  */
 
-import { FileText, Heart, AlertTriangle, ShieldCheck, Building2, Calendar, DollarSign, Send, ArrowRight, Sparkles, Clock, CreditCard } from 'lucide-react'
+import { FileText, AlertTriangle, Building2, Calendar, DollarSign, Sparkles, Clock, CreditCard } from 'lucide-react'
 import type { Invoice } from '../../config/profiles/mbi-data'
 
 interface InvoiceDetailPanelProps {
@@ -33,7 +33,6 @@ interface InvoiceDetailPanelProps {
 // Panel central: header de la factura + exception banner + mockup del documento
 export function InvoiceDocPreview({ invoice }: InvoiceDetailPanelProps) {
     const received = new Date(invoice.received)
-    const rebateAmount = invoice.has3PctRebate ? Math.round(invoice.amount * 0.03) : 0
 
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
@@ -57,11 +56,6 @@ export function InvoiceDocPreview({ invoice }: InvoiceDetailPanelProps) {
                         ) : (
                             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">OCR</span>
                         )}
-                        {invoice.isHealthTrust && (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 uppercase tracking-wider inline-flex items-center gap-1">
-                                <Heart className="h-2.5 w-2.5" />HT
-                            </span>
-                        )}
                     </div>
                 </div>
             </div>
@@ -81,7 +75,7 @@ export function InvoiceDocPreview({ invoice }: InvoiceDetailPanelProps) {
             <div className="p-4">
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Source document</div>
                 <div className="aspect-[4/3] bg-white dark:bg-zinc-900 border border-border rounded-xl p-5 text-[10px] text-zinc-900 dark:text-zinc-100 overflow-hidden">
-                    <InvoiceMockup invoice={invoice} rebate={rebateAmount} />
+                    <InvoiceMockup invoice={invoice} />
                 </div>
             </div>
         </div>
@@ -91,8 +85,6 @@ export function InvoiceDocPreview({ invoice }: InvoiceDetailPanelProps) {
 // ─── InvoiceExtractedFields ───────────────────────────────────────────────────
 // Panel derecho: campos extraídos por AI + rebate callout + CTA de CORE
 export function InvoiceExtractedFields({ invoice }: InvoiceDetailPanelProps) {
-    const rebateAmount = invoice.has3PctRebate ? Math.round(invoice.amount * 0.03) : 0
-
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
             {/* AI extracted fields */}
@@ -104,7 +96,7 @@ export function InvoiceExtractedFields({ invoice }: InvoiceDetailPanelProps) {
                 <div className="space-y-1.5">
                     <FieldRow icon={<Building2 className="h-3 w-3" />} label="Vendor" value={invoice.vendor} confidence={99} />
                     {invoice.clientName && (
-                        <FieldRow icon={<Heart className="h-3 w-3" />} label="Project" value={invoice.clientName} confidence={99} />
+                        <FieldRow icon={<Building2 className="h-3 w-3" />} label="Project" value={invoice.clientName} confidence={99} />
                     )}
                     <FieldRow icon={<FileText className="h-3 w-3" />} label="PO Number" value={invoice.poNumber} confidence={invoice.ocrConfidence} />
                     <FieldRow icon={<DollarSign className="h-3 w-3" />} label="Amount" value={`$${invoice.amount.toLocaleString()}`} confidence={invoice.ocrConfidence} />
@@ -160,7 +152,7 @@ function FieldRow({
 }
 
 // ─── Mini invoice mockup ─────────────────────────────────────────────────────
-function InvoiceMockup({ invoice, rebate }: { invoice: Invoice; rebate: number }) {
+function InvoiceMockup({ invoice }: { invoice: Invoice }) {
     return (
         <div className="h-full w-full font-mono flex flex-col">
             <div className="flex items-center justify-between border-b border-zinc-300 dark:border-zinc-700 pb-1">
@@ -188,15 +180,9 @@ function InvoiceMockup({ invoice, rebate }: { invoice: Invoice; rebate: number }
                     <span className="text-zinc-500">Subtotal</span>
                     <span className="tabular-nums">${invoice.amount.toLocaleString()}</span>
                 </div>
-                {rebate > 0 && (
-                    <div className="flex justify-between text-amber-700 font-bold">
-                        <span>3% Rebate</span>
-                        <span className="tabular-nums">${rebate.toLocaleString()}</span>
-                    </div>
-                )}
                 <div className="flex justify-between font-bold pt-1 border-t border-zinc-200 dark:border-zinc-700">
                     <span>Total Due</span>
-                    <span className="tabular-nums">${(invoice.amount + rebate).toLocaleString()}</span>
+                    <span className="tabular-nums">${invoice.amount.toLocaleString()}</span>
                 </div>
             </div>
             <div className="mt-auto text-[7px] text-zinc-400 italic">

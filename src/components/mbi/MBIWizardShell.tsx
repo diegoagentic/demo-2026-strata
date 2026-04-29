@@ -85,17 +85,8 @@ export default function MBIWizardShell({
                                     Step {visiblePos} of {visibleTotal}
                                 </div>
                                 <div className="text-base font-bold text-foreground">{activeSpec.label}</div>
-                                {actionHint && (
-                                    <div className="text-xs text-muted-foreground mt-0.5">{actionHint}</div>
-                                )}
                             </div>
                         </div>
-                        {nextSpec && (
-                            <div className="text-[10px] text-muted-foreground text-right shrink-0">
-                                <div className="font-bold uppercase tracking-wider">Next</div>
-                                <div className="truncate max-w-[180px]">{nextSpec.label}</div>
-                            </div>
-                        )}
                     </div>
                 )}
 

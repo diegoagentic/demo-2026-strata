@@ -29,8 +29,8 @@ export const MBI_INVOICES: Invoice[] = [
     { id: 'INV-0484', vendor: 'Apex Workspace', poNumber: 'PO-2026-0051', amount: 12900, invoiceDate: '2026-04-16', paymentTerms: 'Net 30',      dueDate: '2026-05-16', received: '2026-04-19T07:04:00Z', isEDI: false, ocrConfidence: 92, hasException: true, exceptionReason: 'Quantity mismatch: PO 6, bill 5 · short-shipped Jarvis desks', status: 'pending' },
     // Exception: missing freight line
     { id: 'INV-0485', vendor: 'CaseWorks',      poNumber: 'PO-2026-0052', amount: 38250, invoiceDate: '2026-04-15', paymentTerms: '2/10 Net 30', dueDate: '2026-05-15', received: '2026-04-19T07:30:00Z', isEDI: false, ocrConfidence: 94, hasException: true, exceptionReason: 'Missing freight line · PO includes $420 inbound freight not on bill', status: 'pending' },
-    // HealthTrust: Allsteel bill for Riverside Medical project → 3% rebate required
-    { id: 'INV-0486', vendor: 'Allsteel',       clientName: 'Riverside Medical Center', poNumber: 'PO-2026-0053', amount: 62400, invoiceDate: '2026-04-16', paymentTerms: 'Net 45',      dueDate: '2026-06-01', received: '2026-04-19T08:00:00Z', isEDI: true, isHealthTrust: true, has3PctRebate: true, ocrConfidence: 97, status: 'pending' },
-    // HealthTrust: HON bill for Lakeside Health System project → 3% rebate required
-    { id: 'INV-0492', vendor: 'HON',            clientName: 'Lakeside Health System',   poNumber: 'PO-2026-0061', amount: 48200, invoiceDate: '2026-04-17', paymentTerms: 'Net 45',      dueDate: '2026-06-01', received: '2026-04-19T09:30:00Z', isEDI: true, isHealthTrust: true, has3PctRebate: true, ocrConfidence: 96, status: 'pending' },
+    // Exception: unit price mismatch vs PO — 160 chairs billed at $345 vs agreed $320
+    { id: 'INV-0486', vendor: 'Versteel',        poNumber: 'PO-2026-0053', amount: 54800, invoiceDate: '2026-04-16', paymentTerms: 'Net 45',      dueDate: '2026-06-01', received: '2026-04-19T08:00:00Z', isEDI: false, ocrConfidence: 84, hasException: true, exceptionReason: 'Unit price mismatch: PO $320/unit, bill $345/unit · 160 chairs', status: 'pending' },
+    // Exception: low OCR confidence — manual field review required before posting
+    { id: 'INV-0492', vendor: 'Global Industries', poNumber: 'PO-2026-0061', amount: 31600, invoiceDate: '2026-04-17', paymentTerms: 'Net 30',    dueDate: '2026-05-07', received: '2026-04-19T09:30:00Z', isEDI: false, ocrConfidence: 78, hasException: true, exceptionReason: 'Low OCR confidence (78%) · manual field review required before posting', status: 'pending' },
 ];
