@@ -88,7 +88,7 @@ export default function HealthTrustExceptionScene() {
             {/* Breadcrumb — context from morning queue */}
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
                 <FileText className="h-3 w-3 shrink-0" />
-                <span>Morning Bill Queue</span>
+                <span>Bill Queue</span>
                 <span className="text-border">›</span>
                 <span className="font-bold text-foreground">{invoice.id} · {invoice.vendor} · HealthTrust rebate review</span>
             </div>

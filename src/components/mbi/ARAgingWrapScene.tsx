@@ -40,7 +40,7 @@ export default function ARAgingWrapScene() {
             <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-2 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                 <div className="text-xs flex-1">
-                    <span className="font-bold text-foreground">8 standard follow-ups auto-sent this morning</span>
+                    <span className="font-bold text-foreground">8 standard follow-ups auto-sent today</span>
                     <span className="text-muted-foreground"> · per payment terms · no action needed</span>
                 </div>
             </div>
@@ -70,7 +70,7 @@ export default function ARAgingWrapScene() {
             {!morningClosed ? (
                 <div className="bg-card dark:bg-zinc-800 border border-primary/30 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div className="min-w-0">
-                        <div className="text-sm font-bold text-foreground">Ready to close the morning?</div>
+                        <div className="text-sm font-bold text-foreground">Ready to wrap up the queue?</div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
                             Vouchers posted · reconciliations logged · collection emails sent · forecast refreshed. Everything's in leadership's live dashboard.
                         </div>
@@ -80,13 +80,13 @@ export default function ARAgingWrapScene() {
                         className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold text-zinc-900 bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm"
                     >
                         <CheckCircle2 className="h-4 w-4" />
-                        Close morning queue
+                        Close queue
                     </button>
                 </div>
             ) : (
                 <FlowHandoff
                     eyebrow="Flow 1 complete"
-                    recapHeading="Kathy's morning · done in 18 minutes"
+                    recapHeading="Kathy's queue · done in 18 minutes"
                     recapSubheading="Vouchers posted, reconciliations cleared, AR emails out — everything Strata couldn't auto-handle routed through your eyes only."
                     recapStats={[
                         { icon: <Clock className="h-4 w-4" />, value: '18 min', sub: 'vs 4h before', accent: 'text-success' },
@@ -95,7 +95,7 @@ export default function ARAgingWrapScene() {
                         { icon: <Receipt className="h-4 w-4" />, value: `$${(committed / 1000).toFixed(0)}K`, sub: 'committed to pay', accent: 'text-success' },
                     ]}
                     timeline={[
-                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Morning queue', caption: '12 bills triaged', flow: 'Flow 1 · Accounting AI' },
+                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Bill queue', caption: '12 bills triaged', flow: 'Flow 1 · Accounting AI' },
                         { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'HealthTrust posted', caption: '3% rebate applied', flow: '—' },
                         { status: 'done', icon: <Package className="h-3.5 w-3.5" />, label: 'Non-EDI cleared', caption: 'Apex Workspace reconciled', flow: '—' },
                         { status: 'done', icon: <Mail className="h-3.5 w-3.5" />, label: 'AR aging reviewed', caption: `${MBI_AR_RECORDS.length} accounts · ${escalated} escalated`, flow: '—' },

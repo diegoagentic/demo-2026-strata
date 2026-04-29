@@ -12,7 +12,7 @@
 //                 m1.x history live in git in case priorities shift.
 //
 // FLOW 1 — Accounting AI (Phase 2, Controller · Phase 1 Pilot) · 5 scenes / 5 beats
-//   m2.1: Morning queue — 3-column kanban (pending · in-progress · done)
+//   m2.1: Bill queue — 3-column kanban (pending · in-progress · done)
 //   m2.2: HealthTrust exception — GPO rebate · approve / override / escalate
 //   m2.3: Non-EDI reconciliation — PO vs invoice line-by-line diff
 //   m2.4: AR aging review — live status taxonomy + analytics (Apr 23 split)
@@ -95,8 +95,8 @@ export const MBI_STEPS: DemoStep[] = [
         id: 'm2.5',
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
-        title: 'Collection drafts + close the morning',
-        description: 'Strata pre-drafted a follow-up for every open account using each client\'s tone history. The Controller reviews, edits if needed, sends. With AP posted, AR collected, and the forecast live, the morning closes — and the next signed budget queues up the PC team.',
+        title: 'Collection drafts + wrap up',
+        description: 'Strata pre-drafted a follow-up for every open account using each client\'s tone history. The Controller reviews, edits if needed, sends. With AP posted, AR collected, and the forecast live, the queue closes — and the next signed budget queues up the PC team.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -153,7 +153,7 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.2': { mode: 'interactive', userAction: 'Approve the GPO rebate · override with a reason · or escalate to the Director of Healthcare' },
     'm2.3': { mode: 'interactive', userAction: 'Reconcile the non-EDI bill line-by-line · accept or override each variance' },
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
-    'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then close the morning' },
+    'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then wrap up the queue' },
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
     'm3.2': { mode: 'interactive', userAction: 'Run SIF extraction · enter GP per vendor · confirm to create CORE Quote QUOT-2026-003' },
     'm3.3': { mode: 'interactive', userAction: 'Review Spec Check · audit loops collapse into one AI pass plus one human review' },
@@ -192,7 +192,7 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'Drafting collection emails by account tone + history',
         'Loading client past-conversation context per draft',
         'Awaiting Controller review · send · close',
-        'Morning complete · ready for handoff to Quotes AI',
+        'Queue complete · ready for handoff to Quotes AI',
     ],
     'm3.1': [
         'Signed budget received from the Account Manager',

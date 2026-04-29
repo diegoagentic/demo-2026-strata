@@ -232,7 +232,7 @@ export default function DesignFindingsReview() {
                 <FlowHandoff
                     eyebrow="Demo complete · full arc"
                     recapHeading="MBI's 4 AIs · one platform · one story"
-                    recapSubheading="From Beth catching a $18K-class mistake at the design source, to Amanda delivering in 4 min, to Kathy's 18-min morning, to the PC team sending a proposal in 12 min. The loop closes upstream."
+                    recapSubheading="From Beth catching a $18K-class mistake at the design source, to Amanda delivering in 4 min, to Kathy closing the queue in 18 min, to the PC team sending a proposal in 12 min. The loop closes upstream."
                     recapStats={[
                         { icon: <Clock className="h-4 w-4" />, value: '4 min', sub: 'Amanda · Flow 1', accent: 'text-success' },
                         { icon: <Clock className="h-4 w-4" />, value: '18 min', sub: 'Kathy · Flow 1', accent: 'text-success' },
@@ -243,7 +243,7 @@ export default function DesignFindingsReview() {
                         { status: 'done', icon: <Palette className="h-3.5 w-3.5" />, label: 'Design caught at source', caption: 'Beth · Flow 3', flow: 'Flow 3 · Design AI' },
                         { status: 'done', icon: <Calculator className="h-3.5 w-3.5" />, label: 'Budget delivered fast', caption: 'Amanda · Flow 1', flow: 'Flow 1 · Budget Builder' },
                         { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'PC queue unblocked', caption: 'Marcia · Flow 2', flow: 'Flow 2 · Quotes AI' },
-                        { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'Morning in 18 min', caption: 'Kathy · Flow 1', flow: 'Flow 1 · Accounting AI' },
+                        { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'Queue in 18 min', caption: 'Kathy · Flow 1', flow: 'Flow 1 · Accounting AI' },
                         { status: 'future', icon: <Send className="h-3.5 w-3.5" />, label: 'Run it again', caption: 'restart the loop', flow: '—', highlight: true },
                     ]}
                     narrative={{

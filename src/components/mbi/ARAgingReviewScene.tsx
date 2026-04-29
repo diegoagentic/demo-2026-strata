@@ -53,7 +53,7 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">AP closed · now AR aging stays live</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Vouchers posted, reconciliations cleared. Now the morning shifts to receivables: live aging board replaces the bi-weekly Excel, and Strata routes the open accounts by status so you know exactly which need a nudge.
+                        Vouchers posted, reconciliations cleared. Now Kathy shifts to receivables: live aging board replaces the bi-weekly Excel, and Strata routes the open accounts by status so you know exactly which need a nudge.
                     </div>
                 </div>
             </div>
@@ -62,7 +62,7 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-2">
                     <Sparkles className="h-3.5 w-3.5 text-ai" />
-                    <span className="text-[10px] font-bold text-ai uppercase tracking-wider">Strata AR signals · this morning</span>
+                    <span className="text-[10px] font-bold text-ai uppercase tracking-wider">Strata AR signals · today</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     <InsightChip

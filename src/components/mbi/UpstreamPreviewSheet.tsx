@@ -190,7 +190,7 @@ function ProjectCreationView() {
                 <div className="text-[11px]">
                     <div className="font-bold text-foreground">Strata picks up here</div>
                     <div className="text-muted-foreground mt-0.5">
-                        From this point on, AP invoices for this project will land in the Accounting AI morning queue (Flow 1). When the budget is signed, the PC team picks it up via Quotes AI (Flow 2).
+                        From this point on, AP invoices for this project will land in the Accounting AI queue (Flow 1). When the budget is signed, the PC team picks it up via Quotes AI (Flow 2).
                     </div>
                 </div>
             </div>

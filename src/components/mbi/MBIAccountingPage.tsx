@@ -37,11 +37,11 @@ import { useDemo } from '../../context/DemoContext'
 //   "AR aging" → "AR aging (open accounts)"    — AR = Accounts Receivable
 //   "HealthTrust" → "Healthcare contract (HealthTrust GPO)" — GPO context inline
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
-    { id: 'morning', label: 'Morning queue · bills to review', shortLabel: '1. Queue' },
+    { id: 'morning', label: 'Bill queue · pending & recent', shortLabel: '1. Queue' },
     { id: 'healthtrust', label: 'Healthcare contract (HealthTrust GPO)', shortLabel: '2. Healthcare GPO' },
     { id: 'non-edi', label: 'Paper bills reconciliation (Non-EDI)', shortLabel: '3. Paper bills' },
     { id: 'ar-aging', label: 'AR aging · open accounts to collect', shortLabel: '4. AR aging' },
-    { id: 'ar-close', label: 'Collection emails + close the morning', shortLabel: '5. Close' },
+    { id: 'ar-close', label: 'Collection emails + wrap up', shortLabel: '5. Close' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
@@ -70,7 +70,7 @@ const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
     1: { hint: 'Approve the auto-calculated 3% rebate (paid to HealthTrust, the healthcare group purchasing organization) · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile paper bills' },
     2: { hint: 'Last AP step · line-by-line diff vs PO for non-EDI vendors (paper / PDF bills, no electronic feed) · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to receivables' },
     3: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
-    4: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then close the morning.', nextLabel: 'Close the morning' },
+    4: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then wrap up the queue.', nextLabel: 'Wrap up' },
 }
 
 export default function MBIAccountingPage() {
@@ -101,14 +101,14 @@ export default function MBIAccountingPage() {
     return (
         <MBIPageShell
             title="Accounting AI"
-            subtitle="Prototype · Phase 1 (Mark's pick) · Kathy Belleville (Controller) · morning routine · 4h → 18 min"
+            subtitle="Prototype · Phase 1 (Mark's pick) · Kathy Belleville (Controller) · daily accounting queue · 4h → 18 min"
             icon={<Receipt className="h-5 w-5" />}
             activeApp="mbi-accounting"
         >
             <MBIModuleHeader
                 module="accounting"
                 tint="ai"
-                outcome="Kathy gets her morning back — exception-only review, HealthTrust royalties auto-flagged, AR collected on time, billing forecast live for leadership."
+                outcome="Kathy gets her time back — exception-only review, HealthTrust royalties auto-flagged, AR collected on time, billing forecast live for leadership."
             />
 
             {inWizard ? (

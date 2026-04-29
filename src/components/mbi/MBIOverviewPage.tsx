@@ -64,7 +64,7 @@ const FLOWS: FlowCard[] = [
         personaInitials: 'KB',
         isPilot: true,
         isPrototype: true,
-        pain: '4-hour morning reading every bill, reconciling every PO, updating AR biweekly in Excel',
+        pain: 'Daily 4-hour routine reading every bill, reconciling every PO, updating AR biweekly in Excel',
         outcome: '12 bills processed continuously as received, pending exceptions reviewed, AR aging live, collection emails sent',
         timeBefore: '4 hours',
         timeAfter: '18 min',
@@ -148,7 +148,7 @@ export default function MBIOverviewPage() {
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
                         The Thursday demo focuses on <strong className="text-foreground">Accounting AI</strong> — Mark's pick: cleanest metric, lowest risk, single owner (Kathy). Uses RPA to interact with CORE — no direct API yet.
-                        <strong className="text-foreground"> Quotes AI</strong> is in the active tour as the natural Phase 4 follow-up that closes the morning's PC handoff.
+                        <strong className="text-foreground"> Quotes AI</strong> is in the active tour as the natural Phase 4 follow-up that closes the PC handoff.
                         <strong className="text-foreground"> Design AI</strong> (Spec Check, Q10 #1 priority) lives in code and is one tab away if the conversation goes there — directional, not Phase 2.
                     </div>
                 </div>
@@ -156,7 +156,7 @@ export default function MBIOverviewPage() {
 
             {/* Aggregate impact stats — one per module + Phase 1 pilots callout. */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <ImpactStat icon={<Clock className="h-4 w-4" />} value="4 hrs → 18 min" sub="Kathy · accounting morning" accent="text-ai" />
+                <ImpactStat icon={<Clock className="h-4 w-4" />} value="4 hrs → 18 min" sub="Kathy · accounting queue" accent="text-ai" />
                 <ImpactStat icon={<Clock className="h-4 w-4" />} value="2 hrs → 12 min" sub="Marcia · quote turnaround" accent="text-info" />
                 <ImpactStat icon={<Award className="h-4 w-4" />} value="9.08/10" sub="Q10 spec check priority" accent="text-success" />
                 <ImpactStat icon={<Users className="h-4 w-4" />} value="2 pilots" sub="Phase 1 · Kathy + Beth" accent="text-ai" />
@@ -168,7 +168,7 @@ export default function MBIOverviewPage() {
                     <div className="min-w-0">
                         <div className="text-sm font-bold text-foreground">Walk the active tour · 9 beats</div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
-                            Start from Kathy's morning (5 beats) and continue to Marcia's PC team (4 beats). Design AI is built but kept off the navigable surface for this demo — see the Phase 4 card below for context.
+                            Start from Kathy's queue (5 beats) and continue to Marcia's PC team (4 beats). Design AI is built but kept off the navigable surface for this demo — see the Phase 4 card below for context.
                         </div>
                     </div>
                     <button
