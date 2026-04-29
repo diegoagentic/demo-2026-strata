@@ -51,7 +51,7 @@ export default function HealthTrustExceptionScene() {
     const [meta, setMeta] = useState<{ reasonCategory?: string; notes?: string; notifyAI?: boolean } | null>(null)
     const [toast, setToast] = useState<string | null>(null)
     const [modalKind, setModalKind] = useState<'override' | 'escalate' | null>(null)
-    const [criteriaOpen, setCriteriaOpen] = useState(true)
+    const [criteriaOpen, setCriteriaOpen] = useState(false)
 
     const pushToast = (msg: string) => {
         setToast(msg)
@@ -85,7 +85,7 @@ export default function HealthTrustExceptionScene() {
 
     return (
         <div className="space-y-4">
-            {/* Breadcrumb — context from morning queue */}
+            {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
                 <FileText className="h-3 w-3 shrink-0" />
                 <span>Bill Queue</span>
@@ -93,209 +93,207 @@ export default function HealthTrustExceptionScene() {
                 <span className="font-bold text-foreground">{invoice.id} · {invoice.vendor} · HealthTrust rebate review</span>
             </div>
 
-            {/* Intro strip — what Strata detected */}
-            <div className="bg-amber-50/70 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-xl p-3 flex items-start gap-2.5">
-                <Heart className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">HealthTrust GPO contract triggered</div>
-                    <div className="text-muted-foreground mt-0.5">
-                        <strong className="text-foreground">{invoice.clientName ?? 'Riverside Medical Center'}</strong> is a HealthTrust GPO member. Per MBI's master agreement, a 3% rebate line auto-appends to every healthcare bill and posts to the GPO payable account.
-                    </div>
-                </div>
-            </div>
-
-            {/* Hero card — reuses the discrepancy grammar */}
+            {/* Invoice summary card */}
             <div className={`
-                border-2 border-l-4 rounded-2xl p-4 transition-all
-                ${status === 'approved' ? 'border-success/40 bg-success/5 dark:bg-success/10 border-l-success' : ''}
-                ${status === 'overridden' ? 'border-info/40 bg-info/5 dark:bg-info/10 border-l-info' : ''}
-                ${status === 'escalated' ? 'border-red-300 dark:border-red-500/40 bg-red-50/70 dark:bg-red-500/10 border-l-red-500' : ''}
-                ${status === 'pending' ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/60 dark:bg-amber-500/10 border-l-amber-500' : ''}
+                bg-card dark:bg-zinc-800 border-2 border-l-4 rounded-2xl overflow-hidden transition-all
+                ${status === 'approved' ? 'border-success/30 border-l-success' : ''}
+                ${status === 'overridden' ? 'border-info/30 border-l-info' : ''}
+                ${status === 'escalated' ? 'border-red-300 dark:border-red-500/40 border-l-red-500' : ''}
+                ${status === 'pending' ? 'border-border border-l-amber-400' : ''}
             `}>
-                {/* Header */}
-                <div className="flex items-start gap-3 mb-3">
+                {/* Invoice header */}
+                <div className="px-4 py-3 flex items-center gap-3">
                     <div className={`
-                        h-10 w-10 rounded-full flex items-center justify-center shrink-0
+                        h-9 w-9 rounded-xl flex items-center justify-center shrink-0
                         ${status === 'approved' ? 'bg-success/15 text-success' : ''}
                         ${status === 'overridden' ? 'bg-info/15 text-info' : ''}
-                        ${status === 'escalated' ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400' : ''}
+                        ${status === 'escalated' ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' : ''}
                         ${status === 'pending' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' : ''}
                     `}>
-                        {status === 'approved' && <CheckCircle2 className="h-5 w-5" />}
-                        {status === 'overridden' && <Pencil className="h-5 w-5" />}
-                        {status === 'escalated' && <Flag className="h-5 w-5" />}
-                        {status === 'pending' && <Heart className="h-5 w-5" />}
+                        {status === 'approved' && <CheckCircle2 className="h-4.5 w-4.5" />}
+                        {status === 'overridden' && <Pencil className="h-4.5 w-4.5" />}
+                        {status === 'escalated' && <Flag className="h-4.5 w-4.5" />}
+                        {status === 'pending' && <Heart className="h-4.5 w-4.5" />}
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                             <GlossaryTooltip term="HealthTrust" side="top">
-                                <StatusBadge label="HealthTrust GPO" tone="warning" size="sm" />
+                                <StatusBadge label="HealthTrust GPO" tone="warning" size="xs" />
                             </GlossaryTooltip>
-                            <span className="text-[10px] text-muted-foreground">AI 97% · auto-calculated</span>
+                            <span className="text-[10px] font-mono text-muted-foreground">{invoice.id}</span>
+                            <span className="text-[10px] text-border">·</span>
+                            <span className="text-[10px] font-mono text-muted-foreground">{invoice.poNumber}</span>
                         </div>
-                        <h3 className="text-lg font-bold text-foreground leading-tight mt-1">
-                            <GlossaryTooltip term="GPO_rebate" side="top">
-                                <span>3% GPO rebate</span>
-                            </GlossaryTooltip>
-                            {' '}<span className="text-muted-foreground font-normal text-sm">· {invoice.vendor} bill</span>
-                        </h3>
-                        <div className="text-[11px] text-muted-foreground">
-                            Project: <strong className="text-foreground">{invoice.clientName ?? 'Riverside Medical Center'}</strong> · <span className="font-mono">{invoice.id}</span> · {invoice.poNumber}
+                        <div className="mt-0.5 text-sm font-bold text-foreground leading-tight">
+                            {invoice.vendor} <span className="font-normal text-muted-foreground">· {invoice.clientName ?? 'Riverside Medical Center'}</span>
                         </div>
                     </div>
                     <div className="text-right shrink-0">
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Rebate amount</div>
-                        <div className="text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">+${rebate.toLocaleString()}</div>
+                        <div className="text-[10px] text-muted-foreground">Bill subtotal</div>
+                        <div className="text-base font-bold text-foreground tabular-nums">${invoice.amount.toLocaleString()}</div>
                     </div>
                 </div>
 
-                {/* AI detection criteria — collapsible */}
-                <div className="border border-ai/30 bg-ai/5 dark:bg-ai/10 rounded-xl overflow-hidden">
+                {/* AI insight strip — collapsed by default */}
+                <div className="border-t border-border">
                     <button
                         onClick={() => setCriteriaOpen(o => !o)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-ai uppercase tracking-wider hover:bg-ai/10 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 dark:hover:bg-zinc-700/30 transition-colors"
                     >
-                        <div className="flex items-center gap-1.5">
-                            <Sparkles className="h-3 w-3" />
-                            <span>How Strata detected this · 4 criteria matched · 97% confidence</span>
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
+                            <span className="text-[11px] font-semibold text-foreground">
+                                Strata found 1 consideration
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">·</span>
+                            <GlossaryTooltip term="GPO_rebate" side="top">
+                                <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                                    3% GPO rebate · +${rebate.toLocaleString()}
+                                </span>
+                            </GlossaryTooltip>
+                            <span className="text-[9px] bg-ai/10 text-ai font-bold px-1.5 py-0.5 rounded-full">97%</span>
                         </div>
-                        {criteriaOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
+                            <span>{criteriaOpen ? 'Hide' : 'View detail'}</span>
+                            {criteriaOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        </div>
                     </button>
+
                     {criteriaOpen && (
-                        <div className="divide-y divide-ai/15 text-xs">
-                            <DetectionCriterion
-                                icon={<Users className="h-3 w-3" />}
-                                label="Client membership"
-                                value={invoice.clientName ?? 'Riverside Medical Center'}
-                                detail="HealthTrust GPO member · verified against contract DB"
-                                confidence={99}
-                            />
-                            <DetectionCriterion
-                                icon={<FileCheck className="h-3 w-3" />}
-                                label="Contract match"
-                                value="Master Agreement · Feb 2024"
-                                detail="Active contract · §4.2 Rebate Schedule · 3% on all GPO member orders"
-                                confidence={99}
-                            />
-                            <DetectionCriterion
-                                icon={<ShieldCheck className="h-3 w-3" />}
-                                label="Vendor eligibility"
-                                value={invoice.vendor}
-                                detail="HNI brand · covered under HealthTrust GPO purchasing terms"
-                                confidence={97}
-                            />
-                            <DetectionCriterion
-                                icon={<Calculator className="h-3 w-3" />}
-                                label="Rate applied"
-                                value="3% × $62,400"
-                                detail={`Rebate = $${rebate.toLocaleString()} · posts to GPO payable, not CORE`}
-                                confidence={97}
-                            />
+                        <div className="border-t border-border">
+                            {/* Detection criteria */}
+                            <div className="divide-y divide-ai/10">
+                                <DetectionCriterion
+                                    icon={<Users className="h-3 w-3" />}
+                                    label="Client membership"
+                                    value={invoice.clientName ?? 'Riverside Medical Center'}
+                                    detail="HealthTrust GPO member · verified against contract DB"
+                                    confidence={99}
+                                />
+                                <DetectionCriterion
+                                    icon={<FileCheck className="h-3 w-3" />}
+                                    label="Contract match"
+                                    value="Master Agreement · Feb 2024"
+                                    detail="Active contract · §4.2 Rebate Schedule · 3% on all GPO member orders"
+                                    confidence={99}
+                                />
+                                <DetectionCriterion
+                                    icon={<ShieldCheck className="h-3 w-3" />}
+                                    label="Vendor eligibility"
+                                    value={invoice.vendor}
+                                    detail="HNI brand · covered under HealthTrust GPO purchasing terms"
+                                    confidence={97}
+                                />
+                                <DetectionCriterion
+                                    icon={<Calculator className="h-3 w-3" />}
+                                    label="Rate applied"
+                                    value="3% × $62,400"
+                                    detail={`Rebate = $${rebate.toLocaleString()} · posts to GPO payable, not CORE`}
+                                    confidence={97}
+                                />
+                            </div>
+
+                            {/* Calculation */}
+                            <div className="divide-y divide-border text-xs border-t border-border bg-muted/10 dark:bg-zinc-900/30">
+                                <div className="px-4 py-2 flex justify-between">
+                                    <span className="text-muted-foreground">Bill subtotal</span>
+                                    <span className="text-foreground tabular-nums">${invoice.amount.toLocaleString()}</span>
+                                </div>
+                                <div className="px-4 py-2 flex justify-between items-center">
+                                    <span className="text-muted-foreground">GPO rebate rate</span>
+                                    <span className="text-foreground tabular-nums">3% (Master Agreement §4.2)</span>
+                                </div>
+                                <div className="px-4 py-2 flex justify-between items-center bg-amber-50/40 dark:bg-amber-500/5">
+                                    <span className="text-amber-700 dark:text-amber-400 font-semibold inline-flex items-center gap-1.5">
+                                        <Sparkles className="h-3 w-3" />
+                                        3% GPO rebate (auto-applied)
+                                    </span>
+                                    <span className="text-amber-700 dark:text-amber-400 font-bold tabular-nums">+${rebate.toLocaleString()}</span>
+                                </div>
+                                <div className="px-4 py-2 flex justify-between bg-muted/20 dark:bg-zinc-900/40">
+                                    <span className="font-bold text-foreground">Total due</span>
+                                    <span className="text-foreground font-bold tabular-nums">${totalDue.toLocaleString()}</span>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* Calculation breakdown */}
-                <div className="bg-zinc-50/70 dark:bg-zinc-900/40 border border-border rounded-xl overflow-hidden">
-                    <div className="px-3 py-2 bg-muted/30 dark:bg-zinc-800 border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        Calculation
-                    </div>
-                    <div className="divide-y divide-border text-xs">
-                        <div className="px-3 py-2 flex justify-between">
-                            <span className="text-muted-foreground">Bill subtotal</span>
-                            <span className="text-foreground tabular-nums">${invoice.amount.toLocaleString()}</span>
+                {/* Actions */}
+                <div className="px-4 py-3 border-t border-border">
+                    {status === 'pending' ? (
+                        <div className="space-y-2">
+                            <div className="grid grid-cols-3 gap-2">
+                                <button
+                                    onClick={() => setModalKind('escalate')}
+                                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-red-700 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-300 dark:border-red-500/40 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                >
+                                    <Flag className="h-3.5 w-3.5" />
+                                    Escalate
+                                </button>
+                                <button
+                                    onClick={() => setModalKind('override')}
+                                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-foreground bg-background dark:bg-zinc-800 border border-border rounded-lg hover:bg-muted hover:border-info/40 transition-colors"
+                                >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                    Override
+                                </button>
+                                <button
+                                    onClick={handleApprove}
+                                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                                >
+                                    <Check className="h-3.5 w-3.5" />
+                                    Approve & post
+                                </button>
+                            </div>
+                            <div className="text-[10px] text-muted-foreground text-center">
+                                Posts to GPO payable · handled outside CORE · not a bank payment
+                            </div>
                         </div>
-                        <div className="px-3 py-2 flex justify-between items-center">
-                            <span className="text-muted-foreground">GPO rebate rate</span>
-                            <span className="text-foreground tabular-nums">3% (Master Agreement §4.2)</span>
-                        </div>
-                        <div className="px-3 py-2 flex justify-between items-center bg-amber-50/40 dark:bg-amber-500/5">
-                            <span className="text-amber-700 dark:text-amber-400 font-semibold inline-flex items-center gap-1.5">
-                                <Sparkles className="h-3 w-3" />
-                                3% GPO rebate (auto-applied)
-                            </span>
-                            <span className="text-amber-700 dark:text-amber-400 font-bold tabular-nums">+${rebate.toLocaleString()}</span>
-                        </div>
-                        <div className="px-3 py-2 flex justify-between bg-muted/20 dark:bg-zinc-900/40">
-                            <span className="font-bold text-foreground">Total due</span>
-                            <span className="text-foreground font-bold tabular-nums">${totalDue.toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer — actions or resolved state */}
-                {status === 'pending' ? (
-                    <div className="mt-4 space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                            <button
-                                onClick={() => setModalKind('escalate')}
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-red-700 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-300 dark:border-red-500/40 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                            >
-                                <Flag className="h-3.5 w-3.5" />
-                                Escalate
-                            </button>
-                            <button
-                                onClick={() => setModalKind('override')}
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-foreground bg-background dark:bg-zinc-800 border border-border rounded-lg hover:bg-muted hover:border-info/40 transition-colors"
-                            >
-                                <Pencil className="h-3.5 w-3.5" />
-                                Override
-                            </button>
-                            <button
-                                onClick={handleApprove}
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-                            >
-                                <Check className="h-3.5 w-3.5" />
-                                Approve & post
-                            </button>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground text-center">
-                            Posts to GPO payable · handled outside CORE · not a bank payment
-                        </div>
-                    </div>
-                ) : (
-                    <div className="mt-4 pt-3 border-t border-current/10 space-y-1.5">
-                        <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-start gap-2 text-xs min-w-0">
-                                {status === 'approved' && <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />}
-                                {status === 'overridden' && <Pencil className="h-4 w-4 text-info shrink-0 mt-0.5" />}
-                                {status === 'escalated' && <Flag className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />}
-                                <div className="min-w-0">
-                                    <div className="text-foreground font-semibold">
-                                        {status === 'approved' && <>Rebate posted · <span className="text-success tabular-nums">${rebate.toLocaleString()}</span> to GPO payable</>}
-                                        {status === 'overridden' && <>Rebate overridden · audit trail logged</>}
-                                        {status === 'escalated' && <>Escalated to Lynda Alexander · awaiting GPO review</>}
-                                    </div>
-                                    {meta?.reasonCategory && (
-                                        <div className="text-[10px] text-muted-foreground mt-0.5">
-                                            Reason: <span className="text-foreground font-medium">
-                                                {(status === 'overridden' ? OVERRIDE_CATEGORIES : ESCALATE_CATEGORIES)
-                                                    .find(c => c.id === meta.reasonCategory)?.label ?? meta.reasonCategory}
-                                            </span>
+                    ) : (
+                        <div className="space-y-1.5">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2 text-xs min-w-0">
+                                    {status === 'approved' && <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />}
+                                    {status === 'overridden' && <Pencil className="h-4 w-4 text-info shrink-0 mt-0.5" />}
+                                    {status === 'escalated' && <Flag className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />}
+                                    <div className="min-w-0">
+                                        <div className="text-foreground font-semibold">
+                                            {status === 'approved' && <>Rebate posted · <span className="text-success tabular-nums">${rebate.toLocaleString()}</span> to GPO payable</>}
+                                            {status === 'overridden' && <>Rebate overridden · audit trail logged</>}
+                                            {status === 'escalated' && <>Escalated to Lynda Alexander · awaiting GPO review</>}
                                         </div>
-                                    )}
-                                    {meta?.notes && (
-                                        <div className="text-[10px] text-muted-foreground italic mt-0.5 line-clamp-2">"{meta.notes}"</div>
-                                    )}
+                                        {meta?.reasonCategory && (
+                                            <div className="text-[10px] text-muted-foreground mt-0.5">
+                                                Reason: <span className="text-foreground font-medium">
+                                                    {(status === 'overridden' ? OVERRIDE_CATEGORIES : ESCALATE_CATEGORIES)
+                                                        .find(c => c.id === meta.reasonCategory)?.label ?? meta.reasonCategory}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {meta?.notes && (
+                                            <div className="text-[10px] text-muted-foreground italic mt-0.5 line-clamp-2">"{meta.notes}"</div>
+                                        )}
+                                    </div>
                                 </div>
+                                <button onClick={handleReopen} className="text-[10px] text-muted-foreground hover:text-foreground underline shrink-0">
+                                    Reopen
+                                </button>
                             </div>
-                            <button onClick={handleReopen} className="text-[10px] text-muted-foreground hover:text-foreground underline shrink-0">
-                                Reopen
-                            </button>
+                            {toast && (
+                                <div className={`
+                                    flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-semibold animate-in fade-in slide-in-from-bottom-2 duration-300
+                                    ${status === 'approved' ? 'bg-success/15 text-success border border-success/30' : ''}
+                                    ${status === 'overridden' ? 'bg-info/15 text-info border border-info/30' : ''}
+                                    ${status === 'escalated' ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500/30' : ''}
+                                `}>
+                                    {status === 'escalated' ? <Send className="h-3.5 w-3.5 shrink-0" /> : <Check className="h-3.5 w-3.5 shrink-0" />}
+                                    <span className="truncate">{toast}</span>
+                                </div>
+                            )}
                         </div>
-                        {toast && (
-                            <div className={`
-                                flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-semibold animate-in fade-in slide-in-from-bottom-2 duration-300
-                                ${status === 'approved' ? 'bg-success/15 text-success border border-success/30' : ''}
-                                ${status === 'overridden' ? 'bg-info/15 text-info border border-info/30' : ''}
-                                ${status === 'escalated' ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500/30' : ''}
-                            `}>
-                                {status === 'escalated' ? <Send className="h-3.5 w-3.5 shrink-0" /> : <Check className="h-3.5 w-3.5 shrink-0" />}
-                                <span className="truncate">{toast}</span>
-                            </div>
-                        )}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Context cards — who is Lynda, what contract */}
@@ -400,8 +398,8 @@ function DetectionCriterion({
     confidence: number
 }) {
     return (
-        <div className="px-3 py-2 flex items-start gap-2.5 bg-background/40 dark:bg-zinc-900/30">
-            <div className="h-6 w-6 rounded-md bg-ai/15 text-ai flex items-center justify-center shrink-0 mt-0.5">
+        <div className="px-4 py-2 flex items-start gap-2.5 bg-background/40 dark:bg-zinc-900/20">
+            <div className="h-6 w-6 rounded-md bg-ai/10 text-ai flex items-center justify-center shrink-0 mt-0.5">
                 {icon}
             </div>
             <div className="flex-1 min-w-0">

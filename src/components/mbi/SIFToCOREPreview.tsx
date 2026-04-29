@@ -23,7 +23,7 @@ const EXTRACTION_STEPS = [
     'Contract matched · HNI Corporate 55%',
     'Customer context added',
     'Shipping params applied',
-    'CORE Quote QUOT-2026-003 created · ready for GP review',
+    'CORE Quote QUOT-2026-003 has been created · ready for GP review',
 ]
 
 const STEP_DELAY_MS = 600

@@ -32,7 +32,7 @@ const EXTRACTION_STEPS = [
 const CORE_STEPS = [
     'Applying GP to 7 line items · calculating sell prices',
     'Freight + install lines confirmed · $14,200 + $8,800',
-    'CORE Quote QUOT-2026-003 created · $372,500 · ready for PC review',
+    'CORE Quote QUOT-2026-003 has been created · $372,500 · ready for PC review',
 ]
 
 interface GPVendor {
