@@ -1,4 +1,4 @@
-﻿// ═══════════════════════════════════════════════════════════════════════════════
+﻿genes// ═══════════════════════════════════════════════════════════════════════════════
 // MBI — Modern Business Interiors · Strata AI Demo Profile
 //
 // CLIENT: Modern Business Interiors (St. Charles, MO + Lenexa, KS · ~42 employees
@@ -137,7 +137,7 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 2: Quotes AI',
         title: 'Send proposal · close the tour',
-        description: "One human review later, the PM sends the proposal. Orders auto-route: EDI manufacturers receive transmissions instantly, non-EDI vendors get drafted PO emails ready to send, and Compass reconciliation queues for the manufacturers that require it. Hours of manual routing happen in minutes — and that closes the active demo tour. Design AI (Spec Check, Phase 4) is available via its own tab if the audience asks.",
+        description: "One human review later, the PM sends the proposal. Orders auto-route: EDI manufacturers receive transmissions instantly, non-EDI vendors get drafted PO emails ready to send. Hours of manual routing happen in minutes — and that closes the active demo tour. Design AI (Spec Check, Phase 4) is available via its own tab if the audience asks.",
         app: 'mbi-quotes',
         role: 'Project Manager',
     },
@@ -217,7 +217,6 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'Project Manager signed off · proposal ready to send',
         'Transmitting EDI to manufacturers that support it',
         'Drafting non-EDI POs for the rest',
-        'Compass reconciliation queued where required',
         'Account Manager pinged · tour complete',
     ],
 };

@@ -31,25 +31,26 @@ interface LineRow {
     line: string
     sku: string
     desc: string
+    spec: string
     poQty: number
     invQty: number
     poUnitPrice: number
     invUnitPrice: number
-    match: 'ok' | 'qty' | 'price'
+    match: 'ok' | 'qty' | 'price' | 'both'
 }
 
 const LINES: LineRow[] = [
-    { id: 'L-01', line: 'L-01', sku: 'AW-TASK-CHR', desc: 'Task chair · graphite', poQty: 2, invQty: 2, poUnitPrice: 1420, invUnitPrice: 1420, match: 'ok' },
-    { id: 'L-02', line: 'L-02', sku: 'AW-LNG-MDN', desc: 'Lounge seating · modern', poQty: 1, invQty: 1, poUnitPrice: 2480, invUnitPrice: 2480, match: 'ok' },
-    { id: 'L-03', line: 'L-03', sku: 'AW-DSK-6030', desc: 'Sit-stand desk 60×30', poQty: 6, invQty: 5, poUnitPrice: 1180, invUnitPrice: 1180, match: 'qty' },
-    { id: 'L-04', line: 'L-04', sku: 'AW-FIN-OAK', desc: 'Oak veneer finish upcharge', poQty: 6, invQty: 5, poUnitPrice: 85, invUnitPrice: 95, match: 'price' },
-    { id: 'L-05', line: 'L-05', sku: 'AW-FRT-INB', desc: 'Inbound freight', poQty: 1, invQty: 1, poUnitPrice: 420, invUnitPrice: 420, match: 'ok' },
+    { id: 'L-01', line: 'L-01', sku: 'AW-TASK-CHR', desc: 'Task chair · graphite', spec: 'Grade B fabric · graphite frame', poQty: 2, invQty: 2, poUnitPrice: 1420, invUnitPrice: 1420, match: 'ok' },
+    { id: 'L-02', line: 'L-02', sku: 'AW-LNG-MDN', desc: 'Lounge seating · modern', spec: 'Vinyl upholstery · chrome base', poQty: 1, invQty: 1, poUnitPrice: 2480, invUnitPrice: 2480, match: 'ok' },
+    { id: 'L-03', line: 'L-03', sku: 'AW-DSK-6030', desc: 'Sit-stand desk 60×30', spec: 'Laminate top · black steel frame', poQty: 6, invQty: 5, poUnitPrice: 1180, invUnitPrice: 1180, match: 'qty' },
+    { id: 'L-04', line: 'L-04', sku: 'AW-FIN-OAK', desc: 'Oak veneer finish upcharge', spec: 'Premium A-grade · 3/4″ thick veneer', poQty: 6, invQty: 5, poUnitPrice: 85, invUnitPrice: 95, match: 'both' },
+    { id: 'L-05', line: 'L-05', sku: 'AW-FRT-INB', desc: 'Inbound freight', spec: 'LTL · dock-to-dock delivery', poQty: 1, invQty: 1, poUnitPrice: 420, invUnitPrice: 420, match: 'ok' },
 ]
 
-/** Natural-language label for each mismatch type — exactly what the transcript requested */
 function getMismatchLabel(row: LineRow): string {
     if (row.match === 'qty') return `Qty mismatch · PO ${row.poQty} · bill ${row.invQty}`
     if (row.match === 'price') return `Price variance · $${row.poUnitPrice} → $${row.invUnitPrice}`
+    if (row.match === 'both') return `Qty + price variance · PO ${row.poQty}@$${row.poUnitPrice} · bill ${row.invQty}@$${row.invUnitPrice}`
     return ''
 }
 
@@ -107,7 +108,7 @@ export default function NonEDIReconcilerScene() {
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
                 <GitCompare className="h-3 w-3 shrink-0" />
-                <span>Morning Bill Queue</span>
+                <span>Bill queue · recent &amp; pending</span>
                 <span className="text-border">›</span>
                 <span className="font-bold text-foreground">{invoice.id} · {invoice.vendor} · line-by-line reconciliation</span>
             </div>
@@ -190,14 +191,28 @@ export default function NonEDIReconcilerScene() {
             {/* Line-by-line diff table */}
             <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
                 {/* Column headers */}
-                <div className="px-4 py-2.5 border-b border-border bg-muted/20 dark:bg-zinc-900/40 grid grid-cols-[3rem_1fr_6rem_6rem_5rem_8rem] gap-3 items-center">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Line #</div>
+                <div className="px-4 py-2.5 border-b border-border bg-muted/20 dark:bg-zinc-900/40 grid grid-cols-[2.5rem_1fr_3rem_3rem_5rem_5rem_4rem_8rem] gap-2 items-end">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Line</div>
                     <div>
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Item · Model #</div>
-                        <div className="text-[9px] text-muted-foreground/60 mt-0.5">Comparing: line · model · unit price only</div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Item · Model # · Spec</div>
+                        <div className="text-[9px] text-muted-foreground/60 mt-0.5">line · model · unit price only</div>
                     </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">PO price</div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Bill price</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">
+                        <div>PO</div>
+                        <div className="text-[9px] font-normal">qty</div>
+                    </div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">
+                        <div>Bill</div>
+                        <div className="text-[9px] font-normal">qty</div>
+                    </div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">
+                        <div>Unit $</div>
+                        <div className="text-[9px] font-normal">PO</div>
+                    </div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">
+                        <div>Unit $</div>
+                        <div className="text-[9px] font-normal">Bill</div>
+                    </div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Delta</div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Action</div>
                 </div>
@@ -211,11 +226,13 @@ export default function NonEDIReconcilerScene() {
                         const lineDiff = invLine - poLine
                         const isException = row.match !== 'ok'
                         const mismatchLabel = getMismatchLabel(row)
+                        const qtyMismatch = row.poQty !== row.invQty
+                        const priceMismatch = row.poUnitPrice !== row.invUnitPrice
                         return (
                             <div
                                 key={row.id}
                                 className={`
-                                    grid grid-cols-[3rem_1fr_6rem_6rem_5rem_8rem] gap-3 px-4 items-center text-xs transition-colors border-l-4 min-h-[56px]
+                                    grid grid-cols-[2.5rem_1fr_3rem_3rem_5rem_5rem_4rem_8rem] gap-2 px-4 items-center text-xs transition-colors border-l-4 min-h-[60px]
                                     ${status === 'accepted' ? 'border-l-success/60 bg-success/5 dark:bg-success/10 py-2.5' : ''}
                                     ${status === 'overridden' ? 'border-l-info/60 bg-info/5 dark:bg-info/10 py-2.5' : ''}
                                     ${status === 'pending' && isException ? 'border-l-amber-500 bg-amber-50/40 dark:bg-amber-500/5 py-2.5' : ''}
@@ -223,12 +240,13 @@ export default function NonEDIReconcilerScene() {
                                 `}
                             >
                                 {/* Line # */}
-                                <div className="font-mono text-[11px] text-muted-foreground">{row.line}</div>
+                                <div className="font-mono text-[10px] text-muted-foreground">{row.line}</div>
 
-                                {/* Item + natural-language mismatch badge */}
+                                {/* Item + spec + mismatch badge */}
                                 <div className="min-w-0">
-                                    <div className="text-foreground truncate font-medium">{row.desc}</div>
+                                    <div className="text-foreground truncate font-medium text-[11px]">{row.desc}</div>
                                     <div className="text-[10px] text-muted-foreground font-mono truncate">{row.sku}</div>
+                                    <div className="text-[10px] text-muted-foreground/80 truncate italic">{row.spec}</div>
                                     {isException && status === 'pending' && (
                                         <div className="mt-0.5">
                                             <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 uppercase tracking-wider">
@@ -242,24 +260,42 @@ export default function NonEDIReconcilerScene() {
                                     )}
                                 </div>
 
-                                {/* PO column */}
-                                <div className="text-right tabular-nums text-muted-foreground">
-                                    <div className="text-[11px]">{row.poQty} × ${row.poUnitPrice}</div>
-                                    <div className="text-[10px] text-muted-foreground/70">${poLine.toLocaleString()}</div>
+                                {/* PO Qty */}
+                                <div className={`text-center tabular-nums font-bold text-[12px] ${qtyMismatch && status === 'pending' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {row.poQty}
                                 </div>
 
-                                {/* Bill column */}
-                                <div className={`text-right tabular-nums font-semibold ${isException ? 'text-amber-700 dark:text-amber-400' : 'text-foreground'}`}>
-                                    <div className="text-[11px]">{row.invQty} × ${row.invUnitPrice}</div>
-                                    <div className={`text-[10px] ${isException ? 'text-amber-600/70 dark:text-amber-500/70' : 'text-muted-foreground/70'}`}>${invLine.toLocaleString()}</div>
+                                {/* Bill Qty */}
+                                <div className={`text-center tabular-nums font-bold text-[12px] ${qtyMismatch && status === 'pending' ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                                    {row.invQty}
+                                    {qtyMismatch && status === 'pending' && (
+                                        <div className="text-[9px] font-normal text-amber-600/80 dark:text-amber-400/80">
+                                            {row.invQty < row.poQty ? `−${row.poQty - row.invQty}` : `+${row.invQty - row.poQty}`}
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Delta */}
+                                {/* PO Unit Price */}
+                                <div className={`text-right tabular-nums text-[11px] ${priceMismatch && status === 'pending' ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+                                    ${row.poUnitPrice.toLocaleString()}
+                                </div>
+
+                                {/* Bill Unit Price */}
+                                <div className={`text-right tabular-nums text-[11px] font-semibold ${priceMismatch && status === 'pending' ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                                    ${row.invUnitPrice.toLocaleString()}
+                                    {priceMismatch && status === 'pending' && (
+                                        <div className="text-[9px] font-normal text-amber-600/80 dark:text-amber-400/80">
+                                            {row.invUnitPrice > row.poUnitPrice ? `+$${row.invUnitPrice - row.poUnitPrice}` : `−$${row.poUnitPrice - row.invUnitPrice}`}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Line Delta */}
                                 <div className={`text-right tabular-nums font-bold text-[11px] ${lineDiff < 0 ? 'text-success' : lineDiff > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
-                                    {lineDiff === 0 ? '—' : `${lineDiff > 0 ? '+' : ''}$${lineDiff.toLocaleString()}`}
+                                    {lineDiff === 0 ? '—' : `${lineDiff > 0 ? '+' : '−'}$${Math.abs(lineDiff).toLocaleString()}`}
                                 </div>
 
-                                {/* Action — dedicated column, never bleeds into data columns */}
+                                {/* Action */}
                                 <div className="flex items-center gap-1 justify-end">
                                     {!isException && status === 'pending' && (
                                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success uppercase tracking-wider">
@@ -299,18 +335,21 @@ export default function NonEDIReconcilerScene() {
 
                     {/* Freight added row */}
                     {freightAdded && (
-                        <div className="grid grid-cols-[3rem_1fr_6rem_6rem_5rem_8rem] gap-3 px-4 py-2.5 items-center text-xs border-l-4 border-l-info/60 bg-info/5 dark:bg-info/10 min-h-[56px] animate-in fade-in duration-300">
-                            <div className="font-mono text-[11px] text-muted-foreground">L-06</div>
+                        <div className="grid grid-cols-[2.5rem_1fr_3rem_3rem_5rem_5rem_4rem_8rem] gap-2 px-4 py-2.5 items-center text-xs border-l-4 border-l-info/60 bg-info/5 dark:bg-info/10 min-h-[60px] animate-in fade-in duration-300">
+                            <div className="font-mono text-[10px] text-muted-foreground">L-06</div>
                             <div className="min-w-0">
-                                <div className="text-foreground font-medium">Outbound freight — added manually</div>
+                                <div className="text-foreground font-medium text-[11px]">Outbound freight — added manually</div>
                                 <div className="text-[10px] text-muted-foreground font-mono">AW-FRT-OUT</div>
+                                <div className="text-[10px] text-muted-foreground/80 italic">LTL · outbound · not on PO</div>
                                 <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-info/15 text-info uppercase tracking-wider mt-0.5">
                                     <Plus className="h-2 w-2" />
                                     Manually added · pending approval
                                 </span>
                             </div>
+                            <div className="text-center text-muted-foreground text-[12px] font-bold">—</div>
+                            <div className="text-center tabular-nums font-bold text-info text-[12px]">1</div>
                             <div className="text-right text-muted-foreground text-[11px]">—</div>
-                            <div className="text-right tabular-nums font-semibold text-info text-[11px]">1 × $680<div className="text-[10px] text-info/70">$680</div></div>
+                            <div className="text-right tabular-nums font-semibold text-info text-[11px]">$680</div>
                             <div className="text-right tabular-nums font-bold text-[11px] text-amber-600 dark:text-amber-400">+$680</div>
                             <div className="flex justify-end">
                                 <StatusBadge label="Pending" tone="info" size="sm" />
@@ -318,7 +357,7 @@ export default function NonEDIReconcilerScene() {
                         </div>
                     )}
 
-                    {/* + Add line row — always visible at the bottom */}
+                    {/* + Add line row */}
                     {!freightAdded && (
                         <div className="px-4 py-2.5 border-l-4 border-l-transparent border-t border-dashed border-border/60">
                             <button

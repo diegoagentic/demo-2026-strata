@@ -54,7 +54,7 @@ export default function FreightTariffPanel() {
                     <div>
                         <div className="text-xs font-bold text-foreground">Freight & Tariff auto-check</div>
                         <div className="text-[10px] text-muted-foreground">
-                            Q10 priority #2 (7.7/10 avg · BD + PC teams 10/10) · CORE doesn't pull these lines today
+                            Flags missing freight + tariff lines before CORE order submission · Q10 priority #2 (7.7/10 avg)
                         </div>
                     </div>
                 </div>

@@ -2,9 +2,7 @@
  * COMPONENT: OrderExecutionPanel
  * PURPOSE: Phase 4.C output — EDI transmission preview for the 5 EDI-enabled
  *          MBI manufacturers (HNI, Allsteel, Gunlocke, HON, Kimball) plus
- *          non-EDI PO email generation, plus Compass reconciliation summary
- *          for the 4 manufacturers that require Compass validation
- *          (HNI, Allsteel, Gunlocke, HON).
+ *          non-EDI PO email generation.
  *
  * PROPS: none — uses MBI_MANUFACTURERS
  *
@@ -15,13 +13,12 @@
  * USED BY: MBIQuotesPage (Phase 4.C)
  */
 
-import { Zap, Mail, Send, CheckCircle2, GitCompare } from 'lucide-react'
+import { Zap, Mail, Send, CheckCircle2 } from 'lucide-react'
 import { MBI_MANUFACTURERS } from '../../config/profiles/mbi-data'
 
 export default function OrderExecutionPanel() {
     const ediMfrs = MBI_MANUFACTURERS.filter(m => m.isEDI)
     const nonEDIMfrs = MBI_MANUFACTURERS.filter(m => !m.isEDI)
-    const compassMfrs = MBI_MANUFACTURERS.filter(m => m.compassValidated)
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -78,34 +75,6 @@ export default function OrderExecutionPanel() {
                                 <Send className="h-2.5 w-2.5" />
                                 Generate
                             </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Compass Reconciliation — full width */}
-            <div className="lg:col-span-2 bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center">
-                            <GitCompare className="h-3.5 w-3.5" />
-                        </div>
-                        <div>
-                            <div className="text-xs font-bold text-foreground">Compass reconciliation · all 4 manufacturers</div>
-                            <div className="text-[10px] text-muted-foreground">
-                                Confirmed: HNI / Allsteel / Gunlocke / HON all require Compass validation. CORE EDI is downstream — not a substitute.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3">
-                    {compassMfrs.map(m => (
-                        <div key={m.id} className="bg-success/5 border border-success/20 rounded-lg px-3 py-2">
-                            <div className="text-xs font-bold text-foreground">{m.name}</div>
-                            <div className="flex items-center gap-1 text-[10px] text-success font-bold uppercase tracking-wider mt-1">
-                                <CheckCircle2 className="h-2.5 w-2.5" />
-                                CAP ↔ Compass match
-                            </div>
                         </div>
                     ))}
                 </div>
