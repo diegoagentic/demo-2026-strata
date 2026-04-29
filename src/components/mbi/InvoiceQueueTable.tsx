@@ -22,7 +22,7 @@
  * USED BY: AccountingMorningQueue (Flow 2 Scene 1)
  */
 
-import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2, RefreshCw, Clock } from 'lucide-react'
+import { AlertTriangle, Zap, CheckCircle2, Loader2, RefreshCw, Clock } from 'lucide-react'
 import type { Invoice, InvoiceStatus } from '../../config/profiles/mbi-data'
 
 interface InvoiceQueueTableProps {
@@ -147,9 +147,6 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
                 {invoice.isEDI && (
                     <CardFlag tone="blue" icon={<Zap className="h-2 w-2" />} label="EDI" />
                 )}
-                {invoice.isHealthTrust && (
-                    <CardFlag tone="amber" icon={<Heart className="h-2 w-2" />} label="HT" />
-                )}
                 {invoice.hasException && (
                     <CardFlag tone="red" icon={<AlertTriangle className="h-2 w-2" />} label="Fix" />
                 )}
@@ -177,11 +174,6 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
             {invoice.status === 'pending' && invoice.exceptionReason && (
                 <div className="text-[9.5px] text-red-600 dark:text-red-400 mt-1 leading-tight line-clamp-2">
                     {invoice.exceptionReason}
-                </div>
-            )}
-            {invoice.status === 'pending' && invoice.isHealthTrust && !invoice.hasException && (
-                <div className="text-[9.5px] text-amber-700 dark:text-amber-400 mt-1 leading-tight">
-                    HealthTrust GPO · pending review
                 </div>
             )}
         </button>
