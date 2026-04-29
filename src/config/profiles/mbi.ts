@@ -18,9 +18,8 @@
 //   m2.4: AR aging review — live status taxonomy + analytics (Apr 23 split)
 //   m2.5: Collection drafts + close — review/edit/send + handoff to Flow 2
 //
-// FLOW 2 — Quotes AI (Phase 4, PM bottleneck resolution) · 4 scenes / 4 beats
+// FLOW 2 — Quotes AI (Phase 4, PM bottleneck resolution) · 3 scenes / 3 beats
 //   m3.1: Incoming budget — signed handoff from the Account Manager → PM queue
-//   m3.2: SIF → CORE auto-import — field-for-field, zero keystrokes
 //   m3.3: AI validation — audit loops collapse into 1 AI + 1 human review
 //   m3.4: Send proposal — closes the active tour (Design AI is Phase 4
 //         directional context · available via Design AI tab outside the tour)
@@ -115,15 +114,6 @@ export const MBI_STEPS: DemoStep[] = [
         role: 'Project Manager',
     },
     {
-        id: 'm3.2',
-        groupId: 1,
-        groupTitle: 'Flow 2: Quotes AI',
-        title: 'SIF → CORE auto-import',
-        description: "The single largest bottleneck — manually re-entering the SIF into CORE — disappears. Strata auto-imports the structured data field-for-field. Zero keystrokes, zero typos. The PM team shifts from builders to reviewers.",
-        app: 'mbi-quotes',
-        role: 'Project Manager',
-    },
-    {
         id: 'm3.3',
         groupId: 1,
         groupTitle: 'Flow 2: Quotes AI',
@@ -155,7 +145,6 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then close the morning' },
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
-    'm3.2': { mode: 'interactive', userAction: 'Watch the SIF flow into CORE · field-for-field · zero keystrokes' },
     'm3.3': { mode: 'interactive', userAction: 'Review Spec Check · audit loops collapse into one AI pass plus one human review' },
     'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers · this closes the active tour' },
 };
@@ -200,13 +189,6 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'All checks green · routing to the PM queue',
         'Project Manager picks it up · bottleneck avoided',
     ],
-    'm3.2': [
-        'Reading the signed SIF · structured fields detected',
-        'Applying the matched contract discount',
-        'Freight + install recalculated (no manual touching)',
-        'Building the CORE proposal draft',
-        'Auto-import complete · zero keystrokes',
-    ],
     'm3.3': [
         'Running Spec Check — dimensions, finish, palette, availability',
         'Cross-checking non-catalog items vs manufacturer price books',
@@ -225,5 +207,5 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const MBI_SELF_INDICATED: string[] = [
     'm2.1', 'm2.2', 'm2.3', 'm2.4', 'm2.5',
-    'm3.1', 'm3.2', 'm3.3', 'm3.4',
+    'm3.1', 'm3.3', 'm3.4',
 ];
