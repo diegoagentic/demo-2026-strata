@@ -118,7 +118,7 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 2: Quotes AI',
         title: 'AI validation · audit loops collapse',
-        description: "Spec Check runs against the assembled BOM. The four sequential audit loops the team used to run by eye — internal, vendor, manager, client — collapse into one AI pass plus one human review. Non-catalog items get cross-checked against manufacturer price books and the COM fabric workflow is formalized so spec gaps stop slipping through.",
+        description: "Spec Check runs against the assembled BOM. The four sequential audit loops the team used to run by eye — internal, vendor, manager, client — collapse into one AI pass plus one human review. Non-catalog items get cross-checked against manufacturer price books and vendor quotes are processed automatically — no manual re-entry.",
         app: 'mbi-quotes',
         role: 'Project Manager',
     },
@@ -192,7 +192,7 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
     'm3.3': [
         'Running Spec Check — dimensions, finish, palette, availability',
         'Cross-checking non-catalog items vs manufacturer price books',
-        'COM workflow · fabric approvals traced',
+        'Vendor quotes read automatically · SIF entries generated · no re-entry',
         'Audit loops collapsed into one AI pass + one human review',
     ],
     'm3.4': [

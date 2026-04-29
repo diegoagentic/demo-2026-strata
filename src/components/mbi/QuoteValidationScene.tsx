@@ -2,13 +2,9 @@
  * COMPONENT: QuoteValidationScene
  * PURPOSE: Flow 3 · Scene 2 — AI pre-validation pass. Hero is the Audit Loop
  *          Collapse diagram (4→1+1 · MBI's #1 pain point reframed). Below it,
- *          the Spec Check report summary with two deep-dives (Non-Catalog
- *          validator + COM workflow) gated behind detail sheets so the scene
- *          stays focused on the loop-collapse story.
- *
- *          Layout: simulation runs as a TOP SECTION (not a gate). The audit
- *          loop + report are always visible below. Once the simulation
- *          completes the top section flips to a decisions-applied recap.
+ *          the Non-Catalog validator is surfaced inline (highlighted) with a
+ *          live vendor quote simulation for the flagged item. The full table
+ *          is available via detail sheet.
  *
  * DS TOKENS: bg-card · ai / primary accents
  *
@@ -17,12 +13,13 @@
 
 import { useState } from 'react'
 import {
-    Search, Package, ArrowRight, Sparkles, ChevronRight, RotateCcw,
+    Search, Package, ArrowRight, Sparkles, ChevronRight, RotateCcw, AlertTriangle,
 } from 'lucide-react'
 import AuditLoopDiagram from './AuditLoopDiagram'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 import SpecCheckReport from './SpecCheckReport'
 import NonCatalogValidatorTable from './NonCatalogValidatorTable'
+import NonCatalogVendorQuoteDemo from './NonCatalogVendorQuoteDemo'
 import MBIDetailSheet from './MBIDetailSheet'
 import AISpecCheckSimulation, {
     SpecCheckDecisionsApplied,
@@ -31,12 +28,18 @@ import AISpecCheckSimulation, {
 
 export default function QuoteValidationScene() {
     const [nonCatalogOpen, setNonCatalogOpen] = useState(false)
-    // null = simulation running · set = decisions applied, recap shown
     const [decisions, setDecisions] = useState<SpecCheckDecisions | null>(null)
+    const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set())
+
+    const handleResolved = () => {
+        setResolvedIds(prev => new Set([...prev, 'NC-004']))
+    }
+
+    const flaggedCount = resolvedIds.has('NC-004') ? 0 : 1
 
     return (
         <div className="space-y-4">
-            {/* Intro — why this scene exists */}
+            {/* Intro */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
@@ -51,7 +54,7 @@ export default function QuoteValidationScene() {
                 </div>
             </div>
 
-            {/* AI simulation OR decisions recap — top section, always present */}
+            {/* AI simulation OR decisions recap */}
             {decisions === null ? (
                 <AISpecCheckSimulation onComplete={setDecisions} />
             ) : (
@@ -61,30 +64,87 @@ export default function QuoteValidationScene() {
                 />
             )}
 
-            {/* ── Original step 2.3 content — always visible ── */}
-
             {/* Hero — audit loop collapse diagram */}
             <AuditLoopDiagram />
 
             {/* Spec Check report */}
             <SpecCheckReport />
 
-            {/* Deep-dive: Non-Catalog validator */}
-            <button
-                onClick={() => setNonCatalogOpen(true)}
-                className="w-full bg-card dark:bg-zinc-800 border border-border rounded-xl p-3 hover:border-primary/40 transition-colors text-left flex items-center gap-3"
-            >
-                <div className="h-9 w-9 rounded-xl bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
-                    <Search className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-foreground">Non-catalog validator</div>
-                    <div className="text-[10px] text-muted-foreground">
-                        80-90% of MBI spec sheets have manual items · 8 validated, 1 flagged
+            {/* ── Non-Catalog inline highlight card ── */}
+            <div className={`
+                rounded-2xl border overflow-hidden transition-colors
+                ${flaggedCount > 0
+                    ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/40 dark:bg-amber-500/5'
+                    : 'border-success/30 bg-success/5 dark:bg-success/10'
+                }
+            `}>
+                {/* Card header */}
+                <div className="px-4 py-3 border-b border-inherit flex items-center gap-3">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${flaggedCount > 0 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-success/15 text-success'}`}>
+                        <Search className="h-4 w-4" />
                     </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-foreground">Non-catalog validator</span>
+                            {flaggedCount > 0 ? (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                                    <AlertTriangle className="h-2.5 w-2.5" />
+                                    1 item needs resolution
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/15 text-success uppercase tracking-wider">
+                                    All resolved
+                                </span>
+                            )}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                            80–90% of MBI spec sheets have manual items · Strata cross-checks against mfg price books
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setNonCatalogOpen(true)}
+                        className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        View all 5
+                        <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </button>
+
+                {/* Flagged item row */}
+                <div className="px-4 py-3">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-bold text-foreground">NC-004 · Acoustic panel · oak veneer 48×24</span>
+                                <span className="text-[10px] font-mono text-muted-foreground">Allsteel · Qty 16</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className="text-[11px] text-muted-foreground">Quoted <strong className="text-foreground">$180/u</strong></span>
+                                <span className="text-muted-foreground/40">→</span>
+                                <span className="text-[11px] text-muted-foreground">Price book <strong className="text-foreground">$215/u</strong></span>
+                                {flaggedCount > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                                        <AlertTriangle className="h-2.5 w-2.5" />
+                                        −$35/u · vendor quote needed
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Vendor quote simulation */}
+                    {flaggedCount > 0 && (
+                        <NonCatalogVendorQuoteDemo onResolved={handleResolved} />
+                    )}
+
+                    {/* Resolved state */}
+                    {flaggedCount === 0 && (
+                        <div className="mt-2 text-[11px] text-success font-semibold">
+                            Vendor quote accepted · $215/u confirmed · SIF entry updated · $3,440 total
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Forward cue */}
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
@@ -104,7 +164,7 @@ export default function QuoteValidationScene() {
                 )}
             </div>
 
-            {/* Deep-dive sheets */}
+            {/* Detail sheet — full table */}
             <MBIDetailSheet
                 isOpen={nonCatalogOpen}
                 onClose={() => setNonCatalogOpen(false)}
@@ -113,7 +173,7 @@ export default function QuoteValidationScene() {
                 icon={<Package className="h-4 w-4" />}
                 width="lg"
             >
-                <NonCatalogValidatorTable />
+                <NonCatalogValidatorTable resolvedIds={resolvedIds} />
             </MBIDetailSheet>
 
             <DataSourcesBar groups={[

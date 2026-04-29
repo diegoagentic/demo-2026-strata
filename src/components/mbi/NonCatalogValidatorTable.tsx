@@ -16,7 +16,7 @@
  * USED BY: MBIQuotesPage (Phase 4.B · shared with Design AI)
  */
 
-import { Search, AlertTriangle, CheckCircle2, DollarSign } from 'lucide-react'
+import { Search, AlertTriangle, CheckCircle2, DollarSign, FileText } from 'lucide-react'
 
 interface NonCatalogItem {
     id: string
@@ -37,9 +37,13 @@ const MOCK_ITEMS: NonCatalogItem[] = [
     { id: 'NC-005', description: 'Custom finish · teal powdercoat', manufacturer: 'CaseWorks', qty: 12, priceQuoted: 65, priceBook: 65, match: 'exact', confidence: 99 },
 ]
 
-export default function NonCatalogValidatorTable() {
-    const exactCount = MOCK_ITEMS.filter(i => i.match === 'exact').length
-    const mismatchCount = MOCK_ITEMS.filter(i => i.match === 'mismatch').length
+interface Props {
+    resolvedIds?: Set<string>
+}
+
+export default function NonCatalogValidatorTable({ resolvedIds = new Set() }: Props) {
+    const exactCount = MOCK_ITEMS.filter(i => i.match === 'exact' || resolvedIds.has(i.id)).length
+    const mismatchCount = MOCK_ITEMS.filter(i => i.match === 'mismatch' && !resolvedIds.has(i.id)).length
 
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
@@ -77,26 +81,38 @@ export default function NonCatalogValidatorTable() {
 
             <div className="divide-y divide-border">
                 {MOCK_ITEMS.map(item => {
+                    const isResolved = resolvedIds.has(item.id)
+                    const effectiveMatch = isResolved ? 'exact' : item.match
                     const deltaPct = item.priceBook > 0 ? Math.round(((item.priceQuoted - item.priceBook) / item.priceBook) * 100) : 0
-                    const rowAccent = item.match === 'mismatch'
-                        ? 'bg-amber-50/40 dark:bg-amber-500/5 border-l-4 border-l-amber-500/70'
-                        : item.match === 'close'
-                            ? 'border-l-4 border-l-info/40'
-                            : 'border-l-4 border-l-transparent hover:bg-muted/20'
+                    const rowAccent = isResolved
+                        ? 'bg-success/5 dark:bg-success/10 border-l-4 border-l-success/60'
+                        : effectiveMatch === 'mismatch'
+                            ? 'bg-amber-50/40 dark:bg-amber-500/5 border-l-4 border-l-amber-500/70'
+                            : effectiveMatch === 'close'
+                                ? 'border-l-4 border-l-info/40'
+                                : 'border-l-4 border-l-transparent hover:bg-muted/20'
                     return (
                         <div key={item.id} className={`px-4 py-2 grid grid-cols-[1.5fr_0.8fr_0.5fr_0.8fr_0.8fr_0.6fr] gap-3 items-center text-xs transition-colors ${rowAccent}`}>
                             <div className="min-w-0">
                                 <div className="text-foreground truncate">{item.description}</div>
                                 <div className="text-[10px] text-muted-foreground font-mono">{item.id}</div>
+                                {isResolved && (
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                        <FileText className="h-2.5 w-2.5 text-success" />
+                                        <span className="text-[9px] text-success font-bold">Quote-resolved · $215/u confirmed</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="text-muted-foreground truncate">{item.manufacturer}</div>
                             <div className="text-right tabular-nums text-muted-foreground">{item.qty}</div>
-                            <div className="text-right tabular-nums font-bold text-foreground">${item.priceQuoted.toLocaleString()}</div>
+                            <div className={`text-right tabular-nums font-bold ${isResolved ? 'text-success' : 'text-foreground'}`}>
+                                ${isResolved ? '215' : item.priceQuoted.toLocaleString()}
+                            </div>
                             <div className="text-right tabular-nums">
                                 {item.priceBook > 0 ? (
                                     <>
                                         <div className="text-foreground">${item.priceBook.toLocaleString()}</div>
-                                        {deltaPct !== 0 && (
+                                        {deltaPct !== 0 && !isResolved && (
                                             <div className={`text-[9px] font-semibold ${deltaPct > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-success'}`}>
                                                 {deltaPct > 0 ? '+' : ''}{deltaPct}%
                                             </div>
@@ -107,7 +123,7 @@ export default function NonCatalogValidatorTable() {
                                 )}
                             </div>
                             <div className="flex justify-center">
-                                <MatchPill match={item.match} confidence={item.confidence} />
+                                <MatchPill match={isResolved ? 'exact' : item.match} confidence={isResolved ? 100 : item.confidence} quoteResolved={isResolved} />
                             </div>
                         </div>
                     )
@@ -117,7 +133,13 @@ export default function NonCatalogValidatorTable() {
     )
 }
 
-function MatchPill({ match, confidence }: { match: 'exact' | 'close' | 'mismatch'; confidence: number }) {
+function MatchPill({ match, confidence, quoteResolved }: { match: 'exact' | 'close' | 'mismatch'; confidence: number; quoteResolved?: boolean }) {
+    if (quoteResolved) return (
+        <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success" title="Resolved via vendor quote">
+            <FileText className="h-2.5 w-2.5" />
+            Resolved
+        </span>
+    )
     if (match === 'exact') return (
         <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success" title={`${confidence}% confidence`}>
             <CheckCircle2 className="h-2.5 w-2.5" />

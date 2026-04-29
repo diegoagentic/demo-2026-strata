@@ -171,7 +171,6 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         deliverables: [
             'Spec Check Engine (Q10 #1 priority — 9.08/10)',
             'Non-Catalog Item Validator (covers 80-90% of specs)',
-            'COM & Special Product tracker via Teams',
             'Audit loop collapse: 4 → 1 AI + 1 human review',
         ],
         estimatedDuration: '6-8 weeks',
