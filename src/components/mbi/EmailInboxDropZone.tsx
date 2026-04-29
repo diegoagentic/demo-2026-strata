@@ -46,9 +46,22 @@ interface FauxEmail {
 }
 
 const FAUX_EMAILS: FauxEmail[] = [
-    { vendor: 'Allsteel · billing@allsteel.example', subject: 'Bill INV-0482 · PO-2026-0047', attached: true, time: '6:14 AM', emailType: 'bill', category: 'edi' },
-    { vendor: 'HON · billing@hon.example',           subject: 'Bill INV-0493 · service line',  attached: true, time: '9:55 AM', emailType: 'bill', category: 'edi' },
-    { vendor: 'Allsteel · statements@allsteel.example', subject: 'Q1 2026 Statement · account summary', time: '8:22 AM', emailType: 'statement', category: 'statement' },
+    // EDI
+    { vendor: 'Allsteel · billing@allsteel.example',      subject: 'Bill INV-0482 · PO-2026-0047',                        attached: true, time: '6:14 AM', emailType: 'bill',        category: 'edi' },
+    { vendor: 'HON · billing@hon.example',                 subject: 'Bill INV-0493 · service line',                        attached: true, time: '9:55 AM', emailType: 'bill',        category: 'edi' },
+    { vendor: 'Kimball · edi@kimball.example',             subject: 'EDI 810 INV-0501 · PO-2026-0052',                     attached: true, time: '7:48 AM', emailType: 'bill',        category: 'edi' },
+    // Non-EDI
+    { vendor: 'Global Industries · billing@global.example', subject: 'Invoice INV-0471 · paper invoice enclosed',          attached: true, time: '7:15 AM', emailType: 'bill',        category: 'non-edi' },
+    { vendor: 'Steelcase · billing@steelcase.example',     subject: 'Invoice INV-3301 · non-catalog item · PO-2026-0039',  attached: true, time: '8:03 AM', emailType: 'bill',        category: 'non-edi' },
+    // HealthTrust GPO
+    { vendor: 'Allsteel · gpo@allsteel.example',           subject: 'Bill INV-0488 · HealthTrust contract · Lakeside',     attached: true, time: '7:30 AM', emailType: 'healthtrust', category: 'healthtrust' },
+    { vendor: 'Teknion · billing@teknion.example',         subject: 'Invoice INV-2218 · HealthTrust GPO terms apply',      attached: true, time: '8:45 AM', emailType: 'healthtrust', category: 'healthtrust' },
+    // Exceptions
+    { vendor: 'Apex Workspace · billing@apex.example',     subject: 'Bill INV-0484 · PO qty mismatch · 6 vs 5 units',      attached: true, time: '7:55 AM', emailType: 'exception',   category: 'exception' },
+    { vendor: 'Teknion · billing@teknion.example',         subject: 'Bill INV-2211 · price discrepancy flagged',           attached: true, time: '9:10 AM', emailType: 'exception',   category: 'exception' },
+    // Statement
+    { vendor: 'Allsteel · statements@allsteel.example',    subject: 'Q1 2026 Statement · account summary',                                time: '8:22 AM', emailType: 'statement',   category: 'statement' },
+    { vendor: 'HON · statements@hon.example',              subject: 'Mar 2026 Account Statement · balance $0',                            time: '6:50 AM', emailType: 'statement',   category: 'statement' },
 ]
 
 const NEW_EMAIL: FauxEmail = { vendor: 'HON · billing@hon.example', subject: 'Invoice INV-0498 · service line', attached: true, time: '10:02 AM', emailType: 'bill', category: 'non-edi' }
@@ -160,7 +173,7 @@ export default function EmailInboxDropZone({ onIngest, activeFilter = 'all' }: E
                     </div>
                     <div className="text-[10px] text-muted-foreground">Strata monitors this inbox · AI classifies emails · bills route to AP queue automatically</div>
                 </div>
-                <span className="text-[10px] text-muted-foreground">4 unread · 12 today</span>
+                <span className="text-[10px] text-muted-foreground">{FAUX_EMAILS.length + 1} emails · today</span>
             </div>
 
             {/* Faux inbox items */}
@@ -169,7 +182,7 @@ export default function EmailInboxDropZone({ onIngest, activeFilter = 'all' }: E
                 const visible = FAUX_EMAILS.filter(e => activeFilter === 'all' || e.category === activeFilter)
                 const isEmpty = !newVisible && visible.length === 0
                 return (
-                    <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40">
+                    <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40 max-h-52 overflow-y-auto">
                         {newVisible && (
                             <div className="animate-in slide-in-from-top-2 duration-300">
                                 <FauxEmailRow {...NEW_EMAIL} highlight />
@@ -274,12 +287,14 @@ export default function EmailInboxDropZone({ onIngest, activeFilter = 'all' }: E
     )
 }
 
-type EmailType = 'bill' | 'rebate-bill' | 'statement'
+type EmailType = 'bill' | 'rebate-bill' | 'statement' | 'healthtrust' | 'exception'
 
 const EMAIL_TYPE_CHIP: Record<EmailType, { label: string; cls: string }> = {
-    'bill':        { label: 'Bill → AP queue',  cls: 'text-success bg-success/10' },
-    'rebate-bill': { label: 'Rebate · Bill → AP', cls: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
-    'statement':   { label: 'Statement · tagged', cls: 'text-muted-foreground bg-muted/60' },
+    'bill':        { label: 'Bill → AP queue',          cls: 'text-success bg-success/10' },
+    'rebate-bill': { label: 'Rebate · Bill → AP',       cls: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
+    'statement':   { label: 'Statement · tagged',        cls: 'text-muted-foreground bg-muted/60' },
+    'healthtrust': { label: 'HealthTrust GPO · review',  cls: 'text-amber-700 dark:text-amber-400 bg-amber-500/10' },
+    'exception':   { label: 'Exception · needs review',  cls: 'text-red-600 dark:text-red-400 bg-red-500/10' },
 }
 
 function FauxEmailRow({ vendor, subject, attached, time, muted, emailType, highlight }: { vendor: string; subject: string; attached?: boolean; time: string; muted?: boolean; emailType?: EmailType; highlight?: boolean }) {
