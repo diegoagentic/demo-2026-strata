@@ -23,6 +23,7 @@
  */
 
 import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2, RefreshCw, Clock } from 'lucide-react'
+import { useState } from 'react'
 import type { Invoice, InvoiceStatus } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
 
@@ -62,13 +63,25 @@ export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: In
         'done': invoices.filter(i => i.status === 'done'),
     }
 
+    const [collapsed, setCollapsed] = useState<Set<InvoiceStatus>>(
+        new Set(['in-progress', 'done'])
+    )
+
+    const toggle = (status: InvoiceStatus) => {
+        setCollapsed(prev => {
+            const next = new Set(prev)
+            next.has(status) ? next.delete(status) : next.add(status)
+            return next
+        })
+    }
+
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
             {/* Header */}
             <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center justify-between">
                 <div>
                     <div className="text-xs font-bold text-foreground">Bill queue · {invoices.length} bills · live</div>
-                    <div className="text-[10px] text-muted-foreground">Continuous processing · recent &amp; pending · 3 columns · click any card</div>
+                    <div className="text-[10px] text-muted-foreground">Continuous processing · recent &amp; pending · click any card</div>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px]">
                     <Legend color="bg-amber-500/20 text-amber-700 dark:text-amber-400" label="HT" />
@@ -77,15 +90,42 @@ export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: In
                 </div>
             </div>
 
-            {/* 3 columns */}
-            <div className="grid grid-cols-3 gap-2 p-2 bg-background/40 dark:bg-zinc-900/40">
+            {/* Columns */}
+            <div className="flex gap-2 p-2 bg-background/40 dark:bg-zinc-900/40 items-start">
                 {COLUMN_ORDER.map(status => {
                     const items = byStatus[status]
                     const meta = COLUMN_META[status]
+                    const isCollapsed = collapsed.has(status)
+
+                    if (isCollapsed) {
+                        return (
+                            <button
+                                key={status}
+                                onClick={() => toggle(status)}
+                                title={`Expand ${meta.label}`}
+                                className={`flex flex-col items-center justify-between shrink-0 w-8 rounded-xl border py-3 gap-2 transition-opacity hover:opacity-80 ${meta.tone}`}
+                                style={{ minHeight: 80 }}
+                            >
+                                <span className={`text-[9px] font-bold tabular-nums px-1 py-0.5 rounded ${meta.chip}`}>
+                                    {items.length}
+                                </span>
+                                <span
+                                    className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground"
+                                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                                >
+                                    {meta.label}
+                                </span>
+                            </button>
+                        )
+                    }
+
                     return (
-                        <div key={status} className={`flex flex-col rounded-xl border ${meta.tone}`}>
+                        <div key={status} className={`flex flex-col flex-1 min-w-0 rounded-xl border ${meta.tone}`}>
                             {/* Column header */}
-                            <div className="px-2.5 py-2 border-b border-border/60 flex items-center justify-between">
+                            <button
+                                onClick={() => toggle(status)}
+                                className="px-2.5 py-2 border-b border-border/60 flex items-center justify-between w-full text-left hover:opacity-80 transition-opacity"
+                            >
                                 <div className="min-w-0">
                                     <div className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${meta.chip}`}>
                                         {status === 'in-progress' && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
@@ -95,7 +135,7 @@ export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: In
                                     <div className="text-[9px] text-muted-foreground mt-1 truncate">{meta.sub}</div>
                                 </div>
                                 <span className="text-[10px] font-bold text-foreground tabular-nums shrink-0">{items.length}</span>
-                            </div>
+                            </button>
 
                             {/* Cards */}
                             <div className="p-1.5 space-y-1.5 max-h-[440px] overflow-y-auto">
