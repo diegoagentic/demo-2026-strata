@@ -24,7 +24,6 @@
 
 import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2, RefreshCw, Clock } from 'lucide-react'
 import type { Invoice, InvoiceStatus } from '../../config/profiles/mbi-data'
-import { GlossaryTooltip } from './GlossaryTooltip'
 
 interface InvoiceQueueTableProps {
     invoices: Invoice[]
@@ -189,24 +188,16 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
     )
 }
 
-const FLAG_GLOSSARY_TERM: Record<string, string> = {
-    EDI: 'EDI',
-    HT: 'HealthTrust',
-    Fix: 'invoice_exception',
-}
-
 function CardFlag({ tone, icon, label }: { tone: 'blue' | 'amber' | 'red'; icon: React.ReactNode; label: string }) {
     const cls =
         tone === 'blue' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400' :
         tone === 'amber' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400' :
         'bg-red-500/15 text-red-700 dark:text-red-400'
     return (
-        <GlossaryTooltip term={FLAG_GLOSSARY_TERM[label] ?? ''} side="top">
-            <span className={`text-[8.5px] font-bold px-1 py-0.5 rounded inline-flex items-center gap-0.5 ${cls}`}>
-                {icon}
-                {label}
-            </span>
-        </GlossaryTooltip>
+        <span className={`text-[8.5px] font-bold px-1 py-0.5 rounded inline-flex items-center gap-0.5 ${cls}`}>
+            {icon}
+            {label}
+        </span>
     )
 }
 

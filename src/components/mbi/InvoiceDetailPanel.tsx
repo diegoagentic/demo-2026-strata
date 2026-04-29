@@ -24,7 +24,6 @@
 
 import { FileText, Heart, AlertTriangle, ShieldCheck, Building2, Calendar, DollarSign, Send, ArrowRight, Sparkles, Clock, CreditCard } from 'lucide-react'
 import type { Invoice } from '../../config/profiles/mbi-data'
-import { GlossaryTooltip } from './GlossaryTooltip'
 
 interface InvoiceDetailPanelProps {
     invoice: Invoice
@@ -54,20 +53,14 @@ export function InvoiceDocPreview({ invoice }: InvoiceDetailPanelProps) {
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                         {invoice.isEDI ? (
-                            <GlossaryTooltip term="EDI_CORE" side="bottom">
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">EDI</span>
-                            </GlossaryTooltip>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">EDI</span>
                         ) : (
-                            <GlossaryTooltip term="OCR_RPA" side="bottom">
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">OCR</span>
-                            </GlossaryTooltip>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">OCR</span>
                         )}
                         {invoice.isHealthTrust && (
-                            <GlossaryTooltip term="HealthTrust" side="bottom">
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 uppercase tracking-wider inline-flex items-center gap-1">
-                                    <Heart className="h-2.5 w-2.5" />HT
-                                </span>
-                            </GlossaryTooltip>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 uppercase tracking-wider inline-flex items-center gap-1">
+                                <Heart className="h-2.5 w-2.5" />HT
+                            </span>
                         )}
                     </div>
                 </div>
