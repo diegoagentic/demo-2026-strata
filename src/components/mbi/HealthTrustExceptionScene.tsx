@@ -18,7 +18,8 @@
 import { useState } from 'react'
 import {
     Heart, Sparkles, CheckCircle2, Check, X, Pencil, Send, Brain,
-    AlertTriangle, Building2, FileText, UserCheck, Flag,
+    AlertTriangle, Building2, FileText, UserCheck, Flag, ChevronDown, ChevronUp,
+    ShieldCheck, Users, FileCheck, Calculator,
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
@@ -49,6 +50,7 @@ export default function HealthTrustExceptionScene() {
     const [meta, setMeta] = useState<{ reasonCategory?: string; notes?: string; notifyAI?: boolean } | null>(null)
     const [toast, setToast] = useState<string | null>(null)
     const [modalKind, setModalKind] = useState<'override' | 'escalate' | null>(null)
+    const [criteriaOpen, setCriteriaOpen] = useState(true)
 
     const pushToast = (msg: string) => {
         setToast(msg)
@@ -146,6 +148,52 @@ export default function HealthTrustExceptionScene() {
                     </div>
                 </div>
 
+                {/* AI detection criteria — collapsible */}
+                <div className="border border-ai/30 bg-ai/5 dark:bg-ai/10 rounded-xl overflow-hidden">
+                    <button
+                        onClick={() => setCriteriaOpen(o => !o)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-ai uppercase tracking-wider hover:bg-ai/10 transition-colors"
+                    >
+                        <div className="flex items-center gap-1.5">
+                            <Sparkles className="h-3 w-3" />
+                            <span>How Strata detected this · 4 criteria matched · 97% confidence</span>
+                        </div>
+                        {criteriaOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    </button>
+                    {criteriaOpen && (
+                        <div className="divide-y divide-ai/15 text-xs">
+                            <DetectionCriterion
+                                icon={<Users className="h-3 w-3" />}
+                                label="Client membership"
+                                value={invoice.clientName ?? 'Riverside Medical Center'}
+                                detail="HealthTrust GPO member · verified against contract DB"
+                                confidence={99}
+                            />
+                            <DetectionCriterion
+                                icon={<FileCheck className="h-3 w-3" />}
+                                label="Contract match"
+                                value="Master Agreement · Feb 2024"
+                                detail="Active contract · §4.2 Rebate Schedule · 3% on all GPO member orders"
+                                confidence={99}
+                            />
+                            <DetectionCriterion
+                                icon={<ShieldCheck className="h-3 w-3" />}
+                                label="Vendor eligibility"
+                                value={invoice.vendor}
+                                detail="HNI brand · covered under HealthTrust GPO purchasing terms"
+                                confidence={97}
+                            />
+                            <DetectionCriterion
+                                icon={<Calculator className="h-3 w-3" />}
+                                label="Rate applied"
+                                value="3% × $62,400"
+                                detail={`Rebate = $${rebate.toLocaleString()} · posts to GPO payable, not CORE`}
+                                confidence={97}
+                            />
+                        </div>
+                    )}
+                </div>
+
                 {/* Calculation breakdown */}
                 <div className="bg-zinc-50/70 dark:bg-zinc-900/40 border border-border rounded-xl overflow-hidden">
                     <div className="px-3 py-2 bg-muted/30 dark:bg-zinc-800 border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -155,6 +203,10 @@ export default function HealthTrustExceptionScene() {
                         <div className="px-3 py-2 flex justify-between">
                             <span className="text-muted-foreground">Bill subtotal</span>
                             <span className="text-foreground tabular-nums">${invoice.amount.toLocaleString()}</span>
+                        </div>
+                        <div className="px-3 py-2 flex justify-between items-center">
+                            <span className="text-muted-foreground">GPO rebate rate</span>
+                            <span className="text-foreground tabular-nums">3% (Master Agreement §4.2)</span>
                         </div>
                         <div className="px-3 py-2 flex justify-between items-center bg-amber-50/40 dark:bg-amber-500/5">
                             <span className="text-amber-700 dark:text-amber-400 font-semibold inline-flex items-center gap-1.5">
@@ -326,6 +378,33 @@ export default function HealthTrustExceptionScene() {
                 confirmLabel="Escalate to Director"
                 confirmLabelWhenNotifying="Escalate & notify AI"
             />
+        </div>
+    )
+}
+
+function DetectionCriterion({
+    icon, label, value, detail, confidence,
+}: {
+    icon: React.ReactNode
+    label: string
+    value: string
+    detail: string
+    confidence: number
+}) {
+    return (
+        <div className="px-3 py-2 flex items-start gap-2.5 bg-background/40 dark:bg-zinc-900/30">
+            <div className="h-6 w-6 rounded-md bg-ai/15 text-ai flex items-center justify-center shrink-0 mt-0.5">
+                {icon}
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</div>
+                    <div className="text-[9px] font-bold text-success tabular-nums shrink-0">{confidence}%</div>
+                </div>
+                <div className="text-[11px] font-semibold text-foreground truncate">{value}</div>
+                <div className="text-[10px] text-muted-foreground leading-snug">{detail}</div>
+            </div>
+            <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-1" />
         </div>
     )
 }
