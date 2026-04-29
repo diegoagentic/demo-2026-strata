@@ -1,4 +1,4 @@
-﻿genes// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // MBI — Modern Business Interiors · Strata AI Demo Profile
 //
 // CLIENT: Modern Business Interiors (St. Charles, MO + Lenexa, KS · ~42 employees
