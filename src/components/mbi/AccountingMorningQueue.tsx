@@ -190,10 +190,7 @@ export default function AccountingMorningQueue() {
                 </div>
             </div>
 
-            {/* Email inbox dropzone */}
-            <EmailInboxDropZone onIngest={handleIngest} activeFilter={billFilter} />
-
-            {/* Shared filter chips — controls both the email inbox above and the bill queue below */}
+            {/* Shared filter chips — controls both the email inbox below and the bill queue further down */}
             <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Filter inbox + queue:</span>
                 {([
@@ -218,6 +215,9 @@ export default function AccountingMorningQueue() {
                     </button>
                 ))}
             </div>
+
+            {/* Email inbox dropzone */}
+            <EmailInboxDropZone onIngest={handleIngest} activeFilter={billFilter} />
 
             {/* PO auto-recheck demo */}
             <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
