@@ -26,7 +26,7 @@ const BEFORE_LOOPS = [
 ]
 
 const AFTER_LOOPS = [
-    { label: 'Strata AI validation', detail: 'Spec check · non-catalog · pricing · drawing vs qty', isAI: true },
+    { label: 'Strata AI validation', detail: 'Duplicates · non-catalog pricing · qty match · SKU check', isAI: true },
     { label: 'Human checkpoint', detail: 'PC reviews AI report · signs off', isAI: false },
 ]
 

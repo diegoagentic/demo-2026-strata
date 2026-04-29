@@ -344,7 +344,7 @@ export default function QuoteGPReviewScene() {
                 <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3 animate-in fade-in duration-300">
                     <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                     <span className="flex-1 text-foreground">
-                        CORE Quote ready. Next: Spec Check runs the AI validation pass — 4 audit loops collapse into 1 AI review + 1 human sign-off.
+                        CORE Quote ready. Next: Strata validates the quote — duplicates, non-catalog pricing, BOM completeness — then the PC signs off.
                     </span>
                 </div>
             )}

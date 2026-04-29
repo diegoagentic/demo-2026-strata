@@ -45,7 +45,7 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
 }
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: '4 audit loops → 1 AI pass + 1 human review · Spec Check is MBI\'s #1 Q10 priority.', nextLabel: 'Review incoming budget' },
+    0: { hint: '4 audit loops → 1 AI pass + 1 human review · BOM validation catches duplicates, pricing gaps, and SKU issues before the proposal goes out.', nextLabel: 'Review incoming budget' },
     1: { hint: 'Signed budget from the Account Manager · all 4 readiness checks pass · PC can pick up.', nextLabel: 'Review GP + create CORE Quote' },
     2: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Send the proposal' },
     3: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
@@ -132,7 +132,7 @@ function OverviewStub() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard value="3.5 / 29" label="PCs / staff (bottleneck)" accent="text-foreground" />
             <StatCard value="4 → 1+1" label="Audit loops (collapsed)" accent="text-success" />
-            <StatCard value="9.08/10" label="Spec Check Q10 priority" accent="text-zinc-900 dark:text-primary" />
+            <StatCard value="< 5 min" label="Quote validation turnaround" accent="text-zinc-900 dark:text-primary" />
             <StatCard value="2h → 12m" label="Per proposal PC effort" accent="text-success" />
         </div>
     )

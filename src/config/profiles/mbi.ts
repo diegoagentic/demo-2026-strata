@@ -109,8 +109,8 @@ export const MBI_STEPS: DemoStep[] = [
         id: 'm3.3',
         groupId: 1,
         groupTitle: 'Flow 2: Quotes AI',
-        title: 'AI validation · audit loops collapse',
-        description: "Spec Check runs against the assembled BOM. The four sequential audit loops the team used to run by eye — internal, vendor, manager, client — collapse into one AI pass plus one human review. Non-catalog items get cross-checked against manufacturer price books and vendor quotes are processed automatically — no manual re-entry.",
+        title: 'Quote validation · BOM completeness check',
+        description: "Strata validates the assembled quote: duplicate lines, non-catalog pricing against manufacturer price books, quantity consistency between SIF and quote, and SKU completeness. The four sequential checks the team used to run by eye collapse into one AI pass plus one human review. Vendor quotes for non-catalog items are read automatically — no manual re-entry.",
         app: 'mbi-quotes',
         role: 'Project Manager',
     },
@@ -156,7 +156,7 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then wrap up the queue' },
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
     'm3.2': { mode: 'interactive', userAction: 'Run SIF extraction · enter GP per vendor · confirm to create CORE Quote QUOT-2026-003' },
-    'm3.3': { mode: 'interactive', userAction: 'Review Spec Check · audit loops collapse into one AI pass plus one human review' },
+    'm3.3': { mode: 'interactive', userAction: 'Review the BOM validation — duplicates, non-catalog pricing, qty consistency · then resolve any flagged items' },
     'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers · this closes the active tour' },
 };
 
@@ -207,10 +207,10 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'PC confirmed GP · sell prices calculated · CORE Quote QUOT-2026-003 created',
     ],
     'm3.3': [
-        'Running Spec Check — dimensions, finish, palette, availability',
-        'Cross-checking non-catalog items vs manufacturer price books',
-        'Vendor quotes read automatically · SIF entries generated · no re-entry',
-        'Audit loops collapsed into one AI pass + one human review',
+        'Scanning BOM for duplicate line items',
+        'Checking non-catalog pricing vs manufacturer price books',
+        'Validating quantity consistency — SIF vs quote',
+        'BOM validation complete · 1 flagged item · vendor quote read automatically',
     ],
     'm3.4': [
         'Project Manager signed off · proposal ready to send',

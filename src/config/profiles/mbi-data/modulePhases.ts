@@ -167,9 +167,9 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         module: 'quotes',
         phase: 3,
         title: 'Validation Layer',
-        summary: 'Spec check + non-catalog validation collapses 4 audit loops to 1.',
+        summary: 'Quote validation + non-catalog pricing collapses 4 audit loops to 1.',
         deliverables: [
-            'Spec Check Engine (Q10 #1 priority — 9.08/10)',
+            'Quote Validation Engine (duplicates · non-catalog pricing · qty · SKU)',
             'Non-Catalog Item Validator (covers 80-90% of specs)',
             'Audit loop collapse: 4 → 1 AI + 1 human review',
         ],

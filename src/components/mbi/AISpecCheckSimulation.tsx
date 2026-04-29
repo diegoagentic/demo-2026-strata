@@ -53,17 +53,17 @@ interface Step {
 
 const PROCESSING_STEPS: Step[] = [
     { label: 'Loading BOM', detail: '143 items · ENT-HQ-F12 · Enterprise Holdings HQ Floor 12', durationMs: 600 },
-    { label: 'Cross-checking dimensions vs the CET footprint', detail: '143 of 143 within tolerance', durationMs: 700 },
-    { label: 'Validating finish consistency', detail: 'Upholstery + laminate · 1 ambiguity to flag', durationMs: 700 },
-    { label: 'Matching palette across surfaces', detail: 'Project palette: charcoal + warm walnut accents', durationMs: 700 },
-    { label: 'Checking vendor availability vs install date', detail: '142 confirmed · 1 lead time unconfirmed', durationMs: 700 },
-    { label: 'Cross-checking non-catalog items', detail: '8 verified vs price books · 1 needs your call', durationMs: 700 },
+    { label: 'Scanning for duplicate line items', detail: '143 lines checked · 0 duplicates found', durationMs: 700 },
+    { label: 'Checking non-catalog pricing vs price books', detail: '9 non-catalog items · 8 confirmed · 1 price mismatch flagged', durationMs: 700 },
+    { label: 'Validating quantity consistency (SIF vs quote)', detail: 'All quantities consistent across SIF and quote', durationMs: 700 },
+    { label: 'Checking SKU completeness', detail: '141 complete · 2 items need your call', durationMs: 700 },
+    { label: 'BOM validation complete', detail: '1 flagged item ready for PC review · vendor quote needed', durationMs: 500 },
 ]
 
 const FINALIZING_STEPS: Step[] = [
     { label: 'Applying your guidance', detail: 'Updating findings list with your decisions', durationMs: 600 },
     { label: 'Re-scoring severity per item', detail: '2 items adjusted', durationMs: 600 },
-    { label: 'Spec Check report ready', detail: '1 AI pass complete · 1 human review remaining', durationMs: 500 },
+    { label: 'BOM validation report ready', detail: '1 AI pass complete · 1 human review remaining', durationMs: 500 },
 ]
 
 interface AISpecCheckSimulationProps {
@@ -101,7 +101,7 @@ export default function AISpecCheckSimulation({ onComplete }: AISpecCheckSimulat
     }
 
     const steps = phase === 'processing' ? PROCESSING_STEPS : FINALIZING_STEPS
-    const headerLabel = phase === 'processing' ? 'AI Spec Check is scanning the BOM…' : 'Applying your guidance…'
+    const headerLabel = phase === 'processing' ? 'Strata is validating the quote BOM…' : 'Applying your guidance…'
 
     return (
         <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-2xl p-4 space-y-3">
@@ -113,7 +113,7 @@ export default function AISpecCheckSimulation({ onComplete }: AISpecCheckSimulat
                     <div className="text-sm font-bold text-foreground">{headerLabel}</div>
                     <div className="text-[10px] text-muted-foreground">
                         {phase === 'processing'
-                            ? '5 checks across 143 line items · Strata will pause if it needs a human call'
+                            ? 'Duplicates · non-catalog pricing · qty match · SKU completeness · pauses for human calls'
                             : 'Re-running the affected checks · this is fast'}
                     </div>
                 </div>
@@ -181,7 +181,7 @@ function QuestionsView({
                         Two judgment calls Strata won't make on its own
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                        These are the kinds of decisions a PM running spec check daily would make based on context the model can't fully see (designer intent, client preferences, vendor history). Pick once · Strata applies it across the report.
+                        These are the kinds of calls a PC makes based on context the model can't fully see — vendor history, client preferences, install timeline. Pick once · Strata applies it across the report.
                     </div>
                 </div>
             </div>

@@ -95,7 +95,7 @@ export default function QuoteIncomingBudget() {
                     <div className="text-xs min-w-0">
                         <div className="font-bold text-foreground">Before · ~2h per proposal</div>
                         <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                            PC manually keyed 24 SIF fields into CORE, entered GP per vendor by hand, ran 4 sequential audit loops, handled spec checks by eye.
+                            PC manually keyed 24 SIF fields into CORE, entered GP per vendor by hand, ran 4 sequential audit loops, validated specs manually, line by line.
                         </div>
                     </div>
                 </div>
@@ -119,7 +119,7 @@ export default function QuoteIncomingBudget() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    All 4 readiness checks passed. Next: Strata runs the AI validation pass — spec check, non-catalog pricing, audit loops collapse to 1 review.
+                    All 4 readiness checks passed. Next: Strata validates the quote — non-catalog pricing, BOM completeness, duplicates — 4 audit loops collapse to 1 review.
                 </span>
             </div>
 

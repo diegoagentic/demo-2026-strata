@@ -44,12 +44,11 @@ export default function QuoteValidationScene() {
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">
-                        Q10 #1 priority at MBI: spec check
+                        Quote validation — 4 audit loops collapse to 1
                     </div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Marked <strong className="text-foreground">9.08/10</strong> in the AI readiness assessment.
-                        Today, PCs run 4 sequential audit loops by eye. Strata's Spec Check engine collapses them into
-                        <strong className="text-foreground"> 1 AI pass + 1 human review</strong> — without losing oversight.
+                        Today, PCs run 4 sequential checks by eye — and errors still reach manufacturers. Strata validates the assembled BOM automatically:
+                        <strong className="text-foreground"> duplicates, non-catalog pricing, quantity consistency, SKU completeness</strong> — then a single human review signs off.
                     </div>
                 </div>
             </div>
@@ -156,7 +155,7 @@ export default function QuoteValidationScene() {
                     <button
                         onClick={() => setDecisions(null)}
                         className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider"
-                        title="Re-run the Spec Check simulation from the top"
+                        title="Re-run the quote validation simulation from the top"
                     >
                         <RotateCcw className="h-3 w-3" />
                         Re-run
