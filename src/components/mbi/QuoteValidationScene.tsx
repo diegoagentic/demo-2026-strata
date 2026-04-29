@@ -22,12 +22,14 @@ import NonCatalogVendorQuoteDemo from './NonCatalogVendorQuoteDemo'
 import MBIDetailSheet from './MBIDetailSheet'
 import AISpecCheckSimulation, {
     SpecCheckDecisionsApplied,
+    DEFAULT_DECISIONS,
     type SpecCheckDecisions,
 } from './AISpecCheckSimulation'
 
 export default function QuoteValidationScene() {
     const [nonCatalogOpen, setNonCatalogOpen] = useState(false)
     const [decisions, setDecisions] = useState<SpecCheckDecisions | null>(null)
+    const [liveDecisions, setLiveDecisions] = useState<SpecCheckDecisions>(DEFAULT_DECISIONS)
     const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set())
 
     const handleResolved = () => {
@@ -54,7 +56,10 @@ export default function QuoteValidationScene() {
 
             {/* AI simulation OR decisions recap */}
             {decisions === null ? (
-                <AISpecCheckSimulation onComplete={setDecisions} />
+                <AISpecCheckSimulation
+                onComplete={(d) => { setDecisions(d); setLiveDecisions(d) }}
+                onDecisionChange={setLiveDecisions}
+            />
             ) : (
                 <SpecCheckDecisionsApplied
                     decisions={decisions}
@@ -63,7 +68,7 @@ export default function QuoteValidationScene() {
             )}
 
             {/* Spec Check report */}
-            <SpecCheckReport decisions={decisions ?? undefined} />
+            <SpecCheckReport decisions={liveDecisions} />
 
             {/* ── Non-Catalog inline highlight card ── */}
             <div className={`

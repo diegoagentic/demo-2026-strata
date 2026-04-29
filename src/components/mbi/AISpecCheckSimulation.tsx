@@ -38,7 +38,7 @@ export interface SpecCheckDecisions {
     nonCatalogLeadTime: 'use-estimate' | 'hold-for-confirmation'
 }
 
-const DEFAULT_DECISIONS: SpecCheckDecisions = {
+export const DEFAULT_DECISIONS: SpecCheckDecisions = {
     finishAmbiguity: 'flag-for-designer',
     nonCatalogLeadTime: 'use-estimate',
 }
@@ -68,12 +68,18 @@ const FINALIZING_STEPS: Step[] = [
 
 interface AISpecCheckSimulationProps {
     onComplete: (decisions: SpecCheckDecisions) => void
+    onDecisionChange?: (decisions: SpecCheckDecisions) => void
 }
 
-export default function AISpecCheckSimulation({ onComplete }: AISpecCheckSimulationProps) {
+export default function AISpecCheckSimulation({ onComplete, onDecisionChange }: AISpecCheckSimulationProps) {
     const [phase, setPhase] = useState<Phase>('questions')
     const [stepIdx, setStepIdx] = useState(0)
     const [decisions, setDecisions] = useState<SpecCheckDecisions>(DEFAULT_DECISIONS)
+
+    const updateDecisions = (d: SpecCheckDecisions) => {
+        setDecisions(d)
+        onDecisionChange?.(d)
+    }
 
     useEffect(() => {
         if (phase !== 'processing' && phase !== 'finalizing') return
@@ -94,7 +100,7 @@ export default function AISpecCheckSimulation({ onComplete }: AISpecCheckSimulat
         return (
             <QuestionsView
                 decisions={decisions}
-                onChange={setDecisions}
+                onChange={updateDecisions}
                 onConfirm={() => { setPhase('finalizing'); setStepIdx(0) }}
             />
         )
