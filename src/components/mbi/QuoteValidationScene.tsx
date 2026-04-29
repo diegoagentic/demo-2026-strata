@@ -20,6 +20,7 @@ import {
     Search, Package, ArrowRight, Sparkles, ChevronRight, RotateCcw,
 } from 'lucide-react'
 import AuditLoopDiagram from './AuditLoopDiagram'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 import SpecCheckReport from './SpecCheckReport'
 import NonCatalogValidatorTable from './NonCatalogValidatorTable'
 import MBIDetailSheet from './MBIDetailSheet'
@@ -115,6 +116,10 @@ export default function QuoteValidationScene() {
                 <NonCatalogValidatorTable />
             </MBIDetailSheet>
 
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.MFR_BOOKS, SOURCES.SPEC_DB] },
+                { sources: [SOURCES.STRATA_SPEC] },
+            ]} />
         </div>
     )
 }

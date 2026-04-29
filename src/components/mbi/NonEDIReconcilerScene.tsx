@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 interface LineRow {
     id: string
@@ -323,6 +324,14 @@ export default function NonEDIReconcilerScene() {
                     <strong className="text-foreground">Every override trains the matcher.</strong> Strata learns your acceptable variance thresholds per vendor — next time Apex Workspace ships 5-of-6 on Jarvis, it'll auto-approve without asking.
                 </div>
             </div>
+
+            {/* Data sources */}
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.VENDOR_EMAIL] },
+                { sources: [SOURCES.DOC_AI] },
+                { sources: [SOURCES.CORE_PO] },
+                { sources: [SOURCES.CORE_GL, SOURCES.CORE_RPA] },
+            ]} />
 
             {/* Override modal */}
             {modalRow && (

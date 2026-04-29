@@ -12,8 +12,9 @@
  * USED BY: MBIQuotesPage (wizard scene 1)
  */
 
-import { Keyboard, X, ArrowRight, Clock, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Keyboard, ArrowRight, Clock, Sparkles, CheckCircle2 } from 'lucide-react'
 import SIFToCOREPreview from './SIFToCOREPreview'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 export default function QuoteAutoImportScene() {
     return (
@@ -83,6 +84,12 @@ export default function QuoteAutoImportScene() {
                     Next: Strata runs <strong>Spec Check</strong> against CORE constraints, vendor availability, and non-catalog pricing — the 4-loop audit collapses into 1 AI pass + 1 PC review.
                 </span>
             </div>
+
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.SIF_FILE] },
+                { sources: [SOURCES.STRATA_AI] },
+                { sources: [SOURCES.CORE_RPA] },
+            ]} />
         </div>
     )
 }

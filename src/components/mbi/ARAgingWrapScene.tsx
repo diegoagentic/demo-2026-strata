@@ -19,11 +19,12 @@
 import { useState } from 'react'
 import {
     Mail, CheckCircle2, Clock, FileSignature,
-    Receipt, Package, FileText, Palette, Sparkles,
+    Receipt, Package, FileText, Sparkles,
 } from 'lucide-react'
 import AIEmailDraftsPanel from './AIEmailDraftsPanel'
 import FlowHandoff from './FlowHandoff'
 import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 export default function ARAgingWrapScene() {
     const [morningClosed, setMorningClosed] = useState(false)
@@ -48,6 +49,13 @@ export default function ARAgingWrapScene() {
 
             {/* AI email drafts */}
             <AIEmailDraftsPanel />
+
+            {/* Data sources */}
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.CORE_AR] },
+                { sources: [SOURCES.STRATA_NLP] },
+                { sources: [SOURCES.OUTLOOK] },
+            ]} />
 
             {/* Close morning CTA · gates FlowHandoff */}
             {!morningClosed ? (

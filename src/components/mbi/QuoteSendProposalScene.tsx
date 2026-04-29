@@ -18,6 +18,7 @@ import {
     Receipt, Zap, Sparkles, Package,
 } from 'lucide-react'
 import FlowHandoff from './FlowHandoff'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 export default function QuoteSendProposalScene() {
     const [sent, setSent] = useState(false)
@@ -120,6 +121,12 @@ export default function QuoteSendProposalScene() {
                     }}
                 />
             )}
+
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.CORE_PO] },
+                { sources: [SOURCES.STRATA_AI] },
+                { sources: [SOURCES.OUTLOOK] },
+            ]} />
         </div>
     )
 }

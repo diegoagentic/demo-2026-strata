@@ -17,13 +17,14 @@
 
 import { useState } from 'react'
 import {
-    Heart, Sparkles, CheckCircle2, Check, X, Pencil, Send, Brain,
-    AlertTriangle, Building2, FileText, UserCheck, Flag, ChevronDown, ChevronUp,
+    Heart, Sparkles, CheckCircle2, Check, Pencil, Send,
+    AlertTriangle, FileText, UserCheck, Flag, ChevronDown, ChevronUp,
     ShieldCheck, Users, FileCheck, Calculator,
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 type ExceptionStatus = 'pending' | 'approved' | 'overridden' | 'escalated'
 
@@ -378,6 +379,13 @@ export default function HealthTrustExceptionScene() {
                 confirmLabel="Escalate to Director"
                 confirmLabelWhenNotifying="Escalate & notify AI"
             />
+
+            {/* Data sources */}
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.HT_DB] },
+                { sources: [SOURCES.STRATA_AI] },
+                { sources: [SOURCES.CORE_RPA, SOURCES.TEAMS] },
+            ]} />
         </div>
     )
 }

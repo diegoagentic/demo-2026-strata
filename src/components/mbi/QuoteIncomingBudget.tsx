@@ -13,10 +13,11 @@
  */
 
 import {
-    FileSignature, ArrowRight, CheckCircle2, Clock, DollarSign,
+    FileSignature, ArrowRight, Clock, DollarSign,
     Building2, Layers, ShieldCheck,
 } from 'lucide-react'
 import QuoteReadinessGate from './QuoteReadinessGate'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 const PC_QUEUE = [
     { id: 'BDG-2026-001', client: 'Mosaic Creative', project: 'Studio Renovation · Floor 3', amount: '$84.2K', status: 'done', statusLabel: 'Proposal sent' },
@@ -110,6 +111,12 @@ export default function QuoteIncomingBudget() {
                     All 4 readiness checks passed. Next: watch Strata auto-import the SIF into CORE — <strong>zero keystrokes, 2 hours saved.</strong>
                 </span>
             </div>
+
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.CRM] },
+                { sources: [SOURCES.SIF_FILE] },
+                { sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] },
+            ]} />
         </div>
     )
 }

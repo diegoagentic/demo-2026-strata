@@ -18,6 +18,7 @@
 import { TrendingDown, ArrowRight, Mail, Sparkles, AlertTriangle, TrendingUp } from 'lucide-react'
 import ARStatusBoard from './ARStatusBoard'
 import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 interface ARAgingReviewSceneProps {
     /** When provided, the "review collection emails" cue at the bottom
@@ -138,6 +139,13 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
                     </button>
                 )}
             </div>
+
+            {/* Data sources */}
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.CORE_AR] },
+                { sources: [SOURCES.STRATA_AI] },
+                { sources: [SOURCES.STRATA_NLP] },
+            ]} />
         </div>
     )
 }

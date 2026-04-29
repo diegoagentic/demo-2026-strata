@@ -18,6 +18,7 @@ import InvoiceQueueTable from './InvoiceQueueTable'
 import InvoiceDetailPanel from './InvoiceDetailPanel'
 import EmailInboxDropZone from './EmailInboxDropZone'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
+import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 import type { Invoice } from '../../config/profiles/mbi-data'
 
 // Invoices that arrive during the demo via the EmailInboxDropZone.
@@ -192,6 +193,13 @@ export default function AccountingMorningQueue() {
                     First up: the Allsteel bill · Strata auto-calculated the <strong>3% rebate</strong> per MBI's GPO contract — needs your approval to post.
                 </span>
             </div>
+
+            {/* Data sources */}
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.VENDOR_EMAIL] },
+                { sources: [SOURCES.DOC_AI] },
+                { sources: [SOURCES.CORE_PO, SOURCES.HT_DB, SOURCES.CORE_RPA] },
+            ]} />
         </div>
     )
 }
