@@ -116,11 +116,27 @@ function polishBody(originalBody: string, direction: 'friendlier' | 'firmer' | '
         .replace(/We haven't received a response to our first reminder on .+\. /i, '')
 }
 
+type AIQuestionState = 'hidden' | 'visible' | 'resolved'
+
 export default function AIEmailDraftsPanel() {
     const drafts = buildDrafts()
     const [sent, setSent] = useState<Record<string, boolean>>({})
     const [edits, setEdits] = useState<Record<string, DraftEdit>>({})
     const [editingId, setEditingId] = useState<string | null>(null)
+    const [aiQuestion, setAiQuestion] = useState<AIQuestionState>('hidden')
+    const [aiChoice, setAiChoice] = useState<string | null>(null)
+
+    useEffect(() => {
+        const t = setTimeout(() => setAiQuestion('visible'), 1400)
+        return () => clearTimeout(t)
+    }, [])
+
+    const handleAiChoice = (choice: string) => {
+        setAiChoice(choice)
+        setAiQuestion('resolved')
+        // Auto-send the escalation draft once the user resolves the AI question
+        setSent(prev => ({ ...prev, 'DRAFT-001': true }))
+    }
 
     const editingDraft = editingId ? drafts.find(d => d.id === editingId) ?? null : null
 
@@ -153,6 +169,40 @@ export default function AIEmailDraftsPanel() {
                     <StatusBadge label="1 auto-sent · 1 awaiting your review" tone="ai" size="sm" />
                 </div>
 
+                {/* AI question — surfaces before the escalation can be sent */}
+                {aiQuestion === 'visible' && (
+                    <div className="px-4 py-3 border-b border-border bg-ai/5 dark:bg-ai/10 animate-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-start gap-2.5">
+                            <div className="h-6 w-6 rounded-lg bg-ai/15 text-ai flex items-center justify-center shrink-0 mt-0.5">
+                                <Sparkles className="h-3 w-3" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-foreground mb-0.5">
+                                    Strata has a question before sending the escalation
+                                </div>
+                                <div className="text-[11px] text-muted-foreground mb-3">
+                                    Lindenwood University is 32 days past due with no response. Should I copy the Account Manager (Keyla Gettings) on this email? She can apply direct pressure if the AP team ignores it.
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                    <button
+                                        onClick={() => handleAiChoice('cc-am')}
+                                        className="flex-1 flex items-center gap-2 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                                    >
+                                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                                        Yes · CC Keyla Gettings
+                                    </button>
+                                    <button
+                                        onClick={() => handleAiChoice('direct')}
+                                        className="flex-1 flex items-center gap-2 px-3 py-2 text-xs font-bold text-foreground bg-background dark:bg-zinc-800 border border-border rounded-lg hover:border-muted-foreground/50 transition-colors"
+                                    >
+                                        No · Send directly to AP team
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="divide-y divide-border">
                     {drafts.map(draft => {
                         const isSent = sent[draft.id]
@@ -173,15 +223,24 @@ export default function AIEmailDraftsPanel() {
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/15 text-success uppercase tracking-wider shrink-0">No action needed</span>
                                     </div>
                                 ) : isSent ? (
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <CheckCircle2 className="h-4 w-4 text-success" />
-                                        <span className="text-muted-foreground">
-                                            Sent to <span className="font-semibold text-foreground">{draft.to}</span>
-                                            {wasEdited && <span className="text-[10px] text-muted-foreground italic ml-1">(edited)</span>}
-                                        </span>
+                                    <div className="flex items-start gap-2 text-xs">
+                                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                                        <div className="flex-1 min-w-0">
+                                            <span className="text-muted-foreground">
+                                                Sent to <span className="font-semibold text-foreground">{draft.to}</span>
+                                                {wasEdited && <span className="text-[10px] text-muted-foreground italic ml-1">(edited)</span>}
+                                            </span>
+                                            {draft.id === 'DRAFT-001' && aiChoice && (
+                                                <div className="text-[10px] text-muted-foreground mt-0.5">
+                                                    {aiChoice === 'cc-am'
+                                                        ? '· CC\'d Keyla Gettings (Account Manager)'
+                                                        : '· Sent directly to AP team only'}
+                                                </div>
+                                            )}
+                                        </div>
                                         <button
                                             onClick={() => setSent(prev => ({ ...prev, [draft.id]: false }))}
-                                            className="ml-auto text-[10px] text-muted-foreground hover:text-foreground underline"
+                                            className="ml-auto text-[10px] text-muted-foreground hover:text-foreground underline shrink-0"
                                         >
                                             Undo
                                         </button>
