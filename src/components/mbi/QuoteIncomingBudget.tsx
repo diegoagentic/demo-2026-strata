@@ -119,7 +119,7 @@ export default function QuoteIncomingBudget() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    All 4 readiness checks passed. Next: Strata extracts 24 fields from the SIF — then the PC enters GP per vendor and CORE Quote is created.
+                    All 4 readiness checks passed. Next: Strata runs the AI validation pass — spec check, non-catalog pricing, audit loops collapse to 1 review.
                 </span>
             </div>
 

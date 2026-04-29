@@ -150,7 +150,7 @@ export default function QuoteValidationScene() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    AI pass complete · no blocking flags. One human review left, then the proposal goes to the client and orders route to vendors.
+                    AI pass complete · no blocking flags. Next: PC reviews GP per vendor and Strata creates CORE Quote QUOT-2026-003 — then the proposal goes to the client.
                 </span>
                 {decisions !== null && (
                     <button

@@ -25,29 +25,29 @@ import { useDemo } from '../../context/DemoContext'
 
 const QUOTES_STEPS: WizardStepSpec[] = [
     { id: 'incoming', label: 'Incoming budget', shortLabel: '1. Incoming' },
-    { id: 'gp-review', label: 'GP review + CORE Quote', shortLabel: '2. GP Review' },
-    { id: 'validation', label: 'AI validation', shortLabel: '3. Validation' },
+    { id: 'validation', label: 'AI validation', shortLabel: '2. Validation' },
+    { id: 'gp-review', label: 'GP review + CORE Quote', shortLabel: '3. GP Review' },
     { id: 'send', label: 'Send proposal', shortLabel: '4. Send' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
     'm3.1': 0,
-    'm3.2': 1,
-    'm3.3': 2,
+    'm3.3': 1,
+    'm3.2': 2,
     'm3.4': 3,
 }
 
 const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     0: 'm3.1',
-    1: 'm3.2',
-    2: 'm3.3',
+    1: 'm3.3',
+    2: 'm3.2',
     3: 'm3.4',
 }
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'Signed budget from the Account Manager · all 4 readiness checks pass · PC can pick up.', nextLabel: 'Review GP + create CORE Quote' },
-    1: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Run AI validation' },
-    2: { hint: '4 audit loops → 1 AI pass + 1 human review · Spec Check is MBI\'s #1 Q10 priority.', nextLabel: 'Send the proposal' },
+    0: { hint: 'Signed budget from the Account Manager · all 4 readiness checks pass · PC can pick up.', nextLabel: 'Run AI validation' },
+    1: { hint: '4 audit loops → 1 AI pass + 1 human review · Spec Check is MBI\'s #1 Q10 priority.', nextLabel: 'Review GP + create CORE Quote' },
+    2: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Send the proposal' },
     3: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
 }
 
@@ -116,8 +116,8 @@ export default function MBIQuotesPage() {
                     }
                 >
                     {activeStep === 0 && <QuoteIncomingBudget />}
-                    {activeStep === 1 && <QuoteGPReviewScene />}
-                    {activeStep === 2 && <QuoteValidationScene />}
+                    {activeStep === 1 && <QuoteValidationScene />}
+                    {activeStep === 2 && <QuoteGPReviewScene />}
                     {activeStep === 3 && <QuoteSendProposalScene />}
                 </MBIWizardShell>
             ) : (
