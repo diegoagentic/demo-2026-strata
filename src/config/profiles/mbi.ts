@@ -106,20 +106,20 @@ export const MBI_STEPS: DemoStep[] = [
     // Project Manager · 4 scenes
     // ═══════════════════════════════════════════
     {
-        id: 'm3.1',
-        groupId: 1,
-        groupTitle: 'Flow 2: Quotes AI',
-        title: 'Incoming budget · handoff from the Account Manager',
-        description: "The signed budget from the Account Manager lands in the Project Manager's queue. All four readiness checks pass — budget confirmed, contract identified, scope locked, design sign-off. For the first time the PM picks up a quote-ready project instead of chasing missing context across teams.",
-        app: 'mbi-quotes',
-        role: 'Project Manager',
-    },
-    {
         id: 'm3.3',
         groupId: 1,
         groupTitle: 'Flow 2: Quotes AI',
         title: 'AI validation · audit loops collapse',
         description: "Spec Check runs against the assembled BOM. The four sequential audit loops the team used to run by eye — internal, vendor, manager, client — collapse into one AI pass plus one human review. Non-catalog items get cross-checked against manufacturer price books and vendor quotes are processed automatically — no manual re-entry.",
+        app: 'mbi-quotes',
+        role: 'Project Manager',
+    },
+    {
+        id: 'm3.1',
+        groupId: 1,
+        groupTitle: 'Flow 2: Quotes AI',
+        title: 'Incoming budget · handoff from the Account Manager',
+        description: "The signed budget from the Account Manager lands in the Project Manager's queue. All four readiness checks pass — budget confirmed, contract identified, scope locked, design sign-off. For the first time the PM picks up a quote-ready project instead of chasing missing context across teams.",
         app: 'mbi-quotes',
         role: 'Project Manager',
     },

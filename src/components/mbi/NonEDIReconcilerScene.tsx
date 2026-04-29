@@ -20,7 +20,7 @@
 import { useState } from 'react'
 import {
     GitCompare, Check, Pencil, CheckCircle2,
-    AlertTriangle, Package, Sparkles, Plus, Truck, Zap, ArrowRight,
+    AlertTriangle, Package, Sparkles, Plus, Truck, ArrowRight,
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
@@ -162,29 +162,6 @@ export default function NonEDIReconcilerScene() {
                 <div>
                     <div className="text-[11px] font-bold text-foreground">Line-by-line comparison · line # · model # · unit price</div>
                     <div className="text-[10px] text-muted-foreground mt-0.5">Ship-to and options excluded — only the fields that determine if the total matches</div>
-                </div>
-            </div>
-
-            {/* AI partial bill insight */}
-            <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3.5 flex items-start gap-3">
-                <div className="h-8 w-8 rounded-lg bg-ai/15 text-ai flex items-center justify-center shrink-0">
-                    <Zap className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-xs font-bold text-foreground">Partial bill pattern detected</span>
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-ai/10 text-ai uppercase tracking-wider">Strata AI</span>
-                    </div>
-                    <div className="text-[11px] text-muted-foreground leading-relaxed">
-                        Strata compared against <strong className="text-foreground">14 prior Apex Workspace invoices</strong> (last 12 months).
-                        Found <strong className="text-foreground">2 similar short-shipments on Jarvis sit-stand desks</strong> — consistent with
-                        Apex Workspace's backorder pattern for this SKU.
-                    </div>
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px]">
-                        <span className="font-bold text-foreground">Suggested resolution:</span>
-                        <span className="inline-flex font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400">Partial shipment — accept short</span>
-                        <span className="text-muted-foreground">· remaining unit likely on backorder</span>
-                    </div>
                 </div>
             </div>
 
