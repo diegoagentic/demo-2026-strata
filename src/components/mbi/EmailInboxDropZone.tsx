@@ -152,7 +152,6 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
                     </div>
                 )}
                 <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted emailType="bill" />
-                <FauxEmailRow vendor="Allsteel · ap@mercyhealth.example" subject="Rebate + bill INV-0486" attached time="8:00 AM" muted emailType="rebate-bill" />
                 <FauxEmailRow vendor="HON · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted emailType="bill" />
                 <FauxEmailRow vendor="Allsteel · statements@allsteel.example" subject="Q1 2026 Statement · account summary" time="8:22 AM" muted emailType="statement" />
             </div>

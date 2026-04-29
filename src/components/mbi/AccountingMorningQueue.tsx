@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight, RefreshCw, Sparkles } from 'lucide-react'
+import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight, RefreshCw, Sparkles, Heart } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import InvoiceDetailPanel from './InvoiceDetailPanel'
 import EmailInboxDropZone from './EmailInboxDropZone'
@@ -114,13 +114,22 @@ function POAutoRecheckDemo({ onAutoResolved }: { onAutoResolved: (id: string) =>
     )
 }
 
+type BillFilter = 'all' | 'exception' | 'healthtrust' | 'edi' | 'non-edi'
+
 export default function AccountingMorningQueue() {
     const [ingested, setIngested] = useState<Invoice[]>([])
     const [autoResolved, setAutoResolved] = useState<Set<string>>(new Set())
+    const [billFilter, setBillFilter] = useState<BillFilter>('all')
 
     const allInvoices = [...MBI_INVOICES, ...ingested].map(inv =>
         autoResolved.has(inv.id) ? { ...inv, status: 'done' as const } : inv
     )
+
+    const filteredInvoices = billFilter === 'all' ? allInvoices
+        : billFilter === 'exception' ? allInvoices.filter(i => i.hasException)
+        : billFilter === 'healthtrust' ? allInvoices.filter(i => i.isHealthTrust)
+        : billFilter === 'edi' ? allInvoices.filter(i => i.isEDI)
+        : allInvoices.filter(i => !i.isEDI)
 
     const total = allInvoices.length
     const pending = allInvoices.filter(i => i.status === 'pending').length
@@ -161,7 +170,7 @@ export default function AccountingMorningQueue() {
                     <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                         Processed <strong className="text-foreground">{total} vendor bills</strong> continuously as they arrived throughout the day ·
                         Document AI extracted fields · matched to open POs in CORE ·
-                        applied HealthTrust 3% rebate logic on <strong className="text-foreground">{healthTrust} GPO bills</strong>.
+                        applied GPO contract logic on <strong className="text-foreground">{healthTrust} HealthTrust bills</strong>.
                         New bills received at any time go through the same pipeline immediately — Kathy reviews recent activity and pending exceptions on her schedule.
                     </div>
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
@@ -190,11 +199,36 @@ export default function AccountingMorningQueue() {
                 exceptions when CORE POs change, clearing mismatches without Kathy. */}
             <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
 
+            {/* Bill filter chips */}
+            <div className="flex flex-wrap gap-2">
+                {([
+                    { key: 'all',         label: 'All bills',      icon: null,                                                         count: allInvoices.length },
+                    { key: 'exception',   label: 'Exceptions',     icon: <AlertTriangle className="h-3 w-3" />,                        count: allInvoices.filter(i => i.hasException).length },
+                    { key: 'healthtrust', label: 'HealthTrust GPO',icon: <Heart className="h-3 w-3" />,                               count: allInvoices.filter(i => i.isHealthTrust).length },
+                    { key: 'edi',         label: 'EDI',            icon: <Zap className="h-3 w-3" />,                                count: allInvoices.filter(i => i.isEDI).length },
+                    { key: 'non-edi',     label: 'Non-EDI',        icon: <Sparkles className="h-3 w-3" />,                           count: allInvoices.filter(i => !i.isEDI).length },
+                ] as { key: BillFilter; label: string; icon: React.ReactNode; count: number }[]).map(chip => (
+                    <button
+                        key={chip.key}
+                        onClick={() => setBillFilter(chip.key)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            billFilter === chip.key
+                                ? 'bg-primary text-zinc-900 border-primary/50'
+                                : 'bg-card dark:bg-zinc-800 border-border text-muted-foreground hover:text-foreground hover:border-zinc-300 dark:hover:border-zinc-600'
+                        }`}
+                    >
+                        {chip.icon}
+                        {chip.label}
+                        <span className={`tabular-nums ${billFilter === chip.key ? 'opacity-70' : 'opacity-60'}`}>{chip.count}</span>
+                    </button>
+                ))}
+            </div>
+
             {/* Queue + detail */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                 <div className="lg:col-span-3">
                     <InvoiceQueueTable
-                        invoices={allInvoices}
+                        invoices={filteredInvoices}
                         selectedId={selectedId}
                         onSelect={setSelectedId}
                     />
@@ -208,7 +242,7 @@ export default function AccountingMorningQueue() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    First up: the Allsteel bill · Strata auto-calculated the <strong>3% rebate</strong> per MBI's GPO contract — needs your approval to post.
+                    First up: the Allsteel HealthTrust GPO bill · Strata matched the contract and flagged it for your review before posting to CORE.
                 </span>
             </div>
 

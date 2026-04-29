@@ -188,7 +188,7 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
             )}
             {invoice.status === 'pending' && invoice.isHealthTrust && !invoice.hasException && (
                 <div className="text-[9.5px] text-amber-700 dark:text-amber-400 mt-1 leading-tight">
-                    HealthTrust GPO · 3% rebate pending
+                    HealthTrust GPO · pending review
                 </div>
             )}
         </button>
