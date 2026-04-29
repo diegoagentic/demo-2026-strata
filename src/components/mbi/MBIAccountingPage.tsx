@@ -21,33 +21,37 @@ import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import AccountingMorningQueue from './AccountingMorningQueue'
+import NonEDIReconcilerScene from './NonEDIReconcilerScene'
 import ARAgingReviewScene from './ARAgingReviewScene'
 import ARAgingWrapScene from './ARAgingWrapScene'
 import { useDemo } from '../../context/DemoContext'
 
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
-    { id: 'morning', label: 'AP · Pending Review', shortLabel: '1. AP Queue' },
-    { id: 'ar-aging', label: 'AR aging · open accounts to collect', shortLabel: '2. AR aging' },
-    { id: 'ar-close', label: 'Collection emails + wrap up', shortLabel: '3. Close' },
+    { id: 'morning',  label: 'AP · Pending Review',                   shortLabel: '1. AP Queue' },
+    { id: 'non-edi',  label: 'Non-EDI reconciliation — line-by-line', shortLabel: '2. Paper bills', hidden: true },
+    { id: 'ar-aging', label: 'AR aging · open accounts to collect',   shortLabel: '2. AR aging' },
+    { id: 'ar-close', label: 'Collection emails + wrap up',            shortLabel: '3. Close' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
     'm2.1': 0,
-    'm2.3': 0,
-    'm2.4': 1,
-    'm2.5': 2,
+    'm2.3': 1,
+    'm2.4': 2,
+    'm2.5': 3,
 }
 
 const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     0: 'm2.1',
-    1: 'm2.4',
-    2: 'm2.5',
+    1: 'm2.3',
+    2: 'm2.4',
+    3: 'm2.5',
 }
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'AP starts here (AP = Accounts Payable, the bills MBI owes to vendors). Strata processes bills continuously as they arrive — Kathy opens her queue and sees recent activity + pending exceptions.', nextLabel: 'Move to receivables' },
-    1: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
-    2: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then wrap up the queue.', nextLabel: 'Wrap up' },
+    0: { hint: 'AP starts here (AP = Accounts Payable, the bills MBI owes to vendors). Strata processes bills continuously as they arrive — Kathy opens her queue and sees recent activity + pending exceptions.', nextLabel: 'Reconcile paper bills' },
+    1: { hint: 'Line-by-line diff vs PO for non-EDI vendors (paper / PDF bills, no electronic feed) · accept variances that match your delivery, override the rest. HealthTrust rebate flagged inline. Then we move to AR.', nextLabel: 'Post' },
+    2: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
+    3: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then wrap up the queue.', nextLabel: 'Wrap up' },
 }
 
 export default function MBIAccountingPage() {
@@ -108,8 +112,9 @@ export default function MBIAccountingPage() {
                     }
                 >
                     {activeStep === 0 && <AccountingMorningQueue />}
-                    {activeStep === 1 && <ARAgingReviewScene onContinue={() => navigateWizard(2)} />}
-                    {activeStep === 2 && <ARAgingWrapScene />}
+                    {activeStep === 1 && <NonEDIReconcilerScene />}
+                    {activeStep === 2 && <ARAgingReviewScene onContinue={() => navigateWizard(3)} />}
+                    {activeStep === 3 && <ARAgingWrapScene />}
                 </MBIWizardShell>
             ) : (
                 <OverviewStub />

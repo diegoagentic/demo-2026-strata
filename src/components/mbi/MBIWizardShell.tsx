@@ -29,6 +29,7 @@ export interface WizardStepSpec {
     id: string
     label: string
     shortLabel: string
+    hidden?: boolean
 }
 
 interface MBIWizardShellProps {
@@ -56,10 +57,18 @@ export default function MBIWizardShell({
     persona,
     children,
 }: MBIWizardShellProps) {
+    const visibleSteps = steps
+        .map((spec, i) => ({ spec, originalIndex: i }))
+        .filter(e => !e.spec.hidden)
+
     const activeSpec = steps[activeStep]
-    const nextSpec = steps[activeStep + 1]
+    const nextVisibleEntry = visibleSteps.find(e => e.originalIndex > activeStep)
+    const nextSpec = nextVisibleEntry?.spec ?? null
     const resolvedNextLabel = nextLabel ?? (nextSpec ? `Continue · ${nextSpec.label}` : 'Done')
     const isLast = activeStep === steps.length - 1
+
+    const visiblePos = visibleSteps.filter(e => e.originalIndex <= activeStep).length
+    const visibleTotal = visibleSteps.length
 
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
@@ -71,7 +80,7 @@ export default function MBIWizardShell({
                             {persona}
                             <div className="min-w-0">
                                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                    Step {activeStep + 1} of {steps.length}
+                                    Step {visiblePos} of {visibleTotal}
                                 </div>
                                 <div className="text-base font-bold text-foreground">{activeSpec.label}</div>
                                 {actionHint && (
@@ -89,15 +98,15 @@ export default function MBIWizardShell({
                 )}
 
                 <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-                    {steps.map((step, i) => {
-                        const isActive = i === activeStep
-                        const isCompleted = i < activeStep
+                    {visibleSteps.map((entry, chipIdx) => {
+                        const isActive = entry.originalIndex === activeStep
+                        const isCompleted = entry.originalIndex < activeStep
                         const clickable = !!onStepClick
                         const Comp: React.ElementType = clickable ? 'button' : 'div'
                         return (
-                            <div key={step.id} className="flex items-center gap-1 shrink-0">
+                            <div key={entry.spec.id} className="flex items-center gap-1 shrink-0">
                                 <Comp
-                                    onClick={clickable ? () => onStepClick!(i) : undefined}
+                                    onClick={clickable ? () => onStepClick!(entry.originalIndex) : undefined}
                                     className={`
                                         flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all
                                         ${isActive ? 'bg-primary/10 text-zinc-900 dark:text-primary border-primary/40 shadow-sm' : ''}
@@ -114,12 +123,12 @@ export default function MBIWizardShell({
                                             ${!isActive && !isCompleted ? 'bg-muted text-muted-foreground' : ''}
                                         `}
                                     >
-                                        {isCompleted ? <Check className="h-3 w-3" /> : i + 1}
+                                        {isCompleted ? <Check className="h-3 w-3" /> : chipIdx + 1}
                                     </div>
-                                    <span className="whitespace-nowrap">{step.label}</span>
+                                    <span className="whitespace-nowrap">{entry.spec.label}</span>
                                 </Comp>
-                                {i < steps.length - 1 && (
-                                    <div className={`h-px w-3 shrink-0 ${i < activeStep ? 'bg-success/50' : 'bg-border'}`} />
+                                {chipIdx < visibleSteps.length - 1 && (
+                                    <div className={`h-px w-3 shrink-0 ${entry.originalIndex < activeStep ? 'bg-success/50' : 'bg-border'}`} />
                                 )}
                             </div>
                         )
@@ -150,7 +159,7 @@ export default function MBIWizardShell({
                         </button>
 
                         <div className="text-[10px] text-muted-foreground tabular-nums hidden sm:block">
-                            Step {activeStep + 1} of {steps.length}
+                            Step {visiblePos} of {visibleTotal}
                         </div>
 
                         <button
