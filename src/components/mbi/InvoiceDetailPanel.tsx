@@ -87,7 +87,7 @@ export function InvoiceDocPreview({ invoice }: InvoiceDetailPanelProps) {
             {/* Document mockup */}
             <div className="p-4">
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Source document</div>
-                <div className="aspect-[5/4] bg-white dark:bg-zinc-900 border border-border rounded-xl p-4 text-[9px] text-zinc-900 dark:text-zinc-100 overflow-hidden">
+                <div className="aspect-[4/3] bg-white dark:bg-zinc-900 border border-border rounded-xl p-5 text-[10px] text-zinc-900 dark:text-zinc-100 overflow-hidden">
                     <InvoiceMockup invoice={invoice} rebate={rebateAmount} />
                 </div>
             </div>

@@ -187,7 +187,7 @@ export default function AccountingMorningQueue() {
             <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
 
             {/* Queue + document preview + extracted fields — 3-panel grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr_1fr] gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.7fr_1.1fr] gap-4 items-start">
                 <InvoiceQueueTable
                     invoices={filteredInvoices}
                     selectedId={selectedId}
