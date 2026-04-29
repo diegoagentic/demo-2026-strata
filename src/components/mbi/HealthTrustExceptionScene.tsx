@@ -51,7 +51,7 @@ export default function HealthTrustExceptionScene() {
     const [meta, setMeta] = useState<{ reasonCategory?: string; notes?: string; notifyAI?: boolean } | null>(null)
     const [toast, setToast] = useState<string | null>(null)
     const [modalKind, setModalKind] = useState<'override' | 'escalate' | null>(null)
-    const [criteriaOpen, setCriteriaOpen] = useState(false)
+    const [criteriaOpen, setCriteriaOpen] = useState(true)
 
     const pushToast = (msg: string) => {
         setToast(msg)
@@ -202,13 +202,6 @@ export default function HealthTrustExceptionScene() {
                                 <div className="px-4 py-2 flex justify-between items-center">
                                     <span className="text-muted-foreground">GPO rebate rate</span>
                                     <span className="text-foreground tabular-nums">3% (Master Agreement §4.2)</span>
-                                </div>
-                                <div className="px-4 py-2 flex justify-between items-center bg-amber-50/40 dark:bg-amber-500/5">
-                                    <span className="text-amber-700 dark:text-amber-400 font-semibold inline-flex items-center gap-1.5">
-                                        <Sparkles className="h-3 w-3" />
-                                        3% GPO rebate (auto-applied)
-                                    </span>
-                                    <span className="text-amber-700 dark:text-amber-400 font-bold tabular-nums">+${rebate.toLocaleString()}</span>
                                 </div>
                                 <div className="px-4 py-2 flex justify-between bg-muted/20 dark:bg-zinc-900/40">
                                     <span className="font-bold text-foreground">Total due</span>
