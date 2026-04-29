@@ -1,76 +1,53 @@
 ﻿/**
  * COMPONENT: MBIAccountingPage
- * PURPOSE: Flow 1 — Accounting AI, packaged in MBIWizardShell with 5 scenes
+ * PURPOSE: Flow 1 — Accounting AI, packaged in MBIWizardShell with 4 scenes
  *          that follow Kathy Belleville's morning end-to-end:
- *            1. Morning queue (AP)
- *            2. HealthTrust exception (AP · GPO rebate)
- *            3. Non-EDI reconciliation (AP · line-by-line)
- *            4. AR aging review (AR · live board + analytics)
- *            5. Collection drafts + close (AR · review · send · close)
+ *            1. Morning queue (AP · Pending Review)
+ *            2. Non-EDI reconciliation (AP · line-by-line + HealthTrust rebate)
+ *            3. AR aging review (AR · live board + analytics)
+ *            4. Collection drafts + close (AR · review · send · close)
  *
  *          Mirrors the wizard pattern with shared stepper, persona badge,
- *          per-step CTA, and FlowHandoff at the end. AR was split from a
- *          single wrap-up into two scenes (4 + 5) per Apr 23 Matt's "keep
- *          AP, ADD AR" — gives AR parity with the 3 AP scenes.
+ *          per-step CTA, and FlowHandoff at the end.
  *
- * DEMO TOUR: m2.1 → m2.5 map 1:1 to wizard scenes 0–4. Outside a demo step
- * the user navigates freely via the stepper chips + Back/Next.
+ * DEMO TOUR: m2.1 / m2.3 / m2.4 / m2.5 map 1:1 to wizard scenes 0–3.
+ * Outside a demo step the user navigates freely via the stepper chips + Back/Next.
  */
 
 import { useEffect, useState } from 'react'
-import { Receipt, Heart, GitCompare, DollarSign } from 'lucide-react'
+import { Receipt, GitCompare, DollarSign } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import AccountingMorningQueue from './AccountingMorningQueue'
-import HealthTrustExceptionScene from './HealthTrustExceptionScene'
-import NonEDIReconcilerScene from './NonEDIReconcilerScene'
 import ARAgingReviewScene from './ARAgingReviewScene'
 import ARAgingWrapScene from './ARAgingWrapScene'
 import { useDemo } from '../../context/DemoContext'
 
-// Step labels written so a non-finance audience can read them. Acronyms
-// are kept (MBI uses them internally) but with a friendlier first word
-// where it helps:
-//   "Non-EDI" → "Paper bills (Non-EDI)"     — non-EDI = no electronic feed
-//   "AR aging" → "AR aging (open accounts)"    — AR = Accounts Receivable
-//   "HealthTrust" → "Healthcare contract (HealthTrust GPO)" — GPO context inline
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
     { id: 'morning', label: 'AP · Pending Review', shortLabel: '1. AP Queue' },
-    { id: 'healthtrust', label: 'Healthcare contract (HealthTrust GPO)', shortLabel: '2. Healthcare GPO' },
-    { id: 'non-edi', label: 'Paper bills reconciliation (Non-EDI)', shortLabel: '3. Paper bills' },
-    { id: 'ar-aging', label: 'AR aging · open accounts to collect', shortLabel: '4. AR aging' },
-    { id: 'ar-close', label: 'Collection emails + wrap up', shortLabel: '5. Close' },
+    { id: 'ar-aging', label: 'AR aging · open accounts to collect', shortLabel: '2. AR aging' },
+    { id: 'ar-close', label: 'Collection emails + wrap up', shortLabel: '3. Close' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
     'm2.1': 0,
-    'm2.2': 1,
-    'm2.3': 2,
-    'm2.4': 3,
-    'm2.5': 4,
+    'm2.3': 0,
+    'm2.4': 1,
+    'm2.5': 2,
 }
 
 const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     0: 'm2.1',
-    1: 'm2.2',
-    2: 'm2.3',
-    3: 'm2.4',
-    4: 'm2.5',
+    1: 'm2.4',
+    2: 'm2.5',
 }
 
-// Hints emphasize the AP → AR continuity Matt asked for on Apr 23.
-// Scenes 0-2 are AP (Accounts Payable · what MBI owes to vendors).
-// Scenes 3-4 are AR (Accounts Receivable · what clients owe MBI).
-// First mention of each acronym/jargon word includes a plain-language
-// gloss so a non-finance audience can follow.
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'AP starts here (AP = Accounts Payable, the bills MBI owes to vendors). Strata processes bills continuously as they arrive — Kathy opens her queue and sees recent activity + pending exceptions.', nextLabel: 'Review healthcare rebate' },
-    1: { hint: 'Approve the auto-calculated 3% rebate (paid to HealthTrust, the healthcare group purchasing organization) · or override with a logged reason · or escalate to the Healthcare Director.', nextLabel: 'Reconcile paper bills' },
-    2: { hint: 'Last AP step · line-by-line diff vs PO for non-EDI vendors (paper / PDF bills, no electronic feed) · accept variances that match your delivery, override the rest. Then we move to AR.', nextLabel: 'AP done · move to receivables' },
-    3: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
-    4: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then wrap up the queue.', nextLabel: 'Wrap up' },
+    0: { hint: 'AP starts here (AP = Accounts Payable, the bills MBI owes to vendors). Strata processes bills continuously as they arrive — Kathy opens her queue and sees recent activity + pending exceptions.', nextLabel: 'Move to receivables' },
+    1: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
+    2: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then wrap up the queue.', nextLabel: 'Wrap up' },
 }
 
 export default function MBIAccountingPage() {
@@ -131,10 +108,8 @@ export default function MBIAccountingPage() {
                     }
                 >
                     {activeStep === 0 && <AccountingMorningQueue />}
-                    {activeStep === 1 && <HealthTrustExceptionScene />}
-                    {activeStep === 2 && <NonEDIReconcilerScene />}
-                    {activeStep === 3 && <ARAgingReviewScene onContinue={() => navigateWizard(4)} />}
-                    {activeStep === 4 && <ARAgingWrapScene />}
+                    {activeStep === 1 && <ARAgingReviewScene onContinue={() => navigateWizard(2)} />}
+                    {activeStep === 2 && <ARAgingWrapScene />}
                 </MBIWizardShell>
             ) : (
                 <OverviewStub />
@@ -145,9 +120,8 @@ export default function MBIAccountingPage() {
 
 function OverviewStub() {
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <StatCard icon={<Receipt className="h-4 w-4" />} value="12" label="Bills processed · live queue" accent="text-foreground" />
-            <StatCard icon={<Heart className="h-4 w-4" />} value="2" label="HealthTrust rebate flagged" accent="text-zinc-900 dark:text-primary" />
             <StatCard icon={<GitCompare className="h-4 w-4" />} value="2" label="Non-EDI exceptions" accent="text-amber-600 dark:text-amber-400" />
             <StatCard icon={<DollarSign className="h-4 w-4" />} value="$240K" label="AR live · forecast refreshed" accent="text-success" />
         </div>

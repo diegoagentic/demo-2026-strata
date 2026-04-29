@@ -65,15 +65,6 @@ export const MBI_STEPS: DemoStep[] = [
         role: 'Dealer',
     },
     {
-        id: 'm2.2',
-        groupId: 0,
-        groupTitle: 'Flow 1: Accounting AI',
-        title: 'HealthTrust exception — GPO contract review',
-        description: 'A hospital bill hits the HealthTrust GPO contract. Strata recognizes the membership, matches the contract terms, and flags it for Controller review before posting to CORE. The Controller reviews the contract match, then approves to post, overrides with a reason, or escalates to the Director of Healthcare.',
-        app: 'mbi-accounting',
-        role: 'Dealer',
-    },
-    {
         id: 'm2.3',
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
@@ -150,7 +141,6 @@ export const MBI_STEPS: DemoStep[] = [
 
 export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.1': { mode: 'interactive', userAction: 'Review the queue · bills processed as they arrived · exceptions flagged for human decision' },
-    'm2.2': { mode: 'interactive', userAction: 'Review the GPO contract match · approve to post · override with a reason · or escalate to the Director of Healthcare' },
     'm2.3': { mode: 'interactive', userAction: 'Reconcile the non-EDI bill line-by-line · accept or override each variance' },
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then wrap up the queue' },
@@ -169,12 +159,6 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'Matching bill lines to open POs in CORE',
         'Applying GPO contract logic to HealthTrust bills',
         'Clean bills auto-posted · agents reconciling non-EDI · exceptions surfaced',
-    ],
-    'm2.2': [
-        'Detected HealthTrust GPO member on this bill',
-        'Matching bill to GPO contract · verifying membership and terms',
-        'Contract confirmed · staging bill for Controller review',
-        'Awaiting Controller approval before posting to CORE',
     ],
     'm2.3': [
         'Vendor flagged as non-EDI · falling back to OCR',
@@ -223,6 +207,6 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const MBI_SELF_INDICATED: string[] = [
-    'm2.1', 'm2.2', 'm2.3', 'm2.4', 'm2.5',
+    'm2.1', 'm2.3', 'm2.4', 'm2.5',
     'm3.1', 'm3.2', 'm3.3', 'm3.4',
 ];

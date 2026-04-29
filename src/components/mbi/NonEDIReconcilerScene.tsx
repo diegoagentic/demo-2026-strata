@@ -21,6 +21,7 @@ import { useState } from 'react'
 import {
     GitCompare, Check, Pencil, CheckCircle2,
     AlertTriangle, Package, Sparkles, Plus, Truck, ArrowRight,
+    Heart, Flag, Send, UserCheck, FileText,
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
@@ -62,6 +63,192 @@ const OVERRIDE_CATEGORIES = [
 ]
 
 type RowStatus = 'pending' | 'accepted' | 'overridden'
+type HtStatus = 'pending' | 'approved' | 'overridden' | 'escalated'
+
+const HT_OVERRIDE_CATEGORIES = [
+    { id: 'contract-ambiguous', label: 'GPO contract clause ambiguous' },
+    { id: 'different-rate', label: 'Different rebate rate applies' },
+    { id: 'exempt-line', label: 'Line items are exempt from rebate' },
+    { id: 'other', label: 'Other (describe below)' },
+]
+const HT_ESCALATE_CATEGORIES = [
+    { id: 'director-review', label: 'Needs the Healthcare Director\'s GPO expertise' },
+    { id: 'client-dispute', label: 'Client disputing rebate' },
+    { id: 'audit-trigger', label: 'Potential audit trigger' },
+    { id: 'other', label: 'Other (describe below)' },
+]
+
+function HealthTrustRebateCard() {
+    const htInvoice = MBI_INVOICES.find(i => i.id === 'INV-0486')!
+    const rebate = Math.round(htInvoice.amount * 0.03)
+
+    const [htStatus, setHtStatus] = useState<HtStatus>('pending')
+    const [htMeta, setHtMeta] = useState<{ reasonCategory?: string; notes?: string } | null>(null)
+    const [htModal, setHtModal] = useState<'override' | 'escalate' | null>(null)
+    const [htToast, setHtToast] = useState<string | null>(null)
+
+    const pushHtToast = (msg: string) => {
+        setHtToast(msg)
+        setTimeout(() => setHtToast(null), 4000)
+    }
+
+    const handleApprove = () => {
+        setHtStatus('approved')
+        pushHtToast(`Rebate approved · $${rebate.toLocaleString()} posted to GPO payable`)
+    }
+
+    return (
+        <div className={`bg-card dark:bg-zinc-800 border-2 rounded-2xl overflow-hidden transition-all
+            ${htStatus === 'approved' ? 'border-success/30' : ''}
+            ${htStatus === 'overridden' ? 'border-info/30' : ''}
+            ${htStatus === 'escalated' ? 'border-red-300 dark:border-red-500/40' : ''}
+            ${htStatus === 'pending' ? 'border-amber-400/60' : ''}
+        `}>
+            {/* Header */}
+            <div className="px-4 py-3 flex items-center gap-3">
+                <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0
+                    ${htStatus === 'pending' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' : ''}
+                    ${htStatus === 'approved' ? 'bg-success/15 text-success' : ''}
+                    ${htStatus === 'overridden' ? 'bg-info/15 text-info' : ''}
+                    ${htStatus === 'escalated' ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' : ''}
+                `}>
+                    {htStatus === 'pending' && <Heart className="h-4.5 w-4.5" />}
+                    {htStatus === 'approved' && <CheckCircle2 className="h-4.5 w-4.5" />}
+                    {htStatus === 'overridden' && <Pencil className="h-4.5 w-4.5" />}
+                    {htStatus === 'escalated' && <Flag className="h-4.5 w-4.5" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 uppercase tracking-wider inline-flex items-center gap-1">
+                            <Heart className="h-2.5 w-2.5" /> HealthTrust GPO
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">{htInvoice.id}</span>
+                    </div>
+                    <div className="mt-0.5 text-xs font-bold text-foreground">
+                        {htInvoice.vendor} <span className="font-normal text-muted-foreground">· 3% GPO rebate · Strata auto-detected</span>
+                    </div>
+                </div>
+                <div className="text-right shrink-0">
+                    <div className="text-[10px] text-muted-foreground">Rebate</div>
+                    <div className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">${rebate.toLocaleString()}</div>
+                </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 pb-3 border-t border-border pt-3">
+                {htStatus === 'pending' ? (
+                    <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                            <button
+                                onClick={() => setHtModal('escalate')}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-red-700 dark:text-red-400 bg-background dark:bg-zinc-800 border border-red-300 dark:border-red-500/40 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                            >
+                                <Flag className="h-3.5 w-3.5" />
+                                Escalate
+                            </button>
+                            <button
+                                onClick={() => setHtModal('override')}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-foreground bg-background dark:bg-zinc-800 border border-border rounded-lg hover:bg-muted hover:border-info/40 transition-colors"
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Override
+                            </button>
+                            <button
+                                onClick={handleApprove}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                            >
+                                <Check className="h-3.5 w-3.5" />
+                                Approve & post
+                            </button>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground text-center">Posts to GPO payable · handled outside CORE · not a bank payment</div>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 text-xs">
+                        {htStatus === 'approved' && <CheckCircle2 className="h-4 w-4 text-success shrink-0" />}
+                        {htStatus === 'overridden' && <Pencil className="h-4 w-4 text-info shrink-0" />}
+                        {htStatus === 'escalated' && <Send className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-foreground">
+                                {htStatus === 'approved' && <>Rebate posted · <span className="text-success tabular-nums">${rebate.toLocaleString()}</span> to GPO payable</>}
+                                {htStatus === 'overridden' && 'Rebate overridden · audit trail logged'}
+                                {htStatus === 'escalated' && 'Escalated to Lynda Alexander · #healthcare-gpo pinged'}
+                            </div>
+                            {htMeta?.notes && (
+                                <div className="text-[10px] text-muted-foreground italic mt-0.5 line-clamp-1">"{htMeta.notes}"</div>
+                            )}
+                        </div>
+                        <button onClick={() => { setHtStatus('pending'); setHtMeta(null) }} className="text-[10px] text-muted-foreground hover:text-foreground underline shrink-0">Reopen</button>
+                    </div>
+                )}
+                {htToast && (
+                    <div className={`mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-semibold animate-in fade-in duration-300
+                        ${htStatus === 'approved' ? 'bg-success/15 text-success border border-success/30' : ''}
+                        ${htStatus === 'overridden' ? 'bg-info/15 text-info border border-info/30' : ''}
+                        ${htStatus === 'escalated' ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500/30' : ''}
+                    `}>
+                        <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                        {htToast}
+                    </div>
+                )}
+            </div>
+
+            {/* Override modal */}
+            <MBIReasonModal
+                isOpen={htModal === 'override'}
+                onClose={() => setHtModal(null)}
+                onSubmit={payload => {
+                    setHtStatus('overridden')
+                    setHtMeta({ reasonCategory: payload.categoryId, notes: payload.notes })
+                    setHtModal(null)
+                    pushHtToast('Rebate overridden · reason logged to audit trail')
+                }}
+                tone="info"
+                icon={<Pencil className="h-5 w-5" />}
+                title="Override the 3% rebate"
+                subtitle={`${htInvoice.vendor} · ${htInvoice.id}`}
+                contextBanner={{
+                    tone: 'warning',
+                    icon: <AlertTriangle className="h-4 w-4" />,
+                    title: 'Rebate won\'t be applied to this bill.',
+                    body: <>The <strong>${rebate.toLocaleString()}</strong> stays off the GPO payable. Audit trail captures your reason.</>,
+                }}
+                categories={HT_OVERRIDE_CATEGORIES}
+                defaultCategoryId="contract-ambiguous"
+                categoryPrompt="Why override the rebate?"
+                notesPlaceholder="e.g. Per HealthTrust amendment dated 03/04, this line item is exempt..."
+                notesRequiredForCategoryId="other"
+                confirmLabel="Skip rebate · log override"
+            />
+            <MBIReasonModal
+                isOpen={htModal === 'escalate'}
+                onClose={() => setHtModal(null)}
+                onSubmit={payload => {
+                    setHtStatus('escalated')
+                    setHtMeta({ reasonCategory: payload.categoryId, notes: payload.notes })
+                    setHtModal(null)
+                    pushHtToast('Escalated to Lynda Alexander · Teams ping sent to #healthcare-gpo')
+                }}
+                tone="danger"
+                icon={<Flag className="h-5 w-5" />}
+                title="Escalate to the Healthcare Director"
+                subtitle="Owns GPO contracts · ~1 hour response in Teams"
+                contextBanner={{
+                    tone: 'info',
+                    icon: <UserCheck className="h-4 w-4" />,
+                    title: 'The Healthcare Director will see this in Teams within the hour.',
+                    body: 'Posts to #healthcare-gpo with bill context + your reason. The rebate stays on hold until they respond.',
+                }}
+                categories={HT_ESCALATE_CATEGORIES}
+                defaultCategoryId="director-review"
+                categoryPrompt="Why escalate?"
+                notesPlaceholder="e.g. Riverside CFO emailed questioning the 3% — need the Healthcare Director to confirm..."
+                notesRequiredForCategoryId="other"
+                confirmLabel="Escalate to Director"
+            />
+        </div>
+    )
+}
 
 export default function NonEDIReconcilerScene() {
     const invoice = MBI_INVOICES.find(i => i.id === 'INV-0484')!
