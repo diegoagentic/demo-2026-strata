@@ -71,7 +71,7 @@ interface AISpecCheckSimulationProps {
 }
 
 export default function AISpecCheckSimulation({ onComplete }: AISpecCheckSimulationProps) {
-    const [phase, setPhase] = useState<Phase>('processing')
+    const [phase, setPhase] = useState<Phase>('questions')
     const [stepIdx, setStepIdx] = useState(0)
     const [decisions, setDecisions] = useState<SpecCheckDecisions>(DEFAULT_DECISIONS)
 

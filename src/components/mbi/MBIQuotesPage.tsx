@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { FileSearch, Sparkles } from 'lucide-react'
+import { FileSearch, Sparkles, Building2, FolderOpen } from 'lucide-react'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
@@ -108,11 +108,23 @@ export default function MBIQuotesPage() {
                     actionHint={stepMeta.hint}
                     nextLabel={stepMeta.nextLabel}
                     persona={
-                        <MBIPersonaBadge
-                            name="Marcia Ludwig"
-                            role="Director of PM · 3.5 PCs for 29 staff"
-                            tone="neutral"
-                        />
+                        <div className="flex flex-col gap-1.5">
+                            <MBIPersonaBadge
+                                name="Marcia Ludwig"
+                                role="Director of PM · 3.5 PCs for 29 staff"
+                                tone="neutral"
+                            />
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted border border-border text-foreground">
+                                    <Building2 className="h-2.5 w-2.5 text-muted-foreground" />
+                                    Enterprise Holdings
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted border border-border text-foreground">
+                                    <FolderOpen className="h-2.5 w-2.5 text-muted-foreground" />
+                                    New HQ Floor 12 · BDG-2026-002
+                                </span>
+                            </div>
+                        </div>
                     }
                 >
                     {activeStep === 0 && <QuoteValidationScene />}
