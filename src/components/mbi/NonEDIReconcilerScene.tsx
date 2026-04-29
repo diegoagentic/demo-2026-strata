@@ -113,55 +113,50 @@ export default function NonEDIReconcilerScene() {
                 <span className="font-bold text-foreground">{invoice.id} · {invoice.vendor} · line-by-line reconciliation</span>
             </div>
 
-            {/* Exception queue context — "you're only seeing the exceptions" */}
-            <div className="bg-success/5 dark:bg-success/10 border border-success/30 rounded-xl p-3 flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">10 bills auto-posted to CORE as they arrived · 2 recent exceptions pending your decision</div>
-                    <div className="text-muted-foreground mt-0.5">
-                        Bills where every line matched the PO flowed through automatically. This queue is exceptions only — mismatches the AI flagged for your decision.
-                    </div>
-                </div>
-            </div>
-
-            {/* Stage 1: Total comparison */}
-            <div className={`rounded-xl border p-4 ${diff < 0 ? 'bg-success/5 border-success/30 dark:bg-success/10' : diff > 0 ? 'bg-amber-500/5 border-amber-300 dark:border-amber-500/30' : 'bg-info/5 border-info/30'}`}>
-                <div className="flex items-center gap-1.5 mb-3">
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">Step 1</span>
-                    <span className="text-[11px] font-bold text-foreground">Total comparison</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${diff < 0 ? 'bg-success/15 text-success' : diff > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-info/15 text-info'}`}>
-                        <GitCompare className="h-5 w-5" />
+            {/* Invoice header + total comparison — single unified card */}
+            <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
+                {/* Header row */}
+                <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${diff < 0 ? 'bg-success/15 text-success' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'}`}>
+                        <GitCompare className="h-4.5 w-4.5" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-foreground">{invoice.vendor}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground">{invoice.id}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground">·</span>
+                            <span className="text-[10px] font-mono text-muted-foreground">{invoice.poNumber}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success">
+                                <CheckCircle2 className="h-2.5 w-2.5" />
+                                10 auto-posted
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                                <AlertTriangle className="h-2.5 w-2.5" />
+                                2 exceptions pending
+                            </span>
+                        </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                        <div className="flex items-center gap-2 justify-end">
                             <span className="text-sm font-bold text-muted-foreground tabular-nums">${totalPO.toLocaleString()}</span>
                             <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
-                            <span className={`text-sm font-bold tabular-nums ${diff < 0 ? 'text-success' : diff > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
+                            <span className={`text-sm font-bold tabular-nums ${diff < 0 ? 'text-success' : 'text-amber-600 dark:text-amber-400'}`}>
                                 ${totalInv.toLocaleString()}
                             </span>
                             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${diff < 0 ? 'bg-success/15 text-success' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'}`}>
                                 {diff < 0 ? `−$${Math.abs(diff).toLocaleString()}` : `+$${Math.abs(diff).toLocaleString()}`}
                             </span>
                         </div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                            {invoice.vendor} · <span className="font-mono">{invoice.poNumber}</span> · total mismatch detected
-                        </div>
-                    </div>
-                    <div className="shrink-0 flex items-center gap-1.5 text-[10px] text-muted-foreground border border-border/60 bg-background/60 rounded-lg px-2.5 py-1.5">
-                        <ArrowRight className="h-3 w-3 text-ai shrink-0" />
-                        <span>Running line-by-line</span>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">PO vs invoice · 2 lines flagged</div>
                     </div>
                 </div>
-            </div>
 
-            {/* Stage 2 header */}
-            <div className="flex items-start gap-2">
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider shrink-0 mt-0.5">Step 2</span>
-                <div>
-                    <div className="text-[11px] font-bold text-foreground">Line-by-line comparison · line # · model # · unit price</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">Ship-to and options excluded — only the fields that determine if the total matches</div>
+                {/* Line-by-line table header */}
+                <div className="px-4 py-2 bg-muted/20 dark:bg-zinc-900/40 flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-foreground">Line-by-line comparison</span>
+                    <span className="text-[10px] text-muted-foreground">· line # · model # · unit price · ship-to excluded</span>
                 </div>
             </div>
 
