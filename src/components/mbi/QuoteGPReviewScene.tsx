@@ -79,8 +79,8 @@ type Phase = 'idle' | 'extracting' | 'gp-ready' | 'creating' | 'created'
 type GPMode = 'byVendor' | 'allLines'
 
 export default function QuoteGPReviewScene() {
-    const [phase, setPhase] = useState<Phase>('idle')
-    const [extractStep, setExtractStep] = useState(0)
+    const [phase, setPhase] = useState<Phase>('gp-ready')
+    const [extractStep, setExtractStep] = useState(EXTRACTION_STEPS.length)
     const [coreStep, setCoreStep] = useState(0)
     const [gpMode, setGPMode] = useState<GPMode>('byVendor')
     const [allLinesGP, setAllLinesGP] = useState('')
