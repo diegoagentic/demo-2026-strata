@@ -35,6 +35,7 @@ interface EmailDraft {
     subject: string
     body: string
     to: string
+    autoSent?: boolean
 }
 
 interface DraftEdit {
@@ -66,6 +67,7 @@ function buildDrafts(): EmailDraft[] {
             to: `${noResponse.client} AP team`,
             subject: `Second follow-up: ${noResponse.poNumber} · $${(noResponse.amount / 1000).toFixed(0)}K past due`,
             body: `Hi,\n\nWe haven't received a response to our first reminder on ${noResponse.poNumber} (sent ${noResponse.lastContact}). The balance of $${noResponse.amount.toLocaleString()} is now ${noResponse.daysPastDue} days past due.\n\nCan you confirm receipt of the invoice and expected payment date?\n\nThanks,\nMBI · Accounting`,
+            autoSent: true,
         })
     }
     return drafts
@@ -148,7 +150,7 @@ export default function AIEmailDraftsPanel() {
                             Escalation cases only · routine follow-ups already auto-sent · review, edit if needed, send
                         </div>
                     </div>
-                    <StatusBadge label={`${drafts.length} drafts ready`} tone="ai" size="sm" />
+                    <StatusBadge label="1 auto-sent · 1 awaiting your review" tone="ai" size="sm" />
                 </div>
 
                 <div className="divide-y divide-border">
@@ -160,8 +162,17 @@ export default function AIEmailDraftsPanel() {
                         const body = edit?.body ?? draft.body
                         const wasEdited = !!edit
                         return (
-                            <div key={draft.id} className="px-4 py-3">
-                                {isSent ? (
+                            <div key={draft.id} className={`px-4 py-3 ${draft.autoSent ? 'bg-success/5' : ''}`}>
+                                {draft.autoSent ? (
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <span className="font-semibold text-success">Auto-sent by Strata · delivered</span>
+                                            <span className="text-muted-foreground ml-2">→ {draft.to}</span>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/15 text-success uppercase tracking-wider shrink-0">No action needed</span>
+                                    </div>
+                                ) : isSent ? (
                                     <div className="flex items-center gap-2 text-xs">
                                         <CheckCircle2 className="h-4 w-4 text-success" />
                                         <span className="text-muted-foreground">
