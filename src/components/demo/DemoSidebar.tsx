@@ -214,7 +214,7 @@ export default function DemoSidebar() {
                     className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg border transition-all font-semibold ${c.fab}`}
                 >
                     <Play size={20} fill="currentColor" />
-                    <span>Start</span>
+                    <span>Demo</span>
                 </button>
             </div>
         );
