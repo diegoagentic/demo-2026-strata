@@ -15,7 +15,7 @@
  * DS TOKENS: bg-card · success/info/destructive accents
  */
 
-import { TrendingDown, ArrowRight, Mail, Sparkles, AlertTriangle, TrendingUp } from 'lucide-react'
+import { TrendingDown, ArrowRight, Mail, Sparkles, AlertTriangle, TrendingUp, PauseCircle } from 'lucide-react'
 import ARStatusBoard from './ARStatusBoard'
 import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
@@ -41,6 +41,7 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
     // account. Mark THOSE specific records on the board so the audience
     // sees the funnel narrowing — many open accounts here, the 2 with
     // drafts highlighted, and only those 2 surface for action next.
+    const holdCount = MBI_AR_RECORDS.filter(r => r.collectionsHold).length
     const firstEscalated = MBI_AR_RECORDS.find(r => r.status === 'escalated')
     const firstNoResponse = MBI_AR_RECORDS.find(r => r.status === 'no-response')
     const draftReadyIds = [firstEscalated?.id, firstNoResponse?.id].filter(Boolean) as string[]
@@ -64,7 +65,7 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
                     <Sparkles className="h-3.5 w-3.5 text-ai" />
                     <span className="text-[10px] font-bold text-ai uppercase tracking-wider">Strata AR signals · today</span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                     <InsightChip
                         icon={<AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400" />}
                         text={`${escalated} accounts 30+ days past due — escalation recommended`}
@@ -79,6 +80,11 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
                         icon={<Mail className="h-3 w-3 text-ai" />}
                         text="2 AI follow-up emails drafted · ready for your review next"
                         tone="ai"
+                    />
+                    <InsightChip
+                        icon={<PauseCircle className="h-3 w-3 text-amber-600 dark:text-amber-400" />}
+                        text={`${holdCount} invoices on collections hold · installation or punch list pending`}
+                        tone="amber"
                     />
                 </div>
             </div>
@@ -150,12 +156,14 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
     )
 }
 
-function InsightChip({ icon, text, tone }: { icon: React.ReactNode; text: string; tone: 'red' | 'green' | 'ai' }) {
+function InsightChip({ icon, text, tone }: { icon: React.ReactNode; text: string; tone: 'red' | 'green' | 'ai' | 'amber' }) {
     const cls = tone === 'red'
         ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20'
         : tone === 'green'
             ? 'bg-success/5 border-success/20'
-            : 'bg-ai/5 border-ai/20'
+            : tone === 'amber'
+                ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20'
+                : 'bg-ai/5 border-ai/20'
     return (
         <div className={`flex items-start gap-1.5 rounded-lg px-2.5 py-2 border text-[10px] text-foreground ${cls}`}>
             <span className="shrink-0 mt-0.5">{icon}</span>

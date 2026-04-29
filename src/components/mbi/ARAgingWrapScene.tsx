@@ -19,7 +19,7 @@
 import { useState } from 'react'
 import {
     Mail, CheckCircle2, Clock, FileSignature,
-    Receipt, Package, FileText, Sparkles,
+    Receipt, Package, FileText, Sparkles, PauseCircle,
 } from 'lucide-react'
 import AIEmailDraftsPanel from './AIEmailDraftsPanel'
 import FlowHandoff from './FlowHandoff'
@@ -33,6 +33,7 @@ export default function ARAgingWrapScene() {
     const committed = MBI_AR_RECORDS
         .filter(r => r.status === 'committed-to-pay')
         .reduce((acc, r) => acc + r.amount, 0)
+    const heldAccounts = MBI_AR_RECORDS.filter(r => r.collectionsHold)
 
     return (
         <div className="space-y-4">
@@ -40,8 +41,39 @@ export default function ARAgingWrapScene() {
             <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-2 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                 <div className="text-xs flex-1">
-                    <span className="font-bold text-foreground">8 standard follow-ups auto-sent today</span>
-                    <span className="text-muted-foreground"> · per payment terms · no action needed</span>
+                    <span className="font-bold text-foreground">6 standard follow-ups auto-sent today</span>
+                    <span className="text-muted-foreground"> · per payment terms · </span>
+                    <span className="font-semibold text-amber-700 dark:text-amber-400">2 held back by Strata</span>
+                </div>
+            </div>
+
+            {/* Collections hold context */}
+            <div className="bg-amber-50/60 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-xl overflow-hidden">
+                <div className="px-3 py-2 border-b border-amber-200 dark:border-amber-500/20 flex items-center gap-2">
+                    <PauseCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                        {heldAccounts.length} accounts excluded from auto-collections
+                    </span>
+                </div>
+                <div className="divide-y divide-amber-200/60 dark:divide-amber-500/20">
+                    {heldAccounts.map(r => (
+                        <div key={r.id} className="px-3 py-2 flex items-center gap-2.5 text-[11px]">
+                            <div className="flex-1 min-w-0">
+                                <span className="font-semibold text-foreground">{r.client}</span>
+                                <span className="text-muted-foreground ml-1.5">
+                                    {r.holdReason === 'installation-pending'
+                                        ? `· Installation pending ${r.installationDate ? new Date(r.installationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}`
+                                        : `· ${r.punchListOpen} punch list items open`}
+                                </span>
+                            </div>
+                            <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                                {r.holdReason === 'installation-pending' ? 'Install pending' : 'Punch list'}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+                <div className="px-3 py-2 bg-amber-50/40 dark:bg-amber-500/5 text-[10px] text-amber-700/80 dark:text-amber-400/80">
+                    Strata holds these from collections until the project is complete.
                 </div>
             </div>
 

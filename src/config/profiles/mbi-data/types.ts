@@ -176,6 +176,11 @@ export interface ARRecord {
     status: 'pending-approval' | 'no-response' | 'committed-to-pay' | 'escalated';
     lastContact?: string;
     salesperson?: string;
+    /** Strata holds this account from auto-collections until project is complete */
+    collectionsHold?: boolean;
+    holdReason?: 'installation-pending' | 'punch-list-open';
+    installationDate?: string;
+    punchListOpen?: number;
 }
 
 export interface BillingForecastPoint {

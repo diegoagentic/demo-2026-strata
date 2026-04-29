@@ -20,7 +20,7 @@
  */
 
 import { useState } from 'react'
-import { User, Calendar, AlertTriangle, Clock, Check, TrendingUp, Mail, Phone, ExternalLink, ChevronDown } from 'lucide-react'
+import { User, Calendar, AlertTriangle, Clock, Check, TrendingUp, Mail, Phone, ExternalLink, ChevronDown, PauseCircle, Wrench } from 'lucide-react'
 import type { ARRecord } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
 
@@ -144,9 +144,16 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                             <span>{meta.label}</span>
                                         </GlossaryTooltip>
                                     </div>
-                                    <span className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded ${meta.pillBg} ${meta.accent}`}>
-                                        {items.length}
-                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                        {statusKey === 'pending-approval' && items.filter(r => r.collectionsHold).length > 0 && (
+                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                                                {items.filter(r => r.collectionsHold).length} on hold
+                                            </span>
+                                        )}
+                                        <span className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded ${meta.pillBg} ${meta.accent}`}>
+                                            {items.length}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <div className="bg-card p-2 space-y-1.5 max-h-80 overflow-y-auto">
@@ -157,14 +164,31 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                         const isOpen = expandedId === r.id
                                         const hasDraft = highlightSet.has(r.id)
                                         return (
-                                            <div key={r.id} className={`bg-zinc-50/50 dark:bg-zinc-800 border rounded-lg border-l-4 ${meta.leftBar} text-xs transition-all ${
-                                                hasDraft
-                                                    ? 'border-amber-400 dark:border-amber-500 ring-2 ring-amber-300/40 dark:ring-amber-500/30 shadow-md'
-                                                    : isOpen
-                                                        ? 'border-zinc-400 dark:border-zinc-500'
-                                                        : 'border-border hover:border-zinc-300 dark:hover:border-zinc-700'
+                                            <div key={r.id} className={`bg-zinc-50/50 dark:bg-zinc-800 border rounded-lg border-l-4 text-xs transition-all ${
+                                                r.collectionsHold
+                                                    ? 'border-l-amber-500 border-amber-300 dark:border-amber-500/40'
+                                                    : hasDraft
+                                                        ? `${meta.leftBar} border-amber-400 dark:border-amber-500 ring-2 ring-amber-300/40 dark:ring-amber-500/30 shadow-md`
+                                                        : isOpen
+                                                            ? `${meta.leftBar} border-zinc-400 dark:border-zinc-500`
+                                                            : `${meta.leftBar} border-border hover:border-zinc-300 dark:hover:border-zinc-700`
                                             }`}>
-                                                {hasDraft && (
+                                                {r.collectionsHold && (
+                                                    <div className="px-2.5 py-1.5 bg-amber-50/80 dark:bg-amber-500/10 border-b border-amber-300/40 dark:border-amber-500/30 flex items-center gap-1.5">
+                                                        <PauseCircle className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                                                                Collections hold
+                                                            </span>
+                                                            <span className="text-[9px] text-amber-600/80 dark:text-amber-400/80 ml-1">
+                                                                {r.holdReason === 'installation-pending'
+                                                                    ? `· Installation ${r.installationDate ? new Date(r.installationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'pending'}`
+                                                                    : `· ${r.punchListOpen} punch list items open`}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {hasDraft && !r.collectionsHold && (
                                                     <div className="px-2.5 py-1 bg-amber-50/80 dark:bg-amber-500/10 border-b border-amber-300/40 dark:border-amber-500/30 flex items-center gap-1.5">
                                                         <Mail className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400" />
                                                         <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
@@ -248,6 +272,15 @@ function ARQuickActions({
                     { icon: <ExternalLink className="h-3 w-3" />, label: `Open ${record.poNumber} in CORE`, tone: 'neutral' },
                 ]
             case 'pending-approval':
+                if (record.collectionsHold) {
+                    return [
+                        { icon: <PauseCircle className="h-3 w-3" />, label: record.holdReason === 'installation-pending'
+                            ? `Held — installation scheduled ${record.installationDate ? new Date(record.installationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} · Strata will auto-release`
+                            : `Held — ${record.punchListOpen} punch list items open · Strata will auto-release when closed`, tone: 'neutral' },
+                        { icon: <Wrench className="h-3 w-3" />, label: record.holdReason === 'punch-list-open' ? `View open punch list for ${record.client}` : `View installation schedule`, tone: 'neutral' },
+                        { icon: <ExternalLink className="h-3 w-3" />, label: `Open ${record.poNumber} in CORE`, tone: 'neutral' },
+                    ]
+                }
                 return [
                     { icon: <Mail className="h-3 w-3" />, label: `Ping ${record.client} for status update`, tone: 'primary' },
                     { icon: <ExternalLink className="h-3 w-3" />, label: `Open ${record.poNumber} in CORE`, tone: 'neutral' },
