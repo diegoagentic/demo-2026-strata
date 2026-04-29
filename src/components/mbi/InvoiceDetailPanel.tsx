@@ -121,34 +121,6 @@ export function InvoiceExtractedFields({ invoice }: InvoiceDetailPanelProps) {
             </div>
 
 
-            {/* CORE CTA */}
-            <div className="px-4 pb-4">
-                <div className="bg-muted/20 border border-primary/30 rounded-xl p-3 flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
-                        <Send className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 text-xs">
-                        <div className="font-bold text-foreground">
-                            {invoice.hasException ? 'Resolve exception before posting' : 'Ready to pre-fill CORE voucher'}
-                        </div>
-                        <div className="text-muted-foreground text-[10px]">
-                            {invoice.hasException
-                                ? 'Controller review required — no auto-post.'
-                                : 'All fields extracted · 3-way match ready.'}
-                        </div>
-                        {!invoice.hasException && (
-                            <div className="text-[9px] text-muted-foreground/70 mt-0.5">Queues voucher via RPA · not a live payment</div>
-                        )}
-                    </div>
-                    <button
-                        disabled={invoice.hasException}
-                        className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-primary-foreground bg-primary rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                        {invoice.hasException ? 'Review' : 'Post to CORE'}
-                        <ArrowRight className="h-3 w-3" />
-                    </button>
-                </div>
-            </div>
         </div>
     )
 }
