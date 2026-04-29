@@ -20,7 +20,7 @@
  */
 
 import { useState } from 'react'
-import { User, Calendar, AlertTriangle, Clock, Check, TrendingUp, Mail, Phone, ExternalLink, ChevronDown, PauseCircle, Wrench, ClipboardCheck, MessageSquare, Send } from 'lucide-react'
+import { User, Calendar, AlertTriangle, Clock, Check, TrendingUp, Mail, Phone, ExternalLink, ChevronDown, PauseCircle, Wrench, ClipboardCheck, MessageSquare, Send, Sparkles } from 'lucide-react'
 import type { ARRecord } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
 import ARHoldReviewModal from './ARHoldReviewModal'
@@ -261,6 +261,12 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                                                     <span>{r.lastContact}</span>
                                                                 </>
                                                             )}
+                                                        </div>
+                                                    )}
+                                                    {r.replyIntent && (
+                                                        <div className="flex items-start gap-1 mt-1.5 px-1.5 py-1 bg-ai/10 rounded text-[9px] text-ai font-semibold leading-tight">
+                                                            <Sparkles className="h-2.5 w-2.5 shrink-0 mt-px" />
+                                                            <span>{r.replyIntent}</span>
                                                         </div>
                                                     )}
                                                 </button>

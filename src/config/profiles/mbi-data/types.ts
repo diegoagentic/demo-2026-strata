@@ -181,6 +181,8 @@ export interface ARRecord {
     holdReason?: 'installation-pending' | 'punch-list-open';
     installationDate?: string;
     punchListOpen?: number;
+    /** AI-detected intent from client reply — shown as follow-up badge on no-response cards */
+    replyIntent?: string;
 }
 
 export interface BillingForecastPoint {

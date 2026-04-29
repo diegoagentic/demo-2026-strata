@@ -15,10 +15,13 @@
  * DS TOKENS: bg-card · success/info/destructive accents
  */
 
-import { TrendingDown, ArrowRight, Mail, Sparkles, AlertTriangle, TrendingUp, PauseCircle } from 'lucide-react'
+import { useState } from 'react'
+import { TrendingDown, ArrowRight, Mail, Sparkles, AlertTriangle, TrendingUp, PauseCircle, Clock } from 'lucide-react'
 import ARStatusBoard from './ARStatusBoard'
 import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
+
+type ARFilter = 'all' | 'sent' | 'no-response' | 'escalated' | 'on-hold'
 
 interface ARAgingReviewSceneProps {
     /** When provided, the "review collection emails" cue at the bottom
@@ -27,6 +30,14 @@ interface ARAgingReviewSceneProps {
 }
 
 export default function ARAgingReviewScene({ onContinue }: ARAgingReviewSceneProps = {}) {
+    const [arFilter, setArFilter] = useState<ARFilter>('all')
+
+    const filteredRecords = arFilter === 'all' ? MBI_AR_RECORDS
+        : arFilter === 'sent' ? MBI_AR_RECORDS.filter(r => !r.collectionsHold && r.status !== 'escalated')
+        : arFilter === 'no-response' ? MBI_AR_RECORDS.filter(r => r.status === 'no-response')
+        : arFilter === 'escalated' ? MBI_AR_RECORDS.filter(r => r.status === 'escalated')
+        : MBI_AR_RECORDS.filter(r => r.collectionsHold === true)
+
     const totalAR = MBI_AR_RECORDS.reduce((acc, r) => acc + r.amount, 0)
     const escalated = MBI_AR_RECORDS.filter(r => r.status === 'escalated').length
     const committed = MBI_AR_RECORDS
@@ -117,8 +128,33 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
                 />
             </div>
 
+            {/* Filter bar */}
+            <div className="flex flex-wrap gap-2">
+                {([
+                    { key: 'all', label: 'All', count: MBI_AR_RECORDS.length, icon: null },
+                    { key: 'sent', label: 'Emails sent', count: 8, icon: <Mail className="h-3 w-3" /> },
+                    { key: 'no-response', label: 'No response', count: 2, icon: <Clock className="h-3 w-3" /> },
+                    { key: 'escalated', label: 'Escalated', count: 2, icon: <AlertTriangle className="h-3 w-3" /> },
+                    { key: 'on-hold', label: 'On hold', count: 2, icon: <PauseCircle className="h-3 w-3" /> },
+                ] as { key: ARFilter; label: string; count: number; icon: React.ReactNode }[]).map(chip => (
+                    <button
+                        key={chip.key}
+                        onClick={() => setArFilter(chip.key)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            arFilter === chip.key
+                                ? 'bg-primary text-zinc-900 border-primary/50'
+                                : 'bg-card dark:bg-zinc-800 border-border text-muted-foreground hover:text-foreground hover:border-zinc-300 dark:hover:border-zinc-600'
+                        }`}
+                    >
+                        {chip.icon}
+                        {chip.label}
+                        <span className={`tabular-nums ${arFilter === chip.key ? 'opacity-70' : 'opacity-60'}`}>{chip.count}</span>
+                    </button>
+                ))}
+            </div>
+
             {/* AR status board · highlights the records that have drafts queued next */}
-            <ARStatusBoard records={MBI_AR_RECORDS} highlightedIds={draftReadyIds} />
+            <ARStatusBoard records={filteredRecords} highlightedIds={draftReadyIds} />
 
             {/* Forward cue · now a real button so the funnel from list → action
                 is one click instead of "next" copy without a control */}

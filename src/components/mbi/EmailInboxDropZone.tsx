@@ -25,7 +25,7 @@
  *            success accents on processed
  */
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Mail, Inbox, Upload, Sparkles, CheckCircle2, Loader2, Paperclip, FileText } from 'lucide-react'
 
 interface EmailInboxDropZoneProps {
@@ -52,7 +52,18 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
     const [stage, setStage] = useState<Stage>('idle')
     const [activeFilename, setActiveFilename] = useState<string | null>(null)
     const [processStepIdx, setProcessStepIdx] = useState(0)
+    const [newEmailVisible, setNewEmailVisible] = useState(false)
     const dragCounter = useRef(0)
+    const autoTriggered = useRef(false)
+
+    useEffect(() => {
+        if (autoTriggered.current) return
+        autoTriggered.current = true
+        const t1 = setTimeout(() => setNewEmailVisible(true), 1800)
+        const t2 = setTimeout(() => runProcessing('HON_Billing_INV-0498.pdf'), 2800)
+        return () => { clearTimeout(t1); clearTimeout(t2) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const runProcessing = (filename: string) => {
         setActiveFilename(filename)
@@ -135,6 +146,11 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
 
             {/* Faux inbox items */}
             <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40">
+                {newEmailVisible && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                        <FauxEmailRow vendor="HON · billing@hon.example" subject="Invoice INV-0498 · service line" attached time="10:02 AM" emailType="bill" highlight />
+                    </div>
+                )}
                 <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted emailType="bill" />
                 <FauxEmailRow vendor="Allsteel · ap@mercyhealth.example" subject="Rebate + bill INV-0486" attached time="8:00 AM" muted emailType="rebate-bill" />
                 <FauxEmailRow vendor="HON · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted emailType="bill" />
@@ -163,15 +179,14 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
                         <div className="flex-1 min-w-0">
                             <div className="text-sm font-bold text-foreground">Drop a vendor bill here</div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">
-                                PDF, image, .eml — Strata processes it like any other inbound email. No file at hand? Simulate one →
+                                PDF, image, .eml — Strata processes it like any other inbound email.
                             </div>
                         </div>
                         <button
                             onClick={handleSimulate}
-                            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                            className="shrink-0 text-[10px] text-muted-foreground hover:text-foreground underline transition-colors"
                         >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            Simulate a new email
+                            Simulate
                         </button>
                     </div>
                 )}
@@ -237,10 +252,10 @@ const EMAIL_TYPE_CHIP: Record<EmailType, { label: string; cls: string }> = {
     'statement':   { label: 'Statement · tagged', cls: 'text-muted-foreground bg-muted/60' },
 }
 
-function FauxEmailRow({ vendor, subject, attached, time, muted, emailType }: { vendor: string; subject: string; attached?: boolean; time: string; muted?: boolean; emailType?: EmailType }) {
+function FauxEmailRow({ vendor, subject, attached, time, muted, emailType, highlight }: { vendor: string; subject: string; attached?: boolean; time: string; muted?: boolean; emailType?: EmailType; highlight?: boolean }) {
     const chip = emailType ? EMAIL_TYPE_CHIP[emailType] : null
     return (
-        <div className={`flex items-start gap-3 px-2 py-1.5 rounded ${muted ? 'opacity-60' : ''}`}>
+        <div className={`flex items-start gap-3 px-2 py-1.5 rounded transition-all ${muted ? 'opacity-60' : ''} ${highlight ? 'ring-1 ring-amber-400/60 bg-amber-50/60 dark:bg-amber-500/10 rounded-lg' : ''}`}>
             <Mail className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
                 <div className="text-[11px] font-semibold text-foreground truncate">{vendor}</div>
