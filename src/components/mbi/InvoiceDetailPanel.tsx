@@ -127,26 +127,6 @@ export function InvoiceExtractedFields({ invoice }: InvoiceDetailPanelProps) {
                 </div>
             </div>
 
-            {/* HealthTrust rebate callout */}
-            {invoice.has3PctRebate && (
-                <div className="mx-4 mb-4 bg-amber-500/5 border border-amber-300 dark:border-amber-500/30 rounded-xl p-3">
-                    <div className="flex items-start gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="flex-1">
-                            <div className="text-xs font-bold text-foreground">HealthTrust 3% rebate — auto-flagged</div>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">
-                                Per HealthTrust GPO contract, 3% rebate line required before voucher posts.
-                            </div>
-                            <div className="mt-2 flex items-center justify-between bg-background border border-border rounded-lg px-3 py-2">
-                                <span className="text-[10px] font-semibold text-foreground">Rebate (3% of ${invoice.amount.toLocaleString()})</span>
-                                <span className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">+${rebateAmount.toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* CORE CTA */}
             <div className="px-4 pb-4">
