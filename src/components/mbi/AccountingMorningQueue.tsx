@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { Moon, Loader2, AlertTriangle, CheckCircle2, ArrowRight, Sparkles, FileSignature, X } from 'lucide-react'
+import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight, Sparkles, FileSignature, X } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import InvoiceDetailPanel from './InvoiceDetailPanel'
 import EmailInboxDropZone from './EmailInboxDropZone'
@@ -137,18 +137,18 @@ export default function AccountingMorningQueue() {
             {/* Overnight work summary — 3-column workflow story (Apr 23 commitment) */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-2xl p-4 flex items-start gap-3">
                 <div className="h-10 w-10 rounded-xl bg-ai/15 text-ai flex items-center justify-center shrink-0">
-                    <Moon className="h-5 w-5" />
+                    <Zap className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                        <div className="text-sm font-bold text-foreground">Strata worked overnight</div>
+                        <div className="text-sm font-bold text-foreground">Strata processes bills continuously · recent &amp; pending</div>
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">Kathy · AP Accountant</span>
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                        Read <strong className="text-foreground">{total} vendor bills</strong> ·
-                        extracted fields with Document AI · matched to open POs in CORE ·
+                        Processed <strong className="text-foreground">{total} vendor bills</strong> continuously as they arrived throughout the day ·
+                        Document AI extracted fields · matched to open POs in CORE ·
                         applied HealthTrust 3% rebate logic on <strong className="text-foreground">{healthTrust} GPO bills</strong>.
-                        The queue below shows what's done, what agents are still working on, and what only you can decide.
+                        New bills received at any time go through the same pipeline immediately — Kathy reviews recent activity and pending exceptions on her schedule.
                     </div>
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">

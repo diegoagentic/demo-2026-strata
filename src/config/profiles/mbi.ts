@@ -59,8 +59,8 @@ export const MBI_STEPS: DemoStep[] = [
         id: 'm2.1',
         groupId: 0,
         groupTitle: 'Flow 1: Accounting AI',
-        title: 'Morning queue — overnight processing complete',
-        description: 'The Controller opens Strata to find the overnight queue laid out in three columns: 5 bills auto-posted to CORE, 3 still being worked by reconciliation agents, and 4 that need her eyes — two clean exceptions plus two HealthTrust GPO rebate approvals.',
+        title: 'Bill queue — continuous · recent &amp; pending',
+        description: 'Strata processes vendor bills continuously throughout the day as they arrive. Kathy opens her queue and sees the current state: 5 recently auto-posted to CORE, 3 being worked by reconciliation agents, and 4 pending her decision — two clean exceptions plus two HealthTrust GPO rebate approvals.',
         app: 'mbi-accounting',
         role: 'Dealer',
     },
@@ -149,7 +149,7 @@ export const MBI_STEPS: DemoStep[] = [
 // ─── STEP BEHAVIOR ───────────────────────────────────────────────────────────
 
 export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
-    'm2.1': { mode: 'interactive', userAction: 'Review the overnight queue · pre-processed bills ready · exceptions flagged for human decision' },
+    'm2.1': { mode: 'interactive', userAction: 'Review the queue · bills processed as they arrived · exceptions flagged for human decision' },
     'm2.2': { mode: 'interactive', userAction: 'Approve the GPO rebate · override with a reason · or escalate to the Director of Healthcare' },
     'm2.3': { mode: 'interactive', userAction: 'Reconcile the non-EDI bill line-by-line · accept or override each variance' },
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
@@ -164,7 +164,7 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
 
 export const MBI_STEP_MESSAGES: Record<string, string[]> = {
     'm2.1': [
-        'Fetching overnight bill queue',
+        'Fetching bill queue',
         'Document AI extracting fields from each vendor bill',
         'Matching bill lines to open POs in CORE',
         'Applying HealthTrust exception logic',

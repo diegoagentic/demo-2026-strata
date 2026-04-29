@@ -65,7 +65,7 @@ const FLOWS: FlowCard[] = [
         isPilot: true,
         isPrototype: true,
         pain: '4-hour morning reading every bill, reconciling every PO, updating AR biweekly in Excel',
-        outcome: '12 bills pre-processed overnight, exceptions reviewed, AR aging live, collection emails sent',
+        outcome: '12 bills processed continuously as received, pending exceptions reviewed, AR aging live, collection emails sent',
         timeBefore: '4 hours',
         timeAfter: '18 min',
         scenes: 5,

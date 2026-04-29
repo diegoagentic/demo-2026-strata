@@ -116,7 +116,7 @@ export default function NonEDIReconcilerScene() {
             <div className="bg-success/5 dark:bg-success/10 border border-success/30 rounded-xl p-3 flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">10 bills auto-posted to CORE overnight · you're reviewing the 2 that need attention</div>
+                    <div className="font-bold text-foreground">10 bills auto-posted to CORE as they arrived · 2 recent exceptions pending your decision</div>
                     <div className="text-muted-foreground mt-0.5">
                         Bills where every line matched the PO flowed through automatically. This queue is exceptions only — mismatches the AI flagged for your decision.
                     </div>

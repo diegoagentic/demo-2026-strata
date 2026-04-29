@@ -113,7 +113,7 @@ export const SOURCES = {
     CORE_AR:        { name: 'CORE · AR',          type: 'erp'           as SourceType, note: 'CORE\'s Accounts Receivable module. Feeds live aging data to Strata.' },
     CORE_GL:        { name: 'CORE · GL',          type: 'erp'           as SourceType, note: 'General Ledger in CORE. Approved lines post here via RPA after reconciliation.' },
     CORE_PO:        { name: 'CORE · POs',         type: 'erp'           as SourceType, note: 'CORE purchase orders. Strata matches every bill line against the open PO.' },
-    DOC_AI:         { name: 'Document AI',        type: 'ai'            as SourceType, note: 'Strata\'s OCR engine. Reads vendor PDFs overnight — extracts fields at 88–99% confidence.' },
+    DOC_AI:         { name: 'Document AI',        type: 'ai'            as SourceType, note: 'Strata\'s OCR engine. Reads vendor PDFs continuously as they arrive — extracts fields at 88–99% confidence.' },
     STRATA_AI:      { name: 'Strata AI',          type: 'ai'            as SourceType, note: 'Strata\'s AI layer — orchestrates agents, applies contract logic, drafts emails.' },
     STRATA_NLP:     { name: 'Strata NLP',         type: 'ai'            as SourceType, note: 'Natural-language model. Drafts AR follow-up emails in the client\'s tone history.' },
     STRATA_SPEC:    { name: 'Strata Spec Engine', type: 'ai'            as SourceType, note: 'Cross-checks every spec line against manufacturer price books and CET footprint.' },
