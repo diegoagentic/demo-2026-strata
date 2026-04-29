@@ -116,7 +116,7 @@ export default function MBIQuotesPage() {
                                 </span>
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted border border-border text-foreground">
                                     <FolderOpen className="h-2.5 w-2.5 text-muted-foreground" />
-                                    New HQ Floor 12 · BDG-2026-002
+                                    New HQ Floor 12 · 2026-002
                                 </span>
                             </div>
                         </div>
