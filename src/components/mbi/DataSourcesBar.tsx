@@ -125,4 +125,5 @@ export const SOURCES = {
     OUTLOOK:        { name: 'Outlook',            type: 'communication' as SourceType, note: 'Strata sends drafted AR follow-up emails directly from here after Controller review.' },
     SIF_FILE:       { name: 'SIF (CET export)',   type: 'file'          as SourceType, note: 'Standard Interchange Format — XML export from the designer\'s CET tool. 24 fields.' },
     CRM:            { name: 'CRM',                type: 'external'      as SourceType, note: 'MBI\'s CRM. Budget requests originate from approved opportunities here.' },
+    INVOICE_HISTORY:{ name: 'Invoice History',    type: 'erp'           as SourceType, note: 'Historical vendor invoices in CORE. Strata cross-references prior bills to detect partial shipment and backorder patterns per vendor and SKU.' },
 } satisfies Record<string, DataSource>

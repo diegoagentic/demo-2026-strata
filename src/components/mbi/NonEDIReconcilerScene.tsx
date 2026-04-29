@@ -20,7 +20,7 @@
 import { useState } from 'react'
 import {
     GitCompare, Check, Pencil, CheckCircle2,
-    AlertTriangle, Package, Sparkles, Plus, Truck,
+    AlertTriangle, Package, Sparkles, Plus, Truck, Zap, ArrowRight,
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
@@ -123,39 +123,83 @@ export default function NonEDIReconcilerScene() {
                 </div>
             </div>
 
-            {/* Total delta banner */}
-            <div className={`rounded-xl border p-4 flex items-center gap-4 ${diff < 0 ? 'bg-success/5 border-success/30 dark:bg-success/10' : diff > 0 ? 'bg-amber-500/5 border-amber-300 dark:border-amber-500/30' : 'bg-info/5 border-info/30'}`}>
-                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${diff < 0 ? 'bg-success/15 text-success' : diff > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-info/15 text-info'}`}>
-                    <GitCompare className="h-6 w-6" />
+            {/* Stage 1: Total comparison */}
+            <div className={`rounded-xl border p-4 ${diff < 0 ? 'bg-success/5 border-success/30 dark:bg-success/10' : diff > 0 ? 'bg-amber-500/5 border-amber-300 dark:border-amber-500/30' : 'bg-info/5 border-info/30'}`}>
+                <div className="flex items-center gap-1.5 mb-3">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">Step 1</span>
+                    <span className="text-[11px] font-bold text-foreground">Total comparison</span>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${diff < 0 ? 'bg-success/15 text-success' : diff > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-info/15 text-info'}`}>
+                        <GitCompare className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-bold text-muted-foreground tabular-nums">${totalPO.toLocaleString()}</span>
+                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+                            <span className={`text-sm font-bold tabular-nums ${diff < 0 ? 'text-success' : diff > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
+                                ${totalInv.toLocaleString()}
+                            </span>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${diff < 0 ? 'bg-success/15 text-success' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'}`}>
+                                {diff < 0 ? `−$${Math.abs(diff).toLocaleString()}` : `+$${Math.abs(diff).toLocaleString()}`}
+                            </span>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                            {invoice.vendor} · <span className="font-mono">{invoice.poNumber}</span> · total mismatch detected
+                        </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-1.5 text-[10px] text-muted-foreground border border-border/60 bg-background/60 rounded-lg px-2.5 py-1.5">
+                        <ArrowRight className="h-3 w-3 text-ai shrink-0" />
+                        <span>Running line-by-line</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stage 2 header */}
+            <div className="flex items-start gap-2">
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider shrink-0 mt-0.5">Step 2</span>
+                <div>
+                    <div className="text-[11px] font-bold text-foreground">Line-by-line comparison · line # · model # · unit price</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Ship-to and options excluded — only the fields that determine if the total matches</div>
+                </div>
+            </div>
+
+            {/* AI partial bill insight */}
+            <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3.5 flex items-start gap-3">
+                <div className="h-8 w-8 rounded-lg bg-ai/15 text-ai flex items-center justify-center shrink-0">
+                    <Zap className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-foreground">
-                        Bill is{' '}
-                        <span className={diff < 0 ? 'text-success' : 'text-amber-600 dark:text-amber-400'}>
-                            {diff < 0 ? `$${Math.abs(diff).toLocaleString()} less` : diff > 0 ? `$${Math.abs(diff).toLocaleString()} more` : 'equal to'}
-                        </span>
-                        {' '}than the PO
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-xs font-bold text-foreground">Partial bill pattern detected</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-ai/10 text-ai uppercase tracking-wider">Strata AI</span>
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                        {invoice.vendor} · <span className="font-mono">{invoice.poNumber}</span> · <strong className="text-foreground">{flaggedRows.length} of {LINES.length} lines differ</strong> · review each below and approve or override
+                    <div className="text-[11px] text-muted-foreground leading-relaxed">
+                        Strata compared against <strong className="text-foreground">14 prior Apex Workspace invoices</strong> (last 12 months).
+                        Found <strong className="text-foreground">2 similar short-shipments on Jarvis sit-stand desks</strong> — consistent with
+                        Apex Workspace's backorder pattern for this SKU.
                     </div>
-                </div>
-                <div className="text-right shrink-0">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">PO → Bill</div>
-                    <div className="text-base font-bold tabular-nums text-foreground">${totalPO.toLocaleString()} → ${totalInv.toLocaleString()}</div>
+                    <div className="mt-2 flex items-center gap-1.5 text-[10px]">
+                        <span className="font-bold text-foreground">Suggested resolution:</span>
+                        <span className="inline-flex font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400">Partial shipment — accept short</span>
+                        <span className="text-muted-foreground">· remaining unit likely on backorder</span>
+                    </div>
                 </div>
             </div>
 
             {/* Line-by-line diff table */}
             <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
                 {/* Column headers */}
-                <div className="px-4 py-2.5 border-b border-border bg-muted/20 dark:bg-zinc-900/40 grid grid-cols-[3rem_1fr_6rem_6rem_5rem_8rem] gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider items-center">
-                    <div>Line</div>
-                    <div>Item · mismatch</div>
-                    <div className="text-right">PO</div>
-                    <div className="text-right">Bill</div>
-                    <div className="text-right">Delta</div>
-                    <div className="text-right">Action</div>
+                <div className="px-4 py-2.5 border-b border-border bg-muted/20 dark:bg-zinc-900/40 grid grid-cols-[3rem_1fr_6rem_6rem_5rem_8rem] gap-3 items-center">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Line #</div>
+                    <div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Item · Model #</div>
+                        <div className="text-[9px] text-muted-foreground/60 mt-0.5">Comparing: line · model · unit price only</div>
+                    </div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">PO price</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Bill price</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Delta</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Action</div>
                 </div>
 
                 <div className="divide-y divide-border">
@@ -329,7 +373,7 @@ export default function NonEDIReconcilerScene() {
             <DataSourcesBar groups={[
                 { sources: [SOURCES.VENDOR_EMAIL] },
                 { sources: [SOURCES.DOC_AI] },
-                { sources: [SOURCES.CORE_PO] },
+                { sources: [SOURCES.CORE_PO, SOURCES.INVOICE_HISTORY] },
                 { sources: [SOURCES.CORE_GL, SOURCES.CORE_RPA] },
             ]} />
 
