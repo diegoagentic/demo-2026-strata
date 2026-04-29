@@ -106,7 +106,7 @@ export default function MBIAccountingPage() {
                 active={activeTab === 'accounting'}
                 onClick={() => setActiveTab('accounting')}
                 icon={<Receipt className="h-3.5 w-3.5" />}
-                label="Accounting"
+                label="AP Exceptions"
             />
             <TabButton
                 active={activeTab === 'collections'}
