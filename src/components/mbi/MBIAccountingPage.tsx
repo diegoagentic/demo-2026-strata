@@ -48,7 +48,7 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
 }
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: '', nextLabel: 'Reconcile paper bills' },
+    0: { hint: '', nextLabel: 'Review' },
     1: { hint: 'Line-by-line diff vs PO for non-EDI vendors (paper / PDF bills, no electronic feed) · accept variances that match your delivery, override the rest. HealthTrust rebate flagged inline. Then we move to AR.', nextLabel: 'Post' },
     2: { hint: 'AP closed · now AR (Accounts Receivable, what clients owe MBI). $240K open · live aging board replaces the bi-weekly Excel · scan the open accounts by how late they are.', nextLabel: 'Review collection drafts' },
     3: { hint: 'Strata drafted every follow-up in the client\'s tone history · review, edit if needed, send · then wrap up the queue.', nextLabel: 'Wrap up' },
