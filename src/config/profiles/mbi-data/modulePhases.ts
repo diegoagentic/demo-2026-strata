@@ -50,7 +50,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
             'Document AI bill ingestion → CORE pre-fill',
             'Non-EDI line-by-line reconciliation agent',
             'Exception-only review queue for Kathy',
-            'Freight & tariff missing-line flagging',
+            'Freight & tariff missing-line flagging when exceeding the agreed threshold',
         ],
         estimatedDuration: '5-7 weeks',
         isPilot: true,

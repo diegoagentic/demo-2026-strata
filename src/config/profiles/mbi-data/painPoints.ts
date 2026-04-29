@@ -187,7 +187,7 @@ export const MBI_PAIN_POINTS: PainPoint[] = [
         resolvedInPhase: 2,
         area: 'PC + BD + Sales',
         before: '100% manual freight/tariff calculation per CORE order',
-        after: 'AI agent flags missing lines (EDI + non-EDI)',
+        after: 'AI agent flags missing lines exceeding the agreed threshold (EDI + non-EDI)',
         q10Priority: 7.7,
     },
     {
