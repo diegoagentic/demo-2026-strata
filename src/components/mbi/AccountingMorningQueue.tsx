@@ -131,14 +131,12 @@ export default function AccountingMorningQueue() {
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                        <div className="text-sm font-bold text-foreground">Strata processes bills continuously · recent &amp; pending</div>
+                        <div className="text-sm font-bold text-foreground">Strata monitors the AP mailbox · {total} vendor bills processed</div>
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">Kathy · AP Accountant</span>
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                        Processed <strong className="text-foreground">{total} vendor bills</strong> continuously as they arrived throughout the day ·
-                        Document AI extracted fields · matched to open POs in CORE ·
-                        applied GPO contract logic on <strong className="text-foreground">{healthTrust} HealthTrust bills</strong>.
-                        New bills received at any time go through the same pipeline immediately — Kathy reviews recent activity and pending exceptions on her schedule.
+                        Strata identifies non-EDI vendor bills and extracts key data using <strong className="text-foreground">Document AI</strong>. It matches bills to open POs in CORE at the line or total level and processes those that meet criteria.
+                        Exceptions are <strong className="text-foreground">flagged for review</strong> and assigned to the appropriate PO agent.
                     </div>
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
