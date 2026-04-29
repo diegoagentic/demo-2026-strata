@@ -114,6 +114,8 @@ export default function BudgetIntakeStep({
                         description="Fill a short form (space type, scope, contract, ceiling). Strata uses historical CORE data + pricing reference table to estimate."
                         bullets={['~5 min', 'No CET required', 'Marked budget-grade']}
                         onClick={() => onPathChange('quick-budget')}
+                        optional
+                        optionalNote="Value depends on whether your sales team uses CORE directly — CORE can copy an existing order fast. Validate with sales in Phase 1."
                     />
                 </div>
             </>
@@ -150,6 +152,8 @@ function PathCard({
     bullets,
     onClick,
     emphasis,
+    optional,
+    optionalNote,
 }: {
     icon: React.ReactNode
     title: string
@@ -158,26 +162,37 @@ function PathCard({
     bullets: string[]
     onClick: () => void
     emphasis?: boolean
+    optional?: boolean
+    optionalNote?: string
 }) {
     return (
         <button
             onClick={onClick}
             className={`
-                text-left bg-card border rounded-2xl p-5 transition-all hover:shadow-md
-                ${emphasis ? 'border-primary/40 hover:border-primary' : 'border-border hover:border-muted-foreground/40'}
+                text-left bg-card rounded-2xl p-5 transition-all hover:shadow-md
+                ${emphasis ? 'border border-primary/40 hover:border-primary' : ''}
+                ${optional ? 'border border-dashed border-amber-400/60 dark:border-amber-500/40 hover:border-amber-400 dark:hover:border-amber-500/70' : ''}
+                ${!emphasis && !optional ? 'border border-border hover:border-muted-foreground/40' : ''}
             `}
         >
             <div className="flex items-start gap-3 mb-3">
-                <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${emphasis ? 'bg-primary/10 text-zinc-900 dark:text-primary' : 'bg-muted text-foreground'}`}>
+                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${emphasis ? 'bg-primary/10 text-zinc-900 dark:text-primary' : optional ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'bg-muted text-foreground'}`}>
                     {icon}
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-base font-bold text-foreground">{title}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-bold text-foreground">{title}</h3>
+                        {optional && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 uppercase tracking-wider border border-amber-400/30">
+                                Optional · validate Phase 1
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{subtitle}</p>
                 </div>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">{description}</p>
-            <ul className="space-y-1">
+            <ul className="space-y-1 mb-3">
                 {bullets.map((b, i) => (
                     <li key={i} className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                         <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
@@ -185,6 +200,11 @@ function PathCard({
                     </li>
                 ))}
             </ul>
+            {optional && optionalNote && (
+                <div className="mt-2 pt-2.5 border-t border-amber-400/20 flex items-start gap-1.5">
+                    <span className="text-[10px] text-amber-700/80 dark:text-amber-400/80 leading-snug">{optionalNote}</span>
+                </div>
+            )}
         </button>
     )
 }
