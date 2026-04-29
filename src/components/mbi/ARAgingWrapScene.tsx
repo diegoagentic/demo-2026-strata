@@ -73,12 +73,12 @@ export default function ARAgingWrapScene() {
                     recapSubheading="Vouchers posted, reconciliations cleared, AR emails out — everything Strata couldn't auto-handle routed through your eyes only."
                     recapStats={[
                         { icon: <Clock className="h-4 w-4" />, value: '18 min', sub: 'vs 4h before', accent: 'text-success' },
-                        { icon: <Sparkles className="h-4 w-4" />, value: '5 / 12', sub: 'invoices auto-posted', accent: 'text-success' },
+                        { icon: <Sparkles className="h-4 w-4" />, value: '5 / 12', sub: 'bills auto-posted', accent: 'text-success' },
                         { icon: <Mail className="h-4 w-4" />, value: '3', sub: 'collection emails sent' },
                         { icon: <Receipt className="h-4 w-4" />, value: `$${(committed / 1000).toFixed(0)}K`, sub: 'committed to pay', accent: 'text-success' },
                     ]}
                     timeline={[
-                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Morning queue', caption: '12 invoices triaged', flow: 'Flow 1 · Accounting AI' },
+                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Morning queue', caption: '12 bills triaged', flow: 'Flow 1 · Accounting AI' },
                         { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'HealthTrust posted', caption: '3% rebate applied', flow: '—' },
                         { status: 'done', icon: <Package className="h-3.5 w-3.5" />, label: 'Non-EDI cleared', caption: 'Apex Workspace reconciled', flow: '—' },
                         { status: 'done', icon: <Mail className="h-3.5 w-3.5" />, label: 'AR aging reviewed', caption: `${MBI_AR_RECORDS.length} accounts · ${escalated} escalated`, flow: '—' },

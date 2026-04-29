@@ -66,7 +66,7 @@ export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: In
             {/* Header */}
             <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center justify-between">
                 <div>
-                    <div className="text-xs font-bold text-foreground">Morning bill queue · 12 bills</div>
+                    <div className="text-xs font-bold text-foreground">Morning bill queue · {invoices.length} bills</div>
                     <div className="text-[10px] text-muted-foreground">AI extracted overnight · workflow in 3 columns · click any card</div>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px]">
