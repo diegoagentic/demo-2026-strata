@@ -108,7 +108,7 @@ export default function AccountingMorningQueue() {
                         {billingCreated && (
                             <div className="text-[11px] text-success font-semibold mt-1 inline-flex items-center gap-1">
                                 <FileSignature className="h-3 w-3" />
-                                Invoice drafted · {BILLING_TRIGGER.invoiceRef} · ready for Kathy's review
+                                Invoice drafted · {BILLING_TRIGGER.invoiceRef} · ready for your review
                             </div>
                         )}
                     </div>

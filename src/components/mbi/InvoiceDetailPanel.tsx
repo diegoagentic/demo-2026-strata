@@ -150,7 +150,7 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                         </div>
                         <div className="text-muted-foreground text-[10px]">
                             {invoice.hasException
-                                ? 'Kathy review required — no auto-post.'
+                                ? 'Controller review required — no auto-post.'
                                 : 'All fields extracted · HealthTrust logic applied · 3-way match ready.'}
                         </div>
                         {!invoice.hasException && (

@@ -48,7 +48,7 @@ const TIERS: TierSpec[] = [
         border: 'border-info/30',
         bg: 'bg-info/5',
         pillBg: 'bg-info/10 text-info',
-        assignee: 'Kathy reviews draft',
+        assignee: 'Controller reviews draft',
         sla: '24h response target',
         distribution: '~10% of invoices',
     },

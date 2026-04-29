@@ -59,7 +59,7 @@ export default function NonEDIReconciliationPanel({ invoices }: NonEDIReconcilia
                     <div className="text-2xl font-bold text-red-600 dark:text-red-400 tabular-nums mt-0.5">
                         {mismatches.length - resolvedCount}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">for Kathy's review</div>
+                    <div className="text-[10px] text-muted-foreground">pending approval</div>
                 </div>
             </div>
 
