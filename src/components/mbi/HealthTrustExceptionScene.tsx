@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
-import { GlossaryTooltip } from './GlossaryTooltip'
+
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 type ExceptionStatus = 'pending' | 'approved' | 'overridden' | 'escalated'
@@ -117,9 +117,7 @@ export default function HealthTrustExceptionScene() {
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                            <GlossaryTooltip term="HealthTrust" side="top">
-                                <StatusBadge label="HealthTrust GPO" tone="warning" size="xs" />
-                            </GlossaryTooltip>
+                            <StatusBadge label="HealthTrust GPO" tone="warning" size="xs" />
                             <span className="text-[10px] font-mono text-muted-foreground">{invoice.id}</span>
                             <span className="text-[10px] text-border">·</span>
                             <span className="text-[10px] font-mono text-muted-foreground">{invoice.poNumber}</span>
@@ -146,11 +144,9 @@ export default function HealthTrustExceptionScene() {
                                 Strata found 1 consideration
                             </span>
                             <span className="text-[10px] text-muted-foreground">·</span>
-                            <GlossaryTooltip term="GPO_rebate" side="top">
-                                <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
-                                    3% GPO rebate · +${rebate.toLocaleString()}
-                                </span>
-                            </GlossaryTooltip>
+                            <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                                3% GPO rebate · +${rebate.toLocaleString()}
+                            </span>
                             <span className="text-[9px] bg-ai/10 text-ai font-bold px-1.5 py-0.5 rounded-full">97%</span>
                         </div>
                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
