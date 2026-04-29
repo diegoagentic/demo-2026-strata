@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')!).render(
       <DemoProfileProvider>
         <DemoProvider>
           <TenantProvider>
-            <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
               <App />
             </ThemeProvider>
           </TenantProvider>
