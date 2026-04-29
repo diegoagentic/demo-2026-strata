@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Receipt, GitCompare, DollarSign, Flag, AlertTriangle, UserCheck } from 'lucide-react'
+import { Receipt, GitCompare, DollarSign, Flag, UserCheck } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal } from '../shared'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
@@ -29,9 +29,9 @@ import { useDemo } from '../../context/DemoContext'
 
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
     { id: 'morning',  label: 'AP · Pending Review',                   shortLabel: '1. AP Queue' },
-    { id: 'non-edi',  label: 'Non-EDI reconciliation — line-by-line', shortLabel: '2. Paper bills', hidden: true },
-    { id: 'ar-aging', label: 'AR aging · open accounts to collect',   shortLabel: '2. AR aging' },
-    { id: 'ar-close', label: 'Collection emails + wrap up',            shortLabel: '3. Close' },
+    { id: 'non-edi',  label: 'Non-EDI reconciliation — line-by-line', shortLabel: '2. Non-EDI' },
+    { id: 'ar-aging', label: 'AR aging · open accounts to collect',   shortLabel: '3. AR aging' },
+    { id: 'ar-close', label: 'Collection emails + wrap up',            shortLabel: '4. Close' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
