@@ -24,6 +24,7 @@
 
 import { FileText, Heart, AlertTriangle, ShieldCheck, Building2, Calendar, DollarSign, Send, ArrowRight, Sparkles, Clock, CreditCard } from 'lucide-react'
 import type { Invoice } from '../../config/profiles/mbi-data'
+import { GlossaryTooltip } from './GlossaryTooltip'
 
 interface InvoiceDetailPanelProps {
     invoice: Invoice
@@ -54,19 +55,25 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                     <div className="flex items-center gap-1.5">
                         {/* Data path chip — EDI = CORE native, non-EDI = Strata OCR + RPA */}
                         {invoice.isEDI ? (
-                            <span title="Vendor sends directly into CORE — no OCR, no re-keying" className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                                EDI · CORE native
-                            </span>
+                            <GlossaryTooltip term="EDI_CORE" side="bottom">
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                                    EDI · CORE native
+                                </span>
+                            </GlossaryTooltip>
                         ) : (
-                            <span title="Paper bill — Strata OCR extracts fields, RPA posts to CORE" className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
-                                OCR + RPA
-                            </span>
+                            <GlossaryTooltip term="OCR_RPA" side="bottom">
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
+                                    OCR + RPA
+                                </span>
+                            </GlossaryTooltip>
                         )}
                         {invoice.isHealthTrust && (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 uppercase tracking-wider inline-flex items-center gap-1">
-                                <Heart className="h-2.5 w-2.5" />
-                                HealthTrust GPO
-                            </span>
+                            <GlossaryTooltip term="HealthTrust" side="bottom">
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 uppercase tracking-wider inline-flex items-center gap-1">
+                                    <Heart className="h-2.5 w-2.5" />
+                                    HealthTrust GPO
+                                </span>
+                            </GlossaryTooltip>
                         )}
                     </div>
                 </div>

@@ -22,6 +22,14 @@
 import { useState } from 'react'
 import { User, Calendar, AlertTriangle, Clock, Check, TrendingUp, Mail, Phone, ExternalLink, ChevronDown } from 'lucide-react'
 import type { ARRecord } from '../../config/profiles/mbi-data'
+import { GlossaryTooltip } from './GlossaryTooltip'
+
+const AR_GLOSSARY_KEY: Record<string, string> = {
+    'escalated': 'AR_escalated',
+    'no-response': 'AR_no_response',
+    'pending-approval': 'AR_pending',
+    'committed-to-pay': 'AR_committed',
+}
 
 const STATUS_META = {
     'escalated': {
@@ -132,7 +140,9 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                 <div className="flex items-center justify-between">
                                     <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${meta.accent}`}>
                                         {meta.icon}
-                                        <span>{meta.label}</span>
+                                        <GlossaryTooltip term={AR_GLOSSARY_KEY[statusKey] ?? ''} side="top">
+                                            <span>{meta.label}</span>
+                                        </GlossaryTooltip>
                                     </div>
                                     <span className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded ${meta.pillBg} ${meta.accent}`}>
                                         {items.length}

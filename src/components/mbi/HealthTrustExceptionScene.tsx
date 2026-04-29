@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal, StatusBadge } from '../shared'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
+import { GlossaryTooltip } from './GlossaryTooltip'
 
 type ExceptionStatus = 'pending' | 'approved' | 'overridden' | 'escalated'
 
@@ -124,11 +125,16 @@ export default function HealthTrustExceptionScene() {
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                            <StatusBadge label="HealthTrust GPO" tone="warning" size="sm" />
+                            <GlossaryTooltip term="HealthTrust" side="top">
+                                <StatusBadge label="HealthTrust GPO" tone="warning" size="sm" />
+                            </GlossaryTooltip>
                             <span className="text-[10px] text-muted-foreground">AI 97% · auto-calculated</span>
                         </div>
                         <h3 className="text-lg font-bold text-foreground leading-tight mt-1">
-                            3% GPO rebate <span className="text-muted-foreground font-normal text-sm">· {invoice.vendor} bill</span>
+                            <GlossaryTooltip term="GPO_rebate" side="top">
+                                <span>3% GPO rebate</span>
+                            </GlossaryTooltip>
+                            {' '}<span className="text-muted-foreground font-normal text-sm">· {invoice.vendor} bill</span>
                         </h3>
                         <div className="text-[11px] text-muted-foreground">
                             Project: <strong className="text-foreground">{invoice.clientName ?? 'Riverside Medical Center'}</strong> · <span className="font-mono">{invoice.id}</span> · {invoice.poNumber}

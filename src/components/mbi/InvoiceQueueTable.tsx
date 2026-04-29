@@ -24,6 +24,7 @@
 
 import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2 } from 'lucide-react'
 import type { Invoice, InvoiceStatus } from '../../config/profiles/mbi-data'
+import { GlossaryTooltip } from './GlossaryTooltip'
 
 interface InvoiceQueueTableProps {
     invoices: Invoice[]
@@ -186,13 +187,10 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
     )
 }
 
-// Plain-language tooltips for the acronym badges so a non-finance audience
-// (and MBI's own team during the demo) can hover and understand without
-// needing background knowledge.
-const FLAG_TOOLTIPS: Record<string, string> = {
-    EDI: 'EDI · Electronic Data Interchange. Vendor sends the invoice straight into CORE — no manual entry, no OCR.',
-    HT: 'HealthTrust · Group Purchasing Organization for healthcare clients. MBI reports a 3% rebate to HealthTrust on every bill tied to a GPO member project (e.g. Riverside Medical Center, Lakeside Health System).',
-    Fix: 'Exception flagged · the line items, quantities or amounts don\'t match the matching purchase order. Needs a human decision.',
+const FLAG_GLOSSARY_TERM: Record<string, string> = {
+    EDI: 'EDI',
+    HT: 'HealthTrust',
+    Fix: 'invoice_exception',
 }
 
 function CardFlag({ tone, icon, label }: { tone: 'blue' | 'amber' | 'red'; icon: React.ReactNode; label: string }) {
@@ -201,13 +199,12 @@ function CardFlag({ tone, icon, label }: { tone: 'blue' | 'amber' | 'red'; icon:
         tone === 'amber' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400' :
         'bg-red-500/15 text-red-700 dark:text-red-400'
     return (
-        <span
-            className={`text-[8.5px] font-bold px-1 py-0.5 rounded inline-flex items-center gap-0.5 ${cls}`}
-            title={FLAG_TOOLTIPS[label]}
-        >
-            {icon}
-            {label}
-        </span>
+        <GlossaryTooltip term={FLAG_GLOSSARY_TERM[label] ?? ''} side="top">
+            <span className={`text-[8.5px] font-bold px-1 py-0.5 rounded inline-flex items-center gap-0.5 ${cls}`}>
+                {icon}
+                {label}
+            </span>
+        </GlossaryTooltip>
     )
 }
 
