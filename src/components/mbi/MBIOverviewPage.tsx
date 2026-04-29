@@ -346,13 +346,19 @@ function FlowCardView({ flow, onLaunch }: { flow: FlowCard; onLaunch: () => void
                     <ArrowRight className="h-3 w-3 text-muted-foreground" />
                     <span className="text-success font-bold">{flow.timeAfter}</span>
                 </div>
-                <button
-                    onClick={onLaunch}
-                    className={`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-opacity hover:opacity-90 shadow-sm ${tint.badge}`}
-                >
-                    Start Flow {flow.number}
-                    <ArrowRight className="h-3 w-3" />
-                </button>
+                {flow.availabilityNote ? (
+                    <span className="text-[10px] font-bold text-muted-foreground px-3 py-1.5 rounded-lg bg-muted/60 border border-border cursor-default">
+                        Roadmap · not in tour
+                    </span>
+                ) : (
+                    <button
+                        onClick={onLaunch}
+                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-opacity hover:opacity-90 shadow-sm ${tint.badge}`}
+                    >
+                        Start Flow {flow.number}
+                        <ArrowRight className="h-3 w-3" />
+                    </button>
+                )}
             </div>
         </div>
     )
