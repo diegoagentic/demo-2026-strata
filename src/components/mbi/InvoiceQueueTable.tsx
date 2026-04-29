@@ -22,7 +22,7 @@
  * USED BY: AccountingMorningQueue (Flow 2 Scene 1)
  */
 
-import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2, RefreshCw, Clock } from 'lucide-react'
 import type { Invoice, InvoiceStatus } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
 
@@ -129,7 +129,20 @@ export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: In
     )
 }
 
+function dueDateUrgency(dueDate?: string): { days: number; label: string; tone: 'urgent' | 'soon' | null } | null {
+    if (!dueDate) return null
+    const today = new Date('2026-04-29')
+    const due = new Date(dueDate)
+    const days = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    const label = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    if (days < 0) return { days, label, tone: 'urgent' }
+    if (days <= 10) return { days, label, tone: 'urgent' }
+    if (days <= 20) return { days, label, tone: 'soon' }
+    return null
+}
+
 function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selected: boolean; onClick: () => void }) {
+    const due = dueDateUrgency(invoice.dueDate)
     return (
         <button
             onClick={onClick}
@@ -152,7 +165,7 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
                             <span className="ml-1 text-[8.5px] opacity-70">· {new Date(invoice.invoiceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         )}
                     </div>
-                    {invoice.paymentTerms && (
+                    {invoice.paymentTerms && !due && (
                         <div className="text-[8.5px] text-muted-foreground/70 truncate">{invoice.paymentTerms}{invoice.dueDate ? ` · due ${new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}</div>
                     )}
                 </div>
@@ -176,6 +189,17 @@ function InvoiceCard({ invoice, selected, onClick }: { invoice: Invoice; selecte
                 </span>
             </div>
 
+            {due && (
+                <div className={`flex items-center gap-1 mt-1.5 px-1.5 py-1 rounded text-[9px] font-bold ${
+                    due.tone === 'urgent'
+                        ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                        : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                }`}>
+                    <Clock className="h-2.5 w-2.5 shrink-0" />
+                    <span>Due {due.label} · {due.days < 0 ? 'overdue' : `${due.days}d`}</span>
+                    {invoice.paymentTerms && <span className="ml-auto opacity-60">{invoice.paymentTerms}</span>}
+                </div>
+            )}
             {invoice.status === 'in-progress' && invoice.inProgressReason && (
                 <div className="text-[9.5px] text-muted-foreground italic mt-1 leading-tight line-clamp-2">
                     {invoice.inProgressReason}
