@@ -29,7 +29,7 @@ import { useDemo } from '../../context/DemoContext'
 
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
     { id: 'morning',  label: 'AP · Pending Review',                   shortLabel: '1. AP Queue' },
-    { id: 'non-edi',  label: 'Non-EDI reconciliation — line-by-line', shortLabel: '2. Non-EDI' },
+    { id: 'non-edi',  label: 'Bill Review — line-by-line',            shortLabel: '2. Bill Review' },
     { id: 'ar-aging', label: 'AR aging · open accounts to collect',   shortLabel: '3. AR aging' },
     { id: 'ar-close', label: 'Collection emails + wrap up',            shortLabel: '4. Close' },
 ]
