@@ -15,7 +15,6 @@ import { useState } from 'react'
 import {
     Search, Package, ArrowRight, Sparkles, ChevronRight, RotateCcw, AlertTriangle,
 } from 'lucide-react'
-import AuditLoopDiagram from './AuditLoopDiagram'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 import SpecCheckReport from './SpecCheckReport'
 import NonCatalogValidatorTable from './NonCatalogValidatorTable'
@@ -63,11 +62,8 @@ export default function QuoteValidationScene() {
                 />
             )}
 
-            {/* Hero — audit loop collapse diagram */}
-            <AuditLoopDiagram />
-
             {/* Spec Check report */}
-            <SpecCheckReport />
+            <SpecCheckReport decisions={decisions ?? undefined} />
 
             {/* ── Non-Catalog inline highlight card ── */}
             <div className={`

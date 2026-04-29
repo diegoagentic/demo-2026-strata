@@ -17,12 +17,14 @@
  * USED BY: MBIQuotesPage, MBIDesignPage
  */
 
-import { Sparkles, AlertTriangle, AlertCircle, Info, Scan } from 'lucide-react'
+import { Sparkles, AlertTriangle, AlertCircle, Info, Scan, CheckCircle2, UserCheck } from 'lucide-react'
 import { StatusBadge } from '../shared'
 import { MBI_SPEC_CHECKS } from '../../config/profiles/mbi-data'
+import type { SpecCheckDecisions } from './AISpecCheckSimulation'
 
 interface SpecCheckReportProps {
     reportId?: string
+    decisions?: SpecCheckDecisions
 }
 
 const FLAG_TYPE_META = {
@@ -32,11 +34,15 @@ const FLAG_TYPE_META = {
     'non-catalog': { label: 'Non-catalog', icon: '📋' },
 }
 
-export default function SpecCheckReport({ reportId = 'SC-002' }: SpecCheckReportProps) {
+export default function SpecCheckReport({ reportId = 'SC-002', decisions }: SpecCheckReportProps) {
     const report = MBI_SPEC_CHECKS.find(r => r.id === reportId) ?? MBI_SPEC_CHECKS[1]
-    const criticalCount = report.flags.filter(f => f.severity === 'critical').length
-    const warningCount = report.flags.filter(f => f.severity === 'warning').length
-    const infoCount = report.flags.filter(f => f.severity === 'info').length
+
+    const resolvedTypes = decisions ? new Set<string>(['quantity', 'finish', 'non-catalog']) : new Set<string>()
+
+    const criticalCount = Math.max(0, report.flags.filter(f => f.severity === 'critical').length - (resolvedTypes.has('quantity') ? 1 : 0))
+    const warningCount = Math.max(0, report.flags.filter(f => f.severity === 'warning').length - (resolvedTypes.has('finish') ? 1 : 0))
+    const infoCount = Math.max(0, report.flags.filter(f => f.severity === 'info').length - (resolvedTypes.has('non-catalog') ? 1 : 0))
+    const allResolved = decisions !== undefined && criticalCount === 0 && warningCount === 0 && infoCount === 0
 
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
@@ -53,8 +59,8 @@ export default function SpecCheckReport({ reportId = 'SC-002' }: SpecCheckReport
                     </div>
                 </div>
                 <StatusBadge
-                    label={report.status === 'clean' ? 'Clean' : 'Needs review'}
-                    tone={report.status === 'clean' ? 'success' : 'warning'}
+                    label={allResolved ? 'Reviewed' : report.status === 'clean' ? 'Clean' : 'Needs review'}
+                    tone={allResolved ? 'success' : report.status === 'clean' ? 'success' : 'warning'}
                     size="sm"
                 />
             </div>
@@ -75,7 +81,20 @@ export default function SpecCheckReport({ reportId = 'SC-002' }: SpecCheckReport
                     </div>
                 ) : (
                     report.flags.map((flag, i) => {
+                        const resolution: 'ai' | 'expert' | null = (() => {
+                            if (!decisions) return null
+                            if (flag.type === 'quantity') return 'ai'
+                            if (flag.type === 'finish') return 'expert'
+                            if (flag.type === 'non-catalog') return 'expert'
+                            return null
+                        })()
+
                         const theme = (() => {
+                            if (resolution) return {
+                                icon: <CheckCircle2 className="h-4 w-4 text-success" />,
+                                pill: 'bg-success/10 text-success',
+                                bg: 'bg-success/5 dark:bg-success/10',
+                            }
                             if (flag.severity === 'critical') return {
                                 icon: <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />,
                                 pill: 'bg-red-500/10 text-red-700 dark:text-red-400',
@@ -107,8 +126,24 @@ export default function SpecCheckReport({ reportId = 'SC-002' }: SpecCheckReport
                                     </div>
                                     <div className="text-xs text-foreground">{flag.description}</div>
                                 </div>
-                                <div className="flex items-center gap-1 text-[10px] text-ai font-bold shrink-0">
-                                    <Sparkles className="h-3 w-3" />
+                                <div className="shrink-0">
+                                    {resolution === 'ai' && (
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success uppercase tracking-wider">
+                                            <Sparkles className="h-2.5 w-2.5" />
+                                            Resolved by AI
+                                        </span>
+                                    )}
+                                    {resolution === 'expert' && (
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success uppercase tracking-wider">
+                                            <UserCheck className="h-2.5 w-2.5" />
+                                            Resolved by expert
+                                        </span>
+                                    )}
+                                    {!resolution && (
+                                        <div className="flex items-center gap-1 text-[10px] text-ai font-bold">
+                                            <Sparkles className="h-3 w-3" />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )

@@ -119,15 +119,6 @@ export const MBI_STEPS: DemoStep[] = [
         role: 'Project Manager',
     },
     {
-        id: 'm3.2',
-        groupId: 2,
-        groupTitle: 'Flow 3: Quotes AI',
-        title: 'GP review · PC sets margin · CORE Quote created',
-        description: "Spec is clean. Strata reads the SIF in seconds — 24 fields extracted, contract matched. The PC reviews gross profit per vendor: contract lines auto-lock (HNI Corporate 55%), unlocked vendors need a GP entry. Strata calculates sell prices and creates CORE Quote QUOT-2026-003.",
-        app: 'mbi-quotes',
-        role: 'Project Manager',
-    },
-    {
         id: 'm3.4',
         groupId: 2,
         groupTitle: 'Flow 3: Quotes AI',
@@ -149,7 +140,6 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR aging board · spot escalations and on-hold accounts · forecast updates live' },
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then wrap up the queue' },
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
-    'm3.2': { mode: 'interactive', userAction: 'Run SIF extraction · enter GP per vendor · confirm to create CORE Quote QUOT-2026-003' },
     'm3.3': { mode: 'interactive', userAction: 'Review the BOM validation — duplicates, non-catalog pricing, qty consistency · then resolve any flagged items' },
     'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers · this closes the active tour' },
 };
@@ -187,12 +177,6 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'All checks green · routing to the PM queue',
         'Project Manager picks it up · bottleneck avoided',
     ],
-    'm3.2': [
-        'Reading SIF · extracting 24 fields from CET export',
-        'Contract matched · HNI Corporate 55% discount applied',
-        'Staging for GP review · contract lines locked · unlocked vendors need PC input',
-        'PC confirmed GP · sell prices calculated · CORE Quote QUOT-2026-003 created',
-    ],
     'm3.3': [
         'Scanning BOM for duplicate line items',
         'Checking non-catalog pricing vs manufacturer price books',
@@ -211,5 +195,5 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const MBI_SELF_INDICATED: string[] = [
     'm2.1', 'm2.3', 'm2.4', 'm2.5',
-    'm3.1', 'm3.2', 'm3.3', 'm3.4',
+    'm3.1', 'm3.3', 'm3.4',
 ];
