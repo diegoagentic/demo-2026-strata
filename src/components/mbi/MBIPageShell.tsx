@@ -31,13 +31,16 @@ interface MBIPageShellProps {
     actions?: ReactNode
     /** activeApp kept for backwards compatibility — now unused (primary nav lives in Navbar) */
     activeApp?: string
+    /** Optional slot rendered above the title row — used for tab switchers etc. */
+    preHeader?: ReactNode
     children: ReactNode
 }
 
-export default function MBIPageShell({ title, subtitle, icon, actions, children }: MBIPageShellProps) {
+export default function MBIPageShell({ title, subtitle, icon, actions, preHeader, children }: MBIPageShellProps) {
     return (
         <div className="min-h-screen bg-background dark:bg-black pt-24 px-4 pb-20">
             <div className="max-w-7xl mx-auto space-y-6">
+                {preHeader && <div>{preHeader}</div>}
                 {/* Page title row */}
                 <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
                     <div className="flex items-center gap-3">

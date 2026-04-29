@@ -16,7 +16,7 @@
  */
 
 import { useState } from 'react'
-import { TrendingDown, ArrowRight, Mail, Sparkles, AlertTriangle, TrendingUp, PauseCircle, Clock } from 'lucide-react'
+import { ArrowRight, Mail, Sparkles, AlertTriangle, TrendingUp, PauseCircle, Clock } from 'lucide-react'
 import ARStatusBoard from './ARStatusBoard'
 import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
@@ -59,17 +59,6 @@ export default function ARAgingReviewScene({ onContinue }: ARAgingReviewScenePro
 
     return (
         <div className="space-y-4">
-            {/* AP→AR transition intro */}
-            <div className="bg-success/5 dark:bg-success/10 border border-success/30 rounded-xl p-3 flex items-start gap-2.5">
-                <TrendingDown className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">AP closed · now AR aging stays live</div>
-                    <div className="text-muted-foreground mt-0.5">
-                        Vouchers posted, reconciliations cleared. Now Kathy shifts to receivables: live aging board replaces the bi-weekly Excel, and Strata routes the open accounts by status so you know exactly which need a nudge.
-                    </div>
-                </div>
-            </div>
-
             {/* Strata AI insights — 3 quick signals before the full board */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-2">

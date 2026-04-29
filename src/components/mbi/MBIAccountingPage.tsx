@@ -100,34 +100,40 @@ export default function MBIAccountingPage() {
         />
     )
 
+    const tabSwitcher = (
+        <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 w-fit">
+            <TabButton
+                active={activeTab === 'accounting'}
+                onClick={() => setActiveTab('accounting')}
+                icon={<Receipt className="h-3.5 w-3.5" />}
+                label="Accounting"
+            />
+            <TabButton
+                active={activeTab === 'collections'}
+                onClick={() => setActiveTab('collections')}
+                icon={<MailOpen className="h-3.5 w-3.5" />}
+                label="Collections"
+            />
+        </div>
+    )
+
     return (
         <MBIPageShell
-            title="Accounting AI"
-            subtitle="Prototype · Phase 1 (Mark's pick) · Kathy Belleville (Controller) · daily accounting queue · 4h → 18 min"
+            preHeader={tabSwitcher}
+            title={activeTab === 'accounting' ? 'Accounting AI' : 'Collections AI'}
+            subtitle={activeTab === 'accounting'
+                ? 'Prototype · Phase 1 (Mark\'s pick) · Kathy Belleville (Controller) · daily accounting queue · 4h → 18 min'
+                : 'Flow 2 · AR aging + collection follow-ups · Kathy Belleville (Controller)'}
             icon={<Receipt className="h-5 w-5" />}
             activeApp="mbi-accounting"
         >
             <MBIModuleHeader
                 module="accounting"
                 tint="ai"
-                outcome="Kathy gets her time back — exception-only review, AR collected on time, billing forecast live for leadership."
+                outcome={activeTab === 'accounting'
+                    ? 'Kathy gets her time back — exception-only review, AR collected on time, billing forecast live for leadership.'
+                    : '$240K AR open · Strata routes accounts by status, drafts follow-ups in the client\'s tone, and protects on-hold accounts — Kathy reviews and sends.'}
             />
-
-            {/* Internal tab switcher */}
-            <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 self-start w-fit">
-                <TabButton
-                    active={activeTab === 'accounting'}
-                    onClick={() => setActiveTab('accounting')}
-                    icon={<Receipt className="h-3.5 w-3.5" />}
-                    label="Accounting"
-                />
-                <TabButton
-                    active={activeTab === 'collections'}
-                    onClick={() => setActiveTab('collections')}
-                    icon={<MailOpen className="h-3.5 w-3.5" />}
-                    label="Collections"
-                />
-            </div>
 
             {/* Accounting tab — Flow 1 (m2.1 + m2.3) */}
             {activeTab === 'accounting' && (
