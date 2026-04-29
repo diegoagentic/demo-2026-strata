@@ -32,8 +32,8 @@ interface NonCatalogItem {
 const MOCK_ITEMS: NonCatalogItem[] = [
     { id: 'NC-001', description: 'Custom walnut laminate credenza 84×24', manufacturer: 'HNI', qty: 3, priceQuoted: 2800, priceBook: 2800, match: 'exact', confidence: 100 },
     { id: 'NC-002', description: 'COM fabric upgrade · marine blue', manufacturer: 'Apex Workspace', qty: 8, priceQuoted: 450, priceBook: 425, match: 'close', confidence: 92 },
-    { id: 'NC-003', description: 'Built-in reception millwork', manufacturer: 'Custom', qty: 1, priceQuoted: 8500, priceBook: 0, match: 'exact', confidence: 85 },
-    { id: 'NC-004', description: 'Acoustic panel · oak veneer 48×24', manufacturer: 'Allsteel', qty: 16, priceQuoted: 180, priceBook: 215, match: 'mismatch', confidence: 88 },
+    { id: 'NC-003', description: 'BlueDot Alto lounge chair · oatmeal', manufacturer: 'BlueDot', qty: 4, priceQuoted: 1450, priceBook: 0, match: 'exact', confidence: 87 },
+    { id: 'NC-004', description: 'BlueDot Frame side table · walnut', manufacturer: 'BlueDot', qty: 8, priceQuoted: 380, priceBook: 445, match: 'mismatch', confidence: 88 },
     { id: 'NC-005', description: 'Custom finish · teal powdercoat', manufacturer: 'CaseWorks', qty: 12, priceQuoted: 65, priceBook: 65, match: 'exact', confidence: 99 },
 ]
 

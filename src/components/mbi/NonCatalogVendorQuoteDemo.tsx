@@ -21,19 +21,19 @@ import { usePauseAware } from '../../context/usePauseAware'
 import MBIDetailSheet from './MBIDetailSheet'
 
 const QUOTE_STEPS = [
-    'Allsteel vendor quote received · PDF attachment detected via Teams',
+    'BlueDot vendor quote received · PDF attachment detected via Teams',
     'AI reading quote · extracting SKU · unit price · lead time · MOQ',
-    'SIF entry generated · qty 16 · $215/unit · ready for PC review',
+    'SIF entry generated · qty 8 · $445/unit · ready for PC review',
 ]
 
 const GENERATED_ENTRY = {
-    sku: 'AS-ACST-OAK-4824',
-    description: 'Acoustic panel · oak veneer 48×24',
-    qty: 16,
-    unitPrice: 215,
-    leadWeeks: 6,
-    moq: 4,
-    source: 'Allsteel vendor quote · received via Teams · Apr 29 2026',
+    sku: 'BD-FRM-WLN-2442',
+    description: 'Frame side table · walnut',
+    qty: 8,
+    unitPrice: 445,
+    leadWeeks: 5,
+    moq: 2,
+    source: 'BlueDot vendor quote · received via Teams · Apr 29 2026',
 }
 
 type Phase = 'idle' | 'running' | 'done' | 'accepted'
@@ -229,7 +229,7 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
         <div className="bg-white dark:bg-zinc-100 text-zinc-900 rounded-xl p-3 text-[10px] font-mono shadow-sm border border-border leading-relaxed">
             {/* Header */}
             <div className={`flex justify-between mb-2 pb-2 border-b border-zinc-200 ${cls('header')}`}>
-                <div className="font-bold text-[11px] text-zinc-900">ALLSTEEL</div>
+                <div className="font-bold text-[11px] text-zinc-900">BLUEDOT</div>
                 <div className="text-zinc-500 text-[9px]">VENDOR QUOTE</div>
             </div>
 
@@ -237,7 +237,7 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
             <div className="grid grid-cols-2 gap-1 mb-2 text-[9px]">
                 <div className={cls('header')}>
                     <div className="text-zinc-500">QUOTE #</div>
-                    <div className="font-bold text-zinc-900">AS-Q-2026-0441</div>
+                    <div className="font-bold text-zinc-900">BD-Q-2026-0187</div>
                 </div>
                 <div className={cls('header')}>
                     <div className="text-zinc-500">DATE</div>
@@ -262,12 +262,12 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
                 </div>
                 <div className={`grid grid-cols-[1fr_auto_auto_auto] gap-1 ${cls('item')}`}>
                     <div>
-                        <div className="font-bold text-zinc-900">AS-ACST-OAK-4824</div>
-                        <div className="text-zinc-500 text-[8px]">Acoustic panel · oak veneer 48×24</div>
+                        <div className="font-bold text-zinc-900">BD-FRM-WLN-2442</div>
+                        <div className="text-zinc-500 text-[8px]">Frame side table · walnut</div>
                     </div>
-                    <div className="text-right text-zinc-900">16</div>
-                    <div className={`text-right font-bold ${highlighted('pricing') ? 'text-zinc-900' : 'text-zinc-700'}`}>$215</div>
-                    <div className="text-right font-bold text-zinc-900">$3,440</div>
+                    <div className="text-right text-zinc-900">8</div>
+                    <div className={`text-right font-bold ${highlighted('pricing') ? 'text-zinc-900' : 'text-zinc-700'}`}>$445</div>
+                    <div className="text-right font-bold text-zinc-900">$3,560</div>
                 </div>
             </div>
 
@@ -275,23 +275,23 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
             <div className={`border-t border-zinc-200 pt-1.5 grid grid-cols-2 gap-1 text-[9px] mb-2 ${cls('terms')}`}>
                 <div>
                     <div className="text-zinc-500">LEAD TIME</div>
-                    <div className="font-bold text-zinc-900">6 weeks</div>
+                    <div className="font-bold text-zinc-900">5 weeks</div>
                 </div>
                 <div>
                     <div className="text-zinc-500">MOQ</div>
-                    <div className="font-bold text-zinc-900">4 units</div>
+                    <div className="font-bold text-zinc-900">2 units</div>
                 </div>
             </div>
 
             {/* Total */}
             <div className={`border-t border-zinc-200 pt-1 flex justify-between ${cls('pricing')}`}>
                 <span className="text-zinc-500 font-bold">TOTAL</span>
-                <span className="font-bold text-zinc-900">$3,440</span>
+                <span className="font-bold text-zinc-900">$3,560</span>
             </div>
 
             {/* Footer */}
             <div className="mt-2 pt-1 border-t border-zinc-200 text-[8px] text-zinc-400">
-                Valid through May 28 2026 · Allsteel Inc. · Pricing subject to contract terms
+                Valid through May 28 2026 · BlueDot Design Inc. · Pricing subject to contract terms
             </div>
         </div>
     )
