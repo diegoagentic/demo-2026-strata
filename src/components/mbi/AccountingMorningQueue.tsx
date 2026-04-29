@@ -15,7 +15,7 @@
 import { useState } from 'react'
 import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight, RefreshCw, Sparkles, Heart } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
-import InvoiceDetailPanel from './InvoiceDetailPanel'
+import { InvoiceDocPreview, InvoiceExtractedFields } from './InvoiceDetailPanel'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
@@ -186,18 +186,15 @@ export default function AccountingMorningQueue() {
             {/* PO auto-recheck demo */}
             <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
 
-            {/* Queue + detail */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                <div className="lg:col-span-3">
-                    <InvoiceQueueTable
-                        invoices={filteredInvoices}
-                        selectedId={selectedId}
-                        onSelect={setSelectedId}
-                    />
-                </div>
-                <div className="lg:col-span-2">
-                    <InvoiceDetailPanel invoice={selected} />
-                </div>
+            {/* Queue + document preview + extracted fields — 3-panel grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr_1fr] gap-4 items-start">
+                <InvoiceQueueTable
+                    invoices={filteredInvoices}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                />
+                <InvoiceDocPreview invoice={selected} />
+                <InvoiceExtractedFields invoice={selected} />
             </div>
 
             {/* Forward cue */}

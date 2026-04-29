@@ -23,7 +23,6 @@
  */
 
 import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2, RefreshCw, Clock } from 'lucide-react'
-import { useState } from 'react'
 import type { Invoice, InvoiceStatus } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
 
@@ -57,113 +56,44 @@ const COLUMN_META: Record<InvoiceStatus, { label: string; sub: string; tone: str
 }
 
 export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: InvoiceQueueTableProps) {
-    const byStatus: Record<InvoiceStatus, Invoice[]> = {
-        'pending': invoices.filter(i => i.status === 'pending'),
-        'in-progress': invoices.filter(i => i.status === 'in-progress'),
-        'done': invoices.filter(i => i.status === 'done'),
-    }
-
-    const [collapsed, setCollapsed] = useState<Set<InvoiceStatus>>(
-        new Set(['in-progress', 'done'])
-    )
-
-    const toggle = (status: InvoiceStatus) => {
-        setCollapsed(prev => {
-            const next = new Set(prev)
-            next.has(status) ? next.delete(status) : next.add(status)
-            return next
-        })
-    }
+    const pendingItems = invoices.filter(i => i.status === 'pending')
+    const meta = COLUMN_META['pending']
 
     return (
-        <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center justify-between">
-                <div>
-                    <div className="text-xs font-bold text-foreground">Bill queue · {invoices.length} bills · live</div>
-                    <div className="text-[10px] text-muted-foreground">Continuous processing · recent &amp; pending · click any card</div>
+        <div className={`flex flex-col rounded-xl border ${meta.tone}`}>
+            {/* Column header */}
+            <div className="px-2.5 py-2 border-b border-border/60 flex items-center justify-between">
+                <div className="min-w-0">
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${meta.chip}`}>
+                        {meta.label}
+                    </div>
+                    <div className="text-[9px] text-muted-foreground mt-1 truncate">{meta.sub}</div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px]">
-                    <Legend color="bg-amber-500/20 text-amber-700 dark:text-amber-400" label="HT" />
-                    <Legend color="bg-blue-500/20 text-blue-700 dark:text-blue-400" label="EDI" />
-                    <Legend color="bg-red-500/20 text-red-700 dark:text-red-400" label="Exception" />
-                </div>
+                <span className="text-[10px] font-bold text-foreground tabular-nums shrink-0">{pendingItems.length}</span>
             </div>
 
-            {/* Columns */}
-            <div className="flex gap-2 p-2 bg-background/40 dark:bg-zinc-900/40 items-start">
-                {COLUMN_ORDER.map(status => {
-                    const items = byStatus[status]
-                    const meta = COLUMN_META[status]
-                    const isCollapsed = collapsed.has(status)
+            {/* Cards */}
+            <div className="p-1.5 space-y-1.5 max-h-[520px] overflow-y-auto">
+                {pendingItems.map(inv => (
+                    <InvoiceCard
+                        key={inv.id}
+                        invoice={inv}
+                        selected={inv.id === selectedId}
+                        onClick={() => onSelect(inv.id)}
+                    />
+                ))}
+                {pendingItems.length === 0 && (
+                    <div className="text-[10px] text-muted-foreground italic text-center py-4">
+                        Empty
+                    </div>
+                )}
+            </div>
 
-                    if (isCollapsed) {
-                        return (
-                            <button
-                                key={status}
-                                onClick={() => toggle(status)}
-                                title={`Expand ${meta.label}`}
-                                className={`flex flex-col items-center justify-between shrink-0 w-8 rounded-xl border py-3 gap-2 transition-opacity hover:opacity-80 ${meta.tone}`}
-                                style={{ minHeight: 80 }}
-                            >
-                                <span className={`text-[9px] font-bold tabular-nums px-1 py-0.5 rounded ${meta.chip}`}>
-                                    {items.length}
-                                </span>
-                                <span
-                                    className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground"
-                                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                                >
-                                    {meta.label}
-                                </span>
-                            </button>
-                        )
-                    }
-
-                    return (
-                        <div key={status} className={`flex flex-col flex-1 min-w-0 rounded-xl border ${meta.tone}`}>
-                            {/* Column header */}
-                            <button
-                                onClick={() => toggle(status)}
-                                className="px-2.5 py-2 border-b border-border/60 flex items-center justify-between w-full text-left hover:opacity-80 transition-opacity"
-                            >
-                                <div className="min-w-0">
-                                    <div className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${meta.chip}`}>
-                                        {status === 'in-progress' && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
-                                        {status === 'done' && <CheckCircle2 className="h-2.5 w-2.5" />}
-                                        {meta.label}
-                                    </div>
-                                    <div className="text-[9px] text-muted-foreground mt-1 truncate">{meta.sub}</div>
-                                </div>
-                                <span className="text-[10px] font-bold text-foreground tabular-nums shrink-0">{items.length}</span>
-                            </button>
-
-                            {/* Cards */}
-                            <div className="p-1.5 space-y-1.5 max-h-[440px] overflow-y-auto">
-                                {items.map(inv => (
-                                    <InvoiceCard
-                                        key={inv.id}
-                                        invoice={inv}
-                                        selected={inv.id === selectedId}
-                                        onClick={() => onSelect(inv.id)}
-                                    />
-                                ))}
-                                {items.length === 0 && (
-                                    <div className="text-[10px] text-muted-foreground italic text-center py-4">
-                                        Empty
-                                    </div>
-                                )}
-                            </div>
-                            {status === 'pending' && (
-                                <div className="px-2.5 py-1.5 border-t border-border/40 flex items-center gap-1.5">
-                                    <RefreshCw className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" />
-                                    <span className="text-[9px] text-muted-foreground/70 leading-tight">
-                                        Strata re-checks CORE every 15 min · resolved mismatches move to Done automatically
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    )
-                })}
+            <div className="px-2.5 py-1.5 border-t border-border/40 flex items-center gap-1.5">
+                <RefreshCw className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" />
+                <span className="text-[9px] text-muted-foreground/70 leading-tight">
+                    Strata re-checks CORE every 15 min · resolved mismatches move to Done automatically
+                </span>
             </div>
         </div>
     )

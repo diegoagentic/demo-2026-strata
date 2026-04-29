@@ -30,7 +30,9 @@ interface InvoiceDetailPanelProps {
     invoice: Invoice
 }
 
-export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps) {
+// ─── InvoiceDocPreview ───────────────────────────────────────────────────────
+// Panel central: header de la factura + exception banner + mockup del documento
+export function InvoiceDocPreview({ invoice }: InvoiceDetailPanelProps) {
     const received = new Date(invoice.received)
     const rebateAmount = invoice.has3PctRebate ? Math.round(invoice.amount * 0.03) : 0
 
@@ -38,40 +40,32 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
             {/* Header */}
             <div className="px-4 py-3 border-b border-border">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center">
-                                <FileText className="h-3.5 w-3.5" />
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-foreground">{invoice.id} · {invoice.vendor}</div>
-                                <div className="text-[10px] text-muted-foreground">
-                                    Received {received.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} · {received.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-7 w-7 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
+                            <FileText className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-xs font-bold text-foreground truncate">{invoice.id} · {invoice.vendor}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                                Received {received.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} · {received.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        {/* Data path chip — EDI = CORE native, non-EDI = Strata OCR + RPA */}
+                    <div className="flex items-center gap-1.5 shrink-0">
                         {invoice.isEDI ? (
                             <GlossaryTooltip term="EDI_CORE" side="bottom">
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                                    EDI · CORE native
-                                </span>
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 uppercase tracking-wider">EDI</span>
                             </GlossaryTooltip>
                         ) : (
                             <GlossaryTooltip term="OCR_RPA" side="bottom">
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
-                                    OCR + RPA
-                                </span>
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">OCR</span>
                             </GlossaryTooltip>
                         )}
                         {invoice.isHealthTrust && (
                             <GlossaryTooltip term="HealthTrust" side="bottom">
                                 <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 uppercase tracking-wider inline-flex items-center gap-1">
-                                    <Heart className="h-2.5 w-2.5" />
-                                    HealthTrust GPO
+                                    <Heart className="h-2.5 w-2.5" />HT
                                 </span>
                             </GlossaryTooltip>
                         )}
@@ -79,7 +73,7 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                 </div>
             </div>
 
-            {/* Exception banner (if applicable) */}
+            {/* Exception banner */}
             {invoice.hasException && (
                 <div className="px-4 py-3 bg-red-50 dark:bg-red-500/10 border-b border-red-200 dark:border-red-500/20 flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
@@ -90,21 +84,30 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                 </div>
             )}
 
-            {/* Document preview mockup */}
+            {/* Document mockup */}
             <div className="p-4">
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Source document</div>
                 <div className="aspect-[5/4] bg-white dark:bg-zinc-900 border border-border rounded-xl p-4 text-[9px] text-zinc-900 dark:text-zinc-100 overflow-hidden">
                     <InvoiceMockup invoice={invoice} rebate={rebateAmount} />
                 </div>
             </div>
+        </div>
+    )
+}
 
+// ─── InvoiceExtractedFields ───────────────────────────────────────────────────
+// Panel derecho: campos extraídos por AI + rebate callout + CTA de CORE
+export function InvoiceExtractedFields({ invoice }: InvoiceDetailPanelProps) {
+    const rebateAmount = invoice.has3PctRebate ? Math.round(invoice.amount * 0.03) : 0
+
+    return (
+        <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
             {/* AI extracted fields */}
-            <div className="px-4 pb-4 space-y-3">
+            <div className="px-4 pt-4 pb-3 space-y-3">
                 <div className="flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3 text-ai" />
                     <div className="text-[10px] font-bold text-ai uppercase tracking-wider">Strata extracted · confidence {invoice.ocrConfidence}%</div>
                 </div>
-
                 <div className="space-y-1.5">
                     <FieldRow icon={<Building2 className="h-3 w-3" />} label="Vendor" value={invoice.vendor} confidence={99} />
                     {invoice.clientName && (
@@ -124,7 +127,7 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                 </div>
             </div>
 
-            {/* HealthTrust 3% rebate callout */}
+            {/* HealthTrust rebate callout */}
             {invoice.has3PctRebate && (
                 <div className="mx-4 mb-4 bg-amber-500/5 border border-amber-300 dark:border-amber-500/30 rounded-xl p-3">
                     <div className="flex items-start gap-2">
@@ -134,10 +137,10 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                         <div className="flex-1">
                             <div className="text-xs font-bold text-foreground">HealthTrust 3% rebate — auto-flagged</div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">
-                                Per HealthTrust GPO contract, 3% rebate line required on this invoice before voucher posts.
+                                Per HealthTrust GPO contract, 3% rebate line required before voucher posts.
                             </div>
                             <div className="mt-2 flex items-center justify-between bg-background border border-border rounded-lg px-3 py-2">
-                                <span className="text-[10px] font-semibold text-foreground">Rebate line (3% of ${invoice.amount.toLocaleString()})</span>
+                                <span className="text-[10px] font-semibold text-foreground">Rebate (3% of ${invoice.amount.toLocaleString()})</span>
                                 <span className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">+${rebateAmount.toLocaleString()}</span>
                             </div>
                         </div>
@@ -145,7 +148,7 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                 </div>
             )}
 
-            {/* CORE pre-fill CTA */}
+            {/* CORE CTA */}
             <div className="px-4 pb-4">
                 <div className="bg-muted/20 border border-primary/30 rounded-xl p-3 flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
@@ -158,12 +161,10 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                         <div className="text-muted-foreground text-[10px]">
                             {invoice.hasException
                                 ? 'Controller review required — no auto-post.'
-                                : 'All fields extracted · HealthTrust logic applied · 3-way match ready.'}
+                                : 'All fields extracted · 3-way match ready.'}
                         </div>
                         {!invoice.hasException && (
-                            <div className="text-[9px] text-muted-foreground/70 mt-0.5">
-                                Queues voucher via RPA · not a live payment
-                            </div>
+                            <div className="text-[9px] text-muted-foreground/70 mt-0.5">Queues voucher via RPA · not a live payment</div>
                         )}
                     </div>
                     <button
@@ -175,6 +176,16 @@ export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps)
                     </button>
                 </div>
             </div>
+        </div>
+    )
+}
+
+// ─── Default export (backwards compat) ───────────────────────────────────────
+export default function InvoiceDetailPanel({ invoice }: InvoiceDetailPanelProps) {
+    return (
+        <div className="space-y-4">
+            <InvoiceDocPreview invoice={invoice} />
+            <InvoiceExtractedFields invoice={invoice} />
         </div>
     )
 }
