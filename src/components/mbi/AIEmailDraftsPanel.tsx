@@ -145,7 +145,7 @@ export default function AIEmailDraftsPanel() {
                     <div className="flex-1">
                         <div className="text-xs font-bold text-foreground">AI-drafted collection emails</div>
                         <div className="text-[10px] text-muted-foreground">
-                            LLM personalizes by account · the Controller reviews · edit in a floating sheet · one-click sends
+                            Escalation cases only · routine follow-ups already auto-sent · review, edit if needed, send
                         </div>
                     </div>
                     <StatusBadge label={`${drafts.length} drafts ready`} tone="ai" size="sm" />

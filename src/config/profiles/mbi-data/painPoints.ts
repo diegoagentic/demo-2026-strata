@@ -72,7 +72,7 @@ export const MBI_PAIN_POINTS: PainPoint[] = [
         resolvedInPhase: 2,
         area: 'Accounting · Kathy',
         before: 'Manual aging review + drafted-from-scratch follow-up emails',
-        after: 'Auto-aging alerts + AI-drafted emails (review · edit · send)',
+        after: 'Auto-aging alerts · standard follow-ups auto-sent per payment terms · AI drafts escalations for review',
     },
     {
         id: 'billing-forecast-excel',

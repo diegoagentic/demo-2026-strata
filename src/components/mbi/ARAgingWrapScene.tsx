@@ -36,13 +36,22 @@ export default function ARAgingWrapScene() {
 
     return (
         <div className="space-y-4">
-            {/* Drafts intro */}
+            {/* Auto-sent summary strip */}
+            <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-2 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                <div className="text-xs flex-1">
+                    <span className="font-bold text-foreground">8 standard follow-ups auto-sent this morning</span>
+                    <span className="text-muted-foreground"> · per payment terms · no action needed</span>
+                </div>
+            </div>
+
+            {/* Drafts intro — escalation cases only */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Mail className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">Collection emails · pre-drafted overnight</div>
+                    <div className="font-bold text-foreground">2 escalation cases need your review</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Strata wrote each follow-up in the client's tone history. Review, edit if needed, send. Once they're out you can close the morning and hand off to the PC team.
+                        Strata drafted each follow-up in the client's tone history. These are the accounts where auto-send wasn't enough — review, edit if needed, send.
                     </div>
                 </div>
             </div>

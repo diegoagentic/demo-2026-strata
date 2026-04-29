@@ -64,7 +64,7 @@ export const MBI_MODULE_PHASES: ModulePhase[] = [
         deliverables: [
             'HealthTrust 3% rebate auto-flag + escalation',
             'AR aging alerts + status taxonomy dashboard',
-            'AI-drafted collection emails (review → send)',
+            'AI-augmented AR emails · auto-send for standard terms · AI drafts for escalations',
         ],
         estimatedDuration: '4-5 weeks',
     },
