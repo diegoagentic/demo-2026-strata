@@ -15,7 +15,7 @@
 import { useState } from 'react'
 import {
     Send, CheckCircle2, FileText, Clock, Palette,
-    Receipt, Zap, Sparkles, Package,
+    Receipt, Sparkles,
 } from 'lucide-react'
 import FlowHandoff from './FlowHandoff'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
@@ -49,9 +49,14 @@ export default function QuoteSendProposalScene() {
                         Enterprise Holdings · New HQ Floor 12 · 7 line items · $372,500 · HNI Corporate contract
                     </div>
                     {sent && sentAt && (
-                        <div className="text-[11px] text-success font-semibold mt-1 inline-flex items-center gap-1">
-                            <Send className="h-3 w-3" />
-                            Sent {sentAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · copy to Amanda + sales rep · routed to each manufacturer
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <div className="text-[11px] text-success font-semibold inline-flex items-center gap-1">
+                                <Send className="h-3 w-3" />
+                                Sent {sentAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · copy to Amanda + sales rep
+                            </div>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                                Pending Client Approval
+                            </span>
                         </div>
                     )}
                 </div>
@@ -68,7 +73,7 @@ export default function QuoteSendProposalScene() {
                     <div className="min-w-0">
                         <div className="text-sm font-bold text-foreground">Approve + send proposal</div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
-                            Sending routes PO drafts to each manufacturer (EDI or non-EDI), logs the handoff in CORE, and pings Amanda.
+                            Logs the proposal in CORE, notifies Amanda and the sales rep, and marks the project as awaiting client sign-off.
                         </div>
                     </div>
                     <button
@@ -90,8 +95,7 @@ export default function QuoteSendProposalScene() {
                     recapStats={[
                         { icon: <Clock className="h-4 w-4" />, value: '12 min', sub: 'vs 2h per proposal', accent: 'text-success' },
                         { icon: <Sparkles className="h-4 w-4" />, value: '4 → 1+1', sub: 'audit loops collapsed', accent: 'text-success' },
-                        { icon: <Zap className="h-4 w-4" />, value: '5', sub: 'EDI POs auto-transmitted' },
-                        { icon: <Package className="h-4 w-4" />, value: '0', sub: 'manual re-keying', accent: 'text-success' },
+                        { icon: <Send className="h-4 w-4" />, value: '1 proposal', sub: 'delivered · awaiting sign-off' },
                     ]}
                     timeline={[
                         { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'Budget → PC queue', caption: 'signed last week', flow: 'Flow 2 · Quotes AI' },
@@ -123,7 +127,6 @@ export default function QuoteSendProposalScene() {
             )}
 
             <DataSourcesBar groups={[
-                { sources: [SOURCES.CORE_PO] },
                 { sources: [SOURCES.STRATA_AI] },
                 { sources: [SOURCES.OUTLOOK] },
             ]} />
