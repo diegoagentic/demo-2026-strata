@@ -37,7 +37,7 @@ import { useDemo } from '../../context/DemoContext'
 //   "AR aging" → "AR aging (open accounts)"    — AR = Accounts Receivable
 //   "HealthTrust" → "Healthcare contract (HealthTrust GPO)" — GPO context inline
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
-    { id: 'morning', label: 'Bill queue · pending & recent', shortLabel: '1. Queue' },
+    { id: 'morning', label: 'AP · Pending Review', shortLabel: '1. AP Queue' },
     { id: 'healthtrust', label: 'Healthcare contract (HealthTrust GPO)', shortLabel: '2. Healthcare GPO' },
     { id: 'non-edi', label: 'Paper bills reconciliation (Non-EDI)', shortLabel: '3. Paper bills' },
     { id: 'ar-aging', label: 'AR aging · open accounts to collect', shortLabel: '4. AR aging' },
