@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight, RefreshCw, Sparkles, Heart } from 'lucide-react'
+import { Zap, Loader2, AlertTriangle, CheckCircle2, RefreshCw, Sparkles, Clock } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import { InvoiceDocPreview, InvoiceExtractedFields } from './InvoiceDetailPanel'
 import { MBI_INVOICES } from '../../config/profiles/mbi-data'
@@ -91,7 +91,14 @@ function POAutoRecheckDemo({ onAutoResolved }: { onAutoResolved: (id: string) =>
     )
 }
 
-type BillFilter = 'all' | 'exception' | 'healthtrust' | 'edi' | 'non-edi'
+const TODAY = new Date('2026-04-29')
+function isDueSoon(inv: { dueDate?: string }) {
+    if (!inv.dueDate) return false
+    const days = Math.ceil((new Date(inv.dueDate).getTime() - TODAY.getTime()) / 86400000)
+    return days >= 0 && days <= 20
+}
+
+type BillFilter = 'all' | 'exception' | 'pending' | 'due-soon' | 'edi' | 'non-edi'
 
 export default function AccountingMorningQueue() {
     const [autoResolved, setAutoResolved] = useState<Set<string>>(new Set())
@@ -103,7 +110,8 @@ export default function AccountingMorningQueue() {
 
     const filteredInvoices = billFilter === 'all' ? allInvoices
         : billFilter === 'exception' ? allInvoices.filter(i => i.hasException)
-        : billFilter === 'healthtrust' ? allInvoices.filter(i => i.isHealthTrust)
+        : billFilter === 'pending' ? allInvoices.filter(i => i.status === 'pending')
+        : billFilter === 'due-soon' ? allInvoices.filter(isDueSoon)
         : billFilter === 'edi' ? allInvoices.filter(i => i.isEDI)
         : allInvoices.filter(i => !i.isEDI)
 
@@ -159,11 +167,12 @@ export default function AccountingMorningQueue() {
             <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Filter queue:</span>
                 {([
-                    { key: 'all',         label: 'All',            icon: null,                                    count: allInvoices.length },
-                    { key: 'exception',   label: 'Exceptions',     icon: <AlertTriangle className="h-3 w-3" />,   count: allInvoices.filter(i => i.hasException).length },
-                    { key: 'healthtrust', label: 'HealthTrust GPO',icon: <Heart className="h-3 w-3" />,          count: allInvoices.filter(i => i.isHealthTrust).length },
-                    { key: 'edi',         label: 'EDI',            icon: <Zap className="h-3 w-3" />,            count: allInvoices.filter(i => i.isEDI).length },
-                    { key: 'non-edi',     label: 'Non-EDI',        icon: <Sparkles className="h-3 w-3" />,       count: allInvoices.filter(i => !i.isEDI).length },
+                    { key: 'all',       label: 'All',          icon: null,                                    count: allInvoices.length },
+                    { key: 'exception', label: 'Exceptions',   icon: <AlertTriangle className="h-3 w-3" />,   count: allInvoices.filter(i => i.hasException).length },
+                    { key: 'pending',   label: 'Pending',      icon: <Clock className="h-3 w-3" />,           count: allInvoices.filter(i => i.status === 'pending').length },
+                    { key: 'due-soon',  label: 'Due soon',     icon: <Clock className="h-3 w-3" />,           count: allInvoices.filter(isDueSoon).length },
+                    { key: 'edi',       label: 'EDI',          icon: <Zap className="h-3 w-3" />,             count: allInvoices.filter(i => i.isEDI).length },
+                    { key: 'non-edi',   label: 'Non-EDI',      icon: <Sparkles className="h-3 w-3" />,        count: allInvoices.filter(i => !i.isEDI).length },
                 ] as { key: BillFilter; label: string; icon: React.ReactNode; count: number }[]).map(chip => (
                     <button
                         key={chip.key}
@@ -193,14 +202,6 @@ export default function AccountingMorningQueue() {
                 />
                 <InvoiceDocPreview invoice={selected} />
                 <InvoiceExtractedFields invoice={selected} />
-            </div>
-
-            {/* Forward cue */}
-            <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
-                <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
-                <span className="flex-1 text-foreground">
-                    First up: the Allsteel HealthTrust GPO bill · Strata matched the contract and flagged it for your review before posting to CORE.
-                </span>
             </div>
 
             {/* Data sources */}
