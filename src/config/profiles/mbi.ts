@@ -73,10 +73,14 @@ export const MBI_STEPS: DemoStep[] = [
         app: 'mbi-accounting',
         role: 'Dealer',
     },
+    // ═══════════════════════════════════════════
+    // FLOW 2: Collections AI
+    // Controller · AR aging + collection follow-ups
+    // ═══════════════════════════════════════════
     {
         id: 'm2.4',
-        groupId: 0,
-        groupTitle: 'Flow 1: Accounting AI',
+        groupId: 1,
+        groupTitle: 'Flow 2: Collections AI',
         title: 'AR aging — live board replaces the bi-weekly Excel',
         description: 'AP closed · now AR. Filter by category — emails sent, no response, escalated, on hold — to work only what matters. Strata protects two accounts from auto-collections: one with installation pending, one with an open punch list. Where a client replied with a follow-up date, Strata read the intent and scheduled the next contact automatically.',
         app: 'mbi-accounting',
@@ -84,8 +88,8 @@ export const MBI_STEPS: DemoStep[] = [
     },
     {
         id: 'm2.5',
-        groupId: 0,
-        groupTitle: 'Flow 1: Accounting AI',
+        groupId: 1,
+        groupTitle: 'Flow 2: Collections AI',
         title: 'Collection drafts + wrap up',
         description: 'Strata auto-sent 6 standard follow-ups today and held back 2 accounts where the project isn\'t complete yet. For the two escalation cases, Strata drafted emails in each client\'s tone history — the Controller reviews, edits if needed, and sends. With AP posted and AR actioned, the queue closes.',
         app: 'mbi-accounting',
@@ -93,13 +97,13 @@ export const MBI_STEPS: DemoStep[] = [
     },
 
     // ═══════════════════════════════════════════
-    // FLOW 2: Quotes AI (Phase 4)
+    // FLOW 3: Quotes AI (Phase 4)
     // Project Manager · 4 scenes
     // ═══════════════════════════════════════════
     {
         id: 'm3.3',
-        groupId: 1,
-        groupTitle: 'Flow 2: Quotes AI',
+        groupId: 2,
+        groupTitle: 'Flow 3: Quotes AI',
         title: 'Quote validation · BOM completeness check',
         description: "Strata validates the assembled quote: duplicate lines, non-catalog pricing against manufacturer price books, quantity consistency between SIF and quote, and SKU completeness. The four sequential checks the team used to run by eye collapse into one AI pass plus one human review. Vendor quotes for non-catalog items are read automatically — no manual re-entry.",
         app: 'mbi-quotes',
@@ -107,8 +111,8 @@ export const MBI_STEPS: DemoStep[] = [
     },
     {
         id: 'm3.1',
-        groupId: 1,
-        groupTitle: 'Flow 2: Quotes AI',
+        groupId: 2,
+        groupTitle: 'Flow 3: Quotes AI',
         title: 'Incoming budget · handoff from the Account Manager',
         description: "The signed budget from the Account Manager lands in the Project Manager's queue. All four readiness checks pass — budget confirmed, contract identified, scope locked, design sign-off. For the first time the PM picks up a quote-ready project instead of chasing missing context across teams.",
         app: 'mbi-quotes',
@@ -116,8 +120,8 @@ export const MBI_STEPS: DemoStep[] = [
     },
     {
         id: 'm3.2',
-        groupId: 1,
-        groupTitle: 'Flow 2: Quotes AI',
+        groupId: 2,
+        groupTitle: 'Flow 3: Quotes AI',
         title: 'GP review · PC sets margin · CORE Quote created',
         description: "Spec is clean. Strata reads the SIF in seconds — 24 fields extracted, contract matched. The PC reviews gross profit per vendor: contract lines auto-lock (HNI Corporate 55%), unlocked vendors need a GP entry. Strata calculates sell prices and creates CORE Quote QUOT-2026-003.",
         app: 'mbi-quotes',
@@ -125,8 +129,8 @@ export const MBI_STEPS: DemoStep[] = [
     },
     {
         id: 'm3.4',
-        groupId: 1,
-        groupTitle: 'Flow 2: Quotes AI',
+        groupId: 2,
+        groupTitle: 'Flow 3: Quotes AI',
         title: 'Send proposal · close the tour',
         description: "One human review later, the PM sends the proposal. Orders auto-route: EDI manufacturers receive transmissions instantly, non-EDI vendors get drafted PO emails ready to send. Hours of manual routing happen in minutes — and that closes the active demo tour. Design AI (Spec Check, Phase 4) is available via its own tab if the audience asks.",
         app: 'mbi-quotes',

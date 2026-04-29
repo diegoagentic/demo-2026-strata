@@ -1,21 +1,19 @@
-﻿/**
+/**
  * COMPONENT: MBIAccountingPage
- * PURPOSE: Flow 1 — Accounting AI, packaged in MBIWizardShell with 4 scenes
- *          that follow Kathy Belleville's morning end-to-end:
- *            1. Morning queue (AP · Pending Review)
- *            2. Non-EDI reconciliation (AP · line-by-line + HealthTrust rebate)
- *            3. AR aging review (AR · live board + analytics)
- *            4. Collection drafts + close (AR · review · send · close)
+ * PURPOSE: Container for Flow 1 (Accounting AI) + Flow 2 (Collections AI).
+ *          Both flows live under the same "Accounting AI" navbar tab and are
+ *          exposed via two internal tabs: Accounting | Collections.
  *
- *          Mirrors the wizard pattern with shared stepper, persona badge,
- *          per-step CTA, and FlowHandoff at the end.
+ *          Accounting tab  → 2-step wizard: AP queue + Bill Review
+ *          Collections tab → 2-step wizard: AR aging + Collection emails
  *
- * DEMO TOUR: m2.1 / m2.3 / m2.4 / m2.5 map 1:1 to wizard scenes 0–3.
- * Outside a demo step the user navigates freely via the stepper chips + Back/Next.
+ * DEMO TOUR sync:
+ *   m2.1 / m2.3 → Accounting tab, wizard steps 0 / 1
+ *   m2.4 / m2.5 → Collections tab, wizard steps 0 / 1
  */
 
 import { useEffect, useState } from 'react'
-import { Receipt, GitCompare, DollarSign, Flag, UserCheck } from 'lucide-react'
+import { Receipt, GitCompare, DollarSign, Flag, UserCheck, MailOpen } from 'lucide-react'
 import { ReasonDialog as MBIReasonModal } from '../shared'
 import MBIPageShell from './MBIPageShell'
 import MBIModuleHeader from './MBIModuleHeader'
@@ -27,56 +25,80 @@ import ARAgingReviewScene from './ARAgingReviewScene'
 import ARAgingWrapScene from './ARAgingWrapScene'
 import { useDemo } from '../../context/DemoContext'
 
+// ── Accounting wizard (Flow 1) ────────────────────────────────────────────────
 const ACCOUNTING_STEPS: WizardStepSpec[] = [
-    { id: 'morning',  label: 'AP · Pending Review',                   shortLabel: '1. AP Queue' },
-    { id: 'non-edi',  label: 'Bill Review — line-by-line',            shortLabel: '2. Bill Review' },
-    { id: 'ar-aging', label: 'AR aging · open accounts to collect',   shortLabel: '3. AR aging' },
-    { id: 'ar-close', label: 'Collection emails + wrap up',            shortLabel: '4. Close' },
+    { id: 'morning',  label: 'AP · Pending Review',      shortLabel: '1. AP Queue' },
+    { id: 'non-edi',  label: 'Bill Review — line-by-line', shortLabel: '2. Bill Review' },
 ]
 
-const STEP_TO_WIZARD_INDEX: Record<string, number> = {
-    'm2.1': 0,
-    'm2.3': 1,
-    'm2.4': 2,
-    'm2.5': 3,
-}
+const ACCT_STEP_TO_IDX: Record<string, number> = { 'm2.1': 0, 'm2.3': 1 }
+const ACCT_IDX_TO_STEP: Record<number, string>  = { 0: 'm2.1', 1: 'm2.3' }
+const ACCT_NEXT_LABELS: Record<number, string>   = { 0: 'Review', 1: 'Post' }
 
-const WIZARD_INDEX_TO_STEP: Record<number, string> = {
-    0: 'm2.1',
-    1: 'm2.3',
-    2: 'm2.4',
-    3: 'm2.5',
-}
+// ── Collections wizard (Flow 2) ───────────────────────────────────────────────
+const COLLECTIONS_STEPS: WizardStepSpec[] = [
+    { id: 'ar-aging', label: 'AR aging · open accounts to collect', shortLabel: '1. AR Aging' },
+    { id: 'ar-close', label: 'Collection emails + wrap up',          shortLabel: '2. Close' },
+]
 
-const STEP_NEXT_LABELS: Record<number, string> = {
-    0: 'Review',
-    1: 'Post',
-    2: 'Review collection drafts',
-    3: 'Wrap up',
+const COLL_STEP_TO_IDX: Record<string, number> = { 'm2.4': 0, 'm2.5': 1 }
+const COLL_IDX_TO_STEP: Record<number, string>  = { 0: 'm2.4', 1: 'm2.5' }
+const COLL_NEXT_LABELS: Record<number, string>   = { 0: 'Review collection drafts', 1: 'Wrap up' }
+
+type AccountingTab = 'accounting' | 'collections'
+
+const STEP_TO_TAB: Record<string, AccountingTab> = {
+    'm2.1': 'accounting', 'm2.3': 'accounting',
+    'm2.4': 'collections', 'm2.5': 'collections',
 }
 
 export default function MBIAccountingPage() {
     const { currentStep, isDemoActive, steps: tourSteps, goToStep } = useDemo()
     const demoStepId = isDemoActive ? currentStep?.id : null
-    const demoWizardIdx = demoStepId && demoStepId in STEP_TO_WIZARD_INDEX
-        ? STEP_TO_WIZARD_INDEX[demoStepId]
-        : null
 
-    const [activeStep, setActiveStep] = useState(0)
-    const inWizard = demoWizardIdx !== null || !isDemoActive
+    const [activeTab, setActiveTab]     = useState<AccountingTab>('accounting')
+    const [acctStep, setAcctStep]       = useState(0)
+    const [collStep, setCollStep]       = useState(0)
 
+    // Sync tab + wizard index when the demo tour navigates
     useEffect(() => {
-        if (demoWizardIdx !== null) setActiveStep(demoWizardIdx)
-    }, [demoWizardIdx])
+        if (!demoStepId) return
+        const tab = STEP_TO_TAB[demoStepId]
+        if (!tab) return
+        setActiveTab(tab)
+        if (tab === 'accounting' && demoStepId in ACCT_STEP_TO_IDX) {
+            setAcctStep(ACCT_STEP_TO_IDX[demoStepId])
+        } else if (tab === 'collections' && demoStepId in COLL_STEP_TO_IDX) {
+            setCollStep(COLL_STEP_TO_IDX[demoStepId])
+        }
+    }, [demoStepId])
 
-    const navigateWizard = (idx: number) => {
-        setActiveStep(idx)
+    const navigateAccounting = (idx: number) => {
+        setAcctStep(idx)
         if (!isDemoActive) return
-        const targetId = WIZARD_INDEX_TO_STEP[idx]
+        const targetId = ACCT_IDX_TO_STEP[idx]
         if (!targetId || currentStep?.id === targetId) return
         const tourIdx = tourSteps.findIndex(s => s.id === targetId)
         if (tourIdx >= 0) goToStep(tourIdx)
     }
+
+    const navigateCollections = (idx: number) => {
+        setCollStep(idx)
+        if (!isDemoActive) return
+        const targetId = COLL_IDX_TO_STEP[idx]
+        if (!targetId || currentStep?.id === targetId) return
+        const tourIdx = tourSteps.findIndex(s => s.id === targetId)
+        if (tourIdx >= 0) goToStep(tourIdx)
+    }
+
+    const persona = (
+        <MBIPersonaBadge
+            name="Kathy Belleville"
+            role="Controller · Accounting"
+            isPilot
+            tone="ai"
+        />
+    )
 
     return (
         <MBIPageShell
@@ -88,37 +110,81 @@ export default function MBIAccountingPage() {
             <MBIModuleHeader
                 module="accounting"
                 tint="ai"
-                outcome="Kathy gets her time back — exception-only review, HealthTrust royalties auto-flagged, AR collected on time, billing forecast live for leadership."
+                outcome="Kathy gets her time back — exception-only review, AR collected on time, billing forecast live for leadership."
             />
 
-            {inWizard ? (
+            {/* Internal tab switcher */}
+            <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 self-start w-fit">
+                <TabButton
+                    active={activeTab === 'accounting'}
+                    onClick={() => setActiveTab('accounting')}
+                    icon={<Receipt className="h-3.5 w-3.5" />}
+                    label="Accounting"
+                />
+                <TabButton
+                    active={activeTab === 'collections'}
+                    onClick={() => setActiveTab('collections')}
+                    icon={<MailOpen className="h-3.5 w-3.5" />}
+                    label="Collections"
+                />
+            </div>
+
+            {/* Accounting tab — Flow 1 (m2.1 + m2.3) */}
+            {activeTab === 'accounting' && (
                 <MBIWizardShell
                     steps={ACCOUNTING_STEPS}
-                    activeStep={activeStep}
-                    onStepClick={navigateWizard}
-                    onPrev={() => navigateWizard(Math.max(0, activeStep - 1))}
-                    onNext={() => navigateWizard(Math.min(ACCOUNTING_STEPS.length - 1, activeStep + 1))}
+                    activeStep={acctStep}
+                    onStepClick={navigateAccounting}
+                    onPrev={() => navigateAccounting(Math.max(0, acctStep - 1))}
+                    onNext={() => navigateAccounting(Math.min(ACCOUNTING_STEPS.length - 1, acctStep + 1))}
                     canAdvance
-                    nextLabel={STEP_NEXT_LABELS[activeStep]}
-                    secondaryAction={activeStep === 1 ? <EscalateAllButton /> : undefined}
-                    persona={
-                        <MBIPersonaBadge
-                            name="Kathy Belleville"
-                            role="Controller · Accounting"
-                            isPilot
-                            tone="ai"
-                        />
-                    }
+                    nextLabel={ACCT_NEXT_LABELS[acctStep]}
+                    secondaryAction={acctStep === 1 ? <EscalateAllButton /> : undefined}
+                    persona={persona}
                 >
-                    {activeStep === 0 && <AccountingMorningQueue />}
-                    {activeStep === 1 && <NonEDIReconcilerScene />}
-                    {activeStep === 2 && <ARAgingReviewScene onContinue={() => navigateWizard(3)} />}
-                    {activeStep === 3 && <ARAgingWrapScene />}
+                    {acctStep === 0 && <AccountingMorningQueue />}
+                    {acctStep === 1 && <NonEDIReconcilerScene />}
                 </MBIWizardShell>
-            ) : (
-                <OverviewStub />
+            )}
+
+            {/* Collections tab — Flow 2 (m2.4 + m2.5) */}
+            {activeTab === 'collections' && (
+                <MBIWizardShell
+                    steps={COLLECTIONS_STEPS}
+                    activeStep={collStep}
+                    onStepClick={navigateCollections}
+                    onPrev={() => navigateCollections(Math.max(0, collStep - 1))}
+                    onNext={() => navigateCollections(Math.min(COLLECTIONS_STEPS.length - 1, collStep + 1))}
+                    canAdvance
+                    nextLabel={COLL_NEXT_LABELS[collStep]}
+                    persona={persona}
+                >
+                    {collStep === 0 && <ARAgingReviewScene onContinue={() => navigateCollections(1)} />}
+                    {collStep === 1 && <ARAgingWrapScene />}
+                </MBIWizardShell>
             )}
         </MBIPageShell>
+    )
+}
+
+function TabButton({ active, onClick, icon, label }: {
+    active: boolean
+    onClick: () => void
+    icon: React.ReactNode
+    label: string
+}) {
+    return (
+        <button
+            onClick={onClick}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                active
+                    ? 'bg-card dark:bg-zinc-700 text-foreground shadow-sm border border-border'
+                    : 'text-muted-foreground hover:text-foreground'
+            }`}
+        >
+            {icon}
+            {label}
+        </button>
     )
 }
 
