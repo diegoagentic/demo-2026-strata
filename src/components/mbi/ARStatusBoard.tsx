@@ -20,9 +20,10 @@
  */
 
 import { useState } from 'react'
-import { User, Calendar, AlertTriangle, Clock, Check, TrendingUp, Mail, Phone, ExternalLink, ChevronDown, PauseCircle, Wrench } from 'lucide-react'
+import { User, Calendar, AlertTriangle, Clock, Check, TrendingUp, Mail, Phone, ExternalLink, ChevronDown, PauseCircle, Wrench, ClipboardCheck, MessageSquare, Send } from 'lucide-react'
 import type { ARRecord } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
+import ARHoldReviewModal from './ARHoldReviewModal'
 
 const AR_GLOSSARY_KEY: Record<string, string> = {
     'escalated': 'AR_escalated',
@@ -83,6 +84,9 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
     const highlightSet = new Set(highlightedIds ?? [])
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [actionToast, setActionToast] = useState<string | null>(null)
+    const [reviewRecord, setReviewRecord] = useState<ARRecord | null>(null)
+    const [resolvedHolds, setResolvedHolds] = useState<Set<string>>(new Set())
+    const [holdComments, setHoldComments] = useState<Map<string, string>>(new Map())
 
     const grouped: Record<keyof typeof STATUS_META, ARRecord[]> = {
         'escalated': records.filter(r => r.status === 'escalated'),
@@ -98,6 +102,20 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
         setActionToast(label)
         setExpandedId(null)
         setTimeout(() => setActionToast(null), 2200)
+    }
+
+    const handleSendToCollections = (id: string, clientName: string) => {
+        setResolvedHolds(prev => new Set([...prev, id]))
+        setReviewRecord(null)
+        setActionToast(`${clientName} released from hold · sent to collections queue`)
+        setTimeout(() => setActionToast(null), 3000)
+    }
+
+    const handleKeepOnHold = (id: string, comment: string) => {
+        setHoldComments(prev => new Map([...prev, [id, comment]]))
+        setReviewRecord(null)
+        setActionToast(`Comment logged · ${id} remains on hold`)
+        setTimeout(() => setActionToast(null), 2500)
     }
 
     return (
@@ -165,7 +183,7 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                         const hasDraft = highlightSet.has(r.id)
                                         return (
                                             <div key={r.id} className={`bg-zinc-50/50 dark:bg-zinc-800 border rounded-lg border-l-4 text-xs transition-all ${
-                                                r.collectionsHold
+                                                r.collectionsHold && !resolvedHolds.has(r.id)
                                                     ? 'border-l-amber-500 border-amber-300 dark:border-amber-500/40'
                                                     : hasDraft
                                                         ? `${meta.leftBar} border-amber-400 dark:border-amber-500 ring-2 ring-amber-300/40 dark:ring-amber-500/30 shadow-md`
@@ -173,7 +191,7 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                                             ? `${meta.leftBar} border-zinc-400 dark:border-zinc-500`
                                                             : `${meta.leftBar} border-border hover:border-zinc-300 dark:hover:border-zinc-700`
                                             }`}>
-                                                {r.collectionsHold && (
+                                                {r.collectionsHold && !resolvedHolds.has(r.id) && (
                                                     <div className="px-2.5 py-1.5 bg-amber-50/80 dark:bg-amber-500/10 border-b border-amber-300/40 dark:border-amber-500/30 flex items-center gap-1.5">
                                                         <PauseCircle className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
                                                         <div className="flex-1 min-w-0">
@@ -186,6 +204,21 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                                                     : `· ${r.punchListOpen} punch list items open`}
                                                             </span>
                                                         </div>
+                                                        <button
+                                                            onClick={e => { e.stopPropagation(); setReviewRecord(r) }}
+                                                            className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30 transition-colors"
+                                                        >
+                                                            <ClipboardCheck className="h-2.5 w-2.5" />
+                                                            Review hold
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                {r.collectionsHold && resolvedHolds.has(r.id) && (
+                                                    <div className="px-2.5 py-1.5 bg-success/5 border-b border-success/20 flex items-center gap-1.5">
+                                                        <Check className="h-2.5 w-2.5 text-success shrink-0" />
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-success">
+                                                            Released · sent to collections
+                                                        </span>
                                                     </div>
                                                 )}
                                                 {hasDraft && !r.collectionsHold && (
@@ -194,6 +227,12 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                                         <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                                                             Draft ready · review next
                                                         </span>
+                                                    </div>
+                                                )}
+                                                {holdComments.has(r.id) && (
+                                                    <div className="px-2.5 py-1.5 bg-muted/40 border-b border-border flex items-start gap-1.5">
+                                                        <MessageSquare className="h-2.5 w-2.5 text-muted-foreground shrink-0 mt-0.5" />
+                                                        <span className="text-[9px] text-muted-foreground italic">"{holdComments.get(r.id)}"</span>
                                                     </div>
                                                 )}
                                                 <button
@@ -229,6 +268,7 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                                                     <ARQuickActions
                                                         record={r}
                                                         onAction={flashAction}
+                                                        holdResolved={resolvedHolds.has(r.id)}
                                                     />
                                                 )}
                                             </div>
@@ -240,21 +280,27 @@ export default function ARStatusBoard({ records, highlightedIds }: ARStatusBoard
                     )
                 })}
             </div>
+
+            {/* Hold review modal */}
+            <ARHoldReviewModal
+                record={reviewRecord}
+                onClose={() => setReviewRecord(null)}
+                onRelease={() => reviewRecord && handleSendToCollections(reviewRecord.id, reviewRecord.client)}
+                onComment={(text) => reviewRecord && handleKeepOnHold(reviewRecord.id, text)}
+            />
         </div>
     )
 }
 
 // ─── Quick actions (inline expand) ──────────────────────────────────────────
-// Apr 27 audit: ARStatusBoard cards were view-only, asymmetric vs the
-// HealthTrust modal interactivity in the AP scenes. Adding inline expand
-// with status-aware quick actions gives AR cards an action surface without
-// opening another sheet (which would compete with the wizard chrome).
 function ARQuickActions({
     record,
     onAction,
+    holdResolved,
 }: {
     record: ARRecord
     onAction: (label: string) => void
+    holdResolved?: boolean
 }) {
     type Action = { icon: React.ReactNode; label: string; tone: 'primary' | 'neutral' | 'danger' }
     const actions: Action[] = (() => {
@@ -272,12 +318,18 @@ function ARQuickActions({
                     { icon: <ExternalLink className="h-3 w-3" />, label: `Open ${record.poNumber} in CORE`, tone: 'neutral' },
                 ]
             case 'pending-approval':
-                if (record.collectionsHold) {
+                if (record.collectionsHold && !holdResolved) {
                     return [
                         { icon: <PauseCircle className="h-3 w-3" />, label: record.holdReason === 'installation-pending'
                             ? `Held — installation scheduled ${record.installationDate ? new Date(record.installationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} · Strata will auto-release`
                             : `Held — ${record.punchListOpen} punch list items open · Strata will auto-release when closed`, tone: 'neutral' },
                         { icon: <Wrench className="h-3 w-3" />, label: record.holdReason === 'punch-list-open' ? `View open punch list for ${record.client}` : `View installation schedule`, tone: 'neutral' },
+                        { icon: <ExternalLink className="h-3 w-3" />, label: `Open ${record.poNumber} in CORE`, tone: 'neutral' },
+                    ]
+                }
+                if (record.collectionsHold && holdResolved) {
+                    return [
+                        { icon: <Send className="h-3 w-3" />, label: `${record.client} added to collections queue`, tone: 'primary' },
                         { icon: <ExternalLink className="h-3 w-3" />, label: `Open ${record.poNumber} in CORE`, tone: 'neutral' },
                     ]
                 }
