@@ -124,17 +124,21 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
             <div className="px-4 py-2.5 border-b border-border bg-muted/20 flex items-center gap-2">
                 <Inbox className="h-4 w-4 text-foreground" />
                 <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-foreground">Vendor inbox · ap@mbi.example</div>
-                    <div className="text-[10px] text-muted-foreground">Strata watches this inbox · bills land in the queue automatically</div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-bold text-foreground">Vendor inbox · ap@mbi.example</div>
+                        <span className="h-2 w-2 rounded-full bg-success animate-pulse shrink-0" />
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">Strata monitors this inbox · AI classifies emails · bills route to AP queue automatically</div>
                 </div>
-                <span className="text-[10px] text-muted-foreground">3 unread · 12 today</span>
+                <span className="text-[10px] text-muted-foreground">4 unread · 12 today</span>
             </div>
 
             {/* Faux inbox items */}
             <div className="px-4 py-2 border-b border-border space-y-1.5 bg-background/40 dark:bg-zinc-900/40">
-                <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted />
-                <FauxEmailRow vendor="Allsteel · ap@mercyhealth.example" subject="Rebate + bill INV-0486" attached time="8:00 AM" muted />
-                <FauxEmailRow vendor="HON · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted />
+                <FauxEmailRow vendor="Allsteel · billing@allsteel.example" subject="Bill INV-0482 · PO-2026-0047" attached time="6:14 AM" muted emailType="bill" />
+                <FauxEmailRow vendor="Allsteel · ap@mercyhealth.example" subject="Rebate + bill INV-0486" attached time="8:00 AM" muted emailType="rebate-bill" />
+                <FauxEmailRow vendor="HON · billing@hon.example" subject="Bill INV-0493 · service line" attached time="9:55 AM" muted emailType="bill" />
+                <FauxEmailRow vendor="Allsteel · statements@allsteel.example" subject="Q1 2026 Statement · account summary" time="8:22 AM" muted emailType="statement" />
             </div>
 
             {/* Dropzone */}
@@ -225,16 +229,30 @@ export default function EmailInboxDropZone({ onIngest }: EmailInboxDropZoneProps
     )
 }
 
-function FauxEmailRow({ vendor, subject, attached, time, muted }: { vendor: string; subject: string; attached?: boolean; time: string; muted?: boolean }) {
+type EmailType = 'bill' | 'rebate-bill' | 'statement'
+
+const EMAIL_TYPE_CHIP: Record<EmailType, { label: string; cls: string }> = {
+    'bill':        { label: 'Bill → AP queue',  cls: 'text-success bg-success/10' },
+    'rebate-bill': { label: 'Rebate · Bill → AP', cls: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
+    'statement':   { label: 'Statement · tagged', cls: 'text-muted-foreground bg-muted/60' },
+}
+
+function FauxEmailRow({ vendor, subject, attached, time, muted, emailType }: { vendor: string; subject: string; attached?: boolean; time: string; muted?: boolean; emailType?: EmailType }) {
+    const chip = emailType ? EMAIL_TYPE_CHIP[emailType] : null
     return (
-        <div className={`flex items-center gap-3 px-2 py-1.5 rounded ${muted ? 'opacity-60' : ''}`}>
-            <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+        <div className={`flex items-start gap-3 px-2 py-1.5 rounded ${muted ? 'opacity-60' : ''}`}>
+            <Mail className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
                 <div className="text-[11px] font-semibold text-foreground truncate">{vendor}</div>
                 <div className="text-[10px] text-muted-foreground truncate">{subject}</div>
+                {chip && (
+                    <span className={`mt-0.5 inline-flex text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${chip.cls}`}>
+                        {chip.label}
+                    </span>
+                )}
             </div>
-            {attached && <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" aria-label="has attachment" />}
-            <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">{time}</span>
+            {attached && <Paperclip className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" aria-label="has attachment" />}
+            <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 mt-0.5">{time}</span>
         </div>
     )
 }

@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Zap, Loader2, AlertTriangle, CheckCircle2, ArrowRight, RefreshCw, Sparkles } from 'lucide-react'
 import InvoiceQueueTable from './InvoiceQueueTable'
 import InvoiceDetailPanel from './InvoiceDetailPanel'
 import EmailInboxDropZone from './EmailInboxDropZone'
@@ -42,9 +42,85 @@ function makeIngestedInvoice(filename: string, idx: number): Invoice {
     }
 }
 
+const RECHECK_STEPS = [
+    'Detecting PO change in CORE',
+    'Re-running reconciliation · Apex Workspace INV-0484',
+    'Mismatch cleared · auto-posting to CORE',
+]
+
+function POAutoRecheckDemo({ onAutoResolved }: { onAutoResolved: (id: string) => void }) {
+    const [stage, setStage] = useState<'idle' | 'processing' | 'done'>('idle')
+    const [stepIdx, setStepIdx] = useState(0)
+
+    const handleSimulate = () => {
+        if (stage !== 'idle') return
+        setStage('processing')
+        setStepIdx(0)
+        let i = 0
+        const tick = () => {
+            i++
+            setStepIdx(i)
+            if (i < RECHECK_STEPS.length) {
+                setTimeout(tick, 800)
+            } else {
+                setStage('done')
+                onAutoResolved('INV-0484')
+            }
+        }
+        setTimeout(tick, 600)
+    }
+
+    return (
+        <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-border bg-muted/20 flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 text-ai" />
+                <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-foreground">CORE PO sync · Strata re-evaluates exceptions every 15 min</div>
+                    <div className="text-[10px] text-muted-foreground">When a PO changes in CORE and now matches the bill, the exception clears — no action needed from Kathy</div>
+                </div>
+            </div>
+            <div className="px-4 py-3 flex items-center gap-3 flex-wrap">
+                <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-bold text-foreground">Apex Workspace · INV-0484 · $12.9K</div>
+                    <div className="text-[10px] text-red-600 dark:text-red-400 mt-0.5">
+                        {stage === 'done'
+                            ? 'Quantity resolved: PO updated 5 → 6 in CORE · match confirmed'
+                            : 'Quantity mismatch: PO 6, bill 5 · short-shipped Jarvis desks'}
+                    </div>
+                </div>
+                {stage === 'idle' && (
+                    <button
+                        onClick={handleSimulate}
+                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                    >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Simulate PO update in CORE
+                    </button>
+                )}
+                {stage === 'processing' && (
+                    <div className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-ai font-bold">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        {RECHECK_STEPS[Math.min(stepIdx, RECHECK_STEPS.length - 1)]}…
+                    </div>
+                )}
+                {stage === 'done' && (
+                    <div className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-success font-bold">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Auto-resolved · moved to Done
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
 export default function AccountingMorningQueue() {
     const [ingested, setIngested] = useState<Invoice[]>([])
-    const allInvoices = [...MBI_INVOICES, ...ingested]
+    const [autoResolved, setAutoResolved] = useState<Set<string>>(new Set())
+
+    const allInvoices = [...MBI_INVOICES, ...ingested].map(inv =>
+        autoResolved.has(inv.id) ? { ...inv, status: 'done' as const } : inv
+    )
 
     const total = allInvoices.length
     const pending = allInvoices.filter(i => i.status === 'pending').length
@@ -56,6 +132,10 @@ export default function AccountingMorningQueue() {
     const defaultId = MBI_INVOICES.find(i => i.isHealthTrust)?.id ?? MBI_INVOICES[0].id
     const [selectedId, setSelectedId] = useState(defaultId)
     const selected = allInvoices.find(i => i.id === selectedId) ?? allInvoices[0]
+
+    const handleAutoResolved = (id: string) => {
+        setAutoResolved(prev => new Set([...prev, id]))
+    }
 
     const handleIngest = (filename: string) => {
         setIngested(prev => {
@@ -105,6 +185,10 @@ export default function AccountingMorningQueue() {
                 Drop a file (or click Simulate) → the new invoice lands in the
                 Pending column of the kanban below. */}
             <EmailInboxDropZone onIngest={handleIngest} />
+
+            {/* PO auto-recheck demo — Danny feedback #6: shows Strata re-evaluating
+                exceptions when CORE POs change, clearing mismatches without Kathy. */}
+            <POAutoRecheckDemo onAutoResolved={handleAutoResolved} />
 
             {/* Queue + detail */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">

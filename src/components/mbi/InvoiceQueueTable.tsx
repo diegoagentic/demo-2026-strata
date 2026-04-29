@@ -22,7 +22,7 @@
  * USED BY: AccountingMorningQueue (Flow 2 Scene 1)
  */
 
-import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2 } from 'lucide-react'
+import { AlertTriangle, Heart, Zap, CheckCircle2, Loader2, RefreshCw } from 'lucide-react'
 import type { Invoice, InvoiceStatus } from '../../config/profiles/mbi-data'
 import { GlossaryTooltip } from './GlossaryTooltip'
 
@@ -113,6 +113,14 @@ export default function InvoiceQueueTable({ invoices, selectedId, onSelect }: In
                                     </div>
                                 )}
                             </div>
+                            {status === 'pending' && (
+                                <div className="px-2.5 py-1.5 border-t border-border/40 flex items-center gap-1.5">
+                                    <RefreshCw className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" />
+                                    <span className="text-[9px] text-muted-foreground/70 leading-tight">
+                                        Strata re-checks CORE every 15 min · resolved mismatches move to Done automatically
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )
                 })}
