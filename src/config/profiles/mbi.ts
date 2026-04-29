@@ -18,8 +18,9 @@
 //   m2.4: AR aging review — live status taxonomy + analytics (Apr 23 split)
 //   m2.5: Collection drafts + close — review/edit/send + handoff to Flow 2
 //
-// FLOW 2 — Quotes AI (Phase 4, PM bottleneck resolution) · 3 scenes / 3 beats
+// FLOW 2 — Quotes AI (Phase 4, PM bottleneck resolution) · 4 scenes / 4 beats
 //   m3.1: Incoming budget — signed handoff from the Account Manager → PM queue
+//   m3.2: GP review + CORE Quote — PC sets GP per vendor · Strata creates CORE Quote
 //   m3.3: AI validation — audit loops collapse into 1 AI + 1 human review
 //   m3.4: Send proposal — closes the active tour (Design AI is Phase 4
 //         directional context · available via Design AI tab outside the tour)
@@ -114,6 +115,15 @@ export const MBI_STEPS: DemoStep[] = [
         role: 'Project Manager',
     },
     {
+        id: 'm3.2',
+        groupId: 1,
+        groupTitle: 'Flow 2: Quotes AI',
+        title: 'GP review · PC sets margin · CORE Quote created',
+        description: "Strata reads the SIF in seconds — 24 fields extracted, contract matched. Before the CORE Quote is created, the PC reviews gross profit per vendor. Contract lines auto-lock (HNI Corporate 55%). Unlocked vendors need a GP entry from the PC. Strata calculates sell prices and creates CORE Quote QUOT-2026-003.",
+        app: 'mbi-quotes',
+        role: 'Project Manager',
+    },
+    {
         id: 'm3.3',
         groupId: 1,
         groupTitle: 'Flow 2: Quotes AI',
@@ -145,6 +155,7 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR status taxonomy · spot escalations · the forecast updates live as you read' },
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then close the morning' },
     'm3.1': { mode: 'interactive', userAction: 'Review the signed budget handoff from the Account Manager · verify the readiness checks' },
+    'm3.2': { mode: 'interactive', userAction: 'Run SIF extraction · enter GP per vendor · confirm to create CORE Quote QUOT-2026-003' },
     'm3.3': { mode: 'interactive', userAction: 'Review Spec Check · audit loops collapse into one AI pass plus one human review' },
     'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers · this closes the active tour' },
 };
@@ -189,6 +200,12 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'All checks green · routing to the PM queue',
         'Project Manager picks it up · bottleneck avoided',
     ],
+    'm3.2': [
+        'Reading SIF · extracting 24 fields from CET export',
+        'Contract matched · HNI Corporate 55% discount applied',
+        'Staging for GP review · contract lines locked · unlocked vendors need PC input',
+        'PC confirmed GP · sell prices calculated · CORE Quote QUOT-2026-003 created',
+    ],
     'm3.3': [
         'Running Spec Check — dimensions, finish, palette, availability',
         'Cross-checking non-catalog items vs manufacturer price books',
@@ -207,5 +224,5 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const MBI_SELF_INDICATED: string[] = [
     'm2.1', 'm2.2', 'm2.3', 'm2.4', 'm2.5',
-    'm3.1', 'm3.3', 'm3.4',
+    'm3.1', 'm3.2', 'm3.3', 'm3.4',
 ];

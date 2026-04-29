@@ -1,14 +1,14 @@
 /**
  * COMPONENT: MBIQuotesPage
- * PURPOSE: Flow 3 — Quotes AI. 3-scene wizard following the PC team's
- *          proposal creation: incoming budget → AI validation (4→1+1 audit
- *          loop collapse) → send + handoff to Flow 4 (Design AI).
+ * PURPOSE: Flow 2 — Quotes AI. 4-scene wizard following the PC team's
+ *          proposal creation: incoming budget → GP review + CORE Quote →
+ *          AI validation (4→1+1 audit loop collapse) → send + handoff.
  *
- *          Mirrors Flow 1/2 wizard pattern. Marcia Ludwig (Director of PM)
+ *          Mirrors Flow 1 wizard pattern. Marcia Ludwig (Director of PM)
  *          renders as persona — though the 'doers' are Amy Behl + Mario +
  *          Erin (hybrid PC/designer). For the demo, Marcia owns the flow.
  *
- * DEMO TOUR: m3.1 / m3.3 / m3.4 map 1:1 to wizard scenes 0–2.
+ * DEMO TOUR: m3.1 / m3.2 / m3.3 / m3.4 map 1:1 to wizard scenes 0–3.
  */
 
 import { useEffect, useState } from 'react'
@@ -18,32 +18,37 @@ import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import QuoteIncomingBudget from './QuoteIncomingBudget'
+import QuoteGPReviewScene from './QuoteGPReviewScene'
 import QuoteValidationScene from './QuoteValidationScene'
 import QuoteSendProposalScene from './QuoteSendProposalScene'
 import { useDemo } from '../../context/DemoContext'
 
 const QUOTES_STEPS: WizardStepSpec[] = [
     { id: 'incoming', label: 'Incoming budget', shortLabel: '1. Incoming' },
-    { id: 'validation', label: 'AI validation', shortLabel: '2. Validation' },
-    { id: 'send', label: 'Send proposal', shortLabel: '3. Send' },
+    { id: 'gp-review', label: 'GP review + CORE Quote', shortLabel: '2. GP Review' },
+    { id: 'validation', label: 'AI validation', shortLabel: '3. Validation' },
+    { id: 'send', label: 'Send proposal', shortLabel: '4. Send' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
     'm3.1': 0,
-    'm3.3': 1,
-    'm3.4': 2,
+    'm3.2': 1,
+    'm3.3': 2,
+    'm3.4': 3,
 }
 
 const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     0: 'm3.1',
-    1: 'm3.3',
-    2: 'm3.4',
+    1: 'm3.2',
+    2: 'm3.3',
+    3: 'm3.4',
 }
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
-    0: { hint: 'Signed budget from the Account Manager · all 4 readiness checks pass · PC can pick up.', nextLabel: 'Run AI validation' },
-    1: { hint: '4 audit loops → 1 AI pass + 1 human review · Spec Check is MBI\'s #1 Q10 priority.', nextLabel: 'Send the proposal' },
-    2: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
+    0: { hint: 'Signed budget from the Account Manager · all 4 readiness checks pass · PC can pick up.', nextLabel: 'Review GP + create CORE Quote' },
+    1: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Run AI validation' },
+    2: { hint: '4 audit loops → 1 AI pass + 1 human review · Spec Check is MBI\'s #1 Q10 priority.', nextLabel: 'Send the proposal' },
+    3: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
 }
 
 export default function MBIQuotesPage() {
@@ -111,8 +116,9 @@ export default function MBIQuotesPage() {
                     }
                 >
                     {activeStep === 0 && <QuoteIncomingBudget />}
-                    {activeStep === 1 && <QuoteValidationScene />}
-                    {activeStep === 2 && <QuoteSendProposalScene />}
+                    {activeStep === 1 && <QuoteGPReviewScene />}
+                    {activeStep === 2 && <QuoteValidationScene />}
+                    {activeStep === 3 && <QuoteSendProposalScene />}
                 </MBIWizardShell>
             ) : (
                 <OverviewStub />

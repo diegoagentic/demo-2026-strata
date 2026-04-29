@@ -23,7 +23,7 @@ const EXTRACTION_STEPS = [
     'Contract matched · HNI Corporate 55%',
     'Customer context added',
     'Shipping params applied',
-    'CORE proposal draft created',
+    'CORE Quote QUOT-2026-003 created · ready for GP review',
 ]
 
 const STEP_DELAY_MS = 600
@@ -65,7 +65,7 @@ export default function SIFToCOREPreview() {
                         <Sparkles className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                        <div className="text-xs font-bold text-foreground">SIF → CORE auto-import</div>
+                        <div className="text-xs font-bold text-foreground">SIF → CORE Quote · AI extraction</div>
                         <div className="text-[10px] text-muted-foreground">
                             Eliminates largest manual step · PC shifts from builder to reviewer
                         </div>
@@ -161,17 +161,17 @@ export default function SIFToCOREPreview() {
                     <div className={`border rounded-xl p-3 flex flex-col transition-all duration-500 ${isDone ? 'bg-primary/10 dark:bg-primary/15 border-primary/30 opacity-100' : 'bg-muted/20 border-border opacity-40'}`}>
                         <div className="flex items-center gap-1.5 mb-2">
                             <FileText className="h-3.5 w-3.5 text-zinc-900 dark:text-primary" />
-                            <span className="text-[10px] font-bold text-zinc-900 dark:text-primary uppercase tracking-wider">CORE proposal</span>
+                            <span className="text-[10px] font-bold text-zinc-900 dark:text-primary uppercase tracking-wider">CORE Quote</span>
                         </div>
                         <div className="text-xs font-bold text-foreground font-mono">{proposal.id}</div>
-                        <div className="text-[10px] text-muted-foreground">Pending PC review</div>
+                        <div className="text-[10px] text-muted-foreground">Pending GP review</div>
                         <div className="text-[10px] text-muted-foreground mt-1">
                             {proposal.lineItemCount} line items · {proposal.manufacturers.length} vendors
                         </div>
                         <div className="mt-auto pt-2 border-t border-primary/20 text-[10px]">
                             <div className="font-semibold text-foreground">Ready for review</div>
                             <div className="text-[10px] text-muted-foreground">
-                                Was: manual re-entry · Now: 1 click
+                                Was: manual re-entry · Now: AI extraction + GP entry
                             </div>
                         </div>
                     </div>

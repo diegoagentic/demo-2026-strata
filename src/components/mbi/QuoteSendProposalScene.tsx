@@ -43,7 +43,7 @@ export default function QuoteSendProposalScene() {
                     <div className="text-base font-bold text-foreground">
                         {sent
                             ? 'Proposal delivered to Enterprise Holdings'
-                            : 'CORE proposal PROP-2026-003 · ready to send'}
+                            : 'CORE Quote QUOT-2026-003 · ready to send'}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                         Enterprise Holdings · New HQ Floor 12 · 7 line items · $372,500 · HNI Corporate contract
@@ -99,7 +99,7 @@ export default function QuoteSendProposalScene() {
                     ]}
                     timeline={[
                         { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'Budget → PC queue', caption: 'signed last week', flow: 'Flow 2 · Quotes AI' },
-                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'SIF → CORE auto-import', caption: '87 seconds, 0 keystrokes', flow: '—' },
+                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'GP confirmed · CORE Quote QUOT-2026-003', caption: 'PC reviewed GP · Strata created the quote', flow: '—' },
                         { status: 'done', icon: <Send className="h-3.5 w-3.5" />, label: 'Proposal delivered to client', caption: 'just now', flow: '—' },
                         { status: 'future', icon: <Palette className="h-3.5 w-3.5" />, label: 'Phase 4 · Design AI', caption: 'available via the Design AI tab', flow: 'Phase 4 directional', highlight: false },
                     ]}

@@ -86,17 +86,28 @@ export default function QuoteIncomingBudget() {
                 </div>
             </div>
 
-            {/* Why this matters intro */}
-            <div className="bg-muted/30 dark:bg-zinc-800 border border-border rounded-xl p-3 flex items-start gap-2.5">
-                <Building2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                <div className="text-xs">
-                    <div className="font-bold text-foreground">
-                        The biggest bottleneck at MBI: 3.5 PCs for 29 staff
+            {/* Before / After contrast strip */}
+            <div className="grid grid-cols-2 gap-3">
+                <div className="bg-red-50/60 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 rounded-xl p-3 flex items-start gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 flex items-center justify-center shrink-0">
+                        <Building2 className="h-3.5 w-3.5" />
                     </div>
-                    <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Every approved budget used to hit a wall here. A PC had to manually re-enter 24 fields into CORE,
-                        run it through 4 sequential audit loops (internal → vendor → manager → client), and handle every
-                        spec check by eye. That's ~2 hours per proposal. Strata collapses that.
+                    <div className="text-xs min-w-0">
+                        <div className="font-bold text-foreground">Before · ~2h per proposal</div>
+                        <div className="text-muted-foreground mt-0.5 leading-relaxed">
+                            PC manually keyed 24 SIF fields into CORE, entered GP per vendor by hand, ran 4 sequential audit loops, handled spec checks by eye.
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-success/10 dark:bg-success/15 border border-success/30 rounded-xl p-3 flex items-start gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-success/15 text-success flex items-center justify-center shrink-0">
+                        <Layers className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="text-xs min-w-0">
+                        <div className="font-bold text-foreground">Now · ~12 min total</div>
+                        <div className="text-muted-foreground mt-0.5 leading-relaxed">
+                            AI reads the SIF in seconds. PC reviews GP once, confirms. CORE Quote created automatically. Audit loops collapse to 1 AI pass.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,7 +119,7 @@ export default function QuoteIncomingBudget() {
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
                 <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                 <span className="flex-1 text-foreground">
-                    All 4 readiness checks passed. Next: watch Strata auto-import the SIF into CORE — <strong>zero keystrokes, 2 hours saved.</strong>
+                    All 4 readiness checks passed. Next: Strata extracts 24 fields from the SIF — then the PC enters GP per vendor and CORE Quote is created.
                 </span>
             </div>
 
