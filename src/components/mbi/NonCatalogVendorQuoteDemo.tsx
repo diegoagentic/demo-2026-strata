@@ -305,10 +305,46 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
                     <span className={`text-right tabular-nums ${highlighted('pricing') ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>$445.00</span>
                     <span className="text-right tabular-nums font-bold text-zinc-900">$3,560.00</span>
                 </div>
+                {/* Row 2 */}
+                <div className={`grid grid-cols-[1.4rem_1.2rem_2.5rem_1fr_3rem_3.5rem] gap-x-1.5 px-1 py-1 border-b border-zinc-200 ${cls('item')}`}>
+                    <span>2</span>
+                    <span className={highlighted('pricing') ? 'text-zinc-900' : 'text-zinc-600'}>4</span>
+                    <span className="font-bold text-[7.5px] text-zinc-900 truncate">BD-LNG-OAK-2880</span>
+                    <div>
+                        <div className="font-semibold text-zinc-900">Lounge chair · natural oak frame</div>
+                        <div className="text-zinc-500 text-[7px]">SIDEMARK: Enterprise Holdings · Floor 12</div>
+                    </div>
+                    <span className={`text-right tabular-nums ${highlighted('pricing') ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>$890.00</span>
+                    <span className="text-right tabular-nums font-bold text-zinc-900">$3,560.00</span>
+                </div>
+                {/* Row 3 */}
+                <div className={`grid grid-cols-[1.4rem_1.2rem_2.5rem_1fr_3rem_3.5rem] gap-x-1.5 px-1 py-1 border-b border-zinc-200 ${cls('item')}`}>
+                    <span>3</span>
+                    <span className="text-zinc-600">2</span>
+                    <span className="font-bold text-[7.5px] text-zinc-900 truncate">BD-CTB-WLN-3642</span>
+                    <div>
+                        <div className="font-semibold text-zinc-900">Coffee table · walnut veneer</div>
+                        <div className="text-zinc-500 text-[7px]">SIDEMARK: Enterprise Holdings · Floor 12</div>
+                    </div>
+                    <span className="text-right tabular-nums text-zinc-600">$680.00</span>
+                    <span className="text-right tabular-nums font-bold text-zinc-900">$1,360.00</span>
+                </div>
+                {/* Row 4 */}
+                <div className={`grid grid-cols-[1.4rem_1.2rem_2.5rem_1fr_3rem_3.5rem] gap-x-1.5 px-1 py-1 border-b border-zinc-200 ${cls('item')}`}>
+                    <span>4</span>
+                    <span className="text-zinc-600">4</span>
+                    <span className="font-bold text-[7.5px] text-zinc-900 truncate">BD-LMP-BRS-FLR</span>
+                    <div>
+                        <div className="font-semibold text-zinc-900">Floor lamp · brushed brass</div>
+                        <div className="text-zinc-500 text-[7px]">SIDEMARK: Enterprise Holdings · Floor 12</div>
+                    </div>
+                    <span className="text-right tabular-nums text-zinc-600">$210.00</span>
+                    <span className="text-right tabular-nums font-bold text-zinc-900">$840.00</span>
+                </div>
                 {/* List SubTotal */}
                 <div className={`flex justify-end gap-4 mt-1 text-[8px] pr-1 ${cls('pricing')}`}>
                     <span className="text-zinc-500">List SubTotal</span>
-                    <span className="font-bold tabular-nums border-t border-zinc-400 pt-0.5">$3,560.00</span>
+                    <span className="font-bold tabular-nums border-t border-zinc-400 pt-0.5">$9,320.00</span>
                 </div>
             </div>
 
