@@ -47,7 +47,7 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
     0: { hint: '4 audit loops → 1 AI pass + 1 human review · BOM validation catches duplicates, pricing gaps, and SKU issues before the proposal goes out.', nextLabel: 'Vendor quotes' },
     1: { hint: 'Upload vendor quote PDFs · Strata reads SKU, unit price, lead time, and MOQ — no manual re-entry needed.', nextLabel: 'Review GP' },
-    2: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Proposal creation' },
+    2: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Proposal review' },
     3: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
 }
 

@@ -201,7 +201,7 @@ export default function QuoteGPReviewScene() {
                                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                Confirm GP + Create CORE Quote
+                                Confirm GP
                             </button>
                             <span className="text-[10px] text-muted-foreground">
                                 {canConfirm ? 'All GP values set · ready to create' : 'Enter GP for all unlocked vendors'}
