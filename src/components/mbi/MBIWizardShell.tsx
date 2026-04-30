@@ -162,7 +162,7 @@ export default function MBIWizardShell({
                                 disabled={!onNext || !canAdvance}
                                 className="flex-1 sm:flex-none min-w-[120px] flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                             >
-                                <span>{isLast ? 'Done' : resolvedNextLabel}</span>
+                                <span>{resolvedNextLabel}</span>
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>

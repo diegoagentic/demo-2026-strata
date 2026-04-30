@@ -33,7 +33,7 @@ const ACCOUNTING_STEPS: WizardStepSpec[] = [
 
 const ACCT_STEP_TO_IDX: Record<string, number> = { 'm2.1': 0, 'm2.3': 1 }
 const ACCT_IDX_TO_STEP: Record<number, string>  = { 0: 'm2.1', 1: 'm2.3' }
-const ACCT_NEXT_LABELS: Record<number, string>   = { 0: 'Review', 1: 'Post' }
+const ACCT_NEXT_LABELS: Record<number, string>   = { 0: 'Review', 1: 'Resolve and Post' }
 
 // ── Collections wizard (Flow 2) ───────────────────────────────────────────────
 const COLLECTIONS_STEPS: WizardStepSpec[] = [
@@ -142,7 +142,9 @@ export default function MBIAccountingPage() {
                     activeStep={acctStep}
                     onStepClick={navigateAccounting}
                     onPrev={() => navigateAccounting(Math.max(0, acctStep - 1))}
-                    onNext={() => navigateAccounting(Math.min(ACCOUNTING_STEPS.length - 1, acctStep + 1))}
+                    onNext={() => acctStep === ACCOUNTING_STEPS.length - 1
+                        ? navigateAccounting(0)
+                        : navigateAccounting(acctStep + 1)}
                     canAdvance
                     nextLabel={ACCT_NEXT_LABELS[acctStep]}
                     secondaryAction={acctStep === 1 ? <EscalateAllButton /> : undefined}
