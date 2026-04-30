@@ -233,7 +233,7 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
                 <div className="flex justify-between items-start">
                     <div className="text-[10px] font-black font-serif">BluDot Quote</div>
                     <div className="text-right">
-                        <div className={`text-[16px] font-black tracking-widest font-serif leading-none ${cls('header')}`}>BLUEDOT</div>
+                        <div className={`text-[16px] font-black tracking-widest font-serif leading-none ${cls('header')}`}>BluDot</div>
                         <div className="text-[7px] text-zinc-500 mt-0.5">BluDot Design Inc.</div>
                         <div className="text-[7px] text-zinc-500">Minneapolis, MN 55413</div>
                         <div className="text-[7px] text-zinc-500">Phone: 1-612-782-1844</div>
