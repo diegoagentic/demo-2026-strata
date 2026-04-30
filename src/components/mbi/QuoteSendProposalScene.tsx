@@ -55,6 +55,8 @@ export default function QuoteSendProposalScene() {
         <div className="space-y-4">
 
             {/* ── Format selector — same pill-tab pattern as Accounting AI ── */}
+            <div className="flex items-center gap-3">
+            <span className="text-[11px] text-muted-foreground font-medium">Choose proposal format</span>
             <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 w-fit">
                 <TabButton
                     active={format === 'formal'}
@@ -68,6 +70,7 @@ export default function QuoteSendProposalScene() {
                     icon={<BarChart3 className="h-3.5 w-3.5" />}
                     label="Budget proposal"
                 />
+            </div>
             </div>
 
             {/* ── Post-send handoff ── */}
