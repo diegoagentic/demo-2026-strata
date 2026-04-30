@@ -18,7 +18,7 @@
 import { useState, useEffect } from 'react'
 import {
     Check, Sparkles, FileText, CheckCircle2,
-    ArrowRight, Lock, Pencil,
+    ArrowRight, Lock, Pencil, Loader2,
 } from 'lucide-react'
 import { usePauseAware } from '../../context/usePauseAware'
 
@@ -112,7 +112,7 @@ export default function QuoteGPReviewScene() {
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">GP review — one human decision before CORE Quote is created</div>
+                    <div className="font-bold text-foreground">GP review</div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
                         Strata reads the SIF and applies the contract. When the contract dictates cost + sell, GP is auto-locked.
                         For vendors without a contract, the PC enters the target GP — then Strata calculates sell prices and creates the quote.

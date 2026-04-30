@@ -26,7 +26,7 @@ import { useDemo } from '../../context/DemoContext'
 const QUOTES_STEPS: WizardStepSpec[] = [
     { id: 'validation', label: 'AI validation', shortLabel: '1. Validation' },
     { id: 'vendor-upload', label: 'Vendor quote upload', shortLabel: '2. Vendor quotes' },
-    { id: 'gp-review', label: 'GP review + CORE Quote', shortLabel: '3. GP Review' },
+    { id: 'gp-review', label: 'GP review', shortLabel: '3. GP Review' },
     { id: 'send', label: 'Proposal creation', shortLabel: '4. Proposal' },
 ]
 
