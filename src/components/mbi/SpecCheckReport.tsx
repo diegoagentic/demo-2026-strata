@@ -37,12 +37,11 @@ const FLAG_TYPE_META = {
 export default function SpecCheckReport({ reportId = 'SC-002', decisions }: SpecCheckReportProps) {
     const report = MBI_SPEC_CHECKS.find(r => r.id === reportId) ?? MBI_SPEC_CHECKS[1]
 
-    const resolvedTypes = decisions ? new Set<string>(['quantity', 'finish', 'non-catalog']) : new Set<string>()
+    const resolvedTypes = decisions ? new Set<string>(['quantity', 'finish']) : new Set<string>()
 
     const criticalCount = Math.max(0, report.flags.filter(f => f.severity === 'critical').length - (resolvedTypes.has('quantity') ? 1 : 0))
     const warningCount = Math.max(0, report.flags.filter(f => f.severity === 'warning').length - (resolvedTypes.has('finish') ? 1 : 0))
-    const infoCount = Math.max(0, report.flags.filter(f => f.severity === 'info').length - (resolvedTypes.has('non-catalog') ? 1 : 0))
-    const allResolved = decisions !== undefined && criticalCount === 0 && warningCount === 0 && infoCount === 0
+    const allResolved = decisions !== undefined && criticalCount === 0 && warningCount === 0
 
     return (
         <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
@@ -66,11 +65,10 @@ export default function SpecCheckReport({ reportId = 'SC-002', decisions }: Spec
             </div>
 
             {/* Summary counts */}
-            <div className="px-4 py-3 border-b border-border grid grid-cols-4 gap-2">
+            <div className="px-4 py-3 border-b border-border grid grid-cols-3 gap-2">
                 <SummaryCell label="Scanned" value={report.lineItemsScanned} className="text-foreground" />
                 <SummaryCell label="Critical" value={criticalCount} className="text-red-600 dark:text-red-400" />
                 <SummaryCell label="Warnings" value={warningCount} className="text-amber-600 dark:text-amber-400" />
-                <SummaryCell label="Info" value={infoCount} className="text-info" />
             </div>
 
             {/* Flags list */}
@@ -85,7 +83,6 @@ export default function SpecCheckReport({ reportId = 'SC-002', decisions }: Spec
                             if (!decisions) return null
                             if (flag.type === 'quantity') return 'ai'
                             if (flag.type === 'finish') return 'expert'
-                            if (flag.type === 'non-catalog') return 'expert'
                             return null
                         })()
 

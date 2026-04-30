@@ -19,7 +19,6 @@ export const MBI_SPEC_CHECKS: SpecCheckReport[] = [
         flags: [
             { type: 'quantity', severity: 'critical', description: 'Allsteel Altitude worksurface: drawing shows 8 units · spec ordered 6 — quantity mismatch vs CET', lineRef: 'L5' },
             { type: 'finish', severity: 'warning', description: 'HON Ignition finish "Forest Green" inconsistent with project palette "Marine Blue"', lineRef: 'L11' },
-            { type: 'non-catalog', severity: 'info', description: '8 line items entered manually — recommend non-catalog validator review' },
         ],
         status: 'needs-review',
     },
