@@ -1,8 +1,9 @@
 /**
  * COMPONENT: QuoteSendProposalScene
  * PURPOSE: Flow 3 · Scene 3 — Proposal creation. Two-column layout:
- *          left = CORE Quote summary + send CTA + FlowHandoff;
+ *          left = action panel (CORE Quote summary + send CTA + FlowHandoff);
  *          right (wider) = inline budget proposal document preview.
+ *          Each column is a self-contained card at equal visual weight.
  *
  * USED BY: MBIQuotesPage (wizard scene 3)
  */
@@ -26,25 +27,40 @@ export default function QuoteSendProposalScene() {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
 
-                {/* ── Left column (2/5) — actions ── */}
-                <div className="lg:col-span-2 space-y-4">
+            {/* ── Left panel (2/5) — action card ── */}
+            <div className="lg:col-span-2 bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
 
-                    {/* Proposal summary card */}
-                    <div className={`border rounded-2xl p-4 flex items-start gap-3 transition-colors ${
-                        sent ? 'bg-success/10 dark:bg-success/15 border-success/40' : 'bg-success/5 border-success/30'
+                {/* Panel header */}
+                <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
+                        <Send className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                        <div className="text-xs font-bold text-foreground">Approve & send proposal</div>
+                        <div className="text-[10px] text-muted-foreground">QUOT-2026-003 · Enterprise Holdings</div>
+                    </div>
+                </div>
+
+                {/* Panel body */}
+                <div className="p-4 space-y-4">
+
+                    {/* Quote status section */}
+                    <div className={`rounded-xl p-3 flex items-start gap-3 transition-colors ${
+                        sent
+                            ? 'bg-success/10 dark:bg-success/15 border border-success/30'
+                            : 'bg-success/5 border border-success/20'
                     }`}>
-                        <div className="h-10 w-10 rounded-full bg-success/15 text-success flex items-center justify-center shrink-0">
-                            <CheckCircle2 className="h-5 w-5" />
+                        <div className="h-8 w-8 rounded-full bg-success/15 text-success flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-foreground">
-                                {sent ? 'Proposal delivered to Enterprise Holdings' : 'CORE Quote QUOT-2026-003 · ready to send'}
+                            <div className="text-xs font-bold text-foreground">
+                                {sent ? 'Proposal delivered' : 'CORE Quote · ready to send'}
                             </div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">
-                                Enterprise Holdings · New HQ Floor 12 · 7 line items · $372,500
+                                7 line items · $372,500 · New HQ Floor 12
                             </div>
                             {sent && sentAt && (
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -60,20 +76,17 @@ export default function QuoteSendProposalScene() {
                         </div>
                         <div className="text-right shrink-0">
                             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">PC effort</div>
-                            <div className="text-lg font-bold text-success">~12 min</div>
+                            <div className="text-base font-bold text-success">~12 min</div>
                             <div className="text-[10px] text-muted-foreground">was 2h</div>
                         </div>
                     </div>
 
-                    {/* Send CTA */}
+                    {/* Send CTA section */}
                     {!sent && (
-                        <div className="bg-card dark:bg-zinc-800 border border-primary/30 rounded-2xl p-4 space-y-3">
-                            <div>
-                                <div className="text-sm font-bold text-foreground">Approve + send proposal</div>
-                                <div className="text-[11px] text-muted-foreground mt-0.5">
-                                    Logs the proposal in CORE, notifies Amanda and the sales rep, and marks the project as awaiting client sign-off.
-                                </div>
-                            </div>
+                        <div className="space-y-2.5">
+                            <p className="text-[11px] text-muted-foreground leading-snug">
+                                Logs the proposal in CORE, notifies Amanda and the sales rep, and marks the project as awaiting client sign-off.
+                            </p>
                             <button
                                 onClick={handleSend}
                                 className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold text-zinc-900 bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm"
@@ -129,11 +142,11 @@ export default function QuoteSendProposalScene() {
                         { sources: [SOURCES.OUTLOOK] },
                     ]} />
                 </div>
+            </div>
 
-                {/* ── Right column (3/5) — proposal document ── */}
-                <div className="lg:col-span-3">
-                    <ProposalDocument sent={sent} />
-                </div>
+            {/* ── Right panel (3/5) — proposal document card ── */}
+            <div className="lg:col-span-3">
+                <ProposalDocument sent={sent} />
             </div>
         </div>
     )
@@ -145,142 +158,135 @@ function ProposalDocument({ sent }: { sent: boolean }) {
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 
     return (
-        <div className="space-y-2">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <FileText className="h-3 w-3" />
-                Budget proposal · QUOT-2026-003
+        <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
+                        <FileText className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                        <div className="text-xs font-bold text-foreground">Budget Proposal · QUOT-2026-003</div>
+                        <div className="text-[10px] text-muted-foreground">Enterprise Holdings · New HQ Floor 12 · {today}</div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    {sent
+                        ? <StatusBadge label="Sent" tone="success" size="sm" />
+                        : <StatusBadge label="Draft" tone="warning" size="sm" />
+                    }
+                    <button
+                        className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted"
+                        title="Download PDF"
+                    >
+                        <Download className="h-3 w-3" />
+                        PDF
+                    </button>
+                </div>
             </div>
 
-            <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden">
-                {/* Header */}
-                <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-primary/10 text-zinc-900 dark:text-primary flex items-center justify-center shrink-0">
-                            <FileText className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <div className="text-xs font-bold text-foreground">Quote Proposal · QUOT-2026-003</div>
-                            <div className="text-[10px] text-muted-foreground">Enterprise Holdings · New HQ Floor 12 · {today}</div>
-                        </div>
+            {/* Document body */}
+            <div className="p-4 max-h-[520px] overflow-y-auto space-y-4">
+
+                {/* Total investment */}
+                <div className="rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20 px-4 py-3">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total investment</div>
+                    <div className="flex items-baseline gap-1 mt-1">
+                        <span className="text-lg text-muted-foreground">$</span>
+                        <span className="text-3xl font-bold text-foreground tabular-nums">372,500</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        {sent
-                            ? <StatusBadge label="Sent" tone="success" size="sm" />
-                            : <StatusBadge label="Draft" tone="warning" size="sm" />
-                        }
-                        <button
-                            className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted"
-                            title="Download PDF"
-                        >
-                            <Download className="h-3 w-3" />
-                            PDF
-                        </button>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                        HNI Corporate contract · 7 line items · labor + freight included
                     </div>
                 </div>
 
-                {/* Document body */}
-                <div className="p-4 max-h-[520px] overflow-y-auto space-y-4">
-
-                    {/* Total investment */}
-                    <div className="rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20 px-4 py-3">
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total investment</div>
-                        <div className="flex items-baseline gap-1 mt-1">
-                            <span className="text-lg text-muted-foreground">$</span>
-                            <span className="text-3xl font-bold text-foreground tabular-nums">372,500</span>
+                {/* Financial breakdown */}
+                <section className="space-y-2">
+                    <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Financial breakdown</div>
+                    <dl className="space-y-1.5 px-1">
+                        <BudgetRow label="Product subtotal" value="$349,500" />
+                        <BudgetRow label="HNI Corporate contract (applied)" value="Included" note="55% contract locked" tone="success" />
+                        <div className="border-t border-border pt-1.5">
+                            <BudgetRow label="Product net" value="$349,500" bold />
                         </div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                            HNI Corporate contract · 7 line items · labor + freight included
+                        <BudgetRow label="Labor (delivery + installation)" value="+$14,200" tone="info" />
+                        <BudgetRow label="Freight" value="+$8,800" tone="info" />
+                        <div className="border-t-2 border-primary/40 pt-2">
+                            <BudgetRow label="Total proposal" value="$372,500" bold large />
                         </div>
-                    </div>
+                    </dl>
+                </section>
 
-                    {/* Financial breakdown */}
-                    <section className="space-y-2">
-                        <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Financial breakdown</div>
-                        <dl className="space-y-1.5 px-1">
-                            <BudgetRow label="Product subtotal" value="$349,500" />
-                            <BudgetRow label="HNI Corporate contract (applied)" value="Included" note="55% contract locked" tone="success" />
-                            <div className="border-t border-border pt-1.5">
-                                <BudgetRow label="Product net" value="$349,500" bold />
-                            </div>
-                            <BudgetRow label="Labor (delivery + installation)" value="+$14,200" tone="info" />
-                            <BudgetRow label="Freight" value="+$8,800" tone="info" />
-                            <div className="border-t-2 border-primary/40 pt-2">
-                                <BudgetRow label="Total proposal" value="$372,500" bold large />
-                            </div>
-                        </dl>
-                    </section>
-
-                    {/* Line items summary */}
-                    <section className="space-y-2">
-                        <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Line items · 7 total</div>
-                        <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
-                            {[
-                                { vendor: 'HNI', description: 'Workstations + storage · 4 lines', amount: '$218,400', contract: 'HNI Corporate 55%' },
-                                { vendor: 'Allsteel', description: 'Seating · 2 lines', amount: '$96,200', contract: null },
-                                { vendor: 'BluDot', description: 'Lounge + side tables · 1 line', amount: '$34,900', contract: null },
-                            ].map(item => (
-                                <div key={item.vendor} className="px-3 py-2 flex items-center justify-between gap-3 text-xs">
-                                    <div className="min-w-0">
-                                        <div className="font-semibold text-foreground">{item.vendor}</div>
-                                        <div className="text-[10px] text-muted-foreground">{item.description}</div>
-                                        {item.contract && (
-                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success mt-0.5">
-                                                <CheckCircle2 className="h-2.5 w-2.5" />
-                                                {item.contract}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="font-bold text-foreground tabular-nums shrink-0">{item.amount}</div>
+                {/* Line items summary */}
+                <section className="space-y-2">
+                    <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Line items · 7 total</div>
+                    <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
+                        {[
+                            { vendor: 'HNI', description: 'Workstations + storage · 4 lines', amount: '$218,400', contract: 'HNI Corporate 55%' },
+                            { vendor: 'Allsteel', description: 'Seating · 2 lines', amount: '$96,200', contract: null },
+                            { vendor: 'BluDot', description: 'Lounge + side tables · 1 line', amount: '$34,900', contract: null },
+                        ].map(item => (
+                            <div key={item.vendor} className="px-3 py-2 flex items-center justify-between gap-3 text-xs">
+                                <div className="min-w-0">
+                                    <div className="font-semibold text-foreground">{item.vendor}</div>
+                                    <div className="text-[10px] text-muted-foreground">{item.description}</div>
+                                    {item.contract && (
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success mt-0.5">
+                                            <CheckCircle2 className="h-2.5 w-2.5" />
+                                            {item.contract}
+                                        </span>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
-                    </section>
+                                <div className="font-bold text-foreground tabular-nums shrink-0">{item.amount}</div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
 
-                    {/* Delivery schedule */}
-                    <section className="space-y-2">
-                        <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Delivery schedule</div>
-                        <ol className="space-y-2">
-                            {[
-                                { label: 'Contract signed', date: 'Week 0 — today' },
-                                { label: 'Orders placed with manufacturers', date: 'Week 1' },
-                                { label: 'On-site installation', date: 'Weeks 8–10' },
-                                { label: 'Final walk-through + sign-off', date: 'Week 11' },
-                            ].map((step, i) => (
-                                <li key={step.label} className="flex items-start gap-2 text-xs">
-                                    <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-zinc-900 dark:text-primary text-[10px] font-bold flex items-center justify-center tabular-nums">
-                                        {i + 1}
-                                    </span>
-                                    <div>
-                                        <div className="text-foreground font-semibold leading-tight">{step.label}</div>
-                                        <div className="text-[10px] text-muted-foreground">{step.date}</div>
-                                    </div>
-                                </li>
-                            ))}
-                        </ol>
-                    </section>
+                {/* Delivery schedule */}
+                <section className="space-y-2">
+                    <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Delivery schedule</div>
+                    <ol className="space-y-2">
+                        {[
+                            { label: 'Contract signed', date: 'Week 0 — today' },
+                            { label: 'Orders placed with manufacturers', date: 'Week 1' },
+                            { label: 'On-site installation', date: 'Weeks 8–10' },
+                            { label: 'Final walk-through + sign-off', date: 'Week 11' },
+                        ].map((step, i) => (
+                            <li key={step.label} className="flex items-start gap-2 text-xs">
+                                <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-zinc-900 dark:text-primary text-[10px] font-bold flex items-center justify-center tabular-nums">
+                                    {i + 1}
+                                </span>
+                                <div>
+                                    <div className="text-foreground font-semibold leading-tight">{step.label}</div>
+                                    <div className="text-[10px] text-muted-foreground">{step.date}</div>
+                                </div>
+                            </li>
+                        ))}
+                    </ol>
+                </section>
 
-                    {/* Approval chain */}
-                    <section className="space-y-2">
-                        <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Approval chain</div>
-                        <ul className="grid grid-cols-2 gap-2">
-                            {[
-                                'Marcia Ludwig · Director of PM',
-                                'Sara Chen · Account Manager',
-                                'Amanda Torres · Sales Rep',
-                                'Client · Enterprise Holdings',
-                            ].map(line => (
-                                <li key={line} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 text-[11px]">
-                                    <CheckCircle2 className={`w-3 h-3 shrink-0 ${sent ? 'text-success' : 'text-muted-foreground/40'}`} />
-                                    <span className="text-foreground truncate">{line}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
+                {/* Approval chain */}
+                <section className="space-y-2">
+                    <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Approval chain</div>
+                    <ul className="grid grid-cols-2 gap-2">
+                        {[
+                            'Marcia Ludwig · Director of PM',
+                            'Sara Chen · Account Manager',
+                            'Amanda Torres · Sales Rep',
+                            'Client · Enterprise Holdings',
+                        ].map(line => (
+                            <li key={line} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 text-[11px]">
+                                <CheckCircle2 className={`w-3 h-3 shrink-0 ${sent ? 'text-success' : 'text-muted-foreground/40'}`} />
+                                <span className="text-foreground truncate">{line}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
 
-                    <p className="text-[10px] text-muted-foreground italic text-center">
-                        Prepared by Strata AI · logged to CORE on send · {today}
-                    </p>
-                </div>
+                <p className="text-[10px] text-muted-foreground italic text-center">
+                    Prepared by Strata AI · logged to CORE on send · {today}
+                </p>
             </div>
         </div>
     )
