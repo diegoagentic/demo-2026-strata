@@ -219,7 +219,7 @@ function FormalProposalPanel({ sent, sentAt, onSend }: { sent: boolean; sentAt: 
                     Dear Enterprise Holdings team,
                 </p>
                 <p>
-                    We are pleased to present our proposal for the complete interior furnishing of your new headquarters, Floor 12. This proposal reflects your approved budget and has been validated against our HNI Corporate contract pricing.
+                    We are pleased to present our proposal for the complete interior furnishing of your new headquarters, Floor 12.
                 </p>
 
                 <div className="not-italic font-sans border border-border rounded-xl p-4 space-y-2 bg-primary/5 dark:bg-primary/10">
@@ -235,7 +235,7 @@ function FormalProposalPanel({ sent, sentAt, onSend }: { sent: boolean; sentAt: 
                 </div>
 
                 <p>
-                    The scope includes workstations, storage, seating, and lounge furnishings sourced from HNI, Allsteel, and BluDot. Delivery, installation, and freight are included in the total investment. All HNI items are priced under your active Corporate contract at a 55% discount.
+                    The scope includes workstations, storage, seating, and lounge furnishings sourced from HNI, Allsteel, and BluDot. Delivery, installation, and freight are included in the total investment.
                 </p>
                 <p>
                     Upon your approval, we will place orders immediately and coordinate with your facilities team on delivery scheduling (Weeks 8–10) and final walk-through (Week 11).
