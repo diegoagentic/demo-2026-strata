@@ -25,7 +25,7 @@ import { useDemo } from '../../context/DemoContext'
 const QUOTES_STEPS: WizardStepSpec[] = [
     { id: 'validation', label: 'AI validation', shortLabel: '1. Validation' },
     { id: 'gp-review', label: 'GP review + CORE Quote', shortLabel: '2. GP Review' },
-    { id: 'send', label: 'Send proposal', shortLabel: '3. Send' },
+    { id: 'send', label: 'Proposal creation', shortLabel: '3. Proposal' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
@@ -42,7 +42,7 @@ const WIZARD_INDEX_TO_STEP: Record<number, string> = {
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
     0: { hint: '4 audit loops → 1 AI pass + 1 human review · BOM validation catches duplicates, pricing gaps, and SKU issues before the proposal goes out.', nextLabel: 'Review GP' },
-    1: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Send the proposal' },
+    1: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Proposal creation' },
     2: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
 }
 
