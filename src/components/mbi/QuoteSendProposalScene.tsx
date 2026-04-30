@@ -9,9 +9,9 @@
 
 import { useState } from 'react'
 import {
-    Send, CheckCircle2, FileText, Clock, Palette,
+    Send, FileText, Clock, Palette,
     Receipt, Sparkles, Download, Mail, BarChart3,
-    ChevronRight, ChevronDown,
+    ChevronRight,
 } from 'lucide-react'
 
 // ─── Tab button — same pattern as MBIAccountingPage ──────────────────────────
@@ -38,31 +38,6 @@ function TabButton({ active, onClick, icon, label }: {
 import FlowHandoff from './FlowHandoff'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 import { StatusBadge } from '../shared'
-
-// ─── CORE vendor financial data ───────────────────────────────────────────────
-
-const VENDOR_FINANCIALS = [
-    {
-        vendor: 'HNI', description: 'Workstations + storage', lines: 4,
-        list: 277500, sell: 218400, cost: 134000, gp: 84400, gpPct: 38.6,
-        tax: 0, gross: 218400, avgDisc: 21.3, contract: 'HNI Corporate 55%',
-    },
-    {
-        vendor: 'Allsteel', description: 'Seating', lines: 2,
-        list: 160333, sell: 96200, cost: 72150, gp: 24050, gpPct: 25.0,
-        tax: 0, gross: 96200, avgDisc: 40.0, contract: null,
-    },
-    {
-        vendor: 'BluDot', description: 'Lounge + side tables', lines: 1,
-        list: 57538, sell: 34900, cost: 26175, gp: 8725, gpPct: 25.0,
-        tax: 0, gross: 34900, avgDisc: 39.4, contract: null,
-    },
-] as const
-
-const VENDOR_TOTAL = {
-    lines: 7, list: 495371, sell: 349500, cost: 232325,
-    gp: 117175, gpPct: 33.5, tax: 0, gross: 349500, avgDisc: 29.5,
-}
 
 type Format = 'formal' | 'budget'
 
@@ -111,7 +86,7 @@ export default function QuoteSendProposalScene() {
                     ]}
                     timeline={[
                         { status: 'done', icon: <FileText className="h-3.5 w-3.5" />, label: 'Budget → PC queue', caption: 'signed last week', flow: 'Flow 2 · Quotes AI' },
-                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'GP confirmed · CORE Quote QUOT-2026-003', caption: 'PC reviewed GP · Strata created the quote', flow: '—' },
+                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Quote QUOT-2026-003 confirmed · GP reviewed', caption: 'PC reviewed GP · Strata calculated sell prices', flow: '—' },
                         { status: 'done', icon: <Send className="h-3.5 w-3.5" />, label: 'Proposal delivered to client', caption: 'just now', flow: '—' },
                         { status: 'future', icon: <Palette className="h-3.5 w-3.5" />, label: 'Phase 4 · Design AI', caption: 'available via the Design AI tab', flow: 'Phase 4 directional', highlight: false },
                     ]}
@@ -173,7 +148,7 @@ function SendBar({
                     </div>
                 ) : (
                     <div className="text-[11px] text-muted-foreground">
-                        Logs to CORE · notifies Amanda and the sales rep · marks project awaiting sign-off.
+                        Notifies Amanda and the sales rep · marks project awaiting sign-off.
                     </div>
                 )}
             </div>
@@ -259,27 +234,6 @@ function FormalProposalPanel({ sent, sentAt, onSend }: { sent: boolean; sentAt: 
                     </div>
                 </div>
 
-                {/* Line items — collapsible CORE breakdown */}
-                <div className="not-italic font-sans space-y-1">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Line items · 7 total</div>
-                    <div className="border border-border rounded-xl overflow-hidden">
-                        {VENDOR_FINANCIALS.map(v => (
-                            <VendorLineItem key={v.vendor} item={v} />
-                        ))}
-                        <div className="grid grid-cols-[1.2rem_1fr_1fr_1fr_1fr_2.5rem_2rem_1fr_3.2rem] gap-x-2 px-3 py-2 text-[10px] tabular-nums border-t-2 border-border bg-muted/20 font-bold">
-                            <span>{VENDOR_TOTAL.lines}</span>
-                            <span className="text-muted-foreground">${VENDOR_TOTAL.list.toLocaleString()}</span>
-                            <span className="text-foreground">${VENDOR_TOTAL.sell.toLocaleString()}</span>
-                            <span className="text-muted-foreground">${VENDOR_TOTAL.cost.toLocaleString()}</span>
-                            <span className="text-success">${VENDOR_TOTAL.gp.toLocaleString()}</span>
-                            <span className="text-success">{VENDOR_TOTAL.gpPct}%</span>
-                            <span className="text-muted-foreground">{VENDOR_TOTAL.tax.toFixed(2)}</span>
-                            <span>${VENDOR_TOTAL.gross.toLocaleString()}</span>
-                            <span className="text-muted-foreground">{VENDOR_TOTAL.avgDisc.toFixed(2)}%</span>
-                        </div>
-                    </div>
-                </div>
-
                 <p>
                     The scope includes workstations, storage, seating, and lounge furnishings sourced from HNI, Allsteel, and BluDot. Delivery, installation, and freight are included in the total investment.
                 </p>
@@ -297,7 +251,7 @@ function FormalProposalPanel({ sent, sentAt, onSend }: { sent: boolean; sentAt: 
                 </div>
 
                 <p className="text-[10px] text-muted-foreground italic text-center font-sans">
-                    Prepared by Strata AI · logged to CORE on send · {today}
+                    Prepared by Strata AI · {today}
                 </p>
             </div>
 
@@ -372,83 +326,12 @@ function BudgetProposalPanel({ sent, sentAt, onSend }: { sent: boolean; sentAt: 
                     </dl>
                 </section>
 
-                {/* Line items summary */}
-                <section className="space-y-2">
-                    <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Line items · 7 total</div>
-                    <div className="border border-border rounded-xl overflow-hidden">
-                        {VENDOR_FINANCIALS.map(v => (
-                            <VendorLineItem key={v.vendor} item={v} />
-                        ))}
-                        {/* Totals row */}
-                        <div className="grid grid-cols-[1.2rem_1fr_1fr_1fr_1fr_2.5rem_2rem_1fr_3.2rem] gap-x-2 px-3 py-2 text-[10px] tabular-nums border-t-2 border-border bg-muted/20 font-bold">
-                            <span>{VENDOR_TOTAL.lines}</span>
-                            <span className="text-muted-foreground">${VENDOR_TOTAL.list.toLocaleString()}</span>
-                            <span className="text-foreground">${VENDOR_TOTAL.sell.toLocaleString()}</span>
-                            <span className="text-muted-foreground">${VENDOR_TOTAL.cost.toLocaleString()}</span>
-                            <span className="text-success">${VENDOR_TOTAL.gp.toLocaleString()}</span>
-                            <span className="text-success">{VENDOR_TOTAL.gpPct}%</span>
-                            <span className="text-muted-foreground">{VENDOR_TOTAL.tax.toFixed(2)}</span>
-                            <span>${VENDOR_TOTAL.gross.toLocaleString()}</span>
-                            <span className="text-muted-foreground">{VENDOR_TOTAL.avgDisc.toFixed(2)}%</span>
-                        </div>
-                    </div>
-                </section>
-
                 <p className="text-[10px] text-muted-foreground italic text-center">
-                    Prepared by Strata AI · logged to CORE on send · {today}
+                    Prepared by Strata AI · {today}
                 </p>
             </div>
 
             <SendBar sent={sent} sentAt={sentAt} onSend={onSend} />
-        </div>
-    )
-}
-
-// ─── Vendor line item — collapsible CORE financial row ───────────────────────
-
-function VendorLineItem({ item }: { item: typeof VENDOR_FINANCIALS[number] }) {
-    const [open, setOpen] = useState(false)
-    return (
-        <div className="border-b border-border last:border-0">
-            <button
-                onClick={() => setOpen(o => !o)}
-                className="w-full px-3 py-2.5 flex items-center gap-3 text-xs hover:bg-muted/30 transition-colors text-left"
-            >
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
-                <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-foreground">{item.vendor}</div>
-                    <div className="text-[10px] text-muted-foreground">{item.description} · {item.lines} lines</div>
-                    {item.contract && (
-                        <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success mt-0.5">
-                            <CheckCircle2 className="h-2.5 w-2.5" />
-                            {item.contract}
-                        </span>
-                    )}
-                </div>
-                <div className="font-bold text-foreground tabular-nums shrink-0">${item.sell.toLocaleString()}</div>
-            </button>
-
-            {open && (
-                <div className="px-3 pb-3 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="rounded-xl overflow-hidden border border-border">
-                        <div className="grid grid-cols-[1.2rem_1fr_1fr_1fr_1fr_2.5rem_2rem_1fr_3.2rem] gap-x-2 px-3 py-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/20">
-                            <span>#</span><span>List $</span><span>Sell $</span><span>Cost $</span>
-                            <span>GP $</span><span>GP%</span><span>Tax</span><span>Gross $</span><span>Avg Disc%</span>
-                        </div>
-                        <div className="grid grid-cols-[1.2rem_1fr_1fr_1fr_1fr_2.5rem_2rem_1fr_3.2rem] gap-x-2 px-3 py-2 text-[10px] tabular-nums bg-card dark:bg-zinc-800">
-                            <span className="text-muted-foreground">{item.lines}</span>
-                            <span className="text-muted-foreground">${item.list.toLocaleString()}</span>
-                            <span className="font-semibold text-foreground">${item.sell.toLocaleString()}</span>
-                            <span className="text-muted-foreground">${item.cost.toLocaleString()}</span>
-                            <span className="text-success font-semibold">${item.gp.toLocaleString()}</span>
-                            <span className="text-success font-semibold">{item.gpPct}%</span>
-                            <span className="text-muted-foreground">{item.tax.toFixed(2)}</span>
-                            <span className="text-foreground">${item.gross.toLocaleString()}</span>
-                            <span className={item.avgDisc < 0 ? 'text-destructive' : 'text-muted-foreground'}>{item.avgDisc.toFixed(2)}%</span>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

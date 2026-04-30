@@ -128,6 +128,15 @@ export const MBI_STEPS: DemoStep[] = [
         role: 'Project Manager',
     },
     {
+        id: 'm3.6',
+        groupId: 2,
+        groupTitle: 'Flow 3: Quotes AI',
+        title: 'Proposal review',
+        description: "Review CORE Quote line items · adjust GP if needed before generating the proposal.",
+        app: 'mbi-quotes',
+        role: 'Project Manager',
+    },
+    {
         id: 'm3.4',
         groupId: 2,
         groupTitle: 'Flow 3: Quotes AI',
@@ -151,6 +160,7 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm3.3': { mode: 'interactive', userAction: 'Review the BOM validation — duplicates, non-catalog pricing, qty consistency · then proceed to vendor quote upload' },
     'm3.5': { mode: 'interactive', userAction: 'Upload the vendor quote PDF · Strata reads it · review the extracted data and resolve the flagged NC-004 item' },
     'm3.2': { mode: 'interactive', userAction: 'Run SIF extraction · enter GP per vendor · confirm to create CORE Quote QUOT-2026-003' },
+    'm3.6': { mode: 'interactive', userAction: 'Review CORE Quote line items · adjust GP% if needed · then click Create proposal' },
     'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers · this closes the active tour' },
 };
 
@@ -187,6 +197,12 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'Staging for GP review · contract lines locked · unlocked vendors need PC input',
         'PC confirmed GP · sell prices calculated · CORE Quote QUOT-2026-003 created',
     ],
+    'm3.6': [
+        'Loading CORE Quote QUOT-2026-003 line items',
+        'Surfacing GP breakdown per vendor',
+        'Unlocked vendors ready for PC adjustment',
+        'Line items confirmed · ready to generate proposal',
+    ],
     'm3.3': [
         'Scanning BOM for duplicate line items',
         'Checking non-catalog pricing vs manufacturer price books',
@@ -211,5 +227,5 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const MBI_SELF_INDICATED: string[] = [
     'm2.1', 'm2.3', 'm2.4', 'm2.5',
-    'm3.3', 'm3.5', 'm3.2', 'm3.4',
+    'm3.3', 'm3.5', 'm3.2', 'm3.6', 'm3.4',
 ];

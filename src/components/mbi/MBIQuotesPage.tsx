@@ -18,37 +18,42 @@ import MBIModuleHeader from './MBIModuleHeader'
 import MBIWizardShell, { type WizardStepSpec } from './MBIWizardShell'
 import MBIPersonaBadge from './MBIPersonaBadge'
 import QuoteGPReviewScene from './QuoteGPReviewScene'
+import QuoteProposalReviewScene from './QuoteProposalReviewScene'
 import QuoteValidationScene from './QuoteValidationScene'
 import QuoteVendorUploadScene from './QuoteVendorUploadScene'
 import QuoteSendProposalScene from './QuoteSendProposalScene'
 import { useDemo } from '../../context/DemoContext'
 
 const QUOTES_STEPS: WizardStepSpec[] = [
-    { id: 'validation', label: 'AI validation', shortLabel: '1. Validation' },
-    { id: 'vendor-upload', label: 'Vendor quote upload', shortLabel: '2. Vendor quotes' },
-    { id: 'gp-review', label: 'GP review', shortLabel: '3. GP Review' },
-    { id: 'send', label: 'Proposal creation', shortLabel: '4. Proposal' },
+    { id: 'validation',       label: 'AI validation',        shortLabel: '1. Validation' },
+    { id: 'vendor-upload',    label: 'Vendor quote upload',  shortLabel: '2. Vendor quotes' },
+    { id: 'gp-review',        label: 'GP review',            shortLabel: '3. GP Review' },
+    { id: 'proposal-review',  label: 'Proposal review',      shortLabel: '4. Review' },
+    { id: 'send',             label: 'Proposal creation',    shortLabel: '5. Proposal' },
 ]
 
 const STEP_TO_WIZARD_INDEX: Record<string, number> = {
     'm3.3': 0,
     'm3.5': 1,
     'm3.2': 2,
-    'm3.4': 3,
+    'm3.6': 3,
+    'm3.4': 4,
 }
 
 const WIZARD_INDEX_TO_STEP: Record<number, string> = {
     0: 'm3.3',
     1: 'm3.5',
     2: 'm3.2',
-    3: 'm3.4',
+    3: 'm3.6',
+    4: 'm3.4',
 }
 
 const STEP_HINTS: Record<number, { hint: string; nextLabel: string }> = {
     0: { hint: '4 audit loops → 1 AI pass + 1 human review · BOM validation catches duplicates, pricing gaps, and SKU issues before the proposal goes out.', nextLabel: 'Vendor quotes' },
     1: { hint: 'Upload vendor quote PDFs · Strata reads SKU, unit price, lead time, and MOQ — no manual re-entry needed.', nextLabel: 'Review GP' },
     2: { hint: 'PC enters GP per vendor · contract lines auto-locked · Strata creates CORE Quote QUOT-2026-003.', nextLabel: 'Proposal review' },
-    3: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
+    3: { hint: 'Review CORE Quote line items · adjust GP if needed · then create the proposal.', nextLabel: 'Create proposal' },
+    4: { hint: 'Approve + send · proposal delivered to client · awaiting sign-off.', nextLabel: 'Done' },
 }
 
 export default function MBIQuotesPage() {
@@ -122,7 +127,8 @@ export default function MBIQuotesPage() {
                     {activeStep === 0 && <QuoteValidationScene />}
                     {activeStep === 1 && <QuoteVendorUploadScene />}
                     {activeStep === 2 && <QuoteGPReviewScene />}
-                    {activeStep === 3 && <QuoteSendProposalScene />}
+                    {activeStep === 3 && <QuoteProposalReviewScene />}
+                    {activeStep === 4 && <QuoteSendProposalScene />}
                 </MBIWizardShell>
             ) : (
                 <OverviewStub />
