@@ -105,7 +105,16 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Flow 3: Quotes AI',
         title: 'Quote validation · BOM completeness check',
-        description: "Strata validates the assembled quote: duplicate lines, non-catalog pricing against manufacturer price books, quantity consistency between SIF and quote, and SKU completeness. The four sequential checks the team used to run by eye collapse into one AI pass plus one human review. Vendor quotes for non-catalog items are read automatically — no manual re-entry.",
+        description: "Strata validates the assembled quote: duplicate lines, non-catalog pricing against manufacturer price books, quantity consistency between SIF and quote, and SKU completeness.",
+        app: 'mbi-quotes',
+        role: 'Project Manager',
+    },
+    {
+        id: 'm3.5',
+        groupId: 2,
+        groupTitle: 'Flow 3: Quotes AI',
+        title: 'Vendor quote upload · non-catalog resolution',
+        description: "Drop a vendor quote PDF and Strata reads it — SKU, unit price, lead time, MOQ extracted automatically. Non-catalog items flagged by the validator are resolved here, no manual re-entry.",
         app: 'mbi-quotes',
         role: 'Project Manager',
     },
@@ -139,8 +148,9 @@ export const MBI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'm2.3': { mode: 'interactive', userAction: 'Review flagged bill variances line-by-line · accept or override each one' },
     'm2.4': { mode: 'interactive', userAction: 'Scan the AR aging board · spot escalations and on-hold accounts · forecast updates live' },
     'm2.5': { mode: 'interactive', userAction: 'Review the AI-drafted collection emails · edit if needed · send · then wrap up the queue' },
+    'm3.3': { mode: 'interactive', userAction: 'Review the BOM validation — duplicates, non-catalog pricing, qty consistency · then proceed to vendor quote upload' },
+    'm3.5': { mode: 'interactive', userAction: 'Upload the vendor quote PDF · Strata reads it · review the extracted data and resolve the flagged NC-004 item' },
     'm3.2': { mode: 'interactive', userAction: 'Run SIF extraction · enter GP per vendor · confirm to create CORE Quote QUOT-2026-003' },
-    'm3.3': { mode: 'interactive', userAction: 'Review the BOM validation — duplicates, non-catalog pricing, qty consistency · then resolve any flagged items' },
     'm3.4': { mode: 'interactive', userAction: 'Approve and send the proposal · orders route to manufacturers · this closes the active tour' },
 };
 
@@ -181,7 +191,13 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
         'Scanning BOM for duplicate line items',
         'Checking non-catalog pricing vs manufacturer price books',
         'Validating quantity consistency — SIF vs quote',
-        'BOM validation complete · 1 flagged item · vendor quote read automatically',
+        'BOM validation complete · 1 non-catalog item flagged · vendor quote needed',
+    ],
+    'm3.5': [
+        'Vendor quote PDF detected · reading attachment',
+        'Extracting SKU · unit price · lead time · MOQ',
+        'Matching quote to flagged NC-004 line item',
+        'Data confirmed · SIF entry ready · no manual re-entry needed',
     ],
     'm3.4': [
         'Project Manager signed off · proposal ready to send',
@@ -195,5 +211,5 @@ export const MBI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const MBI_SELF_INDICATED: string[] = [
     'm2.1', 'm2.3', 'm2.4', 'm2.5',
-    'm3.2', 'm3.3', 'm3.4',
+    'm3.3', 'm3.5', 'm3.2', 'm3.4',
 ];
