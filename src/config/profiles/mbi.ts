@@ -123,7 +123,7 @@ export const MBI_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Flow 3: Quotes AI',
         title: 'Proposal creation · close the tour',
-        description: "One human review later, the PM sends the proposal. Orders auto-route: EDI manufacturers receive transmissions instantly, non-EDI vendors get drafted PO emails ready to send. Hours of manual routing happen in minutes — and that closes the active demo tour. Design AI (Spec Check, Phase 4) is available via its own tab if the audience asks.",
+        description: "One human review later, the proposal is sent.",
         app: 'mbi-quotes',
         role: 'Project Manager',
     },
