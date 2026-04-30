@@ -25,7 +25,7 @@ import { usePauseAware } from '../../context/usePauseAware'
 const CORE_STEPS = [
     'Applying GP to 7 line items · calculating sell prices',
     'Freight + install lines confirmed · $14,200 + $8,800',
-    'CORE Quote QUOT-2026-003 has been created · $372,500 · ready for PC review',
+    'Proposal has been created and is ready for review · $372,500 total',
 ]
 
 interface GPVendor {
@@ -225,7 +225,7 @@ export default function QuoteGPReviewScene() {
                         </div>
                         <div>
                             <div className="text-xs font-bold text-foreground">
-                                {phase === 'creating' ? 'Creating CORE Quote…' : 'CORE Quote QUOT-2026-003 · ready for review'}
+                                {phase === 'creating' ? 'Creating CORE Quote…' : 'Proposal ready for review'}
                             </div>
                             <div className="text-[10px] text-muted-foreground">
                                 Strata applies GP · calculates sell prices · creates the quote in CORE
@@ -268,7 +268,7 @@ export default function QuoteGPReviewScene() {
                 <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3 animate-in fade-in duration-300">
                     <ArrowRight className="h-4 w-4 text-zinc-900 dark:text-primary shrink-0" />
                     <span className="flex-1 text-foreground">
-                        CORE Quote ready. Next: Strata validates the quote — duplicates, non-catalog pricing, BOM completeness — then the PC signs off.
+                        Proposal ready. Next: Final Review
                     </span>
                 </div>
             )}
