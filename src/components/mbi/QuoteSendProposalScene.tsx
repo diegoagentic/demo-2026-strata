@@ -394,47 +394,6 @@ function BudgetProposalPanel({ sent, sentAt, onSend }: { sent: boolean; sentAt: 
                     </div>
                 </section>
 
-                {/* Delivery schedule */}
-                <section className="space-y-2">
-                    <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Delivery schedule</div>
-                    <ol className="grid grid-cols-2 gap-2">
-                        {[
-                            { label: 'Contract signed', date: 'Week 0 — today' },
-                            { label: 'Orders placed', date: 'Week 1' },
-                            { label: 'On-site installation', date: 'Weeks 8–10' },
-                            { label: 'Final walk-through', date: 'Week 11' },
-                        ].map((step, i) => (
-                            <li key={step.label} className="flex items-start gap-2 text-xs">
-                                <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-zinc-900 dark:text-primary text-[10px] font-bold flex items-center justify-center tabular-nums">
-                                    {i + 1}
-                                </span>
-                                <div>
-                                    <div className="text-foreground font-semibold leading-tight">{step.label}</div>
-                                    <div className="text-[10px] text-muted-foreground">{step.date}</div>
-                                </div>
-                            </li>
-                        ))}
-                    </ol>
-                </section>
-
-                {/* Approval chain */}
-                <section className="space-y-2">
-                    <div className="text-[10px] font-bold text-foreground uppercase tracking-wider">Approval chain</div>
-                    <ul className="grid grid-cols-2 gap-2">
-                        {[
-                            'Marcia Ludwig · Director of PM',
-                            'Sara Chen · Account Manager',
-                            'Amanda Torres · Sales Rep',
-                            'Client · Enterprise Holdings',
-                        ].map(line => (
-                            <li key={line} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 text-[11px]">
-                                <CheckCircle2 className={`w-3 h-3 shrink-0 ${sent ? 'text-success' : 'text-muted-foreground/40'}`} />
-                                <span className="text-foreground truncate">{line}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </section>
-
                 <p className="text-[10px] text-muted-foreground italic text-center">
                     Prepared by Strata AI · logged to CORE on send · {today}
                 </p>
