@@ -17,17 +17,10 @@
 
 import { useState, useEffect } from 'react'
 import {
-    Play, Loader2, Check, Sparkles, FileText, CheckCircle2,
+    Check, Sparkles, FileText, CheckCircle2,
     ArrowRight, Lock, Pencil,
 } from 'lucide-react'
 import { usePauseAware } from '../../context/usePauseAware'
-
-const EXTRACTION_STEPS = [
-    'CET export validated · 24 fields confirmed',
-    'Contract matched · HNI Corporate 55% discount',
-    'Customer context added · Enterprise Holdings · Floor 12',
-    'Shipping params applied · freight + install staged',
-]
 
 const CORE_STEPS = [
     'Applying GP to 7 line items · calculating sell prices',
@@ -80,7 +73,6 @@ type GPMode = 'byVendor' | 'allLines'
 
 export default function QuoteGPReviewScene() {
     const [phase, setPhase] = useState<Phase>('gp-ready')
-    const [extractStep, setExtractStep] = useState(EXTRACTION_STEPS.length)
     const [coreStep, setCoreStep] = useState(0)
     const [gpMode, setGPMode] = useState<GPMode>('byVendor')
     const [allLinesGP, setAllLinesGP] = useState('')
@@ -89,16 +81,6 @@ export default function QuoteGPReviewScene() {
         custom: '',
     })
     const { pauseAwareTimeout } = usePauseAware()
-
-    // Extraction animation
-    useEffect(() => {
-        if (phase !== 'extracting') return
-        if (extractStep < EXTRACTION_STEPS.length) {
-            return pauseAwareTimeout(() => setExtractStep(s => s + 1), 700)
-        } else {
-            return pauseAwareTimeout(() => setPhase('gp-ready'), 400)
-        }
-    }, [phase, extractStep, pauseAwareTimeout])
 
     // CORE Quote creation animation
     useEffect(() => {
@@ -138,65 +120,7 @@ export default function QuoteGPReviewScene() {
                 </div>
             </div>
 
-            {/* SIF Extraction panel */}
-            <div className={`rounded-2xl border overflow-hidden transition-colors ${
-                phase === 'idle' ? 'bg-card dark:bg-zinc-800 border-border' : 'bg-ai/5 dark:bg-ai/10 border-ai/30'
-            }`}>
-                <div className="px-4 py-3 border-b border-inherit flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-ai/10 text-ai flex items-center justify-center shrink-0">
-                            {phase === 'extracting'
-                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                : <Sparkles className="h-3.5 w-3.5" />
-                            }
-                        </div>
-                        <div>
-                            <div className="text-xs font-bold text-foreground">SIF extraction · 24 fields</div>
-                            <div className="text-[10px] text-muted-foreground">AI reads the SIF · matches contract · stages for GP entry</div>
-                        </div>
-                    </div>
-                    {phase === 'idle' && (
-                        <button
-                            onClick={() => { setPhase('extracting'); setExtractStep(0) }}
-                            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-900 bg-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-                        >
-                            <Play className="h-3 w-3" />
-                            Run extraction
-                        </button>
-                    )}
-                </div>
-
-                <div className="px-4 py-3 space-y-1.5">
-                    {EXTRACTION_STEPS.map((step, i) => {
-                        const done = phase === 'gp-ready' || phase === 'creating' || phase === 'created' || (phase === 'extracting' && i < extractStep)
-                        const running = phase === 'extracting' && i === extractStep
-                        const visible = done || running
-                        return (
-                            <div
-                                key={i}
-                                className={`flex items-center gap-2 text-[11px] transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-20'}`}
-                            >
-                                {done
-                                    ? <Check className="h-3 w-3 text-ai shrink-0" />
-                                    : running
-                                        ? <Loader2 className="h-3 w-3 text-ai shrink-0 animate-spin" />
-                                        : <div className="h-3 w-3 rounded-full border border-border shrink-0" />
-                                }
-                                <span className={done ? 'text-foreground' : 'text-muted-foreground'}>{step}</span>
-                            </div>
-                        )
-                    })}
-                </div>
-
-                {(phase === 'gp-ready' || phase === 'creating' || phase === 'created') && (
-                    <div className="px-4 pb-3 flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-ai shrink-0" />
-                        <span className="text-[10px] font-bold text-ai">Extraction complete · confidence 96% · GP entry required</span>
-                    </div>
-                )}
-            </div>
-
-            {/* GP Review table — appears after extraction */}
+            {/* GP Review table */}
             {(phase === 'gp-ready' || phase === 'creating' || phase === 'created') && (
                 <div className="bg-card dark:bg-zinc-800 border border-border rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-wrap gap-2">
