@@ -14,16 +14,13 @@
 import { useState } from 'react'
 import { ArrowRight, Sparkles, RotateCcw } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
-import SpecCheckReport from './SpecCheckReport'
 import AISpecCheckSimulation, {
     SpecCheckDecisionsApplied,
-    DEFAULT_DECISIONS,
     type SpecCheckDecisions,
 } from './AISpecCheckSimulation'
 
 export default function QuoteValidationScene() {
     const [decisions, setDecisions] = useState<SpecCheckDecisions | null>(null)
-    const [liveDecisions, setLiveDecisions] = useState<SpecCheckDecisions>(DEFAULT_DECISIONS)
 
     return (
         <div className="space-y-4">
@@ -43,8 +40,8 @@ export default function QuoteValidationScene() {
             {/* AI simulation OR decisions recap */}
             {decisions === null ? (
                 <AISpecCheckSimulation
-                    onComplete={(d) => { setDecisions(d); setLiveDecisions(d) }}
-                    onDecisionChange={setLiveDecisions}
+                    onComplete={(d) => setDecisions(d)}
+                    onDecisionChange={() => {}}
                 />
             ) : (
                 <SpecCheckDecisionsApplied
@@ -52,9 +49,6 @@ export default function QuoteValidationScene() {
                     onRerun={() => setDecisions(null)}
                 />
             )}
-
-            {/* Spec Check report */}
-            <SpecCheckReport decisions={liveDecisions} />
 
             {/* Forward cue */}
             <div className="flex items-center gap-3 text-xs bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3">
