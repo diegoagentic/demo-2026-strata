@@ -226,77 +226,104 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
         `px-1 py-0.5 rounded transition-all duration-300 ${highlighted(zone) ? 'ring-1 ring-ai/60 bg-ai/10' : ''}`
 
     return (
-        <div className="bg-white dark:bg-zinc-100 text-zinc-900 rounded-2xl shadow-md border border-border overflow-hidden text-[10px] font-mono leading-relaxed">
-            {/* Letterhead bar */}
-            <div className="bg-zinc-900 text-white px-3 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-[9px] font-black shrink-0">BD</div>
-                    <span className="text-[11px] font-black tracking-wider">BLUEDOT</span>
+        <div className="bg-white text-zinc-900 rounded-2xl shadow-md border border-border overflow-hidden text-[9px] font-mono leading-snug">
+
+            {/* ── Page header — Leland style ── */}
+            <div className="px-3 pt-3 pb-2 border-b border-zinc-300">
+                <div className="flex justify-between items-start">
+                    <div className="text-[10px] font-black font-serif">BluDot Quote</div>
+                    <div className="text-right">
+                        <div className={`text-[16px] font-black tracking-widest font-serif leading-none ${cls('header')}`}>BLUEDOT</div>
+                        <div className="text-[7px] text-zinc-500 mt-0.5">BluDot Design Inc.</div>
+                        <div className="text-[7px] text-zinc-500">Minneapolis, MN 55413</div>
+                        <div className="text-[7px] text-zinc-500">Phone: 1-612-782-1844</div>
+                    </div>
                 </div>
-                <span className="text-[9px] text-zinc-400 uppercase tracking-wider">Vendor Quote</span>
+
+                {/* Metadata rows */}
+                <div className={`mt-1.5 space-y-0.5 ${cls('header')}`}>
+                    {[
+                        { label: 'Quote Number:', value: 'BD-Q-2026-0187  (Please reference on your P.O.)' },
+                        { label: 'Quote Date:', value: 'Apr 28, 2026' },
+                        { label: 'Project Name:', value: 'Enterprise Holdings · Floor 12' },
+                        { label: 'Specifier:', value: 'MBI · PC Team' },
+                    ].map(row => (
+                        <div key={row.label} className="flex items-baseline gap-2 border-b border-zinc-200 pb-0.5 text-[8px]">
+                            <span className="text-zinc-500 w-20 shrink-0">{row.label}</span>
+                            <span className="font-semibold text-zinc-900 truncate">{row.value}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div className="p-3">
-                {/* Quote ref + date */}
-                <div className="grid grid-cols-2 gap-1 mb-2 text-[9px]">
-                    <div className={cls('header')}>
-                        <div className="text-zinc-500">QUOTE #</div>
-                        <div className="font-bold text-zinc-900">BD-Q-2026-0187</div>
-                    </div>
-                    <div className={cls('header')}>
-                        <div className="text-zinc-500">DATE</div>
-                        <div className="font-bold text-zinc-900">Apr 28 2026</div>
-                    </div>
+            {/* ── Bill To / Ship To ── */}
+            <div className={`flex gap-4 px-3 py-2 border-b border-zinc-200 text-[8px] ${cls('customer')}`}>
+                <div className="flex-1">
+                    <div className="font-bold uppercase text-[6.5px] tracking-wider text-zinc-500 mb-0.5">BILL TO:</div>
+                    <div className="font-semibold text-zinc-900">Modern Business Interiors</div>
+                    <div className="text-zinc-500">2020 N Highway 94 Service Rd W</div>
+                    <div className="text-zinc-500">St. Charles, MO 63303 USA</div>
                 </div>
-
-                {/* Customer */}
-                <div className={`mb-2 ${cls('customer')}`}>
-                    <div className="text-zinc-500 text-[9px]">TO</div>
-                    <div className="text-zinc-900">Modern Business Interiors</div>
-                    <div className="text-zinc-500">St. Charles, MO · Attn: PC Team</div>
+                <div className="flex-1">
+                    <div className="font-bold uppercase text-[6.5px] tracking-wider text-zinc-500 mb-0.5">SHIP TO:</div>
+                    <div className="text-zinc-500">Missouri</div>
+                    <div className="text-zinc-500">Attn: PC Team</div>
                 </div>
+            </div>
 
-                {/* Line items */}
-                <div className="border-t border-zinc-200 pt-1.5 mb-2">
-                    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-1 text-[9px] text-zinc-500 font-bold mb-1 px-1">
-                        <div>ITEM / SKU</div>
-                        <div className="text-right">QTY</div>
-                        <div className="text-right">UNIT</div>
-                        <div className="text-right">TOTAL</div>
-                    </div>
-                    <div className={`grid grid-cols-[1fr_auto_auto_auto] gap-1 ${cls('item')}`}>
-                        <div>
-                            <div className="font-bold text-zinc-900">BD-FRM-WLN-2442</div>
-                            <div className="text-zinc-500 text-[8px]">Frame side table · walnut</div>
-                        </div>
-                        <div className="text-right text-zinc-900">8</div>
-                        <div className={`text-right font-bold ${highlighted('pricing') ? 'text-zinc-900' : 'text-zinc-700'}`}>$445</div>
-                        <div className="text-right font-bold text-zinc-900">$3,560</div>
-                    </div>
+            {/* ── Shipping terms bar ── */}
+            <div className="grid grid-cols-4 gap-x-2 px-3 py-1.5 border-b border-zinc-300 text-[7.5px]">
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">FOB</div><div className="text-zinc-900">Minneapolis</div></div>
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">Sales Order Type</div><div className="text-zinc-900">Standard</div></div>
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">Terms</div><div className="text-zinc-900">Pre-Paid</div></div>
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">Ship Via</div><div className="text-zinc-900">TBD</div></div>
+            </div>
+
+            {/* ── List Priced Items ── */}
+            <div className="px-3 pt-2 pb-1">
+                <div className="bg-zinc-800 text-white px-2 py-1 text-[7.5px] font-bold mb-1 rounded-sm">
+                    List Priced Items
                 </div>
-
-                {/* Terms */}
-                <div className={`border-t border-zinc-200 pt-1.5 grid grid-cols-2 gap-1 text-[9px] mb-2 ${cls('terms')}`}>
+                {/* Column headers */}
+                <div className="grid grid-cols-[1.4rem_1.2rem_2.5rem_1fr_3rem_3.5rem] gap-x-1.5 text-[6.5px] font-bold uppercase text-zinc-500 px-1 mb-0.5">
+                    <span>ITEM</span>
+                    <span>QTY</span>
+                    <span>PROD CODE</span>
+                    <span>DESCRIPTION</span>
+                    <span className="text-right">LIST PRICE</span>
+                    <span className="text-right">EXTENDED</span>
+                </div>
+                {/* Row 1 */}
+                <div className={`grid grid-cols-[1.4rem_1.2rem_2.5rem_1fr_3rem_3.5rem] gap-x-1.5 px-1 py-1 border-b border-zinc-200 ${cls('item')}`}>
+                    <span>1</span>
+                    <span className={highlighted('pricing') ? 'text-zinc-900' : 'text-zinc-600'}>8</span>
+                    <span className="font-bold text-[7.5px] text-zinc-900 truncate">BD-FRM-WLN-2442</span>
                     <div>
-                        <div className="text-zinc-500">LEAD TIME</div>
-                        <div className="font-bold text-zinc-900">5 weeks</div>
+                        <div className="font-semibold text-zinc-900">Frame side table · walnut</div>
+                        <div className="text-zinc-500 text-[7px]">SIDEMARK: Enterprise Holdings · Floor 12</div>
                     </div>
-                    <div>
-                        <div className="text-zinc-500">MOQ</div>
-                        <div className="font-bold text-zinc-900">2 units</div>
-                    </div>
+                    <span className={`text-right tabular-nums ${highlighted('pricing') ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>$445.00</span>
+                    <span className="text-right tabular-nums font-bold text-zinc-900">$3,560.00</span>
                 </div>
+                {/* List SubTotal */}
+                <div className={`flex justify-end gap-4 mt-1 text-[8px] pr-1 ${cls('pricing')}`}>
+                    <span className="text-zinc-500">List SubTotal</span>
+                    <span className="font-bold tabular-nums border-t border-zinc-400 pt-0.5">$3,560.00</span>
+                </div>
+            </div>
 
-                {/* Total */}
-                <div className={`border-t-2 border-zinc-900 pt-1 flex justify-between ${cls('pricing')}`}>
-                    <span className="text-zinc-900 font-black">TOTAL</span>
-                    <span className="font-black text-zinc-900">$3,560</span>
-                </div>
+            {/* ── Terms / Lead time ── */}
+            <div className={`px-3 py-1.5 border-t border-zinc-200 grid grid-cols-4 gap-x-2 text-[7.5px] ${cls('terms')}`}>
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">Lead Time</div><div className="font-semibold text-zinc-900">5 weeks</div></div>
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">MOQ</div><div className="font-semibold text-zinc-900">2 units</div></div>
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">Validity</div><div className="text-zinc-500">May 28 2026</div></div>
+                <div><div className="font-bold text-zinc-400 uppercase text-[6.5px]">Confidence</div><div className="text-zinc-900">94%</div></div>
+            </div>
 
-                {/* Footer */}
-                <div className="mt-2 pt-1 border-t border-zinc-200 text-[8px] text-zinc-400">
-                    Valid through May 28 2026 · BluDot Design Inc. · Pricing subject to contract terms
-                </div>
+            {/* ── Footer ── */}
+            <div className="px-3 py-1.5 border-t border-zinc-300 flex justify-between text-[6.5px] text-zinc-400">
+                <span>All orders subject to Terms &amp; Conditions at bluedotdesign.com</span>
+                <span>Page 1 of 1</span>
             </div>
         </div>
     )

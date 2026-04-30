@@ -196,7 +196,7 @@ function QuestionsView({
             <QuestionCard
                 index={1}
                 context="Item 12 of 143 · Pacific Fabrics Aspire lounge chair · qty 6 · finish 'Charcoal Heather'"
-                question={`"This chair finish is visually within the project palette but the spec sheet calls for the exact match ('Charcoal Tweed'). Designer didn't list a substitution rule. Accept as compatible swap, or flag it so the designer signs off explicitly?"`}
+                question={`"This chair finish is visually within the project palette but differs from the other chairs in the BOM."`}
                 rationale='History: Enterprise Holdings has accepted "close enough" finishes 7 of last 9 times — but their last project rejected one. Risk is real but small.'
                 options={[
                     { value: 'accept', label: 'Accept as compatible', detail: 'Faster · matches recent pattern (7 of 9)', selected: decisions.finishAmbiguity === 'accept-as-compatible' },
