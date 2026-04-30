@@ -148,13 +148,6 @@ export default function SpecCheckReport({ reportId = 'SC-002', decisions }: Spec
                 )}
             </div>
 
-            {/* Footer hint */}
-            <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center gap-2 text-[11px] text-muted-foreground">
-                <Sparkles className="h-3 w-3 text-ai shrink-0" />
-                <span>
-                    Replaces 2 of 3 manual audit loops. Before: "everything's blue, this one's green" caught after client sees it.
-                </span>
-            </div>
         </div>
     )
 }
