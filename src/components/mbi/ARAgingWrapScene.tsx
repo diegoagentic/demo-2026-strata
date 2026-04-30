@@ -17,22 +17,14 @@
  */
 
 import { useState } from 'react'
-import {
-    Mail, CheckCircle2, Clock, FileSignature,
-    Receipt, Package, FileText, Sparkles, PauseCircle,
-} from 'lucide-react'
+import { Mail, CheckCircle2, PauseCircle } from 'lucide-react'
 import AIEmailDraftsPanel from './AIEmailDraftsPanel'
-import FlowHandoff from './FlowHandoff'
 import { MBI_AR_RECORDS } from '../../config/profiles/mbi-data'
 import DataSourcesBar, { SOURCES } from './DataSourcesBar'
 
 export default function ARAgingWrapScene() {
     const [morningClosed, setMorningClosed] = useState(false)
 
-    const escalated = MBI_AR_RECORDS.filter(r => r.status === 'escalated').length
-    const committed = MBI_AR_RECORDS
-        .filter(r => r.status === 'committed-to-pay')
-        .reduce((acc, r) => acc + r.amount, 0)
     const heldAccounts = MBI_AR_RECORDS.filter(r => r.collectionsHold)
 
     return (
@@ -116,43 +108,17 @@ export default function ARAgingWrapScene() {
                     </button>
                 </div>
             ) : (
-                <FlowHandoff
-                    eyebrow="Flow 1 complete"
-                    recapHeading="Kathy's queue · done in 18 minutes"
-                    recapSubheading="Vouchers posted, reconciliations cleared, AR emails out — everything Strata couldn't auto-handle routed through your eyes only."
-                    recapStats={[
-                        { icon: <Clock className="h-4 w-4" />, value: '18 min', sub: 'vs 4h before', accent: 'text-success' },
-                        { icon: <Sparkles className="h-4 w-4" />, value: '5 / 12', sub: 'bills auto-posted', accent: 'text-success' },
-                        { icon: <Mail className="h-4 w-4" />, value: '3', sub: 'collection emails sent' },
-                        { icon: <Receipt className="h-4 w-4" />, value: `$${(committed / 1000).toFixed(0)}K`, sub: 'committed to pay', accent: 'text-success' },
-                    ]}
-                    timeline={[
-                        { status: 'done', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'Bill queue', caption: '12 bills triaged', flow: 'Flow 1 · Accounting AI' },
-                        { status: 'done', icon: <Receipt className="h-3.5 w-3.5" />, label: 'HealthTrust posted', caption: '3% rebate applied', flow: '—' },
-                        { status: 'done', icon: <Package className="h-3.5 w-3.5" />, label: 'Non-EDI cleared', caption: 'Apex Workspace reconciled', flow: '—' },
-                        { status: 'done', icon: <Mail className="h-3.5 w-3.5" />, label: 'AR aging reviewed', caption: `${MBI_AR_RECORDS.length} accounts · ${escalated} escalated`, flow: '—' },
-                        { status: 'next', icon: <Mail className="h-3.5 w-3.5" />, label: 'Collection emails sent', caption: '3 follow-ups out', flow: '—' },
-                        { status: 'future', icon: <FileSignature className="h-3.5 w-3.5" />, label: 'Next Enterprise PO', caption: 'PC team picks up', flow: 'Flow 2 · Quotes AI', highlight: true },
-                    ]}
-                    narrative={{
-                        eyebrow: 'Meanwhile · upstream',
-                        icon: <FileSignature className="h-5 w-5" />,
-                        title: `A new client just signed the budget the Account Manager sent last week. The PC team has work to do.`,
-                        body: (
-                            <>
-                                Marcia's team runs <strong className="text-foreground">3.5 PCs for 29 staff</strong> — the biggest bottleneck at MBI. Every approved budget used to trigger hours of manual SIF re-entry into CORE plus 4 audit loops. That's where <strong className="text-foreground">Quotes AI</strong> collapses the work.
-                            </>
-                        ),
-                    }}
-                    primaryCTA={{
-                        label: "Continue to Quotes AI · PC team's queue",
-                        icon: <FileText className="h-4 w-4" />,
-                        targetStepId: 'm3.1',
-                    }}
-                    secondaryCTAs={[
-                        { label: 'Restart from Accounting', icon: <Receipt className="h-3 w-3" />, targetStepId: 'm2.1' },
-                    ]}
-                />
+                <div className="border border-success/30 bg-success/5 dark:bg-success/10 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-success/15 text-success flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <div className="text-sm font-bold text-foreground">Queue closed · Collections AI complete</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                            Vouchers posted · reconciliations cleared · 3 collection emails out · forecast updated.
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     )
