@@ -32,11 +32,10 @@ export default function QuoteValidationScene() {
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">
-                        Quote validation — 4 audit loops collapse to 1
+                        BOM Validation
                     </div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Today, PCs run 4 sequential checks by eye — and errors still reach manufacturers. Strata validates the assembled BOM automatically:
-                        <strong className="text-foreground"> duplicates, non-catalog pricing, quantity consistency, SKU completeness</strong> — then a single human review signs off.
+                        Strata reviews the uploaded BOM, converts to SIF format if necessary, and performs multiple validations.
                     </div>
                 </div>
             </div>
