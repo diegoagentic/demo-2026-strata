@@ -16,10 +16,8 @@ export const MBI_SPEC_CHECKS: SpecCheckReport[] = [
         projectId: 'ENT-HQ-F12',
         runAt: '2026-04-18T14:30:00Z',
         lineItemsScanned: 143,
-        flags: [
-            { type: 'finish', severity: 'warning', description: 'HON Ignition finish "Forest Green" inconsistent with project palette "Marine Blue"', lineRef: 'L11' },
-        ],
-        status: 'needs-review',
+        flags: [],
+        status: 'clean',
     },
     {
         id: 'SC-003',
