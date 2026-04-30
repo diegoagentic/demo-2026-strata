@@ -226,72 +226,77 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
         `px-1 py-0.5 rounded transition-all duration-300 ${highlighted(zone) ? 'ring-1 ring-ai/60 bg-ai/10' : ''}`
 
     return (
-        <div className="bg-white dark:bg-zinc-100 text-zinc-900 rounded-xl p-3 text-[10px] font-mono shadow-sm border border-border leading-relaxed">
-            {/* Header */}
-            <div className={`flex justify-between mb-2 pb-2 border-b border-zinc-200 ${cls('header')}`}>
-                <div className="font-bold text-[11px] text-zinc-900">BLUEDOT</div>
-                <div className="text-zinc-500 text-[9px]">VENDOR QUOTE</div>
+        <div className="bg-white dark:bg-zinc-100 text-zinc-900 rounded-2xl shadow-md border border-border overflow-hidden text-[10px] font-mono leading-relaxed">
+            {/* Letterhead bar */}
+            <div className="bg-zinc-900 text-white px-3 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-[9px] font-black shrink-0">BD</div>
+                    <span className="text-[11px] font-black tracking-wider">BLUEDOT</span>
+                </div>
+                <span className="text-[9px] text-zinc-400 uppercase tracking-wider">Vendor Quote</span>
             </div>
 
-            {/* Quote ref + date */}
-            <div className="grid grid-cols-2 gap-1 mb-2 text-[9px]">
-                <div className={cls('header')}>
-                    <div className="text-zinc-500">QUOTE #</div>
-                    <div className="font-bold text-zinc-900">BD-Q-2026-0187</div>
-                </div>
-                <div className={cls('header')}>
-                    <div className="text-zinc-500">DATE</div>
-                    <div className="font-bold text-zinc-900">Apr 28 2026</div>
-                </div>
-            </div>
-
-            {/* Customer */}
-            <div className={`mb-2 ${cls('customer')}`}>
-                <div className="text-zinc-500 text-[9px]">TO</div>
-                <div className="text-zinc-900">Modern Business Interiors</div>
-                <div className="text-zinc-500">St. Charles, MO · Attn: PC Team</div>
-            </div>
-
-            {/* Line items */}
-            <div className="border-t border-zinc-200 pt-1.5 mb-2">
-                <div className="grid grid-cols-[1fr_auto_auto_auto] gap-1 text-[9px] text-zinc-500 font-bold mb-1 px-1">
-                    <div>ITEM / SKU</div>
-                    <div className="text-right">QTY</div>
-                    <div className="text-right">UNIT</div>
-                    <div className="text-right">TOTAL</div>
-                </div>
-                <div className={`grid grid-cols-[1fr_auto_auto_auto] gap-1 ${cls('item')}`}>
-                    <div>
-                        <div className="font-bold text-zinc-900">BD-FRM-WLN-2442</div>
-                        <div className="text-zinc-500 text-[8px]">Frame side table · walnut</div>
+            <div className="p-3">
+                {/* Quote ref + date */}
+                <div className="grid grid-cols-2 gap-1 mb-2 text-[9px]">
+                    <div className={cls('header')}>
+                        <div className="text-zinc-500">QUOTE #</div>
+                        <div className="font-bold text-zinc-900">BD-Q-2026-0187</div>
                     </div>
-                    <div className="text-right text-zinc-900">8</div>
-                    <div className={`text-right font-bold ${highlighted('pricing') ? 'text-zinc-900' : 'text-zinc-700'}`}>$445</div>
-                    <div className="text-right font-bold text-zinc-900">$3,560</div>
+                    <div className={cls('header')}>
+                        <div className="text-zinc-500">DATE</div>
+                        <div className="font-bold text-zinc-900">Apr 28 2026</div>
+                    </div>
                 </div>
-            </div>
 
-            {/* Terms */}
-            <div className={`border-t border-zinc-200 pt-1.5 grid grid-cols-2 gap-1 text-[9px] mb-2 ${cls('terms')}`}>
-                <div>
-                    <div className="text-zinc-500">LEAD TIME</div>
-                    <div className="font-bold text-zinc-900">5 weeks</div>
+                {/* Customer */}
+                <div className={`mb-2 ${cls('customer')}`}>
+                    <div className="text-zinc-500 text-[9px]">TO</div>
+                    <div className="text-zinc-900">Modern Business Interiors</div>
+                    <div className="text-zinc-500">St. Charles, MO · Attn: PC Team</div>
                 </div>
-                <div>
-                    <div className="text-zinc-500">MOQ</div>
-                    <div className="font-bold text-zinc-900">2 units</div>
+
+                {/* Line items */}
+                <div className="border-t border-zinc-200 pt-1.5 mb-2">
+                    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-1 text-[9px] text-zinc-500 font-bold mb-1 px-1">
+                        <div>ITEM / SKU</div>
+                        <div className="text-right">QTY</div>
+                        <div className="text-right">UNIT</div>
+                        <div className="text-right">TOTAL</div>
+                    </div>
+                    <div className={`grid grid-cols-[1fr_auto_auto_auto] gap-1 ${cls('item')}`}>
+                        <div>
+                            <div className="font-bold text-zinc-900">BD-FRM-WLN-2442</div>
+                            <div className="text-zinc-500 text-[8px]">Frame side table · walnut</div>
+                        </div>
+                        <div className="text-right text-zinc-900">8</div>
+                        <div className={`text-right font-bold ${highlighted('pricing') ? 'text-zinc-900' : 'text-zinc-700'}`}>$445</div>
+                        <div className="text-right font-bold text-zinc-900">$3,560</div>
+                    </div>
                 </div>
-            </div>
 
-            {/* Total */}
-            <div className={`border-t border-zinc-200 pt-1 flex justify-between ${cls('pricing')}`}>
-                <span className="text-zinc-500 font-bold">TOTAL</span>
-                <span className="font-bold text-zinc-900">$3,560</span>
-            </div>
+                {/* Terms */}
+                <div className={`border-t border-zinc-200 pt-1.5 grid grid-cols-2 gap-1 text-[9px] mb-2 ${cls('terms')}`}>
+                    <div>
+                        <div className="text-zinc-500">LEAD TIME</div>
+                        <div className="font-bold text-zinc-900">5 weeks</div>
+                    </div>
+                    <div>
+                        <div className="text-zinc-500">MOQ</div>
+                        <div className="font-bold text-zinc-900">2 units</div>
+                    </div>
+                </div>
 
-            {/* Footer */}
-            <div className="mt-2 pt-1 border-t border-zinc-200 text-[8px] text-zinc-400">
-                Valid through May 28 2026 · BluDot Design Inc. · Pricing subject to contract terms
+                {/* Total */}
+                <div className={`border-t-2 border-zinc-900 pt-1 flex justify-between ${cls('pricing')}`}>
+                    <span className="text-zinc-900 font-black">TOTAL</span>
+                    <span className="font-black text-zinc-900">$3,560</span>
+                </div>
+
+                {/* Footer */}
+                <div className="mt-2 pt-1 border-t border-zinc-200 text-[8px] text-zinc-400">
+                    Valid through May 28 2026 · BluDot Design Inc. · Pricing subject to contract terms
+                </div>
             </div>
         </div>
     )

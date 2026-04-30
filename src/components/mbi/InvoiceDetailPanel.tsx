@@ -153,39 +153,62 @@ function FieldRow({
 
 // ─── Mini invoice mockup ─────────────────────────────────────────────────────
 function InvoiceMockup({ invoice }: { invoice: Invoice }) {
+    const date = new Date(invoice.received).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
     return (
-        <div className="h-full w-full font-mono flex flex-col">
-            <div className="flex items-center justify-between border-b border-zinc-300 dark:border-zinc-700 pb-1">
+        <div className="h-full w-full font-mono text-[9px] text-zinc-800 dark:text-zinc-200 flex flex-col gap-1.5 overflow-hidden">
+            {/* Letterhead */}
+            <div className="flex justify-between items-start border-b-2 border-zinc-800 dark:border-zinc-300 pb-1.5">
                 <div>
-                    <div className="font-bold text-[10px]">{invoice.vendor.toUpperCase()}</div>
-                    <div className="text-zinc-400">Bill</div>
+                    <div className="text-[11px] font-black tracking-wider">{invoice.vendor.toUpperCase()}</div>
+                    <div className="text-[8px] text-zinc-500">Office furniture · St. Louis, MO</div>
                 </div>
                 <div className="text-right">
-                    <div className="font-bold text-[10px]">{invoice.id}</div>
-                    <div className="text-zinc-400">{new Date(invoice.received).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                    <div className="text-[10px] font-bold">BILL</div>
+                    <div className="text-zinc-500">{invoice.id}</div>
+                    <div className="text-zinc-500">{date}</div>
                 </div>
             </div>
-            <div className="mt-2 space-y-0.5">
-                <div className="text-zinc-500">BILL TO</div>
-                <div>Modern Business Interiors</div>
+
+            {/* Bill To */}
+            <div className="space-y-0.5">
+                <div className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider">Bill To</div>
+                <div className="font-semibold">Modern Business Interiors</div>
                 <div className="text-zinc-500">2020 N Highway 94 Service Rd W</div>
                 <div className="text-zinc-500">St. Charles, MO 63303</div>
             </div>
-            <div className="mt-2 pt-1 border-t border-zinc-200 dark:border-zinc-700 space-y-0.5">
-                <div className="flex justify-between">
-                    <span className="text-zinc-500">Ref PO</span>
-                    <span>{invoice.poNumber}</span>
+
+            {/* Line items table */}
+            <div className="flex-1 min-h-0 mt-1">
+                <div className="grid grid-cols-[1fr_auto_auto_auto] text-[8px] font-bold text-zinc-400 uppercase tracking-wider gap-x-2 pb-0.5">
+                    <span>Description</span><span>Qty</span><span>Unit Price</span><span>Amount</span>
                 </div>
-                <div className="flex justify-between">
-                    <span className="text-zinc-500">Subtotal</span>
+                <div className="border-t border-zinc-300 dark:border-zinc-600 pt-1 grid grid-cols-[1fr_auto_auto_auto] gap-x-2">
+                    <span className="truncate text-zinc-700 dark:text-zinc-300">{invoice.vendor} — Ref PO {invoice.poNumber}</span>
+                    <span>1</span>
                     <span className="tabular-nums">${invoice.amount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between font-bold pt-1 border-t border-zinc-200 dark:border-zinc-700">
-                    <span>Total Due</span>
                     <span className="tabular-nums">${invoice.amount.toLocaleString()}</span>
                 </div>
             </div>
-            <div className="mt-auto text-[7px] text-zinc-400 italic">
+
+            {/* Totals */}
+            <div className="border-t border-zinc-300 dark:border-zinc-600 pt-1 space-y-0.5">
+                <div className="flex justify-between text-zinc-500">
+                    <span>Subtotal</span>
+                    <span className="tabular-nums">${invoice.amount.toLocaleString()}</span>
+                </div>
+                {invoice.paymentTerms && (
+                    <div className="flex justify-between text-zinc-500">
+                        <span>Terms</span><span>{invoice.paymentTerms}</span>
+                    </div>
+                )}
+                <div className="flex justify-between font-black border-t-2 border-zinc-800 dark:border-zinc-300 pt-0.5">
+                    <span>TOTAL DUE</span>
+                    <span className="tabular-nums">${invoice.amount.toLocaleString()}</span>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="text-[7px] text-zinc-400 italic mt-auto">
                 Auto-extracted by Strata Document AI
             </div>
         </div>
