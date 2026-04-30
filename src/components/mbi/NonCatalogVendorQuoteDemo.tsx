@@ -21,7 +21,7 @@ import { usePauseAware } from '../../context/usePauseAware'
 import MBIDetailSheet from './MBIDetailSheet'
 
 const QUOTE_STEPS = [
-    'BlueDot vendor quote received · PDF attachment detected via Teams',
+    'BluDot vendor quote received · PDF attachment detected via Teams',
     'AI reading quote · extracting SKU · unit price · lead time · MOQ',
     'SIF entry generated · qty 8 · $445/unit · ready for PC review',
 ]
@@ -33,7 +33,7 @@ const GENERATED_ENTRY = {
     unitPrice: 445,
     leadWeeks: 5,
     moq: 2,
-    source: 'BlueDot vendor quote · received via Teams · Apr 29 2026',
+    source: 'BluDot vendor quote · received via Teams · Apr 29 2026',
 }
 
 type Phase = 'idle' | 'running' | 'done' | 'accepted'
@@ -291,7 +291,7 @@ function VendorQuoteDocument({ stepsDone, phase }: { stepsDone: number; phase: P
 
             {/* Footer */}
             <div className="mt-2 pt-1 border-t border-zinc-200 text-[8px] text-zinc-400">
-                Valid through May 28 2026 · BlueDot Design Inc. · Pricing subject to contract terms
+                Valid through May 28 2026 · BluDot Design Inc. · Pricing subject to contract terms
             </div>
         </div>
     )
