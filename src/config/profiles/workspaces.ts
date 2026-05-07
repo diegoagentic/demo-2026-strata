@@ -48,7 +48,7 @@ export const WORKSPACES_STEPS: DemoStep[] = [
         title: 'Mobile Submit + OCR',
         description: 'Strata captures a receipt photo and extracts vendor, date, amount, and category automatically — pre-populating the entire form. Employee selects a manager from the always-current dropdown and submits in seconds instead of navigating a desktop form.',
         app: 'workspaces-submit',
-        role: 'Dealer',
+        role: 'Employee',
     },
     {
         id: 'w1.2',
@@ -75,7 +75,7 @@ export const WORKSPACES_STEPS: DemoStep[] = [
         title: 'Expense Status',
         description: 'Employee sees real-time status of every expense — Submitted, In Review, Approved, Posted, Paid — with timestamps and average payment time. No need to call AP to find out where an expense stands.',
         app: 'workspaces-submit',
-        role: 'Dealer',
+        role: 'Employee',
     },
 
     // ═══════════════════════════════════════════

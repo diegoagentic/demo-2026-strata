@@ -41,7 +41,7 @@ import { useDemo } from '../../context/DemoContext'
 type WorkspacesRole = 'employee' | 'manager' | 'ap' | 'cfo'
 
 const ROLE_CONFIG: Record<WorkspacesRole, { name: string; role: string; tone: 'ai' | 'neutral' | 'info' }> = {
-    'employee': { name: 'Field Staff',          role: 'Expense Submission',         tone: 'neutral' },
+    'employee': { name: 'John Smith — Field Staff', role: 'Expense Submission · Mobile', tone: 'neutral' },
     'manager':  { name: 'Operations Manager',   role: 'Expense Approval',           tone: 'ai'      },
     'ap':       { name: 'Letza — AP Coordinator', role: 'GL Review · CORE · Admin', tone: 'neutral' },
     'cfo':      { name: 'Mehmet — CFO',         role: 'Spend Dashboard · Reporting', tone: 'info'   },
