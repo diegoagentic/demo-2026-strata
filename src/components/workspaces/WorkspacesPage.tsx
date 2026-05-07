@@ -3,20 +3,24 @@
  * PURPOSE: Container for both Workscapes, Inc. demo flows.
  *
  *   Tab 1 — Expense Submission & Approval (workspaces-submit / workspaces-approval)
- *     4-step wizard: Submit+OCR · Approval Queue · Approve with Receipt · Expense Status
+ *     4-step flow: Submit+OCR · Approval Queue · Approve with Receipt · Expense Status
  *
  *   Tab 2 — AP Processing & Reporting (workspaces-ap / workspaces-reporting)
- *     4-step wizard: AP Queue · GL+CORE Sync · Admin Self-Service · CFO Dashboard
+ *     4-step flow: AP Queue · GL+CORE Sync · Admin Self-Service · CFO Dashboard
  *
  * ROLE SYSTEM:
- *   w1.1, w1.4 → employee (field staff)
- *   w1.2, w1.3 → manager (Tammy / Operations Manager)
- *   w2.1, w2.2, w2.3 → ap (Letza / AP Coordinator)
- *   w2.4 → cfo (Mehmet / CFO)
+ *   w1.1, w1.4 → employee (field staff) — full-screen mobile experience
+ *   w1.2, w1.3 → manager (Tammy / Operations Manager) — desktop app
+ *   w2.1, w2.2, w2.3 → ap (Letza / AP Coordinator) — desktop app
+ *   w2.4 → cfo (Mehmet / CFO) — desktop dashboard
  *
  * INTERACTION PRINCIPLE:
- *   No "Next" buttons. Every scene has one semantic action that calls nextStep()
- *   as a side effect. Pattern: Submit · Approve · Confirm · Post · Export.
+ *   No "Next" buttons. Every scene has one semantic action that advances the flow.
+ *
+ * LAYOUT PRINCIPLE:
+ *   Mobile steps (w1.1, w1.4): bypass MBIPageShell entirely — dark bg fills the
+ *   viewport below the navbar, phone is the only UI. No titles, no breadcrumbs.
+ *   Desktop steps: MBIPageShell with title + tab switcher in preHeader.
  *
  * SOT: src/config/profiles/workspaces-data/workspaces-sot.md
  */
@@ -24,7 +28,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Receipt, BarChart2 } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
-import MBIWizardShell, { type WizardStepSpec } from '../mbi/MBIWizardShell'
 import MBIPersonaBadge from '../mbi/MBIPersonaBadge'
 import ExpenseSubmitScene from './ExpenseSubmitScene'
 import ApprovalQueueScene from './ApprovalQueueScene'
@@ -42,56 +45,18 @@ type WorkspacesRole = 'employee' | 'manager' | 'ap' | 'cfo'
 
 const ROLE_CONFIG: Record<WorkspacesRole, { name: string; role: string; tone: 'ai' | 'neutral' | 'info' }> = {
     'employee': { name: 'John Smith — Field Staff', role: 'Expense Submission · Mobile', tone: 'neutral' },
-    'manager':  { name: 'Operations Manager',   role: 'Expense Approval',           tone: 'ai'      },
-    'ap':       { name: 'Letza — AP Coordinator', role: 'GL Review · CORE · Admin', tone: 'neutral' },
-    'cfo':      { name: 'Mehmet — CFO',         role: 'Spend Dashboard · Reporting', tone: 'info'   },
+    'manager':  { name: 'Operations Manager',       role: 'Expense Approval',            tone: 'ai'      },
+    'ap':       { name: 'Letza — AP Coordinator',   role: 'GL Review · CORE · Admin',    tone: 'neutral' },
+    'cfo':      { name: 'Mehmet — CFO',             role: 'Spend Dashboard · Reporting', tone: 'info'    },
 }
 
-// Step → role (steps not listed default to 'employee')
+// Step → role
 const STEP_ROLE: Record<string, WorkspacesRole> = {
-    'w1.1': 'employee',
-    'w1.2': 'manager',
-    'w1.3': 'manager',
-    'w1.4': 'employee',
-    'w2.1': 'ap',
-    'w2.2': 'ap',
-    'w2.3': 'ap',
-    'w2.4': 'cfo',
+    'w1.1': 'employee', 'w1.2': 'manager', 'w1.3': 'manager', 'w1.4': 'employee',
+    'w2.1': 'ap',       'w2.2': 'ap',      'w2.3': 'ap',      'w2.4': 'cfo',
 }
 
-// ── Flow 1 wizard — Expense Submission & Approval (w1.x) ─────────────────────
-
-const SUBMISSION_STEPS: WizardStepSpec[] = [
-    { id: 'submit',  label: 'Mobile submit · OCR auto-fill',       shortLabel: '1. Submit'   },
-    { id: 'queue',   label: 'Approval queue · SLA alerts',         shortLabel: '2. Queue'    },
-    { id: 'approve', label: 'Approve with receipt inline',         shortLabel: '3. Approve'  },
-    { id: 'status',  label: 'Expense status · audit trail',        shortLabel: '4. Status'   },
-]
-
-const SUB_STEP_TO_IDX: Record<string, number> = {
-    'w1.1': 0, 'w1.2': 1, 'w1.3': 2, 'w1.4': 3,
-}
-const SUB_IDX_TO_STEP: Record<number, string> = {
-    0: 'w1.1', 1: 'w1.2', 2: 'w1.3', 3: 'w1.4',
-}
-
-// ── Flow 2 wizard — AP Processing & Reporting (w2.x) ─────────────────────────
-
-const PROCESSING_STEPS: WizardStepSpec[] = [
-    { id: 'ap-queue', label: 'AP queue · GL pre-suggested',        shortLabel: '1. AP Queue' },
-    { id: 'gl-sync',  label: 'GL confirm · auto-post CORE',        shortLabel: '2. GL Sync'  },
-    { id: 'admin',    label: 'Admin · managers · categories',      shortLabel: '3. Admin'    },
-    { id: 'dashboard', label: 'CFO dashboard · spend · trends',    shortLabel: '4. Dashboard'},
-]
-
-const PROC_STEP_TO_IDX: Record<string, number> = {
-    'w2.1': 0, 'w2.2': 1, 'w2.3': 2, 'w2.4': 3,
-}
-const PROC_IDX_TO_STEP: Record<number, string> = {
-    0: 'w2.1', 1: 'w2.2', 2: 'w2.3', 3: 'w2.4',
-}
-
-// ── Tab type ──────────────────────────────────────────────────────────────────
+// ── Tab + step index maps ─────────────────────────────────────────────────────
 
 type WorkspacesTab = 'submission' | 'processing'
 
@@ -99,6 +64,11 @@ const STEP_TO_TAB: Record<string, WorkspacesTab> = {
     'w1.1': 'submission', 'w1.2': 'submission', 'w1.3': 'submission', 'w1.4': 'submission',
     'w2.1': 'processing', 'w2.2': 'processing', 'w2.3': 'processing', 'w2.4': 'processing',
 }
+
+const SUB_STEP_TO_IDX: Record<string, number> = { 'w1.1': 0, 'w1.2': 1, 'w1.3': 2, 'w1.4': 3 }
+const SUB_IDX_TO_STEP: Record<number, string>  = { 0: 'w1.1', 1: 'w1.2', 2: 'w1.3', 3: 'w1.4' }
+const PROC_STEP_TO_IDX: Record<string, number> = { 'w2.1': 0, 'w2.2': 1, 'w2.3': 2, 'w2.4': 3 }
+const PROC_IDX_TO_STEP: Record<number, string>  = { 0: 'w2.1', 1: 'w2.2', 2: 'w2.3', 3: 'w2.4' }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -111,7 +81,7 @@ export default function WorkspacesPage() {
     const [procStep, setProcStep]     = useState(0)
     const [activeRole, setActiveRole] = useState<WorkspacesRole>('employee')
 
-    // Sync tab + wizard index + role when the demo tour navigates
+    // Sync tab + step index + role when the demo tour navigates
     useEffect(() => {
         if (!demoStepId) return
         const tab = STEP_TO_TAB[demoStepId]
@@ -143,16 +113,39 @@ export default function WorkspacesPage() {
         if (tourIdx >= 0) goToStep(tourIdx)
     }, [isDemoActive, currentStep, tourSteps, goToStep])
 
-    const roleConfig = ROLE_CONFIG[activeRole]
+    // ── Mobile steps (w1.1, w1.4) — no MBIPageShell, dark viewport fill ───────
+    // The phone IS the entire experience. No titles, breadcrumbs, or tab chrome.
 
-    const persona = (
-        <MBIPersonaBadge
-            key={activeRole}
-            name={roleConfig.name}
-            role={roleConfig.role}
-            tone={roleConfig.tone}
-        />
-    )
+    if (activeTab === 'submission' && (subStep === 0 || subStep === 3)) {
+        return (
+            <div className="min-h-screen bg-zinc-950 pt-24 flex flex-col items-center">
+                <div className="flex flex-col items-center justify-center py-8 gap-6 w-full animate-in fade-in duration-500">
+                    {/* Minimal dark tab indicator — allows switching flow without page chrome */}
+                    <div className="flex gap-1 bg-zinc-800/60 border border-zinc-700/40 rounded-xl p-1 w-fit">
+                        <button
+                            onClick={() => { setActiveTab('submission') }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-zinc-700 text-zinc-100"
+                        >
+                            <Receipt className="h-3.5 w-3.5" />
+                            Expense Submission
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('processing')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-zinc-500 hover:text-zinc-300"
+                        >
+                            <BarChart2 className="h-3.5 w-3.5" />
+                            AP & Reporting
+                        </button>
+                    </div>
+
+                    {subStep === 0 && <ExpenseSubmitScene onSubmit={() => navigateSub(1)} />}
+                    {subStep === 3 && <ExpenseStatusScene />}
+                </div>
+            </div>
+        )
+    }
+
+    // ── Desktop steps — MBIPageShell with tab switcher + persona badge ─────────
 
     const tabSwitcher = (
         <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 w-fit">
@@ -171,6 +164,11 @@ export default function WorkspacesPage() {
         </div>
     )
 
+    const roleConfig = ROLE_CONFIG[activeRole]
+    const personaBadge = (
+        <MBIPersonaBadge key={activeRole} name={roleConfig.name} role={roleConfig.role} tone={roleConfig.tone} />
+    )
+
     return (
         <MBIPageShell
             preHeader={tabSwitcher}
@@ -183,46 +181,30 @@ export default function WorkspacesPage() {
                 : <BarChart2 className="h-5 w-5" />}
             activeApp={activeTab === 'submission' ? 'workspaces-submit' : 'workspaces-ap'}
         >
-            {/* Flow 1 — Expense Submission & Approval (w1.1 → w1.4) */}
+            {/* Flow 1 — desktop steps only (w1.2, w1.3) */}
             {activeTab === 'submission' && (
-                <MBIWizardShell
-                    steps={SUBMISSION_STEPS}
-                    activeStep={subStep}
-                    onStepClick={navigateSub}
-                    onPrev={() => navigateSub(Math.max(0, subStep - 1))}
-                    onNext={() => navigateSub(Math.min(SUBMISSION_STEPS.length - 1, subStep + 1))}
-                    canAdvance
-                    persona={persona}
-                >
-                    {subStep === 0 && <ExpenseSubmitScene onSubmit={() => navigateSub(1)} />}
+                <div className="space-y-4 animate-in fade-in duration-500">
+                    {personaBadge}
                     {subStep === 1 && <ApprovalQueueScene onReview={() => navigateSub(2)} />}
                     {subStep === 2 && <ApproveWithReceiptScene onApprove={() => navigateSub(3)} />}
-                    {subStep === 3 && <ExpenseStatusScene />}
-                </MBIWizardShell>
+                </div>
             )}
 
-            {/* Flow 2 — AP Processing & Reporting (w2.1 → w2.4) */}
+            {/* Flow 2 — all desktop (w2.1 → w2.4) */}
             {activeTab === 'processing' && (
-                <MBIWizardShell
-                    steps={PROCESSING_STEPS}
-                    activeStep={procStep}
-                    onStepClick={navigateProc}
-                    onPrev={() => navigateProc(Math.max(0, procStep - 1))}
-                    onNext={() => navigateProc(Math.min(PROCESSING_STEPS.length - 1, procStep + 1))}
-                    canAdvance
-                    persona={persona}
-                >
+                <div className="space-y-4 animate-in fade-in duration-500">
+                    {personaBadge}
                     {procStep === 0 && <APReviewQueueScene onReview={() => navigateProc(1)} />}
                     {procStep === 1 && <GLCoreSyncScene onPost={() => navigateProc(2)} />}
                     {procStep === 2 && <AdminScene onSave={() => navigateProc(3)} />}
                     {procStep === 3 && <CFODashboardScene />}
-                </MBIWizardShell>
+                </div>
             )}
         </MBIPageShell>
     )
 }
 
-// ── Tab button ────────────────────────────────────────────────────────────────
+// ── Tab button (desktop / light mode) ────────────────────────────────────────
 
 function TabButton({ active, onClick, icon, label }: {
     active: boolean

@@ -1,0 +1,246 @@
+/**
+ * COMPONENT: AgencyFeeVerifyScene
+ * PURPOSE: Flow 1 · Scene 8 — Expected agency fee (from CoNY T-codes) vs
+ *          MK Invoice Processor (Nancy Bos). Patricia closes in CORE.
+ *
+ * Micro-interaction: Gap scenario toggle
+ *   Match: Expected $41,040 = Nancy $41,040 → ✅ confirm & close
+ *   Gap:   Expected $41,040 ≠ Nancy $39,790 → ⚠️ flag & hold
+ *
+ * Kate's pain point #2: "Lauren said 'there are never discrepancies' —
+ * because she could never verify. Strata checks automatically."
+ *
+ * DS TOKENS: bg-card · bg-success/5 · bg-amber-50 · border-border
+ */
+
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { Sparkles, CheckCircle2, AlertTriangle, ArrowRight, DollarSign, Flag } from 'lucide-react'
+import { useDemo } from '../../context/DemoContext'
+import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+
+interface AgencyFeeVerifySceneProps {
+    onRoleChange?: (role: string) => void
+}
+
+const FEE_LINES = [
+    { product: 'Lounge Seating (×8)',  sale: '$84,000',  tcode: '18%', fee: '$15,120' },
+    { product: 'Work Tables (×12)',    sale: '$96,000',  tcode: '18%', fee: '$17,280' },
+    { product: 'Side Chairs (×12)',    sale: '$48,000',  tcode: '18%', fee: '$8,640'  },
+]
+
+const EXPECTED_FEE = '$41,040'
+const NANCY_MATCH   = '$41,040'
+const NANCY_GAP     = '$39,790'   // simulated discrepancy: -$1,250
+
+export default function AgencyFeeVerifyScene({ onRoleChange }: AgencyFeeVerifySceneProps) {
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+
+    const [revealedCount, setRevealedCount] = useState(0)
+    const [scenario, setScenario]           = useState<'match' | 'gap'>('match')
+    const [confirmed, setConfirmed]         = useState(false)
+    const [flagged, setFlagged]             = useState(false)
+
+    const allRevealed = revealedCount >= FEE_LINES.length
+    const isGap = scenario === 'gap'
+
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
+    useEffect(() => {
+        if (revealedCount >= FEE_LINES.length) return
+        const t = setTimeout(pauseAware(() => setRevealedCount(c => c + 1)), 400)
+        return () => clearTimeout(t)
+    }, [revealedCount, pauseAware])
+
+    const handleConfirm = () => {
+        setConfirmed(true)
+        setTimeout(pauseAware(() => nextStep()), 700)
+    }
+
+    const handleFlag = () => {
+        setFlagged(true)
+        setTimeout(pauseAware(() => nextStep()), 900)
+    }
+
+    return (
+        <div className="space-y-4">
+            {/* Context banner */}
+            <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
+                <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
+                <div className="text-xs flex-1">
+                    <div className="font-bold text-foreground">Agency Fee Verification · DOH-0671</div>
+                    <div className="text-muted-foreground mt-0.5 leading-relaxed">
+                        Strata calculated the expected fee from CoNY contract T-codes and compared it against the MK Invoice Processor report from Nancy Bos.
+                    </div>
+                </div>
+            </div>
+
+            {/* Fee calculation table */}
+            <div className="border border-border rounded-xl overflow-hidden">
+                <div className="grid grid-cols-4 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="col-span-2">Product</span>
+                    <span>T-code</span>
+                    <span className="text-right">Expected fee</span>
+                </div>
+                {FEE_LINES.slice(0, revealedCount).map((line) => (
+                    <div
+                        key={line.product}
+                        className="grid grid-cols-4 gap-0 px-3.5 py-2.5 text-xs border-t border-border animate-in fade-in slide-in-from-left-1 duration-300"
+                    >
+                        <span className="col-span-2 font-medium text-foreground">{line.product}</span>
+                        <span className="text-muted-foreground tabular-nums">{line.tcode}</span>
+                        <span className="text-right font-bold text-foreground tabular-nums">{line.fee}</span>
+                    </div>
+                ))}
+                {allRevealed && (
+                    <div className="px-3.5 py-2.5 border-t border-border bg-muted/20 flex items-center justify-between text-xs animate-in fade-in duration-300">
+                        <span className="font-bold text-foreground">Total expected · BFI contract @ 18%</span>
+                        <span className="font-bold text-foreground tabular-nums">{EXPECTED_FEE}</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Comparison vs Nancy Bos — appears after all revealed */}
+            {allRevealed && (
+                <div className={`border rounded-xl overflow-hidden animate-in fade-in duration-300 transition-colors ${
+                    isGap
+                        ? 'border-amber-200 dark:border-amber-500/30'
+                        : 'border-success/30'
+                }`}>
+                    {/* Scenario toggle — demo affordance */}
+                    {!confirmed && !flagged && (
+                        <div className="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-border bg-muted/40">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                                MK Invoice Processor · Nancy Bos report
+                            </span>
+                            <div className="flex gap-1 bg-background border border-border rounded-lg p-0.5">
+                                <button
+                                    onClick={() => setScenario('match')}
+                                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                        !isGap
+                                            ? 'bg-card text-foreground shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    ✓ Match
+                                </button>
+                                <button
+                                    onClick={() => setScenario('gap')}
+                                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                        isGap
+                                            ? 'bg-card text-foreground shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    ⚠ Gap
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Comparison grid */}
+                    <div className={`grid grid-cols-3 gap-0 px-3.5 py-3 text-xs ${
+                        isGap ? 'bg-amber-50 dark:bg-amber-500/5' : 'bg-success/5'
+                    }`}>
+                        <div className="text-center">
+                            <div className="text-[10px] text-muted-foreground mb-1">Expected (T-codes)</div>
+                            <div className="font-bold text-foreground tabular-nums">{EXPECTED_FEE}</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-[10px] text-muted-foreground mb-1">Nancy Bos (MK)</div>
+                            <div className={`font-bold tabular-nums transition-colors ${
+                                isGap ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'
+                            }`}>
+                                {isGap ? NANCY_GAP : NANCY_MATCH}
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-[10px] text-muted-foreground mb-1">Variance</div>
+                            <div className={`font-bold tabular-nums flex items-center justify-center gap-1 transition-colors ${
+                                isGap ? 'text-amber-600 dark:text-amber-400' : 'text-success'
+                            }`}>
+                                {isGap
+                                    ? <><AlertTriangle className="h-3 w-3" /> −$1,250</>
+                                    : <><CheckCircle2 className="h-3 w-3" /> $0</>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Match / Gap context line */}
+                    <div className={`px-3.5 py-2 text-[11px] border-t ${
+                        isGap
+                            ? 'border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium'
+                            : 'border-success/20 text-success font-medium'
+                    }`}>
+                        {isGap
+                            ? 'MK invoice is $1,250 below contract entitlement — previously undetectable without Strata'
+                            : 'Fee confirmed · contract entitlement matches MK Invoice Processor report'
+                        }
+                    </div>
+                </div>
+            )}
+
+            {/* CTAs — match scenario */}
+            {allRevealed && !isGap && !confirmed && !flagged && (
+                <div className="flex items-center justify-end animate-in fade-in slide-in-from-bottom-1 duration-300">
+                    <button
+                        onClick={handleConfirm}
+                        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                    >
+                        <DollarSign className="h-3.5 w-3.5" />
+                        Confirm &amp; send to Finance / AR
+                        <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            )}
+
+            {/* CTAs — gap scenario */}
+            {allRevealed && isGap && !confirmed && !flagged && (
+                <div className="flex items-center justify-end animate-in fade-in slide-in-from-bottom-1 duration-300">
+                    <button
+                        onClick={handleFlag}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                    >
+                        <Flag className="h-3.5 w-3.5" />
+                        Flag gap · hold for Finance review
+                    </button>
+                </div>
+            )}
+
+            {/* Match confirmed */}
+            {confirmed && (
+                <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
+                    <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                        <div className="font-bold text-foreground">DOH-0671 closed · Agency fee $41,040 verified</div>
+                        <div className="text-muted-foreground mt-0.5">Patricia notified to apply fee and close CORE · order invoiceable</div>
+                    </div>
+                </div>
+            )}
+
+            {/* Gap flagged */}
+            {flagged && (
+                <div className="bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
+                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                        <div className="font-bold text-foreground">Gap flagged · DOH-0671 on hold</div>
+                        <div className="text-muted-foreground mt-0.5">
+                            Patricia and Michael notified · −$1,250 variance escalated to MK Invoice Processor · pending resolution before close
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] },
+            ]} />
+        </div>
+    )
+}

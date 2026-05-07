@@ -1,0 +1,115 @@
+/**
+ * COMPONENT: DiscountCalcScene
+ * PURPOSE: Flow 1 · Scene 3 — Auto discount calculation (sell÷list-1) + true-up line.
+ *          Lauren applies discount to CORE with one click.
+ *
+ * DS TOKENS: bg-card · bg-ai/5 · text-success · border-border
+ */
+
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Sparkles, CheckCircle2, Calculator } from 'lucide-react'
+import { useDemo } from '../../context/DemoContext'
+import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+
+interface DiscountCalcSceneProps {
+    onApply?: () => void
+}
+
+const LINE_ITEMS = [
+    { product: 'Workstations (×18)', list: '$120,000', sale: '$108,000', discount: '10.0%' },
+    { product: 'Task Chairs (×18)',  list: '$36,000',  sale: '$32,400',  discount: '10.0%' },
+    { product: 'Filing Units (×6)',  list: '$8,400',   sale: '$7,560',   discount: '10.0%' },
+]
+
+export default function DiscountCalcScene({ onApply }: DiscountCalcSceneProps) {
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+
+    const [applied, setApplied] = useState(false)
+
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
+    const handleApply = () => {
+        setApplied(true)
+        setTimeout(pauseAware(() => {
+            onApply?.()
+            nextStep()
+        }), 800)
+    }
+
+    return (
+        <div className="space-y-4">
+            {/* Context banner */}
+            <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
+                <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
+                <div className="text-xs flex-1">
+                    <div className="font-bold text-foreground">Discount Calculation · NYPD-0394</div>
+                    <div className="text-muted-foreground mt-0.5 leading-relaxed">
+                        Strata applied (Sale ÷ List) − 1 per line and inserted the true-up to zero GP. Cost = Sale confirmed.
+                    </div>
+                </div>
+            </div>
+
+            {/* Line items */}
+            <div className="border border-border rounded-xl overflow-hidden bg-card">
+                <div className="grid grid-cols-4 gap-2 px-3.5 py-2 border-b border-border bg-muted/40">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide col-span-2">Product</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide text-right">List</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide text-right">Discount</div>
+                </div>
+                {LINE_ITEMS.map((item) => (
+                    <div key={item.product} className="grid grid-cols-4 gap-2 px-3.5 py-2.5 border-b border-border last:border-b-0 items-center">
+                        <div className="col-span-2">
+                            <div className="text-xs font-medium text-foreground">{item.product}</div>
+                            <div className="text-[11px] text-muted-foreground">Sale: {item.sale}</div>
+                        </div>
+                        <div className="text-xs text-foreground text-right tabular-nums">{item.list}</div>
+                        <div className="text-xs font-bold text-success text-right tabular-nums">{item.discount}</div>
+                    </div>
+                ))}
+                {/* True-up row */}
+                <div className="px-3.5 py-2.5 bg-success/5 border-t border-success/20 flex items-center justify-between">
+                    <div className="text-[11px] font-medium text-success flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        True-up line · Cost = Sale confirmed
+                    </div>
+                    <div className="text-[11px] font-bold text-success tabular-nums">GP: $0</div>
+                </div>
+            </div>
+
+            {/* Formula note */}
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <Calculator className="h-3.5 w-3.5 shrink-0" />
+                Formula: (Sale ÷ List) − 1 · Applied to all 3 lines
+            </div>
+
+            {/* Action */}
+            {!applied ? (
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleApply}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                    >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Apply discount to CORE
+                    </button>
+                </div>
+            ) : (
+                <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-center gap-2 animate-in fade-in duration-300">
+                    <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                    <div className="text-xs font-bold text-foreground">Discount applied · NYPD-0394 updated in CORE</div>
+                </div>
+            )}
+
+            <DataSourcesBar groups={[
+                { sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] },
+            ]} />
+        </div>
+    )
+}
