@@ -95,9 +95,9 @@ export default function ApprovalQueueScene({ onReview }: { onReview?: () => void
         setTimeout(tick, 0)
     }, [])
 
-    // Auto-trigger notification after a short pause
+    // Auto-trigger notification — long pause so the presenter can narrate the initial state
     useEffect(() => {
-        pauseAware(() => setScene('notified'), 1600)
+        pauseAware(() => setScene('notified'), 5500)
     }, [pauseAware])
 
     const totalAmount = EXPENSES.reduce(

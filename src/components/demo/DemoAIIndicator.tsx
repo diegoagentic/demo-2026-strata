@@ -106,7 +106,7 @@ export default function DemoAIIndicator() {
         };
 
     return (
-        <div className="sticky top-0 z-50 px-4 sm:px-6 pt-2 pb-1">
+        <div className="sticky top-16 z-40 px-4 sm:px-6 pt-2 pb-1">
             <div className={`relative overflow-hidden rounded-xl backdrop-blur-sm border transition-all duration-500 ${accent.bg} ${accent.border}`}>
 
                 {/* ── Main Row ── */}
