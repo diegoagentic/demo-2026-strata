@@ -193,5 +193,6 @@ export const WORKSPACES_SELF_INDICATED: string[] = [
     'w1.1', // OCR animation handles its own AI reveal
     'w1.2', // Notification card inside the scene replaces the banner
     'w1.3', // Approve/reject scenario toggle is self-indicating
+    'w1.4', // Push notification inside the scene is self-indicating
     'w2.2', // CORE post animation handles its own AI reveal
 ];
