@@ -18,13 +18,13 @@
 import { useState } from 'react'
 import {
     CheckCircle2, XCircle, Receipt, AlertTriangle, ChevronRight,
-    RotateCcw, Sparkles, Pencil, X, ShieldCheck, Clock, User,
+    RotateCcw, Sparkles, Pencil, X, ShieldCheck, Clock, User, Send,
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import { ReceiptImage } from './ExpenseSubmitScene'
 
 type ScenarioMode = 'approve' | 'reject' | 'planb'
-type ApproveState = 'pending' | 'editing' | 'approved' | 'rejected' | 'overridden'
+type ApproveState = 'pending' | 'editing' | 'sending' | 'approved' | 'rejected' | 'overridden'
 
 const CATEGORIES = ['Fuel + Parking', 'Client Meals', 'Travel', 'Office Supplies', 'Other']
 
@@ -74,8 +74,11 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     const switchMode = (m: ScenarioMode) => { setMode(m); reset() }
 
     const handleApprove = () => {
-        setAppState('approved')
-        setTimeout(() => onApprove?.(), 900)
+        setAppState('sending')
+        setTimeout(() => {
+            setAppState('approved')
+            setTimeout(() => onApprove?.(), 1800)
+        }, 1200)
     }
 
     const handleRejectConfirm = () => {
@@ -300,7 +303,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
             )}
 
             {/* ── Actions ── */}
-            {appState === 'pending' && (
+            {(appState === 'pending') && (
                 <div className="space-y-2">
                     {/* Approve */}
                     {(mode === 'approve') && (
@@ -420,6 +423,24 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                             )}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* ── Sending state ── */}
+            {appState === 'sending' && (
+                <div className="space-y-3 animate-in fade-in duration-300">
+                    <div className="bg-card border border-border rounded-xl px-4 py-5 flex flex-col items-center gap-3">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Send className="h-5 w-5 text-primary animate-pulse" />
+                        </div>
+                        <div className="text-center space-y-1">
+                            <p className="text-sm font-bold text-foreground">Approving expense...</p>
+                            <p className="text-xs text-muted-foreground">Routing to AP · Pre-filling GL codes · Notifying John Smith</p>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-1 overflow-hidden">
+                            <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '70%' }} />
+                        </div>
+                    </div>
                 </div>
             )}
 
