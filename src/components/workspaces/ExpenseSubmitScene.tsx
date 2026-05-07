@@ -6,7 +6,7 @@
  */
 
 import { useState, useRef, useCallback } from 'react'
-import { Camera, Plus, CheckCircle2, Clock, Sparkles, ChevronRight, ArrowLeft, Bell } from 'lucide-react'
+import { Camera, Plus, CheckCircle2, Clock, Sparkles, ChevronRight, Bell } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
@@ -75,16 +75,35 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
     return (
         <div className="flex flex-col items-center gap-4">
             <MobileDeviceFrame>
-                {/* Mobile app nav */}
-                <div className="flex items-center justify-between px-4 pt-8 pb-3 border-b border-border/60">
+                {/* Mobile navbar — Strata for Workscapes, adapted for phone */}
+                <div className="flex items-center justify-between px-3 pt-8 pb-2.5 border-b border-border/60 bg-card/40">
+                    {/* Left: Strata logo + app context */}
                     <div className="flex items-center gap-2">
-                        <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                            <p className="text-[9px] text-muted-foreground font-medium leading-none">WORKSCAPES</p>
-                            <p className="text-xs font-bold text-foreground leading-tight">New Expense</p>
+                        <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+                            <span className="text-primary-foreground text-[10px] font-black leading-none">S</span>
+                        </div>
+                        <div className="pl-1.5 border-l border-border">
+                            <p className="text-[9px] text-muted-foreground font-medium leading-none uppercase tracking-wide">Workscapes, Inc.</p>
+                            <p className="text-[11px] font-bold text-foreground leading-tight">Expense Submission</p>
                         </div>
                     </div>
-                    <Bell className="h-4 w-4 text-muted-foreground" />
+                    {/* Right: user + bell */}
+                    <div className="flex items-center gap-2">
+                        <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                        <div className="flex items-center gap-1.5">
+                            <div className="text-right">
+                                <p className="text-[10px] font-semibold text-foreground leading-none">John Smith</p>
+                                <p className="text-[9px] text-muted-foreground leading-none">Field Staff</p>
+                            </div>
+                            <div className="h-6 w-6 rounded-full bg-muted overflow-hidden shrink-0">
+                                <img
+                                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
+                                    alt="John Smith"
+                                    className="h-full w-full object-cover"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {submitState === 'submitted' ? (

@@ -118,29 +118,9 @@ export default function WorkspacesPage() {
 
     if (activeTab === 'submission' && (subStep === 0 || subStep === 3)) {
         return (
-            <div className="min-h-screen bg-zinc-950 pt-24 flex flex-col items-center">
-                <div className="flex flex-col items-center justify-center py-8 gap-6 w-full animate-in fade-in duration-500">
-                    {/* Minimal dark tab indicator — allows switching flow without page chrome */}
-                    <div className="flex gap-1 bg-zinc-800/60 border border-zinc-700/40 rounded-xl p-1 w-fit">
-                        <button
-                            onClick={() => { setActiveTab('submission') }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-zinc-700 text-zinc-100"
-                        >
-                            <Receipt className="h-3.5 w-3.5" />
-                            Expense Submission
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('processing')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-zinc-500 hover:text-zinc-300"
-                        >
-                            <BarChart2 className="h-3.5 w-3.5" />
-                            AP & Reporting
-                        </button>
-                    </div>
-
-                    {subStep === 0 && <ExpenseSubmitScene onSubmit={() => navigateSub(1)} />}
-                    {subStep === 3 && <ExpenseStatusScene />}
-                </div>
+            <div className="min-h-screen bg-zinc-950 dark:bg-zinc-900 flex flex-col items-center justify-center py-8 gap-6 animate-in fade-in duration-500">
+                {subStep === 0 && <ExpenseSubmitScene onSubmit={() => navigateSub(1)} />}
+                {subStep === 3 && <ExpenseStatusScene />}
             </div>
         )
     }
