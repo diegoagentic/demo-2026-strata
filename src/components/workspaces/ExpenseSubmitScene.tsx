@@ -28,18 +28,24 @@ const MANAGERS = [
         name: 'Sarah Johnson',
         dept: 'Operations · Tampa',
         photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
+        aiSuggested: true,
+        aiReason: 'Your team lead · Tampa · approved 12 of your past expenses',
     },
     {
         id: 'mike',
         name: 'Mike Torres',
         dept: 'Sales · Orlando',
         photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
+        aiSuggested: false,
+        aiReason: '',
     },
     {
         id: 'ana',
         name: 'Ana Reyes',
         dept: 'Procurement · Miami',
         photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
+        aiSuggested: false,
+        aiReason: '',
     },
 ]
 
@@ -186,6 +192,14 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
                         <p className="text-[11px] text-muted-foreground mt-0.5">Who should review this $142.50 expense?</p>
                     </div>
 
+                    {/* AI suggestion header */}
+                    <div className="flex items-center gap-2 bg-ai/5 border border-ai/20 rounded-xl px-3 py-2">
+                        <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
+                        <p className="text-[11px] text-foreground">
+                            <span className="font-semibold">Strata suggests</span> the best match based on your team and location
+                        </p>
+                    </div>
+
                     <div className="space-y-2">
                         {MANAGERS.map(m => (
                             <button
@@ -194,15 +208,34 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all text-left ${
                                     selectedMgr?.id === m.id
                                         ? 'border-primary/60 bg-primary/5'
+                                        : m.aiSuggested
+                                        ? 'border-ai/40 bg-ai/5 hover:bg-ai/10'
                                         : 'border-border bg-card hover:bg-muted/40'
                                 }`}
                             >
-                                <div className="h-10 w-10 rounded-full overflow-hidden shrink-0 border border-border">
-                                    <img src={m.photo} alt={m.name} className="h-full w-full object-cover" />
+                                <div className="relative h-10 w-10 shrink-0">
+                                    <div className="h-10 w-10 rounded-full overflow-hidden border border-border">
+                                        <img src={m.photo} alt={m.name} className="h-full w-full object-cover" />
+                                    </div>
+                                    {m.aiSuggested && (
+                                        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-ai flex items-center justify-center border border-card">
+                                            <Sparkles className="h-2 w-2 text-white" />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-foreground">{m.name}</p>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <p className="text-sm font-semibold text-foreground">{m.name}</p>
+                                        {m.aiSuggested && !selectedMgr && (
+                                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full animate-in fade-in duration-300">
+                                                ✦ AI pick
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-[11px] text-muted-foreground">{m.dept}</p>
+                                    {m.aiSuggested && !selectedMgr && (
+                                        <p className="text-[10px] text-ai mt-0.5">{m.aiReason}</p>
+                                    )}
                                     {selectedMgr?.id === m.id && (
                                         <p className="text-[10px] text-ai font-medium mt-0.5 animate-in fade-in duration-200">
                                             ✦ Will review &amp; approve
