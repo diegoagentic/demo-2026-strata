@@ -11,6 +11,8 @@ import { CONTINUA_DEMO_STEPS, CONTINUA_DEMO_STEP_BEHAVIOR, CONTINUA_DEMO_STEP_ME
 import { WRG_DEMO_STEPS, WRG_DEMO_STEP_BEHAVIOR, WRG_DEMO_STEP_MESSAGES, WRG_DEMO_SELF_INDICATED } from './profiles/wrg-demo';
 import { MBI_STEPS, MBI_STEP_BEHAVIOR, MBI_STEP_MESSAGES, MBI_SELF_INDICATED } from './profiles/mbi';
 import { LELAND_STEPS, LELAND_STEP_BEHAVIOR, LELAND_STEP_MESSAGES, LELAND_SELF_INDICATED } from './profiles/leland-demo';
+import { BFI_STEPS, BFI_STEP_BEHAVIOR, BFI_STEP_MESSAGES, BFI_SELF_INDICATED } from './profiles/bfi';
+import { WORKSPACES_STEPS, WORKSPACES_STEP_BEHAVIOR, WORKSPACES_STEP_MESSAGES, WORKSPACES_SELF_INDICATED } from './profiles/workspaces';
 
 export type SimulationApp =
     | 'dashboard' | 'expert-hub' | 'email-marketplace'
@@ -21,7 +23,9 @@ export type SimulationApp =
     | 'dupler-pdf' | 'dupler-warehouse' | 'dupler-reporting'
     | 'wrg-estimator'
     | 'mbi-overview' | 'mbi-budget' | 'mbi-accounting' | 'mbi-quotes' | 'mbi-design'
-    | 'leland-strata' | 'leland-inbox' | 'leland-seradex' | 'leland-review';
+    | 'leland-strata' | 'leland-inbox' | 'leland-seradex' | 'leland-review'
+    | 'bfi-agency-fee' | 'bfi-receiving'
+    | 'workspaces-submit' | 'workspaces-approval' | 'workspaces-ap' | 'workspaces-reporting';
 
 export interface DemoStep {
     id: string;
@@ -30,11 +34,11 @@ export interface DemoStep {
     title: string;
     description: string;
     app: SimulationApp;
-    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager';
+    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO';
     highlightId?: string;
 }
 
-export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland';
+export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces';
 
 export interface DemoProfile {
     id: DemoProfileId;
@@ -136,5 +140,27 @@ export const DEMO_PROFILES: DemoProfile[] = [
         stepBehavior: LELAND_STEP_BEHAVIOR,
         stepMessages: LELAND_STEP_MESSAGES,
         selfIndicatedSteps: LELAND_SELF_INDICATED,
+    },
+    {
+        id: 'bfi',
+        name: 'BFI',
+        companyName: 'BFI',
+        description: 'Agency Fee AI · CoNY receiving workflow',
+        icon: '🏛️',
+        steps: BFI_STEPS,
+        stepBehavior: BFI_STEP_BEHAVIOR,
+        stepMessages: BFI_STEP_MESSAGES,
+        selfIndicatedSteps: BFI_SELF_INDICATED,
+    },
+    {
+        id: 'workspaces',
+        name: 'Workscapes',
+        companyName: 'Workscapes, Inc.',
+        description: 'Expense report AI · GL auto-fill · CORE sync · spend dashboard',
+        icon: '📊',
+        steps: WORKSPACES_STEPS,
+        stepBehavior: WORKSPACES_STEP_BEHAVIOR,
+        stepMessages: WORKSPACES_STEP_MESSAGES,
+        selfIndicatedSteps: WORKSPACES_SELF_INDICATED,
     },
 ];

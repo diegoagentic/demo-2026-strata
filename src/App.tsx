@@ -46,7 +46,9 @@ import MBIBudgetPage from "./components/mbi/MBIBudgetPage"
 import MBIAccountingPage from "./components/mbi/MBIAccountingPage"
 import MBIQuotesPage from "./components/mbi/MBIQuotesPage"
 import MBIDesignPage from "./components/mbi/MBIDesignPage"
-import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon } from 'lucide-react'
+import BFIPage from "./components/bfi/BFIPage"
+import WorkspacesPage from "./components/workspaces/WorkspacesPage"
+import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon } from 'lucide-react'
 
 // Leland Demo — 4 app shells (Phase L0 · expanded in L1-L5)
 import { LelandStrataShell, LelandInboxApp, LelandSeradexApp, LelandReviewQueueApp } from "./features/leland"
@@ -87,8 +89,8 @@ function App() {
   const handleNavigate = (page: string) => {
     if (page === 'overview') {
       setCurrentPage('dashboard')
-    } else if (page.startsWith('mbi-') || page.startsWith('leland-')) {
-      // MBI/Leland nav tabs jump to the first demo step matching that module's app
+    } else if (page.startsWith('mbi-') || page.startsWith('leland-') || page.startsWith('bfi-')) {
+      // MBI/Leland/BFI nav tabs jump to the first demo step matching that module's app
       const idx = steps.findIndex(s => s.app === page)
       if (idx >= 0) goToStep(idx)
     } else {
@@ -128,6 +130,8 @@ function App() {
   const isWRG = demoProfile.id === 'wrg';
   const isMBI = demoProfile.id === 'mbi';
   const isLeland = demoProfile.id === 'leland';
+  const isBFI = demoProfile.id === 'bfi';
+  const isWorkspaces = demoProfile.id === 'workspaces';
   const getSimulationConfig = () => {
     if (!isDemoActive) return { appName: undefined, companyName: undefined, customNavigation: undefined };
 
@@ -156,8 +160,24 @@ function App() {
       : 'PO Workspace';
     const lelandCompany = currentStep.role === 'System' ? 'Strata Services' : demoProfile.companyName;
 
+    // BFI — appName follows the active module; company is always BFI Furniture
+    const bfiAppName = currentStep.app === 'bfi-agency-fee' ? 'Agency Fee AI'
+      : currentStep.app === 'bfi-receiving' ? 'Receiving AI'
+      : 'Agency Fee AI';
+    const bfiCompany = demoProfile.companyName;
+
+    // Workspaces — appName follows the active module; company is Workscapes, Inc.
+    const workspacesAppName = currentStep.app === 'workspaces-submit' ? 'Expense Submission'
+      : currentStep.app === 'workspaces-approval' ? 'Manager Approval'
+      : currentStep.app === 'workspaces-ap' ? 'AP Processing'
+      : currentStep.app === 'workspaces-reporting' ? 'Spend Dashboard'
+      : 'Expense AI';
+    const workspacesCompany = demoProfile.companyName;
+
     const resolvedAppName = isContinua ? continuaAppName
       : isLeland ? lelandAppName
+      : isBFI ? bfiAppName
+      : isWorkspaces ? workspacesAppName
       : currentStep.app === 'email-marketplace' ? (isWRG ? 'WRG Mail' : 'Wells Fargo Mail')
       : currentStep.app === 'catalog' ? 'Marketplace'
       : currentStep.app === 'service-now' ? 'ServiceNow'
@@ -171,6 +191,8 @@ function App() {
       : 'Dealer Experience';
     const resolvedCompany = isContinua ? continuaCompany
       : isLeland ? lelandCompany
+      : isBFI ? bfiCompany
+      : isWorkspaces ? workspacesCompany
       : isExpert || isDuplerExpert || isWrgExpert || isWrgDesigner ? 'Strata Services'
       : demoProfile.companyName;
 
@@ -220,7 +242,19 @@ function App() {
       { name: 'Review Queue', page: 'leland-review', icon: ShieldCheckIcon },
     ];
 
-    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : expertNav;
+    // BFI profile: 2-tab primary nav (Agency Fee AI · Receiving AI)
+    const bfiNav = [
+      { name: 'Agency Fee AI', page: 'bfi-agency-fee', icon: Building2Icon },
+      { name: 'Receiving AI', page: 'bfi-receiving', icon: ReceiptIcon },
+    ];
+
+    // Workspaces profile: 2-tab primary nav (Expense Submission · AP & Reporting)
+    const workspacesNav = [
+      { name: 'Expense Submission', page: 'workspaces-submit', icon: ReceiptIcon },
+      { name: 'AP & Reporting', page: 'workspaces-ap', icon: Building2Icon },
+    ];
+
+    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : expertNav;
     return { appName: resolvedAppName, companyName: resolvedCompany, customNavigation: nav };
   };
 
@@ -260,6 +294,14 @@ function App() {
       'mbi-accounting': 'mbi-accounting',
       'mbi-quotes': 'mbi-quotes',
       'mbi-design': 'mbi-design',
+      // BFI Demo: two modules, each owns its primary nav tab (see bfiNav)
+      'bfi-agency-fee': 'bfi-agency-fee',
+      'bfi-receiving': 'bfi-receiving',
+      // Workspaces Demo: two flows, submission tabs → submit nav, ap/reporting → ap nav
+      'workspaces-submit': 'workspaces-submit',
+      'workspaces-approval': 'workspaces-submit',
+      'workspaces-ap': 'workspaces-ap',
+      'workspaces-reporting': 'workspaces-ap',
     };
     return appToTab[currentStep.app] || currentPage;
   };
@@ -353,6 +395,14 @@ function App() {
         return <LelandSeradexApp />;
       case 'leland-review':
         return <LelandReviewQueueApp />;
+      case 'bfi-agency-fee':
+      case 'bfi-receiving':
+        return <BFIPage />;
+      case 'workspaces-submit':
+      case 'workspaces-approval':
+      case 'workspaces-ap':
+      case 'workspaces-reporting':
+        return <WorkspacesPage />;
       default:
         return (
           <ExpertHubTransactions
