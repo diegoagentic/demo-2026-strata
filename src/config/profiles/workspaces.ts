@@ -191,5 +191,6 @@ export const WORKSPACES_STEP_MESSAGES: Record<string, string[]> = {
 
 export const WORKSPACES_SELF_INDICATED: string[] = [
     'w1.1', // OCR animation handles its own AI reveal
+    'w1.2', // Notification card inside the scene replaces the banner
     'w2.2', // CORE post animation handles its own AI reveal
 ];
