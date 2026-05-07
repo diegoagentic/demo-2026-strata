@@ -26,9 +26,10 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
-import { Receipt, BarChart2 } from 'lucide-react'
+import { Receipt, BarChart2, MousePointerClick } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
 import MBIPersonaBadge from '../mbi/MBIPersonaBadge'
+import { WORKSPACES_STEP_BEHAVIOR } from '../../config/profiles/workspaces'
 import ExpenseSubmitScene from './ExpenseSubmitScene'
 import ApprovalQueueScene from './ApprovalQueueScene'
 import ApproveWithReceiptScene from './ApproveWithReceiptScene'
@@ -165,6 +166,7 @@ export default function WorkspacesPage() {
             {activeTab === 'submission' && (
                 <div className="space-y-4 animate-in fade-in duration-500">
                     {personaBadge}
+                    <StepHint stepId={SUB_IDX_TO_STEP[subStep]} />
                     {subStep === 1 && <ApprovalQueueScene onReview={() => navigateSub(2)} />}
                     {subStep === 2 && <ApproveWithReceiptScene onApprove={() => navigateSub(3)} />}
                 </div>
@@ -174,6 +176,7 @@ export default function WorkspacesPage() {
             {activeTab === 'processing' && (
                 <div className="space-y-4 animate-in fade-in duration-500">
                     {personaBadge}
+                    <StepHint stepId={PROC_IDX_TO_STEP[procStep]} />
                     {procStep === 0 && <APReviewQueueScene onReview={() => navigateProc(1)} />}
                     {procStep === 1 && <GLCoreSyncScene onPost={() => navigateProc(2)} />}
                     {procStep === 2 && <AdminScene onSave={() => navigateProc(3)} />}
@@ -181,6 +184,20 @@ export default function WorkspacesPage() {
                 </div>
             )}
         </MBIPageShell>
+    )
+}
+
+// ── Step hint — replaces the orange AI banner for desktop steps ───────────────
+
+function StepHint({ stepId }: { stepId: string | undefined }) {
+    if (!stepId) return null
+    const behavior = WORKSPACES_STEP_BEHAVIOR[stepId]
+    if (!behavior?.userAction) return null
+    return (
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+            <span>{behavior.userAction}</span>
+        </div>
     )
 }
 

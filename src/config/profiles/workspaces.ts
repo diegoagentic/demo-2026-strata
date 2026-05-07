@@ -194,5 +194,8 @@ export const WORKSPACES_SELF_INDICATED: string[] = [
     'w1.2', // Notification card inside the scene replaces the banner
     'w1.3', // Approve/reject scenario toggle is self-indicating
     'w1.4', // Push notification inside the scene is self-indicating
+    'w2.1', // Scene has its own queue indicators
     'w2.2', // CORE post animation handles its own AI reveal
+    'w2.3', // Admin scene is self-explanatory
+    'w2.4', // Dashboard scene has its own filter/action affordances
 ];
