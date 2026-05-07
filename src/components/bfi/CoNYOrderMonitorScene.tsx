@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, Package, ChevronDown, ChevronUp } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, Package, ChevronDown, ChevronUp, Truck, Lock } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -25,7 +25,9 @@ const ORDERS = [
         daysInWig: 22,
         daysRemaining: 8,
         status: 'ready',
+        carrier: 'Freight',
         fedexGap: null,
+        agencyFeeBlocked: false,
     },
     {
         id: 'DCAS-1182',
@@ -34,10 +36,12 @@ const ORDERS = [
         daysInWig: 18,
         daysRemaining: 12,
         status: 'in-progress',
+        carrier: 'Freight + FedEx',
         fedexGap: {
             trackingNums: ['FX284920', 'FX284921', 'FX284922'],
             detail: 'Strata detected 3 items shipped via FedEx small parcel without WIG confirmation. POD request sent to MK Contact.',
         },
+        agencyFeeBlocked: true,
     },
     {
         id: 'NYPD-0394',
@@ -46,7 +50,9 @@ const ORDERS = [
         daysInWig: 8,
         daysRemaining: 22,
         status: 'in-progress',
+        carrier: 'Freight',
         fedexGap: null,
+        agencyFeeBlocked: false,
     },
 ]
 
@@ -129,11 +135,20 @@ function OrderMonitorCard({ order, fedexExpanded, onToggleFedex, onDispatch, dis
 
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                            <div>
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs font-bold text-foreground">{order.id}</span>
-                                <span className="text-xs text-muted-foreground ml-1.5">· {order.agency}</span>
+                                <span className="text-xs text-muted-foreground">· {order.agency}</span>
+                                {/* Carrier badge */}
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${
+                                    order.carrier === 'Freight + FedEx'
+                                        ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20'
+                                        : 'text-muted-foreground bg-muted border-border'
+                                }`}>
+                                    <Truck className="h-2.5 w-2.5" />
+                                    {order.carrier}
+                                </span>
                             </div>
-                            <span className={`text-xs font-bold tabular-nums ${
+                            <span className={`text-xs font-bold tabular-nums shrink-0 ${
                                 isReady ? 'text-success' : 'text-foreground'
                             }`}>
                                 {order.received}% received
@@ -174,6 +189,14 @@ function OrderMonitorCard({ order, fedexExpanded, onToggleFedex, onDispatch, dis
                                 <p className="text-muted-foreground">{order.fedexGap.detail}</p>
                                 <p className="font-medium">Tracking: {order.fedexGap.trackingNums.join(' · ')}</p>
                                 <p className="text-muted-foreground">Status: tracking — response pending</p>
+                            </div>
+                        )}
+
+                        {/* Agency Fee blocked cross-process badge */}
+                        {order.agencyFeeBlocked && (
+                            <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-destructive bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-1.5">
+                                <Lock className="h-3 w-3 shrink-0" />
+                                Agency Fee blocked · receiving gate not met · FedEx gap must resolve first
                             </div>
                         )}
 

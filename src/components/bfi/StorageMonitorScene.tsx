@@ -7,7 +7,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, Clock } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, Clock, CalendarDays } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -16,10 +16,10 @@ interface StorageMonitorSceneProps {
 }
 
 const ORDERS = [
-    { id: 'DOH-0671', agency: 'NYC Dept. of Health',   daysIn: 22, total: 30, remaining: 8,  dispatched: true  },
-    { id: 'DCAS-1182', agency: 'NYC DCAS',              daysIn: 18, total: 30, remaining: 12, dispatched: false },
-    { id: 'NYPD-0394', agency: 'NYPD Precinct 40',     daysIn: 8,  total: 30, remaining: 22, dispatched: false },
-    { id: 'DOE-2847',  agency: 'NYC Dept. of Education', daysIn: 3,  total: 30, remaining: 27, dispatched: false },
+    { id: 'DOH-0671',  agency: 'NYC Dept. of Health',    daysIn: 22, total: 30, remaining: 8,  dispatched: true,  expiresLabel: 'May 15', june30Risk: false },
+    { id: 'DCAS-1182', agency: 'NYC DCAS',                daysIn: 18, total: 30, remaining: 12, dispatched: false, expiresLabel: 'May 19', june30Risk: false },
+    { id: 'NYPD-0394', agency: 'NYPD Precinct 40',       daysIn: 8,  total: 30, remaining: 22, dispatched: false, expiresLabel: 'May 29', june30Risk: false },
+    { id: 'DOE-2847',  agency: 'NYC Dept. of Education',  daysIn: 3,  total: 30, remaining: 27, dispatched: false, expiresLabel: 'Jun 3',  june30Risk: true  },
 ]
 
 export default function StorageMonitorScene({ onConfirm }: StorageMonitorSceneProps) {
@@ -46,6 +46,17 @@ export default function StorageMonitorScene({ onConfirm }: StorageMonitorScenePr
 
     return (
         <div className="space-y-4">
+            {/* Peak season banner */}
+            <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 flex items-start gap-2.5">
+                <CalendarDays className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <div className="text-xs flex-1">
+                    <div className="font-bold text-foreground">Peak Season · Mar – Jul 2026</div>
+                    <div className="text-muted-foreground mt-0.5 leading-relaxed">
+                        WIG storage fees accelerate in peak season. Orders expiring after June 1 carry elevated billing risk — prioritize dispatch before June 30.
+                    </div>
+                </div>
+            </div>
+
             {/* Context banner */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
@@ -103,10 +114,21 @@ export default function StorageMonitorScene({ onConfirm }: StorageMonitorScenePr
 
                             <div className="flex items-center justify-between text-[11px]">
                                 <span className="text-muted-foreground">{order.daysIn} of {order.total} days used</span>
-                                <span className={`font-medium ${isUrgent ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
-                                    {order.remaining} days remaining
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground">expires {order.expiresLabel}</span>
+                                    <span className={`font-medium ${isUrgent ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                                        {order.remaining} days left
+                                    </span>
+                                </div>
                             </div>
+
+                            {/* June 30 peak season risk */}
+                            {order.june30Risk && (
+                                <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 rounded px-1.5 py-1">
+                                    <CalendarDays className="h-2.5 w-2.5 shrink-0" />
+                                    Expires during peak season · elevated storage fees if delayed past Jun 30
+                                </div>
+                            )}
                         </div>
                     )
                 })}
