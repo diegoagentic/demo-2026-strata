@@ -19,7 +19,7 @@ import { useState } from 'react'
 import {
     CheckCircle2, XCircle, Receipt, AlertTriangle, ChevronRight,
     RotateCcw, Sparkles, Pencil, X, ShieldCheck, Clock, User, Send,
-    Wand2, ZoomIn, ChevronLeft,
+    Wand2, ZoomIn, ChevronLeft, MessageSquare, CheckCheck,
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import { ReceiptImage } from './ExpenseSubmitScene'
@@ -28,6 +28,36 @@ type ScenarioMode = 'approve' | 'reject' | 'planb'
 type ApproveState = 'pending' | 'editing' | 'sending' | 'approved' | 'rejected' | 'overridden'
 
 const CATEGORIES = ['Fuel + Parking', 'Client Meals', 'Travel', 'Office Supplies', 'Other']
+
+// ── Activity & Discussion data ─────────────────────────────────────────────────
+
+const TIMELINE_STEPS = [
+    { label: 'Submitted',     actor: 'John Smith',    initials: 'JS', time: 'May 5 · 10:32 AM', done: true,  current: false },
+    { label: 'Mgr notified',  actor: 'Sarah Johnson', initials: 'SJ', time: 'May 5 · 10:33 AM', done: true,  current: false },
+    { label: 'In review',     actor: 'Sarah Johnson', initials: 'SJ', time: 'May 6 · 9:15 AM',  done: true,  current: true  },
+    { label: 'Routed to AP',  actor: 'Letza Bombard', initials: 'LB', time: 'Pending',           done: false, current: false },
+]
+
+type ThreadStatus = 'open' | 'resolved'
+type Message = { id: string; author: string; initials: string; side: 'employee' | 'manager'; text: string; time: string }
+type Thread   = { id: string; status: ThreadStatus; messages: Message[] }
+
+const INITIAL_THREADS: Thread[] = [
+    {
+        id: 't1',
+        status: 'open',
+        messages: [
+            {
+                id: 'm1',
+                author: 'John Smith',
+                initials: 'JS',
+                side: 'employee',
+                text: 'Hi Sarah — FYI on the Capital Grille receipt: that\'s the gas station on Suncoast Pkwy that uses that brand name. "Server: Maria V." is just the cashier. Definitely fuel, not dining.',
+                time: '10:35 AM',
+            },
+        ],
+    },
+]
 
 const AI_CHECKS = [
     { label: 'Within $150 per-diem limit',         ok: true  },
@@ -61,6 +91,40 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     const [aiApplied,     setAiApplied]    = useState(false)
     const [receiptIdx,    setReceiptIdx]    = useState(0)
     const [receiptModal,  setReceiptModal]  = useState(false)
+
+    // Activity & Discussion
+    const [activityTab,   setActivityTab]  = useState<'timeline' | 'discussion'>('timeline')
+    const [activityOpen,  setActivityOpen] = useState(false)
+    const [threads,       setThreads]      = useState<Thread[]>(INITIAL_THREADS)
+    const [replyTexts,    setReplyTexts]   = useState<Record<string, string>>({})
+    const [newQuestion,   setNewQuestion]  = useState('')
+    const [showAskForm,   setShowAskForm]  = useState(false)
+
+    const openThreadCount = threads.filter(t => t.status === 'open').length
+
+    const resolveThread = (threadId: string) =>
+        setThreads(ts => ts.map(t => t.id === threadId ? { ...t, status: 'resolved' } : t))
+
+    const addReply = (threadId: string) => {
+        const text = (replyTexts[threadId] ?? '').trim()
+        if (!text) return
+        const msg: Message = { id: Date.now().toString(), author: 'Sarah Johnson', initials: 'SJ', side: 'manager', text, time: 'Just now' }
+        setThreads(ts => ts.map(t => t.id === threadId ? { ...t, messages: [...t.messages, msg] } : t))
+        setReplyTexts(r => ({ ...r, [threadId]: '' }))
+    }
+
+    const addQuestion = () => {
+        const text = newQuestion.trim()
+        if (!text) return
+        const thread: Thread = {
+            id: Date.now().toString(),
+            status: 'open',
+            messages: [{ id: Date.now().toString(), author: 'Sarah Johnson', initials: 'SJ', side: 'manager', text, time: 'Just now' }],
+        }
+        setThreads(ts => [...ts, thread])
+        setNewQuestion('')
+        setShowAskForm(false)
+    }
 
     // AI detects category mismatch: restaurant vendor → Fuel + Parking is inconsistent
     const categoryMismatch = editCategory === 'Fuel + Parking' && !aiApplied
@@ -420,6 +484,155 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                 </div>
             )}
 
+            {/* ── Activity & Discussion ── */}
+            {appState !== 'editing' && (
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                    {/* Collapsible header */}
+                    <button
+                        onClick={() => setActivityOpen(v => !v)}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+                    >
+                        <div className="flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-xs font-semibold text-foreground">Activity &amp; Discussion</span>
+                            {!activityOpen && openThreadCount > 0 && (
+                                <span className="text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 px-1.5 py-0.5 rounded-full">
+                                    {openThreadCount} open
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {/* Participant avatars */}
+                            <div className="flex -space-x-1.5">
+                                {[
+                                    { initials: 'JS', title: 'John Smith' },
+                                    { initials: 'SJ', title: 'Sarah Johnson' },
+                                    { initials: 'LB', title: 'Letza Bombard' },
+                                ].map(p => (
+                                    <div key={p.initials} title={p.title}
+                                        className="h-5 w-5 rounded-full bg-muted border-2 border-card flex items-center justify-center text-[8px] font-bold text-muted-foreground"
+                                    >
+                                        {p.initials}
+                                    </div>
+                                ))}
+                            </div>
+                            <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${activityOpen ? 'rotate-90' : ''}`} />
+                        </div>
+                    </button>
+
+                    {activityOpen && (
+                        <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-200">
+                            {/* Tab switcher */}
+                            <div className="flex gap-1 bg-muted/40 rounded-lg p-0.5">
+                                {(['timeline', 'discussion'] as const).map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActivityTab(tab)}
+                                        className={`flex-1 text-[11px] font-semibold py-1.5 rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                                            activityTab === tab ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        {tab === 'timeline' ? 'Timeline' : 'Discussion'}
+                                        {tab === 'discussion' && openThreadCount > 0 && (
+                                            <span className="h-1.5 w-1.5 rounded-full bg-warning shrink-0" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* ── Timeline tab ── */}
+                            {activityTab === 'timeline' && (
+                                <div className="space-y-0">
+                                    {TIMELINE_STEPS.map((step, i) => (
+                                        <div key={step.label} className="flex gap-3">
+                                            <div className="flex flex-col items-center">
+                                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5 border-2 transition-all ${
+                                                    step.current
+                                                        ? 'bg-primary text-primary-foreground border-primary/30 ring-2 ring-primary/20'
+                                                        : step.done
+                                                            ? 'bg-success/15 text-success border-success/30'
+                                                            : 'bg-muted text-muted-foreground/40 border-border'
+                                                }`}>
+                                                    {step.done && !step.current ? '✓' : step.initials[0]}
+                                                </div>
+                                                {i < TIMELINE_STEPS.length - 1 && (
+                                                    <div className={`w-px flex-1 mt-1 mb-1 min-h-[20px] ${step.done ? 'bg-success/25' : 'bg-border/50'}`} />
+                                                )}
+                                            </div>
+                                            <div className="pb-3 flex-1 min-w-0">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className={`text-xs font-semibold ${
+                                                        step.current ? 'text-primary' : step.done ? 'text-foreground' : 'text-muted-foreground/50'
+                                                    }`}>{step.label}</p>
+                                                    <span className={`text-[10px] shrink-0 ${step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+                                                        {step.time}
+                                                    </span>
+                                                </div>
+                                                <p className={`text-[10px] ${step.current ? 'text-primary/70' : step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+                                                    {step.actor}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* ── Discussion tab ── */}
+                            {activityTab === 'discussion' && (
+                                <div className="space-y-3">
+                                    {threads.map(thread => (
+                                        <ThreadCard
+                                            key={thread.id}
+                                            thread={thread}
+                                            replyText={replyTexts[thread.id] ?? ''}
+                                            onReplyChange={text => setReplyTexts(r => ({ ...r, [thread.id]: text }))}
+                                            onReply={() => addReply(thread.id)}
+                                            onResolve={() => resolveThread(thread.id)}
+                                        />
+                                    ))}
+
+                                    {/* Ask a question */}
+                                    {!showAskForm ? (
+                                        <button
+                                            onClick={() => { setShowAskForm(true); setActivityTab('discussion') }}
+                                            className="w-full text-[11px] text-muted-foreground py-2.5 border border-dashed border-border rounded-xl hover:text-foreground hover:border-border/80 transition-colors"
+                                        >
+                                            + Ask employee a question
+                                        </button>
+                                    ) : (
+                                        <div className="space-y-2 animate-in fade-in duration-200">
+                                            <textarea
+                                                value={newQuestion}
+                                                onChange={e => setNewQuestion(e.target.value)}
+                                                placeholder="Ask John something about this expense..."
+                                                rows={2}
+                                                autoFocus
+                                                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/50"
+                                            />
+                                            <div className="flex gap-2 justify-end">
+                                                <button
+                                                    onClick={() => { setShowAskForm(false); setNewQuestion('') }}
+                                                    className="text-xs text-muted-foreground px-2 py-1 hover:text-foreground"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    onClick={addQuestion}
+                                                    disabled={!newQuestion.trim()}
+                                                    className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-lg disabled:opacity-40 hover:opacity-90 transition-opacity"
+                                                >
+                                                    Send question
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* ── Receipt modal ── */}
             {receiptModal && (
                 <ReceiptModal
@@ -693,6 +906,80 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
             )}
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
+        </div>
+    )
+}
+
+// ── Thread card ───────────────────────────────────────────────────────────────
+
+function ThreadCard({ thread, replyText, onReplyChange, onReply, onResolve }: {
+    thread: Thread
+    replyText: string
+    onReplyChange: (v: string) => void
+    onReply: () => void
+    onResolve: () => void
+}) {
+    const resolved = thread.status === 'resolved'
+    return (
+        <div className={`rounded-xl border p-3 space-y-2.5 ${resolved ? 'border-success/20 bg-success/5' : 'border-border bg-card'}`}>
+            {/* Status row */}
+            <div className="flex items-center justify-between">
+                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${resolved ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>
+                    {resolved ? 'Resolved' : 'Open'}
+                </span>
+                {!resolved && (
+                    <button
+                        onClick={onResolve}
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-success transition-colors"
+                    >
+                        <CheckCheck className="h-3 w-3" />
+                        Mark resolved
+                    </button>
+                )}
+            </div>
+
+            {/* Messages */}
+            {thread.messages.map(msg => (
+                <div key={msg.id} className={`flex gap-2 ${msg.side === 'manager' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        msg.side === 'manager' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                        {msg.initials}
+                    </div>
+                    <div className={`rounded-2xl px-3 py-2 max-w-[85%] ${
+                        msg.side === 'manager' ? 'bg-primary/10 rounded-tr-sm' : 'bg-muted rounded-tl-sm'
+                    }`}>
+                        <p className="text-[9px] font-bold text-muted-foreground">{msg.author} · {msg.time}</p>
+                        <p className="text-xs text-foreground mt-0.5 leading-relaxed">{msg.text}</p>
+                    </div>
+                </div>
+            ))}
+
+            {/* Reply input — only open threads */}
+            {!resolved && (
+                <div className="flex gap-2 pt-0.5">
+                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-primary-foreground shrink-0">
+                        SJ
+                    </div>
+                    <div className="flex-1 flex gap-1.5">
+                        <input
+                            value={replyText}
+                            onChange={e => onReplyChange(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onReply() } }}
+                            placeholder="Reply to John..."
+                            className="flex-1 bg-background border border-border rounded-full px-3 py-1 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 min-w-0"
+                        />
+                        <button
+                            onClick={onReply}
+                            disabled={!replyText.trim()}
+                            className="shrink-0 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-30 hover:opacity-90 transition-opacity"
+                            aria-label="Send reply"
+                        >
+                            <Send className="h-3 w-3" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
