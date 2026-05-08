@@ -165,7 +165,6 @@ export default function WorkspacesPage() {
             {/* Flow 1 — desktop steps only (w1.2, w1.3) */}
             {activeTab === 'submission' && (
                 <div className="space-y-4 animate-in fade-in duration-500">
-                    {personaBadge}
                     <StepHint stepId={SUB_IDX_TO_STEP[subStep]} />
                     {subStep === 1 && <ApprovalQueueScene onReview={() => navigateSub(2)} />}
                     {subStep === 2 && <ApproveWithReceiptScene onApprove={() => navigateSub(3)} />}
