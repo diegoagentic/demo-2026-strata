@@ -1,31 +1,29 @@
 /**
  * COMPONENT: WorkspacesPage
- * PURPOSE: Container for both Workscapes, Inc. demo flows.
+ * PURPOSE: Container for the Workscapes, Inc. expense management demo.
  *
- *   Tab 1 — Expense Submission & Approval (workspaces-submit / workspaces-approval)
- *     4-step flow: Submit+OCR · Approval Queue · Approve with Receipt · Expense Status
+ * 1 UNIFIED FLOW — 8 steps, 4 roles, 2 platforms:
+ *   w1.1  Employee (John)    📱 Mobile  — Submit + OCR
+ *   w1.2  Ops Manager (Sarah) 🖥 Desktop — Approval Queue
+ *   w1.3  Ops Manager (Sarah) 🖥 Desktop — Approve with Receipt
+ *   w1.4  Employee (John)    📱 Mobile  — Expense Status
+ *   w2.1  AP Coord (Letza)   🖥 Desktop — AP Review Queue
+ *   w2.2  AP Coord (Letza)   🖥 Desktop — GL + CORE Sync
+ *   w2.3  AP Coord (Letza)   🖥 Desktop — Admin Self-Service
+ *   w2.4  CFO/CAO            🖥 Desktop — Dashboard
  *
- *   Tab 2 — AP Processing & Reporting (workspaces-ap / workspaces-reporting)
- *     4-step flow: AP Queue · GL+CORE Sync · Admin Self-Service · CFO Dashboard
+ * PLATFORM PRINCIPLE:
+ *   Mobile steps (w1.1, w1.4): bypass MBIPageShell — dark bg fills the
+ *   viewport, phone is the only UI. No titles, no breadcrumbs.
+ *   Desktop steps: MBIPageShell with title + userAction subtitle.
+ *   key={stepId} forces a fresh mount + fade-in on every step change,
+ *   making each role/platform transition feel intentional.
  *
- * ROLE SYSTEM:
- *   w1.1, w1.4 → employee (field staff) — full-screen mobile experience
- *   w1.2, w1.3 → manager (Tammy / Operations Manager) — desktop app
- *   w2.1, w2.2, w2.3 → ap (Letza / AP Coordinator) — desktop app
- *   w2.4 → cfo (Mehmet / CFO) — desktop dashboard
- *
- * INTERACTION PRINCIPLE:
- *   No "Next" buttons. Every scene has one semantic action that advances the flow.
- *
- * LAYOUT PRINCIPLE:
- *   Mobile steps (w1.1, w1.4): bypass MBIPageShell entirely — dark bg fills the
- *   viewport below the navbar, phone is the only UI. No titles, no breadcrumbs.
- *   Desktop steps: MBIPageShell with title + tab switcher in preHeader.
+ * NAVIGATION: driven by DemoContext.nextStep() — no manual tab switching.
  *
  * SOT: src/config/profiles/workspaces-data/workspaces-sot.md
  */
 
-import { useEffect, useState, useCallback } from 'react'
 import { Receipt, BarChart2 } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
 import { WORKSPACES_STEP_BEHAVIOR } from '../../config/profiles/workspaces'
@@ -39,154 +37,59 @@ import AdminScene from './AdminScene'
 import CFODashboardScene from './CFODashboardScene'
 import { useDemo } from '../../context/DemoContext'
 
-// ── Tab + step index maps ─────────────────────────────────────────────────────
-
-type WorkspacesTab = 'submission' | 'processing'
-
-const STEP_TO_TAB: Record<string, WorkspacesTab> = {
-    'w1.1': 'submission', 'w1.2': 'submission', 'w1.3': 'submission', 'w1.4': 'submission',
-    'w2.1': 'processing', 'w2.2': 'processing', 'w2.3': 'processing', 'w2.4': 'processing',
-}
-
-const SUB_STEP_TO_IDX: Record<string, number> = { 'w1.1': 0, 'w1.2': 1, 'w1.3': 2, 'w1.4': 3 }
-const SUB_IDX_TO_STEP: Record<number, string>  = { 0: 'w1.1', 1: 'w1.2', 2: 'w1.3', 3: 'w1.4' }
-const PROC_STEP_TO_IDX: Record<string, number> = { 'w2.1': 0, 'w2.2': 1, 'w2.3': 2, 'w2.4': 3 }
-const PROC_IDX_TO_STEP: Record<number, string>  = { 0: 'w2.1', 1: 'w2.2', 2: 'w2.3', 3: 'w2.4' }
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function WorkspacesPage() {
-    const { currentStep, isDemoActive, steps: tourSteps, goToStep } = useDemo()
-    const demoStepId = isDemoActive ? currentStep?.id : null
+    const { currentStep, nextStep } = useDemo()
+    const stepId = currentStep?.id ?? 'w1.1'
 
-    const [activeTab, setActiveTab]     = useState<WorkspacesTab>('submission')
-    const [subStep, setSubStep]         = useState(0)
-    const [procStep, setProcStep]       = useState(0)
-    const [returnToList, setReturnToList] = useState(false)
-
-    // Sync tab + step index + role when the demo tour navigates
-    useEffect(() => {
-        if (!demoStepId) return
-        const tab = STEP_TO_TAB[demoStepId]
-        if (!tab) return
-        setActiveTab(tab)
-        if (tab === 'submission' && demoStepId in SUB_STEP_TO_IDX) {
-            setSubStep(SUB_STEP_TO_IDX[demoStepId])
-        } else if (tab === 'processing' && demoStepId in PROC_STEP_TO_IDX) {
-            setProcStep(PROC_STEP_TO_IDX[demoStepId])
-        }
-    }, [demoStepId])
-
-    const navigateSub = useCallback((idx: number) => {
-        setSubStep(idx)
-        const targetId = SUB_IDX_TO_STEP[idx]
-        if (!isDemoActive || !targetId || currentStep?.id === targetId) return
-        const tourIdx = tourSteps.findIndex(s => s.id === targetId)
-        if (tourIdx >= 0) goToStep(tourIdx)
-    }, [isDemoActive, currentStep, tourSteps, goToStep])
-
-    const navigateProc = useCallback((idx: number) => {
-        setProcStep(idx)
-        const targetId = PROC_IDX_TO_STEP[idx]
-        if (!isDemoActive || !targetId || currentStep?.id === targetId) return
-        const tourIdx = tourSteps.findIndex(s => s.id === targetId)
-        if (tourIdx >= 0) goToStep(tourIdx)
-    }, [isDemoActive, currentStep, tourSteps, goToStep])
-
-    // ── Mobile steps (w1.1, w1.4) — no MBIPageShell, dark viewport fill ───────
-    // The phone IS the entire experience. No titles, breadcrumbs, or tab chrome.
-
-    if (activeTab === 'submission' && (subStep === 0 || subStep === 3)) {
+    // ── Mobile steps — dark viewport, phone is the only UI ───────────────────
+    if (stepId === 'w1.1' || stepId === 'w1.4') {
         return (
             <div className="min-h-screen bg-zinc-950 dark:bg-zinc-900 flex flex-col items-center justify-center py-8 gap-6 animate-in fade-in duration-500">
-                {subStep === 0 && (
-                    <ExpenseSubmitScene
-                        onSubmit={() => { setReturnToList(false); navigateSub(1) }}
-                        initialScreen={returnToList ? 'expenses-list' : 'login'}
-                    />
+                {stepId === 'w1.1' && (
+                    <ExpenseSubmitScene key="w1.1" onSubmit={nextStep} />
                 )}
-                {subStep === 3 && (
-                    <ExpenseStatusScene onBack={() => { setReturnToList(true); navigateSub(0) }} />
+                {stepId === 'w1.4' && (
+                    <ExpenseStatusScene key="w1.4" />
                 )}
             </div>
         )
     }
 
-    // ── Desktop steps — MBIPageShell with tab switcher + persona badge ─────────
-
-    const tabSwitcher = (
-        <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 w-fit">
-            <TabButton
-                active={activeTab === 'submission'}
-                onClick={() => setActiveTab('submission')}
-                icon={<Receipt className="h-3.5 w-3.5" />}
-                label="Expense Submission"
-            />
-            <TabButton
-                active={activeTab === 'processing'}
-                onClick={() => setActiveTab('processing')}
-                icon={<BarChart2 className="h-3.5 w-3.5" />}
-                label="AP & Reporting"
-            />
-        </div>
-    )
-
-    // Dynamic subtitle: step hint text for the active step
-    const activeStepId = activeTab === 'submission' ? SUB_IDX_TO_STEP[subStep] : PROC_IDX_TO_STEP[procStep]
-    const stepSubtitle = WORKSPACES_STEP_BEHAVIOR[activeStepId]?.userAction
+    // ── Desktop steps — MBIPageShell, title + subtitle derived from step ─────
+    const isManagerStep = stepId === 'w1.2' || stepId === 'w1.3'
+    const title = isManagerStep
+        ? 'Expense Submission & Approval'
+        : stepId === 'w2.4'
+        ? 'CFO / CAO Dashboard'
+        : 'AP Processing & Reporting'
+    const subtitle = WORKSPACES_STEP_BEHAVIOR[stepId]?.userAction ?? ''
+    const icon = isManagerStep
+        ? <Receipt className="h-5 w-5" />
+        : <BarChart2 className="h-5 w-5" />
+    const activeApp = isManagerStep
+        ? 'workspaces-approval'
+        : stepId === 'w2.4'
+        ? 'workspaces-reporting'
+        : 'workspaces-ap'
 
     return (
         <MBIPageShell
-            preHeader={tabSwitcher}
-            title={activeTab === 'submission' ? 'Expense Submission & Approval' : 'AP Processing & Reporting'}
-            subtitle={stepSubtitle ?? (activeTab === 'submission'
-                ? 'Mobile OCR · inline receipt approval · audit trail · resubmit loop'
-                : 'GL auto-fill · CORE sync · admin self-service · spend dashboard')}
-            icon={activeTab === 'submission'
-                ? <Receipt className="h-5 w-5" />
-                : <BarChart2 className="h-5 w-5" />}
-            activeApp={activeTab === 'submission' ? 'workspaces-submit' : 'workspaces-ap'}
+            preHeader={null}
+            title={title}
+            subtitle={subtitle}
+            icon={icon}
+            activeApp={activeApp}
         >
-            {/* Flow 1 — desktop steps only (w1.2, w1.3) */}
-            {activeTab === 'submission' && (
-                <div className="space-y-4 animate-in fade-in duration-500">
-                    {subStep === 1 && <ApprovalQueueScene onReview={() => navigateSub(2)} />}
-                    {subStep === 2 && <ApproveWithReceiptScene onApprove={() => navigateSub(3)} />}
-                </div>
-            )}
-
-            {/* Flow 2 — all desktop (w2.1 → w2.4) */}
-            {activeTab === 'processing' && (
-                <div className="space-y-4 animate-in fade-in duration-500">
-                    {procStep === 0 && <APReviewQueueScene onReview={() => navigateProc(1)} />}
-                    {procStep === 1 && <GLCoreSyncScene onPost={() => navigateProc(2)} />}
-                    {procStep === 2 && <AdminScene onSave={() => navigateProc(3)} />}
-                    {procStep === 3 && <CFODashboardScene />}
-                </div>
-            )}
+            <div key={stepId} className="space-y-4 animate-in fade-in duration-500">
+                {stepId === 'w1.2' && <ApprovalQueueScene  onReview={nextStep} />}
+                {stepId === 'w1.3' && <ApproveWithReceiptScene onApprove={nextStep} />}
+                {stepId === 'w2.1' && <APReviewQueueScene  onReview={nextStep} />}
+                {stepId === 'w2.2' && <GLCoreSyncScene     onPost={nextStep} />}
+                {stepId === 'w2.3' && <AdminScene          onSave={nextStep} />}
+                {stepId === 'w2.4' && <CFODashboardScene />}
+            </div>
         </MBIPageShell>
-    )
-}
-
-// ── Tab button (desktop / light mode) ────────────────────────────────────────
-
-function TabButton({ active, onClick, icon, label }: {
-    active: boolean
-    onClick: () => void
-    icon: React.ReactNode
-    label: string
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                active
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-            }`}
-        >
-            {icon}
-            {label}
-        </button>
     )
 }

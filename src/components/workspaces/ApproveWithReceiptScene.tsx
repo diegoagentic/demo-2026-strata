@@ -903,6 +903,12 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                             John can correct and resubmit directly from the app — full audit trail maintained · no calls to AP needed
                         </p>
                     </div>
+                    <button
+                        onClick={() => onApprove?.()}
+                        className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                    >
+                        Continue demo <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
                     <button onClick={reset} className="w-full text-xs text-muted-foreground py-2 hover:text-foreground transition-colors">
                         ↺ Reset scenario
                     </button>

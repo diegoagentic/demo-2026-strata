@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check } from 'lucide-react'
+import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check, Link2 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 const INITIAL_MANAGERS = [
@@ -58,6 +58,8 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     const [showCustomCat, setShowCustomCat] = useState(false)
     const [customCatInput, setCustomCatInput] = useState('')
     const catDropdownRef = useRef<HTMLDivElement>(null)
+    const [editingHierarchy, setEditingHierarchy] = useState(false)
+    const [hierarchySaved, setHierarchySaved]     = useState(false)
 
     useEffect(() => {
         if (!showCatDropdown) return
@@ -444,20 +446,81 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
 
             {/* Section 4 — Approval Hierarchy */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border">
-                    <p className="text-xs font-bold text-foreground">Approval Hierarchy</p>
-                    <p className="text-[10px] text-muted-foreground">Powers Tammy's division rollup on the spend dashboard</p>
-                </div>
-                <div className="px-4 py-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {['Employee', 'Manager', 'Dept Head', 'CFO / AP'].map((level, i, arr) => (
-                            <div key={level} className="flex items-center gap-2">
-                                <span className="text-xs bg-muted border border-border text-foreground px-3 py-1.5 rounded-full font-medium cursor-pointer hover:border-primary transition-colors">{level}</span>
-                                {i < arr.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-                            </div>
-                        ))}
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                    <div>
+                        <p className="text-xs font-bold text-foreground">Approval Hierarchy</p>
+                        <p className="text-[10px] text-muted-foreground">Powers Tammy's division rollup on the spend dashboard</p>
                     </div>
+                    {!editingHierarchy && !hierarchySaved && (
+                        <button
+                            onClick={() => setEditingHierarchy(true)}
+                            className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg hover:bg-primary/15 transition-colors"
+                        >
+                            <Pencil className="h-3 w-3" />
+                            Edit Hierarchy
+                        </button>
+                    )}
+                    {hierarchySaved && (
+                        <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
+                            <Check className="h-3 w-3" />
+                            Saved
+                        </span>
+                    )}
                 </div>
+
+                {/* Read-only view */}
+                {!editingHierarchy && (
+                    <div className="px-4 py-4">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {['Employee', 'Manager', 'Dept Head', 'CFO / AP'].map((level, i, arr) => (
+                                <div key={level} className="flex items-center gap-2">
+                                    <span className={`text-xs border px-3 py-1.5 rounded-full font-medium transition-colors ${
+                                        hierarchySaved ? 'bg-success/10 border-success/30 text-success' : 'bg-muted border-border text-foreground'
+                                    }`}>{level}</span>
+                                    {i < arr.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                                </div>
+                            ))}
+                        </div>
+                        {hierarchySaved && (
+                            <p className="text-[10px] text-success mt-2 animate-in fade-in duration-300">
+                                Hierarchy updated · Tammy's dashboard rollup will reflect changes
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* Edit mode */}
+                {editingHierarchy && (
+                    <div className="px-4 py-4 space-y-3 animate-in fade-in duration-200">
+                        <p className="text-[10px] text-muted-foreground">Drag to reorder · Each level reports to the next</p>
+                        <div className="space-y-2">
+                            {['Employee', 'Manager', 'Dept Head', 'CFO / AP'].map((level, i) => (
+                                <div key={level} className="flex items-center gap-3 bg-muted/40 border border-border rounded-lg px-3 py-2">
+                                    <span className="text-[10px] text-muted-foreground font-bold w-4">{i + 1}</span>
+                                    <span className="text-xs font-medium text-foreground flex-1">{level}</span>
+                                    <span className="text-[9px] text-muted-foreground/60 font-medium uppercase tracking-wide">
+                                        {i === 0 ? 'submits' : i === 1 ? 'approves' : i === 2 ? 'oversees' : 'final authority'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                            <button
+                                onClick={() => { setEditingHierarchy(false); setHierarchySaved(true) }}
+                                className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 transition-opacity"
+                            >
+                                <Check className="h-3.5 w-3.5" />
+                                Confirm Hierarchy
+                            </button>
+                            <button
+                                onClick={() => setEditingHierarchy(false)}
+                                className="px-3 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Save CTA */}
@@ -480,6 +543,32 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                     Live for all new submissions · CORE sync triggered ✓
                 </p>
             )}
+
+            {/* Section 5 — Accounting System Integration */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border bg-muted/30">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-xs font-semibold text-foreground">Accounting System Integration</p>
+                    <span className="ml-auto text-[10px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded-full">Active ✓</span>
+                </div>
+                <div className="px-3 py-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Connection method</span>
+                        <span className="font-medium text-foreground">REST API · OAuth 2.0</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Auto-post on AP approval</span>
+                        <span className="font-medium text-success">Enabled</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Last sync</span>
+                        <span className="font-medium text-foreground">Today, 9:41 AM</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed pt-1 border-t border-border/50">
+                        Approved entries post automatically — no manual re-entry, no copy-paste, no accounting errors.
+                    </p>
+                </div>
+            </div>
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>

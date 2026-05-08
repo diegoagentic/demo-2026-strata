@@ -2,39 +2,73 @@
  * w1.4 — ExpenseStatusScene
  * Employee mobile view: status timeline → notification arrives → tap → data updates
  *
- * State machine:
- *   'watching'  — timeline: 4 done, Posted to CORE + Payment Issued pending
- *   'notified'  — Strata push notification slides in: "Posted to CORE · Payment scheduled May 8"
- *   'updated'   — tap notification → timeline fully updated: Posted ✓ + Payment ✓ with timestamps
+ * State machine (shared across both scenario modes):
+ *   'watching'    — timeline in progress, waiting for next event
+ *   'notified'    — notification slides in (Strata AI or Sarah Johnson rejection)
+ *   'updated'     — tap notification → timeline updated + mode-specific content
+ *   'fixing'      — (rejected mode only) Fix and Resubmit → re-attachment form (Screen 6)
+ *   'resubmitted' — (rejected mode only) Resubmit → success + new timeline
+ *
+ * Scenario modes (toggle):
+ *   'approved' — happy path: CORE posting notification → all steps complete → Paid ✓
+ *   'rejected' — return path: rejection notification → rejection card → Fix and Resubmit
  *
  * Pain points resolved: PP9 (no status visibility) · PP10 (one by one report opening)
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown, ChevronLeft, ChevronRight, Plus, AlertCircle, Camera, Send } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
-import { MobileNavbar } from './ExpenseSubmitScene'
 import { useDemo } from '../../context/DemoContext'
 
-type SceneState = 'watching' | 'notified' | 'updated'
+type SceneState    = 'watching' | 'notified' | 'updated' | 'fixing' | 'resubmitted'
+type ScenarioMode  = 'approved' | 'rejected'
+
+// ── Timeline data ─────────────────────────────────────────────────────────────
 
 const TIMELINE_BASE = [
-    { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',             done: true  },
-    { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson',            done: true  },
-    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · within SLA ✓',  done: true  },
-    { label: 'In AP Review',     time: 'May 6, 9:16 AM',  note: "Routed to Letza's queue",               done: true  },
-    { label: 'Posted to CORE',   time: 'Pending',          note: '',                                       done: false },
-    { label: 'Payment Issued',   time: 'Pending',          note: '',                                       done: false },
+    { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',             done: true,  isRejection: false },
+    { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson',            done: true,  isRejection: false },
+    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · within SLA ✓',  done: true,  isRejection: false },
+    { label: 'In AP Review',     time: 'May 6, 9:16 AM',  note: "Routed to Letza's queue",               done: true,  isRejection: false },
+    { label: 'Posted to CORE',   time: 'Pending',          note: '',                                       done: false, isRejection: false },
+    { label: 'Payment Issued',   time: 'Pending',          note: '',                                       done: false, isRejection: false },
 ]
 
 const TIMELINE_UPDATED = [
-    { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',             done: true  },
-    { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson',            done: true  },
-    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · within SLA ✓',  done: true  },
-    { label: 'In AP Review',     time: 'May 6, 9:16 AM',  note: "Letza confirmed · GL 6200 + 6210 · auto-posted to CORE", done: true },
-    { label: 'Posted to CORE',   time: 'May 6, 2:48 PM',  note: 'Entry #CR-2847 · no manual re-entry',  done: true  },
-    { label: 'Payment Issued',   time: 'May 8, 9:00 AM',  note: 'Check #44821 · 3 days total · within avg ✓', done: true },
+    { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',             done: true, isRejection: false },
+    { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson',            done: true, isRejection: false },
+    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · within SLA ✓',  done: true, isRejection: false },
+    { label: 'In AP Review',     time: 'May 6, 9:16 AM',  note: "Letza confirmed · GL 6200 + 6210 · auto-posted to CORE", done: true, isRejection: false },
+    { label: 'Posted to CORE',   time: 'May 6, 2:48 PM',  note: 'Entry #CR-2847 · no manual re-entry',  done: true, isRejection: false },
+    { label: 'Payment Issued',   time: 'May 8, 9:00 AM',  note: 'Check #44821 · 3 days total · within avg ✓', done: true, isRejection: false },
+]
+
+const TIMELINE_REJECTED_BASE = [
+    { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',  done: true,  isRejection: false },
+    { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson', done: true,  isRejection: false },
+    { label: 'In Review',        time: 'May 6, 9:15 AM',  note: 'Sarah Johnson reviewing',    done: true,  isRejection: false },
+    { label: 'Returned',         time: 'Pending',          note: 'Receipt unclear — see note', done: false, isRejection: true  },
+    { label: 'Posted to CORE',   time: 'Pending',          note: '',                           done: false, isRejection: false },
+    { label: 'Payment Issued',   time: 'Pending',          note: '',                           done: false, isRejection: false },
+]
+
+const TIMELINE_REJECTED_UPDATED = [
+    { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',                done: true, isRejection: false },
+    { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson',              done: true, isRejection: false },
+    { label: 'In Review',        time: 'May 6, 9:15 AM',  note: 'Sarah Johnson reviewing',                 done: true, isRejection: false },
+    { label: 'Returned',         time: 'May 6, 9:22 AM',  note: 'Receipt unclear — reattach fuel receipt', done: true, isRejection: true  },
+    { label: 'Posted to CORE',   time: 'Pending',          note: '',                                        done: false, isRejection: false },
+    { label: 'Payment Issued',   time: 'Pending',          note: '',                                        done: false, isRejection: false },
+]
+
+const TIMELINE_RESUBMITTED = [
+    { label: 'Resubmitted',      time: 'May 6, 9:45 AM', note: 'Corrected fuel receipt attached', done: true,  isRejection: false },
+    { label: 'Manager Notified', time: 'May 6, 9:45 AM', note: 'Push sent to Sarah Johnson',      done: true,  isRejection: false },
+    { label: 'Approved',         time: 'Pending',          note: '',                               done: false, isRejection: false },
+    { label: 'Posted to CORE',   time: 'Pending',          note: '',                               done: false, isRejection: false },
+    { label: 'Payment Issued',   time: 'Pending',          note: '',                               done: false, isRejection: false },
 ]
 
 const HISTORY = [
@@ -42,13 +76,16 @@ const HISTORY = [
     { description: 'Office Supplies', amount: '$23.00', date: 'Apr 15', status: 'Paid ✓', days: '3.1 days' },
 ]
 
+// ── Main component ────────────────────────────────────────────────────────────
+
 export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [scene, setScene] = useState<SceneState>('watching')
-    const [expanded, setExpanded] = useState<Set<string>>(new Set(['Approved']))
+    const [scene,        setScene]        = useState<SceneState>('watching')
+    const [scenarioMode, setScenarioMode] = useState<ScenarioMode>('approved')
+    const [expanded,     setExpanded]     = useState<Set<string>>(new Set(['Approved']))
 
     const toggleStep = (label: string) => {
         setExpanded(prev => {
@@ -70,9 +107,36 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
 
     useEffect(() => {
         pauseAware(() => setScene('notified'), 4000)
-    }, [pauseAware])
+    }, [pauseAware, scenarioMode])
 
-    const timeline = scene === 'updated' ? TIMELINE_UPDATED : TIMELINE_BASE
+    // Derive the active timeline from mode + scene
+    const timeline =
+        scenarioMode === 'rejected'
+            ? scene === 'resubmitted'           ? TIMELINE_RESUBMITTED
+              : scene === 'fixing'              ? TIMELINE_REJECTED_UPDATED
+              : scene === 'updated'             ? TIMELINE_REJECTED_UPDATED
+              : TIMELINE_REJECTED_BASE
+            : scene === 'updated'               ? TIMELINE_UPDATED
+            : TIMELINE_BASE
+
+    // Badge label + class derived from mode + scene
+    const badgeClass =
+        scenarioMode === 'rejected'
+            ? scene === 'resubmitted'           ? 'bg-ai/10 text-ai border-ai/20'
+              : scene === 'fixing'              ? 'bg-destructive/10 text-destructive border-destructive/20'
+              : scene === 'updated'             ? 'bg-destructive/10 text-destructive border-destructive/20'
+              : 'bg-warning/10 text-warning border-warning/20'
+            : scene === 'updated'               ? 'bg-success/10 text-success border-success/20'
+            : 'bg-warning/10 text-warning border-warning/20'
+
+    const badgeLabel =
+        scenarioMode === 'rejected'
+            ? scene === 'resubmitted'           ? 'Resubmitted ✓'
+              : scene === 'fixing'              ? 'Needs Correction'
+              : scene === 'updated'             ? 'Returned'
+              : 'In Review'
+            : scene === 'updated'               ? 'Paid ✓'
+            : 'In AP Review'
 
     return (
         <MobileDeviceFrame>
@@ -93,8 +157,29 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                 {/* User context */}
                 <p className="text-[10px] text-muted-foreground">John Smith · Field Staff</p>
 
+                {/* Scenario toggle */}
+                <div className="flex gap-1 bg-muted/40 rounded-xl p-0.5 w-fit">
+                    {(['approved', 'rejected'] as const).map(m => (
+                        <button
+                            key={m}
+                            onClick={() => { setScenarioMode(m); setScene('watching') }}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-all ${
+                                scenarioMode === m
+                                    ? m === 'approved'
+                                        ? 'bg-success/15 text-success'
+                                        : 'bg-destructive/15 text-destructive'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {m === 'approved' ? '✓ Approved path' : '✗ Returned path'}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Push notification — slides in after delay */}
-                {scene === 'notified' && (
+
+                {/* Approved path notification */}
+                {scenarioMode === 'approved' && scene === 'notified' && (
                     <button
                         onClick={() => setScene('updated')}
                         className="w-full animate-in slide-in-from-top duration-500 flex items-start gap-2.5 bg-card border border-ai/40 rounded-2xl px-3 py-3 text-left shadow-lg hover:border-ai/70 transition-all group"
@@ -127,6 +212,133 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     </button>
                 )}
 
+                {/* Rejected path notification */}
+                {scenarioMode === 'rejected' && scene === 'notified' && (
+                    <button
+                        onClick={() => setScene('updated')}
+                        className="w-full animate-in slide-in-from-top duration-500 flex items-start gap-2.5 bg-card border border-destructive/40 rounded-2xl px-3 py-3 text-left shadow-lg hover:border-destructive/70 transition-all group"
+                    >
+                        <div className="relative shrink-0 mt-0.5">
+                            <div className="h-8 w-8 rounded-xl bg-destructive/10 flex items-center justify-center">
+                                <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold text-destructive uppercase tracking-wide mb-0.5">Sarah Johnson · Returned</p>
+                            <p className="text-xs font-semibold text-foreground leading-snug">
+                                Receipt is unclear — correction needed
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                $142.50 · Fuel + Parking · see rejection note
+                            </p>
+                            <div className="flex items-center gap-1 mt-1.5">
+                                <p className="text-xs font-semibold text-destructive group-hover:underline">Tap to see details</p>
+                                <ChevronRight className="h-3.5 w-3.5 text-destructive" />
+                            </div>
+                        </div>
+                        <button
+                            onClick={e => { e.stopPropagation(); setScene('watching') }}
+                            className="shrink-0 text-muted-foreground hover:text-foreground mt-0.5"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                    </button>
+                )}
+
+                {/* Rejection card — appears when rejected + updated */}
+                {scenarioMode === 'rejected' && scene === 'updated' && (
+                    <div className="bg-destructive/5 border border-destructive/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-300">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-xs font-bold text-destructive">Returned by Sarah Johnson</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    Receipt is unclear — please reattach the Fuel receipt with the full amount visible.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setScene('fixing')}
+                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                        >
+                            Fix and Resubmit
+                        </button>
+                    </div>
+                )}
+
+                {/* Screen 6 — Re-attachment form (brief spec) */}
+                {scenarioMode === 'rejected' && scene === 'fixing' && (
+                    <div className="space-y-3 animate-in fade-in duration-300">
+                        {/* Header */}
+                        <div className="flex items-center gap-2">
+                            <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                            <p className="text-[10px] font-bold text-destructive uppercase tracking-wide">Your expense — needs correction</p>
+                        </div>
+
+                        {/* Rejection note */}
+                        <div className="bg-destructive/5 border border-destructive/20 rounded-xl px-3 py-2.5">
+                            <p className="text-[10px] font-semibold text-destructive mb-0.5">Sarah Johnson wrote:</p>
+                            <p className="text-[10px] text-muted-foreground italic">
+                                "Receipt is unclear — please reattach the Fuel receipt with the full amount visible."
+                            </p>
+                        </div>
+
+                        {/* Line that needs correction */}
+                        <div className="bg-destructive/8 border border-destructive/30 rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-lg bg-destructive/15 flex items-center justify-center shrink-0">
+                                <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-destructive">Fuel · $95.00</p>
+                                <p className="text-[10px] text-destructive/70">Receipt unclear — reattach required</p>
+                            </div>
+                            <span className="text-[9px] bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded-full font-bold shrink-0">Action needed</span>
+                        </div>
+
+                        {/* Re-attach camera UI */}
+                        <div className="border-2 border-dashed border-destructive/30 rounded-xl p-4 flex flex-col items-center gap-2 bg-destructive/3 cursor-pointer hover:border-destructive/50 transition-colors">
+                            <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                                <Camera className="h-5 w-5 text-destructive/70" />
+                            </div>
+                            <p className="text-xs font-semibold text-foreground">Re-attach corrected receipt</p>
+                            <p className="text-[10px] text-muted-foreground text-center">Tap to open camera or choose from gallery · JPG, PNG, PDF</p>
+                        </div>
+
+                        {/* Note to manager */}
+                        <div>
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Note to manager <span className="normal-case font-normal">(optional)</span></p>
+                            <textarea
+                                placeholder="Add context for Sarah (e.g. 'Attached cleaner scan of the fuel receipt')"
+                                className="w-full border border-border rounded-xl px-3 py-2.5 text-xs text-foreground bg-background resize-none h-16 focus:outline-none focus:ring-1 focus:ring-destructive/40 placeholder:text-muted-foreground/60"
+                            />
+                        </div>
+
+                        {/* Resubmit button */}
+                        <button
+                            onClick={() => setScene('resubmitted')}
+                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+                        >
+                            <Send className="h-3.5 w-3.5" />
+                            Resubmit for Approval
+                        </button>
+                    </div>
+                )}
+
+                {/* Resubmitted confirmation — appears after Fix and Resubmit */}
+                {scenarioMode === 'rejected' && scene === 'resubmitted' && (
+                    <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-3 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                            <div>
+                                <p className="text-xs font-bold text-success">Resubmitted ✓</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    Corrected receipt attached · Sarah Johnson notified
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Current expense — status timeline */}
                 <div className="bg-card border border-border rounded-xl p-4 space-y-4">
                     <div className="flex items-start justify-between gap-2">
@@ -134,12 +346,8 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                             <p className="text-sm font-bold text-foreground">Fuel + Parking</p>
                             <p className="text-[11px] text-muted-foreground">$142.50 · May 5 · 2 receipts</p>
                         </div>
-                        <span className={`text-[10px] border px-2 py-0.5 rounded-full font-medium shrink-0 transition-all duration-500 ${
-                            scene === 'updated'
-                                ? 'bg-success/10 text-success border-success/20'
-                                : 'bg-warning/10 text-warning border-warning/20'
-                        }`}>
-                            {scene === 'updated' ? 'Paid ✓' : 'In AP Review'}
+                        <span className={`text-[10px] border px-2 py-0.5 rounded-full font-medium shrink-0 transition-all duration-500 ${badgeClass}`}>
+                            {badgeLabel}
                         </span>
                     </div>
 
@@ -151,12 +359,24 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                             return (
                                 <div key={step.label} className="flex gap-3">
                                     <div className="flex flex-col items-center">
-                                        {step.done
-                                            ? <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5 animate-in zoom-in duration-300" />
-                                            : <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0 mt-0.5" />
-                                        }
+                                        {step.done && !step.isRejection && (
+                                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5 animate-in zoom-in duration-300" />
+                                        )}
+                                        {step.done && step.isRejection && (
+                                            <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5 animate-in zoom-in duration-300" />
+                                        )}
+                                        {!step.done && !step.isRejection && (
+                                            <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0 mt-0.5" />
+                                        )}
+                                        {!step.done && step.isRejection && (
+                                            <AlertCircle className="h-4 w-4 text-destructive/40 shrink-0 mt-0.5" />
+                                        )}
                                         {i < timeline.length - 1 && (
-                                            <div className={`w-px flex-1 mt-1 mb-1 min-h-[16px] transition-colors duration-500 ${step.done ? 'bg-success/30' : 'bg-border'}`} />
+                                            <div className={`w-px flex-1 mt-1 mb-1 min-h-[16px] transition-colors duration-500 ${
+                                                step.done && !step.isRejection ? 'bg-success/30'
+                                                : step.done && step.isRejection ? 'bg-destructive/30'
+                                                : 'bg-border'
+                                            }`} />
                                         )}
                                     </div>
                                     <div className="pb-3 flex-1 min-w-0">
@@ -165,7 +385,11 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                                             className={`w-full flex items-center justify-between gap-2 text-left ${hasNote ? 'cursor-pointer' : 'cursor-default'}`}
                                         >
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <p className={`text-xs font-semibold transition-colors duration-300 ${step.done ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                                                <p className={`text-xs font-semibold transition-colors duration-300 ${
+                                                    step.done && step.isRejection ? 'text-destructive'
+                                                    : step.done ? 'text-foreground'
+                                                    : 'text-muted-foreground/50'
+                                                }`}>
                                                     {step.label}
                                                 </p>
                                                 <span className={`text-[10px] transition-colors duration-300 ${step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
@@ -190,9 +414,9 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     <div className="flex items-center gap-2 pt-1 border-t border-border">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                         <p className="text-[11px] text-muted-foreground">
-                            {scene === 'updated'
+                            {scenarioMode === 'approved' && scene === 'updated'
                                 ? <>Total: <span className="text-foreground font-medium">3 days</span> · within avg · <span className="text-success font-medium">On time ✓</span></>
-                                : <>Avg payment: <span className="text-foreground font-medium">3.2 days</span> · On track</>
+                                : <>Avg payment: <span className="text-foreground font-medium">3.2 days</span> · 3-day SLA</>
                             }
                         </p>
                     </div>
@@ -202,7 +426,9 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                 {scene === 'watching' && (
                     <div className="flex items-center gap-2 justify-center">
                         <Bell className="h-3 w-3 text-muted-foreground animate-pulse" />
-                        <p className="text-[10px] text-muted-foreground">Waiting for AP to post to CORE...</p>
+                        <p className="text-[10px] text-muted-foreground">
+                            {scenarioMode === 'approved' ? 'Waiting for AP to post to CORE...' : 'Waiting for manager review...'}
+                        </p>
                     </div>
                 )}
 

@@ -137,10 +137,27 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                 <APQueueToast onReview={onReview} onDismiss={() => setScene('list')} />
             )}
 
-            {/* Header */}
-            <div className="bg-card border border-border rounded-xl px-4 py-4 space-y-1">
-                <p className="text-xs text-muted-foreground">AP Coordinator · Letza Bombard</p>
-                <p className="text-sm font-bold text-foreground">Good morning, Letza</p>
+            {/* Header — Letza persona, consistent with Sarah's header in ApprovalQueueScene */}
+            <div className="bg-card border border-border rounded-xl px-4 py-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-xs text-muted-foreground">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </p>
+                        <p className="text-sm font-bold text-foreground">Good morning, Letza</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Letza Bombard · AP Coordinator — Workscapes, Inc.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-muted-foreground" />
+                        <div className="h-8 w-8 rounded-full overflow-hidden border border-border shrink-0">
+                            <img
+                                src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&h=80&fit=crop&crop=face"
+                                alt="Letza Bombard"
+                                className="h-full w-full object-cover"
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* KPIs */}
@@ -156,6 +173,16 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                     </div>
                 ))}
             </div>
+
+            {/* Confidence legend — visible once queue is notified */}
+            {scene === 'notified' && (
+                <div className="flex items-center gap-1.5 flex-wrap px-1 animate-in fade-in duration-300">
+                    <span className="text-[9px] text-muted-foreground font-medium">Confidence:</span>
+                    <span className="text-[9px] bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full font-medium">≥ 90% safe</span>
+                    <span className="text-[9px] bg-warning/10 text-warning border border-warning/20 px-1.5 py-0.5 rounded-full font-medium">75–89% review</span>
+                    <span className="text-[9px] bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded-full font-medium">&lt; 75% manual</span>
+                </div>
+            )}
 
             {/* Filter bar */}
             <FilterBar active={filter} onChange={setFilter} />
@@ -186,6 +213,13 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                 </div>
             )}
 
+            {/* AS-IS contrast */}
+            <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Before Strata:</span> Letza opened GlobalSearch, copied every field manually into CORE — ~15 min per expense, ~45 min for a batch of 3. One typo meant a wrong GL post.
+                </p>
+            </div>
+
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>
     )
@@ -206,10 +240,10 @@ function APQueueToast({ onReview, onDismiss }: { onReview?: () => void; onDismis
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · AP Queue ready</p>
                     <p className="text-xs font-semibold text-foreground leading-snug">
-                        3 expenses approved by managers — GL codes pre-filled
+                        John Smith · $142.50 · Fuel + Parking — approved by Sarah Johnson
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Sarah Johnson → John Smith + Maria Lopez · Mike Torres → Carlos Ruiz
+                        GL codes pre-filled · ready to confirm and post to CORE
                     </p>
                 </div>
                 <button

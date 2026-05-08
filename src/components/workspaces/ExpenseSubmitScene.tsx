@@ -12,7 +12,7 @@
 import { useState, useRef, useCallback } from 'react'
 import {
     Camera, Plus, CheckCircle2, Clock, Sparkles,
-    Bell, ArrowLeft, Send, Check, Image, FileText,
+    Bell, ArrowLeft, Send, Check, Image, FileText, Table2,
     Pencil, Trash2, Lock, Mail,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
@@ -268,14 +268,15 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
 
                     <div>
                         <p className="text-sm font-bold text-foreground">New Expense</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">How would you like to attach your receipt?</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Upload from camera, gallery, or file — JPG, PNG, PDF · multiple receipts per expense</p>
                     </div>
 
                     <div className="space-y-2.5">
                         {[
-                            { icon: Camera,   label: 'Take a photo',         sub: 'Use your camera' },
-                            { icon: Image,    label: 'Upload from gallery',   sub: 'Choose from photos' },
-                            { icon: FileText, label: 'Upload file',           sub: 'PDF, JPG, PNG' },
+                            { icon: Camera,   label: 'Take a photo',         sub: 'Camera · AI auto-fills all fields' },
+                            { icon: Image,    label: 'Upload from gallery',   sub: 'JPG, PNG · multiple receipts supported' },
+                            { icon: FileText, label: 'Upload file',           sub: 'PDF, JPG, PNG · any format' },
+                            { icon: Table2,   label: 'Import from Excel',     sub: 'Bulk expense import' },
                         ].map(({ icon: Icon, label, sub }) => (
                             <button
                                 key={label}
@@ -305,8 +306,8 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
             <MobileDeviceFrame>
                 <MobileNavbar title="New Expense" />
                 <div className="px-4 py-16 flex flex-col items-center gap-4 animate-in fade-in duration-300">
-                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Send className="h-7 w-7 text-primary animate-pulse" />
+                    <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center animate-pulse">
+                        <Send className="h-7 w-7 text-primary-foreground" />
                     </div>
                     <div className="text-center space-y-1">
                         <p className="text-sm font-bold text-foreground">Sending to {DEFAULT_MANAGER.name}...</p>
@@ -373,7 +374,10 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
 
                     <div className="flex items-center gap-2 px-1">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-[11px] text-muted-foreground">Avg approval: <span className="font-semibold text-foreground">1.2 days</span></p>
+                        <p className="text-[11px] text-muted-foreground">
+                            Expected: <span className="font-semibold text-foreground">3-day SLA</span>
+                            <span className="text-muted-foreground/70"> · With: Sarah Johnson</span>
+                        </p>
                     </div>
 
                     <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
@@ -550,6 +554,17 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                     </div>
                 </div>
 
+                {/* Notes field — optional context for manager, appears after OCR completes */}
+                {ocrState === 'done' && (
+                    <div className="animate-in fade-in duration-300">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Notes</p>
+                        <textarea
+                            placeholder="Add context for your manager (optional)"
+                            className="w-full border border-border rounded-xl px-3 py-2.5 text-xs text-foreground bg-background resize-none h-16 focus:outline-none focus:ring-1 focus:ring-ai/40 placeholder:text-muted-foreground/60"
+                        />
+                    </div>
+                )}
+
                 {/* Send for Approval CTA */}
                 <button
                     onClick={ocrState === 'done' ? handleSend : undefined}
@@ -677,106 +692,113 @@ export function MobileNavbar({ title }: { title: string }) {
     )
 }
 
-// ── Receipt image (realistic paper receipt look) ──────────────────────────────
+// ── Receipt image (B2B expense document format) ───────────────────────────────
 
 export function ReceiptImage({ compact, variant = 'fuel' }: {
     compact?: boolean
     variant?: 'fuel' | 'parking' | 'toll'
 }) {
-    // Shared helpers — only rendered in full (non-compact) mode
-    const Divider = ({ thick, light }: { thick?: boolean; light?: boolean }) => (
-        <div className={`border-t ${thick ? 'border-t-[1.5px] border-gray-800' : light ? 'border-dashed border-gray-200' : 'border-dashed border-gray-300'} my-3`} />
+    // Shared sub-components
+    const DocDivider = ({ strong }: { strong?: boolean }) => (
+        <div className={`border-t ${strong ? 'border-zinc-300' : 'border-zinc-100'} my-2`} />
     )
-    const Row = ({ label, value, bold, small }: { label: string; value: string; bold?: boolean; small?: boolean }) => (
-        <div className={`flex justify-between ${small ? 'text-[10px]' : 'text-[11px]'} ${bold ? 'font-bold text-gray-900' : 'text-gray-500'}`}>
+    const LV = ({ label, value, bold }: { label: string; value: string; bold?: boolean }) => (
+        <div className={`flex justify-between text-[10px] ${bold ? 'font-bold text-zinc-900' : 'text-zinc-500'}`}>
             <span>{label}</span><span>{value}</span>
         </div>
     )
-    // Thermal barcode — alternating bar widths
-    const Barcode = () => (
-        <div className="flex flex-col items-center gap-1 py-2">
-            <div className="flex items-end gap-px">
-                {[2,1,3,1,2,1,1,3,2,1,1,2,3,1,2,1,3,1,2,1,1,3,2,1,1,2,1,3,2,1,2,1,1,2,3,1].map((w, i) => (
-                    <div key={i} className="bg-gray-900" style={{ width: w, height: i % 5 === 0 || i % 7 === 0 ? 36 : 28 }} />
-                ))}
-            </div>
-            <p className="text-[8px] text-gray-400 font-mono tracking-[0.12em] mt-0.5">0295 2847 0505 4892</p>
+    const ColHeader = ({ cols }: { cols: string[] }) => (
+        <div className="flex items-center justify-between text-[8px] font-semibold text-zinc-400 uppercase tracking-wide pb-1 border-b border-zinc-100 mb-2">
+            {cols.map((c, i) => <span key={i}>{c}</span>)}
         </div>
     )
-    // Perforated top/bottom edge using radial gradient holes
-    const PerforatedEdge = ({ pos }: { pos: 'top' | 'bottom' }) => (
-        <div className="h-4" style={{
-            backgroundImage: `radial-gradient(circle at 50% ${pos === 'top' ? '0%' : '100%'}, white 5px, #faf5e4 5.5px)`,
-            backgroundSize: '16px 100%',
-            backgroundRepeat: 'repeat-x',
-            backgroundPosition: pos,
-        }} />
+    const ApprovedBadge = ({ label = 'APPROVED ✓' }: { label?: string }) => (
+        <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded shrink-0">{label}</span>
     )
 
     // ── PARKING ────────────────────────────────────────────────────────────────
     if (variant === 'parking') {
         if (compact) return (
-            <div className="bg-[#faf5e4] font-mono px-3 py-2 space-y-0.5">
-                <p className="text-[8px] font-black tracking-widest text-gray-900 text-center">WATERSIDE GARAGE</p>
-                <div className="border-t border-dashed border-gray-400 my-1" />
-                <div className="flex justify-between text-[7px] text-gray-800"><span>Parking</span><span className="font-bold">$47.50</span></div>
-                <div className="border-t-2 border-gray-800 mt-1" />
-                <div className="flex justify-between text-[9px] font-black text-gray-900"><span>TOTAL</span><span>$47.50</span></div>
+            <div className="bg-white border border-zinc-100 rounded px-2.5 py-2 space-y-1 min-w-0">
+                <div className="flex items-start justify-between gap-1">
+                    <p className="text-[8px] font-bold text-zinc-900 leading-tight truncate">WATERSIDE GARAGE</p>
+                    <p className="text-[7px] text-zinc-400 shrink-0">#WG-4421</p>
+                </div>
+                <p className="text-[7px] text-zinc-400">05/05/2026 · 9:12–12:27 PM</p>
+                <div className="border-t border-zinc-100 pt-1 space-y-0.5">
+                    <div className="flex justify-between text-[8px]">
+                        <span className="text-zinc-600">Covered Parking · 3h 15m</span>
+                        <span className="font-semibold text-zinc-900">$45.50</span>
+                    </div>
+                    <div className="flex justify-between text-[8px]">
+                        <span className="text-zinc-500">Processing fee</span>
+                        <span className="text-zinc-700">$2.00</span>
+                    </div>
+                </div>
+                <div className="border-t border-zinc-300 pt-1 flex justify-between text-[9px] font-bold text-zinc-900">
+                    <span>TOTAL</span><span>$47.50</span>
+                </div>
+                <p className="text-[7px] text-zinc-400">Visa ···· 4892 · Auth: 773921</p>
             </div>
         )
         return (
-            <div className="bg-[#faf5e4] font-mono">
-                <PerforatedEdge pos="top" />
-                <div className="px-6 pb-2">
-                    <div className="text-center space-y-0.5 py-3">
-                        <p className="text-sm font-black tracking-widest text-gray-900">WATERSIDE GARAGE</p>
-                        <p className="text-[11px] text-gray-500">150 S Tampa St · Tampa Convention Center</p>
-                        <p className="text-[11px] text-gray-500">Tampa, FL 33602</p>
-                        <p className="text-[11px] text-gray-500">(813) 555-0193</p>
-                    </div>
-                    <Divider />
-                    <div className="space-y-1.5">
-                        <Row label="Ticket #" value="P-4421" bold />
-                        <Row label="Date" value="05/05/2026" />
-                        <Row label="Entry time" value="9:12 AM" />
-                        <Row label="Exit time" value="12:27 PM" />
-                        <Row label="Duration" value="3h 15m" />
-                        <Row label="Space #" value="B-214" />
-                        <Row label="Business purpose" value="Site visit — Tampa" />
-                    </div>
-                    <Divider />
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Charges</p>
-                    <div className="space-y-1.5">
-                        <Row label="Parking (3h 15m × $14.00/hr)" value="$45.50" />
-                        <Row label="Processing fee" value="$2.00" />
-                    </div>
-                    <Divider light />
-                    <div className="space-y-1.5">
-                        <Row label="Subtotal" value="$47.50" />
-                        <Row label="Tax (FL exempt)" value="$0.00" />
-                        <Row label="Validation" value="None" />
-                    </div>
-                    <Divider thick />
-                    <div className="flex justify-between text-base font-black text-gray-900 mb-3">
-                        <span>TOTAL</span><span>$47.50</span>
-                    </div>
-                    <Divider />
-                    <div className="space-y-1.5">
-                        <Row label="Card" value="Visa ···· 4892" />
-                        <Row label="Auth #" value="773921" bold />
-                        <Row label="Terminal" value="G-04" />
-                        <Row label="Merchant ID" value="MCH-19342" small />
-                    </div>
-                    <p className="text-center text-[11px] font-black text-gray-900 tracking-widest mt-3">— APPROVED —</p>
-                    <Divider />
-                    <Barcode />
-                    <Divider light />
-                    <div className="text-center space-y-0.5 pb-2">
-                        <p className="text-[10px] text-gray-400 tracking-wide">THANK YOU FOR YOUR BUSINESS</p>
-                        <p className="text-[10px] text-gray-400">*** CUSTOMER COPY ***</p>
+            <div className="bg-white border border-zinc-100 rounded-lg overflow-hidden">
+                {/* Document header */}
+                <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <p className="text-[13px] font-bold text-zinc-900 tracking-tight leading-tight">WATERSIDE GARAGE</p>
+                            <p className="text-[10px] text-zinc-500 mt-0.5">150 S Tampa St · Tampa Convention Center</p>
+                            <p className="text-[10px] text-zinc-500">Tampa, FL 33602 · (813) 555-0193</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                            <p className="text-[11px] font-bold text-zinc-800">Receipt #WG-4421</p>
+                            <p className="text-[10px] text-zinc-500">Date: 05/05/2026</p>
+                            <p className="text-[10px] text-zinc-500">9:12 AM – 12:27 PM</p>
+                        </div>
                     </div>
                 </div>
-                <PerforatedEdge pos="bottom" />
+                {/* Line items */}
+                <div className="px-5 py-3">
+                    <ColHeader cols={['Description', 'Duration / Unit', 'Amount']} />
+                    <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2 text-[11px]">
+                            <div className="min-w-0">
+                                <p className="font-medium text-zinc-800">Covered Parking</p>
+                                <p className="text-[10px] text-zinc-500">Space B-214 · $14.00/hr</p>
+                                <p className="text-[10px] text-zinc-500">Purpose: Site visit — Tampa</p>
+                            </div>
+                            <div className="flex gap-6 shrink-0 text-right">
+                                <span className="text-zinc-500 text-[10px]">3h 15m</span>
+                                <span className="text-zinc-800 w-12">$45.50</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 text-[11px]">
+                            <p className="text-zinc-600">Processing fee</p>
+                            <div className="flex gap-6 shrink-0 text-right">
+                                <span className="text-zinc-400 text-[10px]">—</span>
+                                <span className="text-zinc-600 w-12">$2.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/* Totals */}
+                <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-100 space-y-1">
+                    <LV label="Subtotal" value="$47.50" />
+                    <LV label="FL Sales Tax (exempt)" value="$0.00" />
+                    <DocDivider strong />
+                    <LV label="TOTAL" value="$47.50" bold />
+                </div>
+                {/* Payment */}
+                <div className="px-5 py-3 border-t border-zinc-100">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="space-y-0.5">
+                            <p className="text-[10px] text-zinc-700">Visa ···· 4892 · Auth: 773921</p>
+                            <p className="text-[10px] text-zinc-400">Terminal: G-04 · Merchant: MCH-19342</p>
+                        </div>
+                        <ApprovedBadge />
+                    </div>
+                </div>
             </div>
         )
     }
@@ -784,114 +806,140 @@ export function ReceiptImage({ compact, variant = 'fuel' }: {
     // ── TOLL ───────────────────────────────────────────────────────────────────
     if (variant === 'toll') {
         if (compact) return (
-            <div className="bg-[#faf5e4] font-mono px-3 py-2 space-y-0.5">
-                <p className="text-[8px] font-black tracking-widest text-gray-900 text-center">SUNPASS TOLL</p>
-                <div className="border-t border-dashed border-gray-400 my-1" />
-                <div className="flex justify-between text-[7px] text-gray-800"><span>Toll</span><span className="font-bold">$12.00</span></div>
-                <div className="border-t-2 border-gray-800 mt-1" />
-                <div className="flex justify-between text-[9px] font-black text-gray-900"><span>TOTAL</span><span>$12.00</span></div>
+            <div className="bg-white border border-zinc-100 rounded px-2.5 py-2 space-y-1 min-w-0">
+                <div className="flex items-start justify-between gap-1">
+                    <p className="text-[8px] font-bold text-zinc-900 leading-tight truncate">SUNPASS TOLL</p>
+                    <p className="text-[7px] text-zinc-400 shrink-0">#887341</p>
+                </div>
+                <p className="text-[7px] text-zinc-400">05/05/2026 · 11:03 AM</p>
+                <div className="border-t border-zinc-100 pt-1">
+                    <div className="flex justify-between text-[8px]">
+                        <span className="text-zinc-600">Suncoast Pkwy · Plaza 3</span>
+                        <span className="font-semibold text-zinc-900">$12.00</span>
+                    </div>
+                </div>
+                <div className="border-t border-zinc-300 pt-1 flex justify-between text-[9px] font-bold text-zinc-900">
+                    <span>TOTAL</span><span>$12.00</span>
+                </div>
+                <p className="text-[7px] text-zinc-400">SunPass ···· 8821 · Auto-deducted</p>
             </div>
         )
         return (
-            <div className="bg-[#faf5e4] font-mono">
-                <PerforatedEdge pos="top" />
-                <div className="px-6 pb-2">
-                    <div className="text-center space-y-0.5 py-3">
-                        <p className="text-sm font-black tracking-widest text-gray-900">SUNPASS TOLL</p>
-                        <p className="text-[11px] text-gray-500">Florida Dept of Transportation</p>
-                        <p className="text-[11px] text-gray-500">Suncoast Pkwy · Plaza 3</p>
+            <div className="bg-white border border-zinc-100 rounded-lg overflow-hidden">
+                {/* Document header */}
+                <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <p className="text-[13px] font-bold text-zinc-900 tracking-tight leading-tight">SUNPASS TOLL AUTHORITY</p>
+                            <p className="text-[10px] text-zinc-500 mt-0.5">Florida Dept of Transportation</p>
+                            <p className="text-[10px] text-zinc-500">Suncoast Pkwy · Plaza 3 · Tampa, FL</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                            <p className="text-[11px] font-bold text-zinc-800">Trans #887341</p>
+                            <p className="text-[10px] text-zinc-500">Date: 05/05/2026</p>
+                            <p className="text-[10px] text-zinc-500">11:03 AM</p>
+                        </div>
                     </div>
-                    <Divider />
-                    <div className="space-y-1.5">
-                        <Row label="Trans #" value="887341" bold />
-                        <Row label="Date" value="05/05/2026" />
-                        <Row label="Time" value="11:03 AM" />
-                        <Row label="Vehicle plate" value="FL · ABC-1234" />
-                        <Row label="Account" value="SunPass ···· 8821" />
-                    </div>
-                    <Divider />
-                    <Row label="Toll charge" value="$12.00" />
-                    <Divider light />
-                    <Row label="Subtotal" value="$12.00" />
-                    <Row label="Discount" value="$0.00" />
-                    <Divider thick />
-                    <div className="flex justify-between text-base font-black text-gray-900 my-2">
-                        <span>TOTAL</span><span>$12.00</span>
-                    </div>
-                    <Divider />
-                    <p className="text-[10px] text-gray-400 tracking-wide text-center mb-1">AUTO-DEDUCTED FROM SUNPASS ACCOUNT</p>
-                    <Barcode />
-                    <Divider light />
-                    <p className="text-center text-[10px] text-gray-400 pb-2">*** CUSTOMER COPY ***</p>
                 </div>
-                <PerforatedEdge pos="bottom" />
+                {/* Line items */}
+                <div className="px-5 py-3">
+                    <ColHeader cols={['Description', 'Amount']} />
+                    <div className="flex items-start justify-between gap-2 text-[11px]">
+                        <div className="min-w-0">
+                            <p className="font-medium text-zinc-800">Toll — Suncoast Pkwy Plaza 3</p>
+                            <p className="text-[10px] text-zinc-500">Vehicle: FL · ABC-1234</p>
+                            <p className="text-[10px] text-zinc-500">SunPass Account ···· 8821</p>
+                        </div>
+                        <span className="text-zinc-800 shrink-0">$12.00</span>
+                    </div>
+                </div>
+                {/* Totals */}
+                <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-100 space-y-1">
+                    <LV label="Subtotal" value="$12.00" />
+                    <LV label="Discount" value="$0.00" />
+                    <DocDivider strong />
+                    <LV label="TOTAL" value="$12.00" bold />
+                </div>
+                {/* Payment */}
+                <div className="px-5 py-3 border-t border-zinc-100">
+                    <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] text-zinc-600">SunPass ···· 8821 · Auto-deducted from account</p>
+                        <ApprovedBadge label="POSTED ✓" />
+                    </div>
+                </div>
             </div>
         )
     }
 
     // ── FUEL / The Capital Grille ──────────────────────────────────────────────
     if (compact) return (
-        <div className="bg-[#faf5e4] font-mono px-3 py-2 space-y-0.5">
-            <p className="text-[8px] font-black tracking-widest text-gray-900 text-center">THE CAPITAL GRILLE</p>
-            <div className="border-t border-dashed border-gray-400 my-1" />
-            <div className="flex justify-between text-[7px] text-gray-800"><span>Fuel</span><span className="font-bold">$95.00</span></div>
-            <div className="border-t-2 border-gray-800 mt-1" />
-            <div className="flex justify-between text-[9px] font-black text-gray-900"><span>TOTAL</span><span>$95.00</span></div>
+        <div className="bg-white border border-zinc-100 rounded px-2.5 py-2 space-y-1 min-w-0">
+            <div className="flex items-start justify-between gap-1">
+                <p className="text-[8px] font-bold text-zinc-900 leading-tight truncate">THE CAPITAL GRILLE FUEL</p>
+                <p className="text-[7px] text-zinc-400 shrink-0">#TX-2847</p>
+            </div>
+            <p className="text-[7px] text-zinc-400">05/05/2026 · 12:47 PM</p>
+            <div className="border-t border-zinc-100 pt-1">
+                <div className="flex justify-between text-[8px]">
+                    <span className="text-zinc-600">Premium Unleaded · 11.8 gal</span>
+                    <span className="font-semibold text-zinc-900">$95.00</span>
+                </div>
+            </div>
+            <div className="border-t border-zinc-300 pt-1 flex justify-between text-[9px] font-bold text-zinc-900">
+                <span>TOTAL</span><span>$95.00</span>
+            </div>
+            <p className="text-[7px] text-zinc-400">Visa ···· 4892 · Auth: 029441</p>
         </div>
     )
     return (
-        <div className="bg-[#faf5e4] font-mono">
-            <PerforatedEdge pos="top" />
-            <div className="px-6 pb-2">
-                <div className="text-center space-y-0.5 py-3">
-                    <p className="text-sm font-black tracking-widest text-gray-900">THE CAPITAL GRILLE</p>
-                    <p className="text-[11px] text-gray-500">2223 N. West Shore Blvd</p>
-                    <p className="text-[11px] text-gray-500">Tampa, FL 33607</p>
-                    <p className="text-[11px] text-gray-500">(813) 555-0147</p>
-                </div>
-                <Divider />
-                <div className="space-y-1.5">
-                    <Row label="Check #" value="2847" bold />
-                    <Row label="Date" value="05/05/2026" />
-                    <Row label="Time" value="12:47 PM" />
-                    <Row label="Cashier" value="Maria V." />
-                    <Row label="Business purpose" value="Field ops — Tampa" />
-                </div>
-                <Divider />
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Business Expenses</p>
-                <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] text-gray-800">
-                        <span>Fuel — Suncoast Pkwy</span><span>$95.00</span>
+        <div className="bg-white border border-zinc-100 rounded-lg overflow-hidden">
+            {/* Document header */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="text-[13px] font-bold text-zinc-900 tracking-tight leading-tight">THE CAPITAL GRILLE FUEL</p>
+                        <p className="text-[10px] text-zinc-500 mt-0.5">12401 Suncoast Pkwy & Gunn Hwy · Tampa, FL 33626</p>
+                        <p className="text-[10px] text-zinc-500">(813) 555-0147 · Merchant ID: MCH-48291</p>
                     </div>
-                    <p className="text-[10px] text-gray-400 pl-2">11.8 gal · Premium · $8.05/gal</p>
-                </div>
-                <Divider light />
-                <div className="space-y-1.5">
-                    <Row label="Subtotal" value="$95.00" />
-                    <Row label="Tax (FL exempt)" value="$0.00" />
-                    <Row label="Tip / Gratuity" value="N/A" />
-                </div>
-                <Divider thick />
-                <div className="flex justify-between text-base font-black text-gray-900 mb-3">
-                    <span>TOTAL</span><span>$95.00</span>
-                </div>
-                <Divider />
-                <div className="space-y-1.5">
-                    <Row label="Card" value="Visa ···· 4892" />
-                    <Row label="Auth #" value="029441" bold />
-                    <Row label="Terminal" value="T-17" />
-                    <Row label="Merchant ID" value="MCH-48291" small />
-                </div>
-                <p className="text-center text-[11px] font-black text-gray-900 tracking-widest mt-3">— APPROVED —</p>
-                <Divider />
-                <Barcode />
-                <Divider light />
-                <div className="text-center space-y-0.5 pb-2">
-                    <p className="text-[10px] text-gray-400 tracking-wide">THANK YOU FOR YOUR BUSINESS</p>
-                    <p className="text-[10px] text-gray-400">*** CUSTOMER COPY ***</p>
+                    <div className="text-right shrink-0">
+                        <p className="text-[11px] font-bold text-zinc-800">Receipt #TX-2847</p>
+                        <p className="text-[10px] text-zinc-500">Date: 05/05/2026</p>
+                        <p className="text-[10px] text-zinc-500">12:47 PM</p>
+                    </div>
                 </div>
             </div>
-            <PerforatedEdge pos="bottom" />
+            {/* Line items */}
+            <div className="px-5 py-3">
+                <ColHeader cols={['Description', 'Qty / Unit', 'Amount']} />
+                <div className="flex items-start justify-between gap-2 text-[11px]">
+                    <div className="min-w-0">
+                        <p className="font-medium text-zinc-800">Premium Unleaded 87</p>
+                        <p className="text-[10px] text-zinc-500">Pump #4 · $8.05/gal</p>
+                        <p className="text-[10px] text-zinc-500">Purpose: Field ops — Tampa</p>
+                    </div>
+                    <div className="flex gap-6 shrink-0 text-right">
+                        <span className="text-zinc-500 text-[10px]">11.8 gal</span>
+                        <span className="text-zinc-800 w-12">$95.00</span>
+                    </div>
+                </div>
+            </div>
+            {/* Totals */}
+            <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-100 space-y-1">
+                <LV label="Subtotal" value="$95.00" />
+                <LV label="FL Sales Tax (fuel exempt)" value="$0.00" />
+                <DocDivider strong />
+                <LV label="TOTAL" value="$95.00" bold />
+            </div>
+            {/* Payment */}
+            <div className="px-5 py-3 border-t border-zinc-100">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                        <p className="text-[10px] text-zinc-700">Visa ···· 4892 · Auth: 029441</p>
+                        <p className="text-[10px] text-zinc-400">Terminal: T-17 · Cashier: Maria V.</p>
+                    </div>
+                    <ApprovedBadge />
+                </div>
+            </div>
         </div>
     )
 }

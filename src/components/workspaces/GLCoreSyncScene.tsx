@@ -442,7 +442,7 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                         return (
                             <div
                                 key={line.id}
-                                className={`bg-card border rounded-xl p-4 space-y-3 transition-all duration-200 ${accepted ? 'border-success/40 bg-success/5' : 'border-ai/20'}`}
+                                className={`bg-card border rounded-xl p-4 space-y-3 transition-all duration-200 ${accepted ? 'border-success/40 bg-success/5' : line.confidence < 75 ? 'border-destructive/30 bg-destructive/5' : 'border-ai/20'}`}
                             >
                                 {/* Row header */}
                                 <div className="flex items-start justify-between gap-2">
@@ -716,8 +716,13 @@ function ApThreadCard({ thread, replyText, onReplyChange, onReply, onResolve }: 
 }
 
 function ConfidencePill({ pct }: { pct: number }) {
-    const color = pct >= 90 ? 'text-success bg-success/10' : pct >= 75 ? 'text-warning bg-warning/10' : 'text-muted-foreground bg-muted'
+    const color = pct >= 90
+        ? 'text-success bg-success/10 border border-success/20'
+        : pct >= 75
+        ? 'text-warning bg-warning/10 border border-warning/20'
+        : 'text-destructive bg-destructive/10 border border-destructive/20'
+    const label = pct >= 75 ? `${pct}%` : 'Manual review'
     return (
-        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{pct}%</span>
+        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{label}</span>
     )
 }

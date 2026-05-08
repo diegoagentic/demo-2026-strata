@@ -24,6 +24,7 @@ const HERO_STEP_IDS = new Set<string>([
     'm2.2',  // MBI · HealthTrust GPO 3% rebate modal — the most interactive AP scene
 ]);
 import { useDemoProfile } from '../../context/useDemoProfile';
+import { WORKSPACES_DATA_THREADS } from '../../config/profiles/workspaces';
 
 // Apps belonging to Expert Hub — System steps in these show as "Expert"
 const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quote-detail'];
@@ -37,10 +38,9 @@ function resolveRoleLabel(role: string, app: string, profileId?: string): string
     return role;
 }
 
-// Data threads — mini-summaries for completed steps
-function getStepDataThread(stepId: string): string | null {
-    const threads: Record<string, string> = {
-        // Continua
+// Data threads — mini-summaries for completed steps, keyed by profile ID
+const DATA_THREADS_BY_PROFILE: Record<string, Record<string, string>> = {
+    continua: {
         '1.1': 'Health score 87% — 3 alerts',
         '1.2': '12 items cataloged for reuse',
         '1.3': 'Price verified — $110K savings',
@@ -62,7 +62,8 @@ function getStepDataThread(stepId: string): string | null {
         '4.2': 'Portal published — 82% progress',
         '4.3': '$11,550 reconciled',
         '4.4': '92% satisfaction, AV flagged',
-        // Dupler
+    },
+    dupler: {
         'd1.1': 'Gap detected — vendor PDF imported, products extracted and mapped',
         'd1.2': 'Flagged items resolved — AI suggestions and specialist review',
         'd1.3': 'PMX specification assembled — sent to SC, catalog synchronized',
@@ -79,18 +80,20 @@ function getStepDataThread(stepId: string): string | null {
         'd3.2': 'Updates verified and propagated — metrics configured',
         'd3.3': 'Report assembled — previewed and sent to team',
         'd3.4': 'Report reviewed — client portal live',
-        // WRG — Flow 1: Project Intake
+    },
+    wrg: {
         'w1.1': 'Client request received — attachments identified',
         'w1.2': 'Mismatches found — flagged items sent to designer',
         'w1.3': 'Designer reviewed fields — corrections submitted',
         'w1.4': 'Project registered — expert assigned',
         'w1.5': 'Intake approved — estimation phase authorized',
-        // WRG — Flow 2: Labor Estimation & Quote Assembly
         'w2.1': '24 items costed — 5 flagged, OFS Serpentine escalated to designer',
         'w2.2': '5 modules validated — verification report sent to expert',
         'w2.3': 'All adjustments resolved — proposal assembled ($202,138)',
         'w2.4': 'Proposal approved and released to client — 92% time saved',
-        // Leland — purchase order pipeline (10 steps)
+    },
+    workspaces: WORKSPACES_DATA_THREADS,
+    leland: {
         'l0.1': 'Inbox set · the manual baseline',
         'l1.1': 'PO captured · ready for the next check',
         'l1.2': 'Matching quote found',
@@ -101,8 +104,12 @@ function getStepDataThread(stepId: string): string | null {
         'l1.7': 'Comments · metadata · rebate applied',
         'l1.8': 'Order logged · ticket closed',
         'l2.1': 'One catch · meaningful annual savings',
-    };
-    return threads[stepId] || null;
+    },
+};
+
+function getStepDataThread(stepId: string, profileId: string): string | null {
+    const threads = DATA_THREADS_BY_PROFILE[profileId];
+    return threads?.[stepId] || null;
 }
 
 export default function DemoSidebar() {
@@ -114,7 +121,8 @@ export default function DemoSidebar() {
     const isDupler = activeProfile.id === 'dupler';
     const isWRG = activeProfile.id === 'wrg';
     const isLeland = activeProfile.id === 'leland';
-    const hasDataThreads = isContinua || isDupler || isWRG || isLeland;
+    const isWorkspaces = activeProfile.id === 'workspaces';
+    const hasDataThreads = isContinua || isDupler || isWRG || isLeland || isWorkspaces;
 
     // Invert: when app is dark → sidebar is light, when app is light → sidebar is dark
     const isDarkSidebar = theme === 'light';
@@ -349,9 +357,9 @@ export default function DemoSidebar() {
                                             {step.description}
                                         </p>
                                     )}
-                                    {isCompleted && hasDataThreads && getStepDataThread(step.id) && (
+                                    {isCompleted && hasDataThreads && getStepDataThread(step.id, activeProfile.id) && (
                                         <p className={`text-[8px] italic ${c.textDim} leading-tight`}>
-                                            → {getStepDataThread(step.id)}
+                                            → {getStepDataThread(step.id, activeProfile.id)}
                                         </p>
                                     )}
                                 </div>

@@ -186,6 +186,13 @@ export default function ApprovalQueueScene({ onReview }: { onReview?: () => void
                 )}
             </div>
 
+            {/* AS-IS contrast */}
+            <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Before Strata:</span> managers received an email → logged into GlobalSearch → UI was often grayed out or non-functional → no receipts visible → approved blind. One approval could take 10+ minutes.
+                </p>
+            </div>
+
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
         </div>
     )

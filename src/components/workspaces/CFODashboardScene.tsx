@@ -741,6 +741,8 @@ function CompanyView({
         { label: 'On-time SLA',       value: scaledKPI.sla,              sub: '↑ from 89%' },
     ]
 
+    const [compareMode, setCompareMode] = useState(false)
+
     const [exportState, setExportState] = useState<Record<string, 'idle' | 'generating' | 'done'>>({
         csv: 'idle', pdf: 'idle',
     })
@@ -755,11 +757,21 @@ function CompanyView({
     // Close all dropdowns when clicking one
     const openDept = () => { setDeptOpen(!deptOpen); setLocationOpen(false); setCategoryOpen(false) }
     const openLoc  = () => { setLocationOpen(!locationOpen); setDeptOpen(false); setCategoryOpen(false) }
-    const openCat  = () => { setCategoryOpen(!categoryOpen); setDeptOpen(false); setLocationOpen(false) }
+    const openCat    = () => { setCategoryOpen(!categoryOpen); setDeptOpen(false); setLocationOpen(false) }
+    const [periodOpen, setPeriodOpen] = useState(false)
+    const openPeriod = () => { setPeriodOpen(p => !p); setDeptOpen(false); setLocationOpen(false); setCategoryOpen(false) }
+
+    const PERIOD_OPTIONS = [
+        { id: 'may'    as Period, label: 'May 2026',       available: true  },
+        { id: 'april'  as Period, label: 'April 2026',     available: true  },
+        { id: null,               label: 'Last 6 months',  available: false },
+        { id: null,               label: 'Custom range…',  available: false },
+    ]
+    const periodLabel = period === 'may' ? 'May 2026' : 'April 2026'
 
     return (
         <div className="space-y-4">
-            {/* Filter bar — all 3 functional */}
+            {/* Filter bar — dept / location / category / period */}
             <div className="flex gap-1.5 flex-wrap">
                 {/* Dept */}
                 <div className="relative">
@@ -820,6 +832,33 @@ function CompanyView({
                         </div>
                     )}
                 </div>
+
+                {/* Period */}
+                <div className="relative">
+                    <button
+                        onClick={openPeriod}
+                        className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded-full transition-colors bg-card border-border text-foreground hover:border-primary`}
+                    >
+                        {periodLabel} <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+                    </button>
+                    {periodOpen && (
+                        <div className="absolute top-full left-0 mt-1 z-20 bg-card border border-border rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 min-w-[148px]">
+                            {PERIOD_OPTIONS.map((opt, i) => (
+                                opt.available ? (
+                                    <button key={i} onClick={() => { setPeriod(opt.id!); setPeriodOpen(false); setCompareMode(false) }}
+                                        className={`w-full text-left px-4 py-2 text-xs hover:bg-muted transition-colors ${period === opt.id ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
+                                        {opt.label}
+                                    </button>
+                                ) : (
+                                    <div key={i} className="flex items-center justify-between px-4 py-2 opacity-40 cursor-not-allowed">
+                                        <span className="text-xs text-muted-foreground">{opt.label}</span>
+                                        <span className="text-[9px] text-muted-foreground font-medium">Soon</span>
+                                    </div>
+                                )
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* KPIs */}
@@ -842,14 +881,89 @@ function CompanyView({
                     <p className="text-xs font-bold text-foreground">Spend by Category</p>
                     <div className="flex gap-1 bg-muted/40 rounded-lg p-0.5">
                         {(['april', 'may'] as Period[]).map(p => (
-                            <button key={p} onClick={() => setPeriod(p)}
-                                className={`text-[10px] px-2 py-1 rounded font-medium capitalize transition-all ${period === p ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}>
-                                {p === 'april' ? 'April' : 'May'}
+                            <button key={p}
+                                onClick={() => { setPeriod(p); setCompareMode(false) }}
+                                className={`text-[10px] px-2 py-1 rounded font-medium capitalize transition-all ${!compareMode && period === p ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}>
+                                {p === 'april' ? 'Apr' : 'May'}
                             </button>
                         ))}
+                        <button
+                            onClick={() => setCompareMode(c => !c)}
+                            className={`text-[10px] px-2 py-1 rounded font-medium transition-all ${compareMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                        >
+                            Compare ↔
+                        </button>
                     </div>
                 </div>
 
+                {/* Compare mode — side-by-side bars per category (Mehmet's ask) */}
+                {compareMode ? (
+                    <div className="px-4 py-3 space-y-3 animate-in fade-in duration-300">
+                        {/* Legend */}
+                        <div className="flex items-center gap-4 pb-1">
+                            <div className="flex items-center gap-1.5">
+                                <div className="h-2.5 w-2.5 rounded-sm bg-primary/70 shrink-0" />
+                                <span className="text-[10px] text-muted-foreground font-medium">May 2026</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="h-2.5 w-2.5 rounded-sm bg-muted-foreground/30 shrink-0" />
+                                <span className="text-[10px] text-muted-foreground font-medium">April 2026</span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground ml-auto">MoM Δ</span>
+                        </div>
+
+                        {CATEGORIES_BY_DEPT[deptFilter].may.map((cat, catIdx) => {
+                            const rawCat  = CATEGORIES_BY_DEPT[deptFilter]
+                            const mayAmt  = locationFilter === 'all' ? cat.amount : Math.round(cat.amount * LOCATION_SCALE[locationFilter] / 100) * 100
+                            const aprAmt  = locationFilter === 'all'
+                                ? (rawCat.april.find(c => c.name === cat.name)?.amount ?? 0)
+                                : Math.round((rawCat.april.find(c => c.name === cat.name)?.amount ?? 0) * LOCATION_SCALE[locationFilter] / 100) * 100
+                            const maxAmt  = Math.max(mayAmt, aprAmt, 1)
+                            const delta   = aprAmt > 0 ? Math.round(((mayAmt - aprAmt) / aprAmt) * 100) : 0
+
+                            return (
+                                <div key={cat.name} className="space-y-1 animate-in fade-in duration-300" style={{ animationDelay: `${catIdx * 60}ms` }}>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-medium text-foreground w-16 shrink-0">{cat.name}</span>
+                                        <span className={`text-[10px] font-bold ${delta > 0 ? 'text-warning' : 'text-success'}`}>
+                                            {delta > 0 ? '+' : ''}{delta}%
+                                        </span>
+                                    </div>
+                                    {/* May bar */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[9px] text-muted-foreground w-8 shrink-0 text-right">May</span>
+                                        <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-primary/70 rounded-full transition-all duration-700 ease-out"
+                                                style={{ width: barsVisible ? `${(mayAmt / maxAmt) * 100}%` : '0%' }}
+                                            />
+                                        </div>
+                                        <span className="text-[10px] font-semibold text-foreground w-10 text-right shrink-0">
+                                            ${mayAmt >= 1000 ? `${(mayAmt / 1000).toFixed(1)}K` : mayAmt}
+                                        </span>
+                                    </div>
+                                    {/* Apr bar */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[9px] text-muted-foreground w-8 shrink-0 text-right">Apr</span>
+                                        <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-muted-foreground/30 rounded-full transition-all duration-700 ease-out"
+                                                style={{ width: barsVisible ? `${(aprAmt / maxAmt) * 100}%` : '0%' }}
+                                            />
+                                        </div>
+                                        <span className="text-[10px] text-muted-foreground w-10 text-right shrink-0">
+                                            ${aprAmt >= 1000 ? `${(aprAmt / 1000).toFixed(1)}K` : aprAmt}
+                                        </span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+
+                        <p className="text-[10px] text-muted-foreground pt-1 border-t border-border">
+                            Comparing May 2026 vs April 2026 · {DEPT_LABELS[deptFilter]} · {LOCATION_LABELS[locationFilter]}
+                        </p>
+                    </div>
+                ) : (
                 <div className="px-4 py-3 space-y-2.5" key={`${deptFilter}-${period}-${locationFilter}-${categoryFilter}`}>
                     {displayCategories.length === 0 ? (
                         <p className="text-xs text-muted-foreground text-center py-2">No data for selected filters</p>
@@ -906,6 +1020,7 @@ function CompanyView({
                         )
                     })}
                 </div>
+                )}
             </div>
 
             {/* Preview Full Report CTA */}
