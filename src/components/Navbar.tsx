@@ -63,6 +63,27 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Senior Estimator',
         photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face',
     },
+    // Workspaces demo personas
+    Employee: {
+        name: 'John Smith',
+        role: 'Field Staff',
+        photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face',
+    },
+    'Operations Manager': {
+        name: 'Tammy Okafor',
+        role: 'Operations Manager',
+        photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face',
+    },
+    'AP Coordinator': {
+        name: 'Letza Bombard',
+        role: 'AP Coordinator',
+        photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face',
+    },
+    CFO: {
+        name: 'Mehmet Yildiz',
+        role: 'CFO',
+        photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
@@ -75,6 +96,10 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
     if (role === 'Sales Rep') return 'Sales Rep';
     if (role === 'Designer') return 'Designer';
     if (role === 'SC') return 'SC';
+    if (role === 'Employee') return 'Employee';
+    if (role === 'Operations Manager') return 'Operations Manager';
+    if (role === 'AP Coordinator') return 'AP Coordinator';
+    if (role === 'CFO') return 'CFO';
     if (role === 'System') {
         // System steps inherit the human profile of their parent app
         if (app === 'crm') return 'Sales Rep';
