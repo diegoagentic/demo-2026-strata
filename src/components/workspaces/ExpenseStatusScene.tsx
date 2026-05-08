@@ -86,6 +86,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
     const [scene,        setScene]        = useState<SceneState>('watching')
     const [scenarioMode, setScenarioMode] = useState<ScenarioMode>('approved')
     const [expanded,     setExpanded]     = useState<Set<string>>(new Set(['Approved']))
+    const [selectedRole, setSelectedRole] = useState<string | null>(null)
 
     const toggleStep = (label: string) => {
         setExpanded(prev => {
@@ -162,7 +163,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     {(['approved', 'rejected'] as const).map(m => (
                         <button
                             key={m}
-                            onClick={() => { setScenarioMode(m); setScene('watching') }}
+                            onClick={() => { setScenarioMode(m); setScene('watching'); setSelectedRole(null) }}
                             className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-all ${
                                 scenarioMode === m
                                     ? m === 'approved'
@@ -331,10 +332,10 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     </div>
                 )}
 
-                {/* Handoff bridge — approved + updated: signals transition to AP view */}
+                {/* Handoff bridge — approved + updated: role selector to send confirmation */}
                 {scenarioMode === 'approved' && scene === 'updated' && (
                     <div
-                        className="bg-ai/5 border border-ai/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-500"
+                        className="bg-ai/5 border border-ai/20 rounded-xl px-3 py-3 space-y-3 animate-in fade-in duration-500"
                         style={{ animationDelay: '400ms' }}
                     >
                         <div className="flex items-center gap-2">
@@ -342,13 +343,41 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                             <p className="text-xs font-semibold text-foreground">Expense fully processed</p>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Your expense completed the full approval cycle. The accounting team confirmed the entry and issued payment — no follow-up needed on your end.
+                            Your expense completed the full approval cycle. Send the payment confirmation to:
                         </p>
+
+                        {/* Role selector */}
+                        <div className="space-y-1.5">
+                            {[
+                                { role: 'AP Coordinator', name: 'Letza Bombard',      sub: 'Accounting review & payment posting' },
+                                { role: 'Finance Team',   name: 'Workscapes Finance', sub: 'General ledger & reporting'          },
+                            ].map(r => (
+                                <button
+                                    key={r.role}
+                                    onClick={() => setSelectedRole(r.role)}
+                                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all text-left ${
+                                        selectedRole === r.role
+                                            ? 'border-ai/40 bg-ai/10'
+                                            : 'border-border bg-card hover:bg-muted/30'
+                                    }`}
+                                >
+                                    <div className={`h-3.5 w-3.5 rounded-full border-2 shrink-0 transition-colors ${
+                                        selectedRole === r.role ? 'border-ai bg-ai' : 'border-muted-foreground/40'
+                                    }`} />
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-foreground">{r.role}</p>
+                                        <p className="text-[10px] text-muted-foreground">{r.name} · {r.sub}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
                         <button
                             onClick={nextStep}
-                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                            disabled={!selectedRole}
+                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-xl hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                         >
-                            View payment confirmation
+                            Send confirmation
                             <ChevronRight className="h-3.5 w-3.5" />
                         </button>
                     </div>
