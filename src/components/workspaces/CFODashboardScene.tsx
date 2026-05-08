@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Download, AlertTriangle, ChevronRight, ChevronDown, Bell, Sparkles, ArrowRight, FileText, X, Loader2 } from 'lucide-react'
+import { Download, AlertTriangle, ChevronRight, ChevronDown, Bell, Sparkles, ArrowRight, FileText, X, Loader2, CheckCircle2, Calendar, RefreshCw } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import { useDemo } from '../../context/DemoContext'
 
@@ -152,6 +152,169 @@ function TammyNotificationBanner() {
         </div>
     )
 }
+
+// ── ReminderScheduler ─────────────────────────────────────────────────────────
+
+type ReminderStep    = 'idle' | 'choosing' | 'configuring' | 'sent'
+type PeriodicityId   = 'now' | 'weekly' | 'biweekly' | 'monthly'
+
+const PERIODICITY_OPTIONS: { id: PeriodicityId; label: string; sub: string; icon: 'bell' | 'refresh' | 'calendar' }[] = [
+    { id: 'now',      label: 'Send now',   sub: 'One-time reminder',           icon: 'bell'     },
+    { id: 'weekly',   label: 'Weekly',     sub: 'Every Monday · 9:00 AM',      icon: 'refresh'  },
+    { id: 'biweekly', label: 'Bi-weekly',  sub: 'Every other Monday · 9:00 AM', icon: 'refresh' },
+    { id: 'monthly',  label: 'Monthly',    sub: 'Last Friday of month · 9:00 AM', icon: 'calendar' },
+]
+
+const NEXT_REMINDER: Record<PeriodicityId, string> = {
+    now:      'Sent immediately',
+    weekly:   'Next: Mon May 11 · 9:00 AM',
+    biweekly: 'Next: Mon May 18 · 9:00 AM',
+    monthly:  'Next: Fri May 30 · 9:00 AM',
+}
+
+function ReminderScheduler({ alerts }: { alerts: { name: string; manager: string; days: number }[] }) {
+    const [step, setStep]       = useState<ReminderStep>('idle')
+    const [selected, setSelected] = useState<PeriodicityId | null>(null)
+
+    const uniqueManagers = [...new Set(alerts.map(a => a.manager))]
+
+    if (step === 'idle') {
+        return (
+            <button
+                onClick={() => setStep('choosing')}
+                className="w-full flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg font-medium bg-muted text-muted-foreground hover:text-foreground border border-border transition-all"
+            >
+                <Bell className="h-3 w-3" />
+                Send reminder to managers
+            </button>
+        )
+    }
+
+    if (step === 'choosing') {
+        return (
+            <div className="space-y-2.5 animate-in fade-in duration-200">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Select reminder schedule</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                    {PERIODICITY_OPTIONS.map(opt => (
+                        <button
+                            key={opt.id}
+                            onClick={() => { setSelected(opt.id); setStep('configuring') }}
+                            className="text-left px-3 py-2.5 bg-muted/40 border border-border rounded-xl hover:border-foreground/30 hover:bg-muted transition-all"
+                        >
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                                {opt.icon === 'bell'     && <Bell className="h-3 w-3 text-muted-foreground" />}
+                                {opt.icon === 'refresh'  && <RefreshCw className="h-3 w-3 text-muted-foreground" />}
+                                {opt.icon === 'calendar' && <Calendar className="h-3 w-3 text-muted-foreground" />}
+                                <p className="text-xs font-semibold text-foreground">{opt.label}</p>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground leading-tight">{opt.sub}</p>
+                        </button>
+                    ))}
+                </div>
+                <button onClick={() => setStep('idle')} className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center py-1">
+                    Cancel
+                </button>
+            </div>
+        )
+    }
+
+    if (step === 'configuring' && selected) {
+        const option = PERIODICITY_OPTIONS.find(o => o.id === selected)!
+        return (
+            <div className="space-y-2.5 animate-in fade-in duration-200">
+                {/* Config card */}
+                <div className="bg-ai/5 border border-ai/20 rounded-xl px-3 py-3 space-y-3">
+                    <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3 w-3 text-ai" />
+                        <p className="text-[10px] font-bold text-ai uppercase tracking-wide">Reminder configuration</p>
+                    </div>
+
+                    {/* Recipients */}
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] text-muted-foreground font-medium">Recipients</p>
+                        {uniqueManagers.map(mgr => (
+                            <div key={mgr} className="flex items-center gap-2">
+                                <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-foreground shrink-0">
+                                    {mgr.split(' ').map((n: string) => n[0]).join('')}
+                                </div>
+                                <p className="text-xs text-foreground">{mgr}</p>
+                                <span className="text-[10px] text-muted-foreground ml-auto">
+                                    {alerts.find(a => a.manager === mgr)?.days}d pending
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Message preview */}
+                    <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground font-medium">Message</p>
+                        <div className="bg-card border border-border rounded-lg px-2.5 py-2">
+                            <p className="text-[10px] text-foreground leading-relaxed">
+                                You have expense reports pending approval for over 3 days. Please review and approve or escalate to maintain SLA compliance.
+                            </p>
+                            <p className="text-[9px] text-muted-foreground mt-1">From: Strata · Automated · Workspaces, Inc.</p>
+                        </div>
+                    </div>
+
+                    {/* Schedule */}
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] text-muted-foreground font-medium">Schedule</p>
+                            <p className="text-xs font-semibold text-foreground">{option.label}</p>
+                            <p className="text-[10px] text-muted-foreground">{option.sub}</p>
+                        </div>
+                        <button
+                            onClick={() => setStep('choosing')}
+                            className="text-[10px] text-ai hover:underline font-medium"
+                        >
+                            Change
+                        </button>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setStep('idle')}
+                        className="flex-1 text-xs text-muted-foreground py-2 hover:text-foreground border border-border rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => setStep('sent')}
+                        className="flex-[2] text-xs bg-foreground text-background font-bold py-2 rounded-lg hover:opacity-90 flex items-center justify-center gap-1.5 transition-opacity"
+                    >
+                        <Bell className="h-3 w-3" />
+                        Confirm &amp; Send
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // sent
+    return (
+        <div className="space-y-2 animate-in fade-in duration-300">
+            <div className="bg-success/10 border border-success/20 rounded-xl px-3 py-3 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                    <p className="text-xs font-semibold text-success">Reminders sent ✓</p>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                    {uniqueManagers.join(' · ')} notified via Strata
+                </p>
+                {selected !== 'now' && (
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <RefreshCw className="h-2.5 w-2.5" />
+                        {NEXT_REMINDER[selected!]}
+                    </p>
+                )}
+            </div>
+        </div>
+    )
+}
+
+// ── ReportPreviewModal ────────────────────────────────────────────────────────
 
 function ReportPreviewModal({ onClose }: { onClose: () => void }) {
     const [exportState, setExportState] = useState<'idle' | 'generating' | 'done'>('idle')
@@ -330,7 +493,7 @@ export default function CFODashboardScene() {
     const [categoryFilter, setCategoryFilter]   = useState<CategoryFilter>('all')
     const [categoryOpen, setCategoryOpen]       = useState(false)
     const [drillCategory, setDrillCategory]     = useState<string | null>(null)
-    const [reminderSent, setReminderSent]       = useState(false)
+
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -521,7 +684,6 @@ export default function CFODashboardScene() {
                     categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}
                     categoryOpen={categoryOpen} setCategoryOpen={setCategoryOpen}
                     drillCategory={drillCategory} setDrillCategory={setDrillCategory}
-                    reminderSent={reminderSent} setReminderSent={setReminderSent}
                     kpisVisible={kpisVisible} barsVisible={barsVisible}
                     onPreviewClick={() => setShowPreview(true)}
                 />
@@ -538,7 +700,7 @@ function CompanyView({
     period, setPeriod, deptFilter, setDeptFilter, deptOpen, setDeptOpen,
     locationFilter, setLocationFilter, locationOpen, setLocationOpen,
     categoryFilter, setCategoryFilter, categoryOpen, setCategoryOpen,
-    drillCategory, setDrillCategory, reminderSent, setReminderSent,
+    drillCategory, setDrillCategory,
     kpisVisible, barsVisible, onPreviewClick,
 }: {
     period: Period; setPeriod: (p: Period) => void
@@ -549,7 +711,6 @@ function CompanyView({
     categoryFilter: CategoryFilter; setCategoryFilter: (c: CategoryFilter) => void
     categoryOpen: boolean; setCategoryOpen: (v: boolean) => void
     drillCategory: string | null; setDrillCategory: (c: string | null) => void
-    reminderSent: boolean; setReminderSent: (v: boolean) => void
     kpisVisible: boolean; barsVisible: boolean
     onPreviewClick: () => void
 }) {
@@ -774,13 +935,7 @@ function CompanyView({
                     ))}
                 </div>
                 <div className="px-4 py-3 border-t border-border">
-                    <button
-                        onClick={() => setReminderSent(true)}
-                        className={`w-full flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg font-medium transition-all ${reminderSent ? 'bg-success/10 text-success border border-success/20' : 'bg-muted text-muted-foreground hover:text-foreground border border-border'}`}
-                    >
-                        <Bell className="h-3 w-3" />
-                        {reminderSent ? 'Reminders sent ✓' : 'Send reminder to managers'}
-                    </button>
+                    <ReminderScheduler alerts={SLA_ALERTS} />
                 </div>
             </div>
 
