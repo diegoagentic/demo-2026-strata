@@ -121,7 +121,7 @@ export default function WorkspacesPage() {
         return (
             <div className="min-h-screen bg-zinc-950 dark:bg-zinc-900 flex flex-col items-center justify-center py-8 gap-6 animate-in fade-in duration-500">
                 {subStep === 0 && <ExpenseSubmitScene onSubmit={() => navigateSub(1)} />}
-                {subStep === 3 && <ExpenseStatusScene />}
+                {subStep === 3 && <ExpenseStatusScene onBack={() => navigateSub(0)} />}
             </div>
         )
     }

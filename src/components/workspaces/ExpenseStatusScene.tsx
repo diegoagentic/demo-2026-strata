@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown } from 'lucide-react'
+import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown, ChevronLeft, Plus } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import { MobileNavbar } from './ExpenseSubmitScene'
@@ -42,7 +42,7 @@ const HISTORY = [
     { description: 'Office Supplies', amount: '$23.00', date: 'Apr 15', status: 'Paid ✓', days: '3.1 days' },
 ]
 
-export default function ExpenseStatusScene() {
+export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
@@ -76,7 +76,18 @@ export default function ExpenseStatusScene() {
 
     return (
         <MobileDeviceFrame>
-            <MobileNavbar title="My Expenses" />
+            {/* Navbar with back button */}
+            <div className="flex items-center justify-between px-4 pt-2 pb-3 border-b border-border bg-background">
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-1 text-xs font-medium text-ai hover:opacity-80 transition-opacity"
+                >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                    Expenses
+                </button>
+                <p className="text-xs font-bold text-foreground">Expense Detail</p>
+                <div className="w-14" />
+            </div>
 
             <div className="px-4 py-4 space-y-4">
                 {/* User context */}
@@ -217,7 +228,14 @@ export default function ExpenseStatusScene() {
                 </div>
             </div>
 
-            <div className="px-4 pb-6 pt-2">
+            <div className="px-4 pb-2 pt-2 space-y-3">
+                <button
+                    onClick={onBack}
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity"
+                >
+                    <Plus className="h-4 w-4" />
+                    New expense
+                </button>
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
             </div>
         </MobileDeviceFrame>
