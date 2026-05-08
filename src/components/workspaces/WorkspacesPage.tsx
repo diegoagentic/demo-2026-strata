@@ -28,7 +28,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Receipt, BarChart2 } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
-import MBIPersonaBadge from '../mbi/MBIPersonaBadge'
 import { WORKSPACES_STEP_BEHAVIOR } from '../../config/profiles/workspaces'
 import ExpenseSubmitScene from './ExpenseSubmitScene'
 import ApprovalQueueScene from './ApprovalQueueScene'
@@ -39,23 +38,6 @@ import GLCoreSyncScene from './GLCoreSyncScene'
 import AdminScene from './AdminScene'
 import CFODashboardScene from './CFODashboardScene'
 import { useDemo } from '../../context/DemoContext'
-
-// ── Role system ───────────────────────────────────────────────────────────────
-
-type WorkspacesRole = 'employee' | 'manager' | 'ap' | 'cfo'
-
-const ROLE_CONFIG: Record<WorkspacesRole, { name: string; role: string; tone: 'ai' | 'neutral' | 'info' }> = {
-    'employee': { name: 'John Smith — Field Staff', role: 'Expense Submission · Mobile', tone: 'neutral' },
-    'manager':  { name: 'Operations Manager',       role: 'Expense Approval',            tone: 'ai'      },
-    'ap':       { name: 'Letza — AP Coordinator',   role: 'GL Review · CORE · Admin',    tone: 'neutral' },
-    'cfo':      { name: 'Mehmet — CFO',             role: 'Spend Dashboard · Reporting', tone: 'info'    },
-}
-
-// Step → role
-const STEP_ROLE: Record<string, WorkspacesRole> = {
-    'w1.1': 'employee', 'w1.2': 'manager', 'w1.3': 'manager', 'w1.4': 'employee',
-    'w2.1': 'ap',       'w2.2': 'ap',      'w2.3': 'ap',      'w2.4': 'cfo',
-}
 
 // ── Tab + step index maps ─────────────────────────────────────────────────────
 
@@ -80,7 +62,6 @@ export default function WorkspacesPage() {
     const [activeTab, setActiveTab]     = useState<WorkspacesTab>('submission')
     const [subStep, setSubStep]         = useState(0)
     const [procStep, setProcStep]       = useState(0)
-    const [activeRole, setActiveRole]   = useState<WorkspacesRole>('employee')
     const [returnToList, setReturnToList] = useState(false)
 
     // Sync tab + step index + role when the demo tour navigates
@@ -94,13 +75,11 @@ export default function WorkspacesPage() {
         } else if (tab === 'processing' && demoStepId in PROC_STEP_TO_IDX) {
             setProcStep(PROC_STEP_TO_IDX[demoStepId])
         }
-        setActiveRole(STEP_ROLE[demoStepId] ?? 'employee')
     }, [demoStepId])
 
     const navigateSub = useCallback((idx: number) => {
         setSubStep(idx)
         const targetId = SUB_IDX_TO_STEP[idx]
-        setActiveRole(STEP_ROLE[targetId] ?? 'employee')
         if (!isDemoActive || !targetId || currentStep?.id === targetId) return
         const tourIdx = tourSteps.findIndex(s => s.id === targetId)
         if (tourIdx >= 0) goToStep(tourIdx)
@@ -109,7 +88,6 @@ export default function WorkspacesPage() {
     const navigateProc = useCallback((idx: number) => {
         setProcStep(idx)
         const targetId = PROC_IDX_TO_STEP[idx]
-        setActiveRole(STEP_ROLE[targetId] ?? 'ap')
         if (!isDemoActive || !targetId || currentStep?.id === targetId) return
         const tourIdx = tourSteps.findIndex(s => s.id === targetId)
         if (tourIdx >= 0) goToStep(tourIdx)
@@ -153,11 +131,6 @@ export default function WorkspacesPage() {
         </div>
     )
 
-    const roleConfig = ROLE_CONFIG[activeRole]
-    const personaBadge = (
-        <MBIPersonaBadge key={activeRole} name={roleConfig.name} role={roleConfig.role} tone={roleConfig.tone} />
-    )
-
     // Dynamic subtitle: step hint text for the active step
     const activeStepId = activeTab === 'submission' ? SUB_IDX_TO_STEP[subStep] : PROC_IDX_TO_STEP[procStep]
     const stepSubtitle = WORKSPACES_STEP_BEHAVIOR[activeStepId]?.userAction
@@ -185,7 +158,6 @@ export default function WorkspacesPage() {
             {/* Flow 2 — all desktop (w2.1 → w2.4) */}
             {activeTab === 'processing' && (
                 <div className="space-y-4 animate-in fade-in duration-500">
-                    {personaBadge}
                     {procStep === 0 && <APReviewQueueScene onReview={() => navigateProc(1)} />}
                     {procStep === 1 && <GLCoreSyncScene onPost={() => navigateProc(2)} />}
                     {procStep === 2 && <AdminScene onSave={() => navigateProc(3)} />}
