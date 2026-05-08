@@ -31,7 +31,7 @@ const DEFAULT_MANAGER = {
 }
 
 const FIELDS = [
-    { key: 'vendor',   label: 'Vendor',   value: 'The Capital Grille' },
+    { key: 'vendor',   label: 'Vendor',   value: 'Suncoast Fuel Services' },
     { key: 'date',     label: 'Date',     value: 'May 5, 2026' },
     { key: 'amount',   label: 'Amount',   value: '$142.50' },
     { key: 'category', label: 'Category', value: 'Fuel + Parking' },
@@ -692,112 +692,146 @@ export function MobileNavbar({ title }: { title: string }) {
     )
 }
 
-// ── Receipt image (B2B expense document format) ───────────────────────────────
+// ── Receipt image (corporate B2B document format) ─────────────────────────────
 
 export function ReceiptImage({ compact, variant = 'fuel' }: {
     compact?: boolean
     variant?: 'fuel' | 'parking' | 'toll'
 }) {
-    // Shared sub-components
-    const DocDivider = ({ strong }: { strong?: boolean }) => (
-        <div className={`border-t ${strong ? 'border-zinc-300' : 'border-zinc-100'} my-2`} />
-    )
-    const LV = ({ label, value, bold }: { label: string; value: string; bold?: boolean }) => (
-        <div className={`flex justify-between text-[10px] ${bold ? 'font-bold text-zinc-900' : 'text-zinc-500'}`}>
-            <span>{label}</span><span>{value}</span>
-        </div>
-    )
-    const ColHeader = ({ cols }: { cols: string[] }) => (
-        <div className="flex items-center justify-between text-[8px] font-semibold text-zinc-400 uppercase tracking-wide pb-1 border-b border-zinc-100 mb-2">
-            {cols.map((c, i) => <span key={i}>{c}</span>)}
-        </div>
-    )
-    const ApprovedBadge = ({ label = 'APPROVED ✓' }: { label?: string }) => (
-        <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded shrink-0">{label}</span>
-    )
-
     // ── PARKING ────────────────────────────────────────────────────────────────
     if (variant === 'parking') {
         if (compact) return (
-            <div className="bg-white border border-zinc-100 rounded px-2.5 py-2 space-y-1 min-w-0">
-                <div className="flex items-start justify-between gap-1">
-                    <p className="text-[8px] font-bold text-zinc-900 leading-tight truncate">WATERSIDE GARAGE</p>
-                    <p className="text-[7px] text-zinc-400 shrink-0">#WG-4421</p>
-                </div>
-                <p className="text-[7px] text-zinc-400">05/05/2026 · 9:12–12:27 PM</p>
-                <div className="border-t border-zinc-100 pt-1 space-y-0.5">
-                    <div className="flex justify-between text-[8px]">
-                        <span className="text-zinc-600">Covered Parking · 3h 15m</span>
-                        <span className="font-semibold text-zinc-900">$45.50</span>
+            <div className="bg-white overflow-hidden">
+                <div className="bg-zinc-700 px-2 py-1.5">
+                    <div className="flex items-center justify-between gap-1">
+                        <p className="text-[7px] font-black text-white tracking-tight truncate">WATERSIDE GARAGE</p>
+                        <p className="text-[6px] text-zinc-400 shrink-0 font-mono">#WG-4421</p>
                     </div>
-                    <div className="flex justify-between text-[8px]">
+                    <p className="text-[6px] text-zinc-400 mt-0.5">Parking Receipt · 05/05/2026</p>
+                </div>
+                <div className="px-2 py-1.5 space-y-1">
+                    <div className="flex justify-between text-[7px] border-b border-zinc-100 pb-1">
+                        <span className="text-zinc-600">Covered Parking · 3h 15m</span>
+                        <span className="font-bold text-zinc-900">$45.50</span>
+                    </div>
+                    <div className="flex justify-between text-[7px]">
                         <span className="text-zinc-500">Processing fee</span>
                         <span className="text-zinc-700">$2.00</span>
                     </div>
+                    <div className="flex justify-between text-[8px] font-bold text-zinc-900 border-t border-zinc-300 pt-1">
+                        <span>TOTAL</span><span>$47.50</span>
+                    </div>
+                    <p className="text-[6px] text-zinc-400 font-mono">Visa ···· 4892 · Auth: 773921</p>
                 </div>
-                <div className="border-t border-zinc-300 pt-1 flex justify-between text-[9px] font-bold text-zinc-900">
-                    <span>TOTAL</span><span>$47.50</span>
-                </div>
-                <p className="text-[7px] text-zinc-400">Visa ···· 4892 · Auth: 773921</p>
             </div>
         )
         return (
-            <div className="bg-white border border-zinc-100 rounded-lg overflow-hidden">
-                {/* Document header */}
-                <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+            <div className="bg-white overflow-hidden">
+                {/* Header band */}
+                <div className="bg-zinc-700 px-5 py-3.5">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <p className="text-[13px] font-bold text-zinc-900 tracking-tight leading-tight">WATERSIDE GARAGE</p>
-                            <p className="text-[10px] text-zinc-500 mt-0.5">150 S Tampa St · Tampa Convention Center</p>
-                            <p className="text-[10px] text-zinc-500">Tampa, FL 33602 · (813) 555-0193</p>
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="h-6 w-6 bg-zinc-500 rounded flex items-center justify-center shrink-0">
+                                    <span className="text-[8px] font-black text-white">WG</span>
+                                </div>
+                                <p className="text-[14px] font-black text-white tracking-tight leading-none">WATERSIDE GARAGE</p>
+                            </div>
+                            <p className="text-[9px] text-zinc-400">150 S Tampa St · Tampa Convention Center · Tampa, FL 33602</p>
+                            <p className="text-[9px] text-zinc-400">(813) 555-0193 · EIN: 59-4821034 · License: FL-PK-0041</p>
                         </div>
                         <div className="text-right shrink-0">
-                            <p className="text-[11px] font-bold text-zinc-800">Receipt #WG-4421</p>
-                            <p className="text-[10px] text-zinc-500">Date: 05/05/2026</p>
-                            <p className="text-[10px] text-zinc-500">9:12 AM – 12:27 PM</p>
+                            <p className="text-[8px] text-zinc-400 uppercase tracking-widest mb-0.5">Parking Receipt</p>
+                            <p className="text-[13px] font-bold text-white font-mono">#WG-4421</p>
                         </div>
                     </div>
                 </div>
-                {/* Line items */}
+                {/* Bill To / Document Info */}
+                <div className="grid grid-cols-2 border-b border-zinc-200">
+                    <div className="px-5 py-3 border-r border-zinc-200">
+                        <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Billed To</p>
+                        <p className="text-[11px] font-semibold text-zinc-800">Workscapes, Inc.</p>
+                        <p className="text-[10px] text-zinc-500">4830 W Kennedy Blvd, Ste 600</p>
+                        <p className="text-[10px] text-zinc-500">Tampa, FL 33609</p>
+                    </div>
+                    <div className="px-5 py-3">
+                        <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Document Info</p>
+                        <div className="space-y-0.5">
+                            {[
+                                ['Date', '05/05/2026'],
+                                ['Entry', '9:12 AM'],
+                                ['Exit', '12:27 PM'],
+                                ['Employee', 'John Smith'],
+                                ['Space', 'B-214 · Level 2'],
+                            ].map(([k, v]) => (
+                                <div key={k} className="flex justify-between text-[10px]">
+                                    <span className="text-zinc-500">{k}</span>
+                                    <span className="font-medium text-zinc-800">{v}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                {/* Line items table */}
                 <div className="px-5 py-3">
-                    <ColHeader cols={['Description', 'Duration / Unit', 'Amount']} />
-                    <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2 text-[11px]">
-                            <div className="min-w-0">
-                                <p className="font-medium text-zinc-800">Covered Parking</p>
-                                <p className="text-[10px] text-zinc-500">Space B-214 · $14.00/hr</p>
-                                <p className="text-[10px] text-zinc-500">Purpose: Site visit — Tampa</p>
-                            </div>
-                            <div className="flex gap-6 shrink-0 text-right">
-                                <span className="text-zinc-500 text-[10px]">3h 15m</span>
-                                <span className="text-zinc-800 w-12">$45.50</span>
-                            </div>
+                    <div className="grid grid-cols-[1.5rem_1fr_auto_auto] gap-x-3 pb-1.5 border-b-2 border-zinc-800">
+                        {['#', 'Description', 'Duration', 'Amount'].map((h, i) => (
+                            <p key={i} className={`text-[8px] font-bold text-zinc-500 uppercase tracking-wide ${i >= 2 ? 'text-right' : ''}`}>{h}</p>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-[1.5rem_1fr_auto_auto] gap-x-3 py-2.5 bg-zinc-50 -mx-5 px-5 border-b border-zinc-100">
+                        <p className="text-[10px] text-zinc-400 font-mono">1</p>
+                        <div>
+                            <p className="text-[11px] font-semibold text-zinc-800">Covered Parking · Space B-214</p>
+                            <p className="text-[9px] text-zinc-500">Rate: $14.00/hr · Purpose: Site visit — Tampa</p>
                         </div>
-                        <div className="flex items-center justify-between gap-2 text-[11px]">
-                            <p className="text-zinc-600">Processing fee</p>
-                            <div className="flex gap-6 shrink-0 text-right">
-                                <span className="text-zinc-400 text-[10px]">—</span>
-                                <span className="text-zinc-600 w-12">$2.00</span>
-                            </div>
-                        </div>
+                        <p className="text-[10px] text-zinc-500 text-right">3h 15m</p>
+                        <p className="text-[11px] font-semibold text-zinc-800 text-right">$45.50</p>
+                    </div>
+                    <div className="grid grid-cols-[1.5rem_1fr_auto_auto] gap-x-3 py-2 -mx-5 px-5">
+                        <p className="text-[10px] text-zinc-400 font-mono">2</p>
+                        <p className="text-[10px] text-zinc-600">Processing fee</p>
+                        <p className="text-[10px] text-zinc-400 text-right">—</p>
+                        <p className="text-[10px] text-zinc-600 text-right">$2.00</p>
                     </div>
                 </div>
                 {/* Totals */}
-                <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-100 space-y-1">
-                    <LV label="Subtotal" value="$47.50" />
-                    <LV label="FL Sales Tax (exempt)" value="$0.00" />
-                    <DocDivider strong />
-                    <LV label="TOTAL" value="$47.50" bold />
-                </div>
-                {/* Payment */}
-                <div className="px-5 py-3 border-t border-zinc-100">
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="space-y-0.5">
-                            <p className="text-[10px] text-zinc-700">Visa ···· 4892 · Auth: 773921</p>
-                            <p className="text-[10px] text-zinc-400">Terminal: G-04 · Merchant: MCH-19342</p>
+                <div className="px-5 py-3 border-t border-zinc-200">
+                    <div className="flex justify-end">
+                        <div className="w-52 space-y-1">
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-zinc-500">Subtotal</span>
+                                <span className="text-zinc-700">$47.50</span>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-zinc-500">FL Sales Tax (exempt)</span>
+                                <span className="text-zinc-700">$0.00</span>
+                            </div>
+                            <div className="flex justify-between text-[12px] font-bold text-zinc-900 border-t-2 border-zinc-800 pt-1.5 mt-1">
+                                <span>TOTAL DUE</span>
+                                <span>$47.50</span>
+                            </div>
                         </div>
-                        <ApprovedBadge />
                     </div>
+                </div>
+                {/* Payment + stamp */}
+                <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-200">
+                    <div className="flex items-end justify-between gap-3">
+                        <div>
+                            <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Payment Method</p>
+                            <p className="text-[10px] font-medium text-zinc-700">Visa ···· 4892</p>
+                            <p className="text-[9px] text-zinc-500 font-mono">Auth: 773921 · Terminal: G-04 · Merchant: MCH-19342</p>
+                        </div>
+                        <div className="border-2 border-success rounded px-3 py-1.5 text-center shrink-0" style={{ transform: 'rotate(-2deg)' }}>
+                            <p className="text-[8px] font-black text-success uppercase tracking-widest">APPROVED</p>
+                            <p className="text-[9px] font-bold text-success">✓ Expense</p>
+                        </div>
+                    </div>
+                </div>
+                {/* Footer */}
+                <div className="px-5 py-2 border-t border-zinc-100 flex items-center justify-between">
+                    <p className="text-[8px] text-zinc-400">Retain for expense records · Questions: (813) 555-0193</p>
+                    <p className="text-[8px] text-zinc-400">Page 1 of 1</p>
                 </div>
             </div>
         )
@@ -806,139 +840,254 @@ export function ReceiptImage({ compact, variant = 'fuel' }: {
     // ── TOLL ───────────────────────────────────────────────────────────────────
     if (variant === 'toll') {
         if (compact) return (
-            <div className="bg-white border border-zinc-100 rounded px-2.5 py-2 space-y-1 min-w-0">
-                <div className="flex items-start justify-between gap-1">
-                    <p className="text-[8px] font-bold text-zinc-900 leading-tight truncate">SUNPASS TOLL</p>
-                    <p className="text-[7px] text-zinc-400 shrink-0">#887341</p>
-                </div>
-                <p className="text-[7px] text-zinc-400">05/05/2026 · 11:03 AM</p>
-                <div className="border-t border-zinc-100 pt-1">
-                    <div className="flex justify-between text-[8px]">
-                        <span className="text-zinc-600">Suncoast Pkwy · Plaza 3</span>
-                        <span className="font-semibold text-zinc-900">$12.00</span>
+            <div className="bg-white overflow-hidden">
+                <div className="bg-zinc-800 px-2 py-1.5">
+                    <div className="flex items-center justify-between gap-1">
+                        <p className="text-[7px] font-black text-white tracking-tight truncate">SUNPASS TOLL AUTHORITY</p>
+                        <p className="text-[6px] text-zinc-400 shrink-0 font-mono">#887341</p>
                     </div>
+                    <p className="text-[6px] text-zinc-400 mt-0.5">Toll Transaction · 05/05/2026</p>
                 </div>
-                <div className="border-t border-zinc-300 pt-1 flex justify-between text-[9px] font-bold text-zinc-900">
-                    <span>TOTAL</span><span>$12.00</span>
+                <div className="px-2 py-1.5 space-y-1">
+                    <div className="flex justify-between text-[7px] border-b border-zinc-100 pb-1">
+                        <span className="text-zinc-600">Suncoast Pkwy · Plaza 3</span>
+                        <span className="font-bold text-zinc-900">$12.00</span>
+                    </div>
+                    <div className="flex justify-between text-[8px] font-bold text-zinc-900 border-t border-zinc-300 pt-1">
+                        <span>TOTAL</span><span>$12.00</span>
+                    </div>
+                    <p className="text-[6px] text-zinc-400 font-mono">SunPass ···· 8821 · Auto-deducted</p>
                 </div>
-                <p className="text-[7px] text-zinc-400">SunPass ···· 8821 · Auto-deducted</p>
             </div>
         )
         return (
-            <div className="bg-white border border-zinc-100 rounded-lg overflow-hidden">
-                {/* Document header */}
-                <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+            <div className="bg-white overflow-hidden">
+                {/* Header band */}
+                <div className="bg-zinc-800 px-5 py-3.5">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <p className="text-[13px] font-bold text-zinc-900 tracking-tight leading-tight">SUNPASS TOLL AUTHORITY</p>
-                            <p className="text-[10px] text-zinc-500 mt-0.5">Florida Dept of Transportation</p>
-                            <p className="text-[10px] text-zinc-500">Suncoast Pkwy · Plaza 3 · Tampa, FL</p>
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="h-6 w-6 bg-zinc-600 rounded flex items-center justify-center shrink-0">
+                                    <span className="text-[8px] font-black text-white">FL</span>
+                                </div>
+                                <p className="text-[14px] font-black text-white tracking-tight leading-none">SUNPASS TOLL AUTHORITY</p>
+                            </div>
+                            <p className="text-[9px] text-zinc-400">Florida Dept of Transportation · Suncoast Pkwy · Plaza 3</p>
+                            <p className="text-[9px] text-zinc-400">Tampa, FL 33626 · support.sunpass.com · 1-888-865-5352</p>
                         </div>
                         <div className="text-right shrink-0">
-                            <p className="text-[11px] font-bold text-zinc-800">Trans #887341</p>
-                            <p className="text-[10px] text-zinc-500">Date: 05/05/2026</p>
-                            <p className="text-[10px] text-zinc-500">11:03 AM</p>
+                            <p className="text-[8px] text-zinc-400 uppercase tracking-widest mb-0.5">Toll Transaction</p>
+                            <p className="text-[13px] font-bold text-white font-mono">#887341</p>
                         </div>
                     </div>
                 </div>
-                {/* Line items */}
-                <div className="px-5 py-3">
-                    <ColHeader cols={['Description', 'Amount']} />
-                    <div className="flex items-start justify-between gap-2 text-[11px]">
-                        <div className="min-w-0">
-                            <p className="font-medium text-zinc-800">Toll — Suncoast Pkwy Plaza 3</p>
-                            <p className="text-[10px] text-zinc-500">Vehicle: FL · ABC-1234</p>
-                            <p className="text-[10px] text-zinc-500">SunPass Account ···· 8821</p>
+                {/* Bill To / Document Info */}
+                <div className="grid grid-cols-2 border-b border-zinc-200">
+                    <div className="px-5 py-3 border-r border-zinc-200">
+                        <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Account Holder</p>
+                        <p className="text-[11px] font-semibold text-zinc-800">Workscapes, Inc.</p>
+                        <p className="text-[10px] text-zinc-500">Fleet Account · FL-34819</p>
+                        <p className="text-[10px] text-zinc-500">Tampa, FL 33609</p>
+                    </div>
+                    <div className="px-5 py-3">
+                        <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Transaction Info</p>
+                        <div className="space-y-0.5">
+                            {[
+                                ['Date', '05/05/2026'],
+                                ['Time', '11:03 AM'],
+                                ['Vehicle', 'FL · ABC-1234'],
+                                ['Employee', 'John Smith'],
+                                ['Account', 'SunPass ···· 8821'],
+                            ].map(([k, v]) => (
+                                <div key={k} className="flex justify-between text-[10px]">
+                                    <span className="text-zinc-500">{k}</span>
+                                    <span className="font-medium text-zinc-800">{v}</span>
+                                </div>
+                            ))}
                         </div>
-                        <span className="text-zinc-800 shrink-0">$12.00</span>
+                    </div>
+                </div>
+                {/* Line items table */}
+                <div className="px-5 py-3">
+                    <div className="grid grid-cols-[1.5rem_1fr_auto] gap-x-3 pb-1.5 border-b-2 border-zinc-800">
+                        {['#', 'Description', 'Amount'].map((h, i) => (
+                            <p key={i} className={`text-[8px] font-bold text-zinc-500 uppercase tracking-wide ${i === 2 ? 'text-right' : ''}`}>{h}</p>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-[1.5rem_1fr_auto] gap-x-3 py-2.5 bg-zinc-50 -mx-5 px-5">
+                        <p className="text-[10px] text-zinc-400 font-mono">1</p>
+                        <div>
+                            <p className="text-[11px] font-semibold text-zinc-800">Toll — Suncoast Pkwy Plaza 3</p>
+                            <p className="text-[9px] text-zinc-500">Auto-deducted from SunPass account · Purpose: Field ops</p>
+                        </div>
+                        <p className="text-[11px] font-semibold text-zinc-800 text-right">$12.00</p>
                     </div>
                 </div>
                 {/* Totals */}
-                <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-100 space-y-1">
-                    <LV label="Subtotal" value="$12.00" />
-                    <LV label="Discount" value="$0.00" />
-                    <DocDivider strong />
-                    <LV label="TOTAL" value="$12.00" bold />
-                </div>
-                {/* Payment */}
-                <div className="px-5 py-3 border-t border-zinc-100">
-                    <div className="flex items-center justify-between gap-2">
-                        <p className="text-[10px] text-zinc-600">SunPass ···· 8821 · Auto-deducted from account</p>
-                        <ApprovedBadge label="POSTED ✓" />
+                <div className="px-5 py-3 border-t border-zinc-200">
+                    <div className="flex justify-end">
+                        <div className="w-52 space-y-1">
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-zinc-500">Subtotal</span>
+                                <span className="text-zinc-700">$12.00</span>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-zinc-500">FL Tax (exempt)</span>
+                                <span className="text-zinc-700">$0.00</span>
+                            </div>
+                            <div className="flex justify-between text-[12px] font-bold text-zinc-900 border-t-2 border-zinc-800 pt-1.5 mt-1">
+                                <span>TOTAL DUE</span>
+                                <span>$12.00</span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                {/* Payment + stamp */}
+                <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-200">
+                    <div className="flex items-end justify-between gap-3">
+                        <div>
+                            <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Payment Method</p>
+                            <p className="text-[10px] font-medium text-zinc-700">SunPass Account ···· 8821</p>
+                            <p className="text-[9px] text-zinc-500 font-mono">Auto-deducted · Trans ref: 887341-FL</p>
+                        </div>
+                        <div className="border-2 border-success rounded px-3 py-1.5 text-center shrink-0" style={{ transform: 'rotate(-2deg)' }}>
+                            <p className="text-[8px] font-black text-success uppercase tracking-widest">POSTED</p>
+                            <p className="text-[9px] font-bold text-success">✓ Expense</p>
+                        </div>
+                    </div>
+                </div>
+                {/* Footer */}
+                <div className="px-5 py-2 border-t border-zinc-100 flex items-center justify-between">
+                    <p className="text-[8px] text-zinc-400">This is an official toll receipt · Retain for expense records</p>
+                    <p className="text-[8px] text-zinc-400">Page 1 of 1</p>
                 </div>
             </div>
         )
     }
 
-    // ── FUEL / The Capital Grille ──────────────────────────────────────────────
+    // ── FUEL / Suncoast Fuel Services ─────────────────────────────────────────
     if (compact) return (
-        <div className="bg-white border border-zinc-100 rounded px-2.5 py-2 space-y-1 min-w-0">
-            <div className="flex items-start justify-between gap-1">
-                <p className="text-[8px] font-bold text-zinc-900 leading-tight truncate">THE CAPITAL GRILLE FUEL</p>
-                <p className="text-[7px] text-zinc-400 shrink-0">#TX-2847</p>
-            </div>
-            <p className="text-[7px] text-zinc-400">05/05/2026 · 12:47 PM</p>
-            <div className="border-t border-zinc-100 pt-1">
-                <div className="flex justify-between text-[8px]">
-                    <span className="text-zinc-600">Premium Unleaded · 11.8 gal</span>
-                    <span className="font-semibold text-zinc-900">$95.00</span>
+        <div className="bg-white overflow-hidden">
+            <div className="bg-zinc-800 px-2 py-1.5">
+                <div className="flex items-center justify-between gap-1">
+                    <p className="text-[7px] font-black text-white tracking-tight truncate">SUNCOAST FUEL SERVICES</p>
+                    <p className="text-[6px] text-zinc-400 shrink-0 font-mono">#TX-2847</p>
                 </div>
+                <p className="text-[6px] text-zinc-400 mt-0.5">Fuel Receipt · 05/05/2026</p>
             </div>
-            <div className="border-t border-zinc-300 pt-1 flex justify-between text-[9px] font-bold text-zinc-900">
-                <span>TOTAL</span><span>$95.00</span>
+            <div className="px-2 py-1.5 space-y-1">
+                <div className="flex justify-between text-[7px] border-b border-zinc-100 pb-1">
+                    <span className="text-zinc-600">Premium Unleaded · 11.8 gal</span>
+                    <span className="font-bold text-zinc-900">$95.00</span>
+                </div>
+                <div className="flex justify-between text-[8px] font-bold text-zinc-900 border-t border-zinc-300 pt-1">
+                    <span>TOTAL</span><span>$95.00</span>
+                </div>
+                <p className="text-[6px] text-zinc-400 font-mono">Visa ···· 4892 · Auth: 029441</p>
             </div>
-            <p className="text-[7px] text-zinc-400">Visa ···· 4892 · Auth: 029441</p>
         </div>
     )
     return (
-        <div className="bg-white border border-zinc-100 rounded-lg overflow-hidden">
-            {/* Document header */}
-            <div className="px-5 pt-4 pb-3 border-b border-zinc-100">
+        <div className="bg-white overflow-hidden">
+            {/* Header band */}
+            <div className="bg-zinc-800 px-5 py-3.5">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <p className="text-[13px] font-bold text-zinc-900 tracking-tight leading-tight">THE CAPITAL GRILLE FUEL</p>
-                        <p className="text-[10px] text-zinc-500 mt-0.5">12401 Suncoast Pkwy & Gunn Hwy · Tampa, FL 33626</p>
-                        <p className="text-[10px] text-zinc-500">(813) 555-0147 · Merchant ID: MCH-48291</p>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="h-6 w-6 bg-zinc-600 rounded flex items-center justify-center shrink-0">
+                                <span className="text-[8px] font-black text-white">SF</span>
+                            </div>
+                            <p className="text-[14px] font-black text-white tracking-tight leading-none">SUNCOAST FUEL SERVICES</p>
+                        </div>
+                        <p className="text-[9px] text-zinc-400">12401 Suncoast Pkwy & Gunn Hwy · Tampa, FL 33626</p>
+                        <p className="text-[9px] text-zinc-400">(813) 555-0147 · EIN: 59-2847391 · Merchant ID: MCH-48291</p>
                     </div>
                     <div className="text-right shrink-0">
-                        <p className="text-[11px] font-bold text-zinc-800">Receipt #TX-2847</p>
-                        <p className="text-[10px] text-zinc-500">Date: 05/05/2026</p>
-                        <p className="text-[10px] text-zinc-500">12:47 PM</p>
+                        <p className="text-[8px] text-zinc-400 uppercase tracking-widest mb-0.5">Fuel Receipt</p>
+                        <p className="text-[13px] font-bold text-white font-mono">#TX-2847</p>
                     </div>
                 </div>
             </div>
-            {/* Line items */}
+            {/* Bill To / Document Info */}
+            <div className="grid grid-cols-2 border-b border-zinc-200">
+                <div className="px-5 py-3 border-r border-zinc-200">
+                    <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Billed To</p>
+                    <p className="text-[11px] font-semibold text-zinc-800">Workscapes, Inc.</p>
+                    <p className="text-[10px] text-zinc-500">4830 W Kennedy Blvd, Ste 600</p>
+                    <p className="text-[10px] text-zinc-500">Tampa, FL 33609</p>
+                </div>
+                <div className="px-5 py-3">
+                    <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Document Info</p>
+                    <div className="space-y-0.5">
+                        {[
+                            ['Date', '05/05/2026'],
+                            ['Time', '12:47 PM'],
+                            ['Pump', '#4 · Premium 87'],
+                            ['Employee', 'John Smith'],
+                            ['Terminal', 'T-17'],
+                        ].map(([k, v]) => (
+                            <div key={k} className="flex justify-between text-[10px]">
+                                <span className="text-zinc-500">{k}</span>
+                                <span className="font-medium text-zinc-800">{v}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+            {/* Line items table */}
             <div className="px-5 py-3">
-                <ColHeader cols={['Description', 'Qty / Unit', 'Amount']} />
-                <div className="flex items-start justify-between gap-2 text-[11px]">
-                    <div className="min-w-0">
-                        <p className="font-medium text-zinc-800">Premium Unleaded 87</p>
-                        <p className="text-[10px] text-zinc-500">Pump #4 · $8.05/gal</p>
-                        <p className="text-[10px] text-zinc-500">Purpose: Field ops — Tampa</p>
+                <div className="grid grid-cols-[1.5rem_1fr_auto_auto] gap-x-3 pb-1.5 border-b-2 border-zinc-800">
+                    {['#', 'Description', 'Qty / Unit', 'Amount'].map((h, i) => (
+                        <p key={i} className={`text-[8px] font-bold text-zinc-500 uppercase tracking-wide ${i >= 2 ? 'text-right' : ''}`}>{h}</p>
+                    ))}
+                </div>
+                <div className="grid grid-cols-[1.5rem_1fr_auto_auto] gap-x-3 py-2.5 bg-zinc-50 -mx-5 px-5 border-b border-zinc-100">
+                    <p className="text-[10px] text-zinc-400 font-mono">1</p>
+                    <div>
+                        <p className="text-[11px] font-semibold text-zinc-800">Premium Unleaded 87</p>
+                        <p className="text-[9px] text-zinc-500">Pump #4 · $8.05/gal · Purpose: Field ops — Tampa</p>
                     </div>
-                    <div className="flex gap-6 shrink-0 text-right">
-                        <span className="text-zinc-500 text-[10px]">11.8 gal</span>
-                        <span className="text-zinc-800 w-12">$95.00</span>
-                    </div>
+                    <p className="text-[10px] text-zinc-500 text-right">11.8 gal</p>
+                    <p className="text-[11px] font-semibold text-zinc-800 text-right">$95.00</p>
                 </div>
             </div>
             {/* Totals */}
-            <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-100 space-y-1">
-                <LV label="Subtotal" value="$95.00" />
-                <LV label="FL Sales Tax (fuel exempt)" value="$0.00" />
-                <DocDivider strong />
-                <LV label="TOTAL" value="$95.00" bold />
-            </div>
-            {/* Payment */}
-            <div className="px-5 py-3 border-t border-zinc-100">
-                <div className="flex items-center justify-between gap-2">
-                    <div className="space-y-0.5">
-                        <p className="text-[10px] text-zinc-700">Visa ···· 4892 · Auth: 029441</p>
-                        <p className="text-[10px] text-zinc-400">Terminal: T-17 · Cashier: Maria V.</p>
+            <div className="px-5 py-3 border-t border-zinc-200">
+                <div className="flex justify-end">
+                    <div className="w-52 space-y-1">
+                        <div className="flex justify-between text-[10px]">
+                            <span className="text-zinc-500">Subtotal</span>
+                            <span className="text-zinc-700">$95.00</span>
+                        </div>
+                        <div className="flex justify-between text-[10px]">
+                            <span className="text-zinc-500">FL Sales Tax (fuel exempt)</span>
+                            <span className="text-zinc-700">$0.00</span>
+                        </div>
+                        <div className="flex justify-between text-[12px] font-bold text-zinc-900 border-t-2 border-zinc-800 pt-1.5 mt-1">
+                            <span>TOTAL DUE</span>
+                            <span>$95.00</span>
+                        </div>
                     </div>
-                    <ApprovedBadge />
                 </div>
+            </div>
+            {/* Payment + stamp */}
+            <div className="px-5 py-3 bg-zinc-50 border-t border-zinc-200">
+                <div className="flex items-end justify-between gap-3">
+                    <div>
+                        <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Payment Method</p>
+                        <p className="text-[10px] font-medium text-zinc-700">Visa ···· 4892</p>
+                        <p className="text-[9px] text-zinc-500 font-mono">Auth: 029441 · Terminal: T-17 · Cashier: Maria V.</p>
+                    </div>
+                    <div className="border-2 border-success rounded px-3 py-1.5 text-center shrink-0" style={{ transform: 'rotate(-2deg)' }}>
+                        <p className="text-[8px] font-black text-success uppercase tracking-widest">APPROVED</p>
+                        <p className="text-[9px] font-bold text-success">✓ Expense</p>
+                    </div>
+                </div>
+            </div>
+            {/* Footer */}
+            <div className="px-5 py-2 border-t border-zinc-100 flex items-center justify-between">
+                <p className="text-[8px] text-zinc-400">Retain for expense records · Questions: (813) 555-0147</p>
+                <p className="text-[8px] text-zinc-400">Page 1 of 1</p>
             </div>
         </div>
     )
