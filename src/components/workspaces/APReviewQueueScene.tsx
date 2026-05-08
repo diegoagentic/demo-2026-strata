@@ -66,7 +66,7 @@ const PENDING_EXPENSES = [
 const POSTED_EXPENSES = [
     {
         id: 'ana',
-        name: 'Ana Rodriguez',
+        name: 'Ana Kim',
         amount: '$65.00',
         approvedBy: 'Sarah Johnson',
         approvedDate: 'May 3',

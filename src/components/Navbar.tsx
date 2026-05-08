@@ -70,9 +70,9 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face',
     },
     'Operations Manager': {
-        name: 'Tammy Okafor',
+        name: 'Sarah Johnson',
         role: 'Operations Manager',
-        photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face',
+        photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
     },
     'AP Coordinator': {
         name: 'Letza Bombard',
