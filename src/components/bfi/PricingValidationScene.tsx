@@ -64,13 +64,13 @@ export default function PricingValidationScene() {
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
+    const [sceneState, setSceneState] = useState<'idle' | 'validating'>('idle')
     const [revealedCount, setRevealedCount] = useState(0)
     const [noticeSent, setNoticeSent] = useState(false)
     const [applied, setApplied] = useState(false)
 
     const allRevealed = revealedCount >= LINE_ITEMS.length
     const hasRestricted = LINE_ITEMS.some(l => l.status === 'restricted')
-    // CTA unlocks after reveal + (if restricted item exists) after notice sent
     const ctaUnlocked = allRevealed && (!hasRestricted || noticeSent)
 
     const pauseAware = useCallback((fn: () => void) => () => {
@@ -80,12 +80,13 @@ export default function PricingValidationScene() {
         }, 200)
     }, [])
 
-    // Progressive row reveal
+    // Progressive row reveal — only starts after validating begins
     useEffect(() => {
+        if (sceneState !== 'validating') return
         if (revealedCount >= LINE_ITEMS.length) return
         const t = setTimeout(pauseAware(() => setRevealedCount(c => c + 1)), 350)
         return () => clearTimeout(t)
-    }, [revealedCount, pauseAware])
+    }, [revealedCount, pauseAware, sceneState])
 
     const handleSendNotice = () => {
         setNoticeSent(true)
@@ -94,6 +95,34 @@ export default function PricingValidationScene() {
     const handleApply = () => {
         setApplied(true)
         setTimeout(pauseAware(() => nextStep()), 600)
+    }
+
+    if (sceneState === 'idle') {
+        return (
+            <div className="space-y-4">
+                <div className="border border-border rounded-xl p-4 space-y-3 bg-card">
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <div className="text-xs font-bold text-foreground">NYPD-0394 · Quote received from designer</div>
+                            <div className="text-[11px] text-muted-foreground mt-0.5">NYC Police Dept. · Precinct 40 · MK designer quote</div>
+                            <div className="text-[11px] text-muted-foreground">Received: May 6 · 7:52 AM · 4 line items to validate</div>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">Pending</span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+                        Before Strata: Lauren uploaded the SIF to OmniQuote, waited for validation, then downloaded the result — ~45 min per order.
+                    </div>
+                    <button
+                        onClick={() => setSceneState('validating')}
+                        className="w-full inline-flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                    >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Run pricing validation →
+                    </button>
+                </div>
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+            </div>
+        )
     }
 
     return (

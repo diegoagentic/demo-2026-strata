@@ -7,7 +7,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, ArrowRight, Loader2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -15,12 +15,20 @@ interface ReceiptAlertSceneProps {
     onAcknowledge?: () => void
 }
 
+type SceneState = 'monitoring' | 'alert'
+
 export default function ReceiptAlertScene({ onAcknowledge }: ReceiptAlertSceneProps) {
     const { nextStep, isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
+    const [sceneState, setSceneState] = useState<SceneState>('monitoring')
     const [acknowledged, setAcknowledged] = useState(false)
+
+    useEffect(() => {
+        const t = setTimeout(() => setSceneState('alert'), 1500)
+        return () => clearTimeout(t)
+    }, [])
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -37,8 +45,47 @@ export default function ReceiptAlertScene({ onAcknowledge }: ReceiptAlertScenePr
         }), 700)
     }
 
+    if (sceneState === 'monitoring') {
+        return (
+            <div className="space-y-4">
+                <div className="border border-border rounded-xl p-4 bg-card space-y-3">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Receiving Monitor · Active Orders</div>
+                    {[
+                        { id: 'DOH-0671', label: 'NYC Dept. of Health',     pct: 99, status: 'updating', active: true },
+                        { id: 'DCAS-1182', label: 'NYC DCAS',               pct: 72, status: null,       active: false },
+                        { id: 'NYPD-0394', label: 'NYC Police Dept.',       pct: 100, status: null,      active: false },
+                        { id: 'DOE-2847',  label: 'NYC Dept. of Education', pct: 45, status: null,       active: false },
+                    ].map(order => (
+                        <div key={order.id} className={`border rounded-lg px-3 py-2.5 space-y-1.5 ${order.active ? 'border-ai/40 bg-ai/5' : 'border-border'}`}>
+                            <div className="flex items-center justify-between gap-2">
+                                <div>
+                                    <span className="text-[11px] font-bold text-foreground">{order.id}</span>
+                                    <span className="text-[10px] text-muted-foreground ml-1.5">{order.label}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className={`text-[11px] font-bold tabular-nums ${order.pct === 100 ? 'text-success' : 'text-foreground'}`}>{order.pct}%</span>
+                                    {order.active && <Loader2 className="h-3 w-3 text-ai animate-spin" />}
+                                </div>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-1">
+                                <div
+                                    className={`h-1 rounded-full transition-all duration-1000 ${order.pct === 100 ? 'bg-success' : 'bg-ai'}`}
+                                    style={{ width: `${order.pct}%` }}
+                                />
+                            </div>
+                            {order.active && (
+                                <div className="text-[10px] text-ai font-medium animate-pulse">99% received · updating...</div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_RPA] }]} />
+            </div>
+        )
+    }
+
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in fade-in duration-500">
             {/* Alert card */}
             <div className="bg-success/5 border border-success/30 rounded-xl p-4 flex items-start gap-3">
                 <div className="relative shrink-0 mt-0.5">

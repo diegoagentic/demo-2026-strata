@@ -27,6 +27,9 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
+    const [revealedRows, setRevealedRows] = useState(0)
+    const [checking, setChecking] = useState(false)
+    const [reminderSet, setReminderSet] = useState(false)
     const [confirmed, setConfirmed] = useState(false)
 
     const pauseAware = useCallback((fn: () => void) => () => {
@@ -36,6 +39,17 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
         }, 200)
     }, [])
 
+    const handleCheck = () => {
+        setChecking(true)
+        TRACKER_ROWS.forEach((_, i) => {
+            setTimeout(pauseAware(() => setRevealedRows(i + 1)), 350 * (i + 1))
+        })
+    }
+
+    const handleSetReminder = () => {
+        setReminderSet(true)
+    }
+
     const handleConfirm = () => {
         setConfirmed(true)
         setTimeout(pauseAware(() => {
@@ -43,6 +57,9 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
             nextStep()
         }), 700)
     }
+
+    const allRevealed = revealedRows >= TRACKER_ROWS.length
+    const wigPending = allRevealed && TRACKER_ROWS[3].icon === 'clock'
 
     return (
         <div className="space-y-4">
@@ -71,27 +88,64 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
                 </div>
             </div>
 
-            {/* System status rows */}
-            <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
-                {TRACKER_ROWS.map((row) => (
-                    <div key={row.system} className="flex items-center gap-3 px-3.5 py-3 bg-card">
-                        <div className="shrink-0">
-                            {row.icon === 'check'
-                                ? <CheckCircle2 className="h-4 w-4 text-success" />
-                                : <Clock className="h-4 w-4 text-amber-500" />
-                            }
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="text-xs font-bold text-foreground">{row.system}</div>
-                            <div className="text-[11px] text-muted-foreground">{row.status}</div>
-                        </div>
-                        <div className="text-[11px] text-muted-foreground tabular-nums shrink-0">{row.date}</div>
-                    </div>
-                ))}
-            </div>
+            {/* Check button — shown before reveal starts */}
+            {!checking && (
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleCheck}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                    >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Check status across systems
+                    </button>
+                </div>
+            )}
 
-            {/* Action */}
-            {!confirmed ? (
+            {/* System status rows — revealed sequentially */}
+            {revealedRows > 0 && (
+                <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
+                    {TRACKER_ROWS.slice(0, revealedRows).map((row) => (
+                        <div key={row.system} className="flex items-center gap-3 px-3.5 py-3 bg-card animate-in fade-in slide-in-from-top-1 duration-300">
+                            <div className="shrink-0">
+                                {row.icon === 'check'
+                                    ? <CheckCircle2 className="h-4 w-4 text-success" />
+                                    : <Clock className="h-4 w-4 text-amber-500" />
+                                }
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-foreground">{row.system}</div>
+                                <div className="text-[11px] text-muted-foreground">{row.status}</div>
+                            </div>
+                            <div className="text-[11px] text-muted-foreground tabular-nums shrink-0">{row.date}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* WIG pending note + reminder CTA */}
+            {wigPending && !reminderSet && (
+                <div className="flex items-center justify-between gap-3 border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 rounded-xl px-3.5 py-2.5 animate-in fade-in duration-300">
+                    <div className="text-[11px] text-foreground">
+                        <span className="font-bold">WIG in transit</span> · Lauren sets a reminder for receiving confirmation
+                    </div>
+                    <button
+                        onClick={handleSetReminder}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shrink-0"
+                    >
+                        Set reminder
+                    </button>
+                </div>
+            )}
+
+            {reminderSet && (
+                <div className="text-[11px] text-success font-medium flex items-center gap-1.5 animate-in fade-in duration-200">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Reminder set · DOH-0671 receiving confirmation
+                </div>
+            )}
+
+            {/* Confirm CTA — appears after all revealed */}
+            {allRevealed && !confirmed ? (
                 <div className="flex justify-end">
                     <button
                         onClick={handleConfirm}
@@ -101,12 +155,12 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
                         Confirm order status
                     </button>
                 </div>
-            ) : (
+            ) : confirmed ? (
                 <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-center gap-2 animate-in fade-in duration-300">
                     <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                     <div className="text-xs font-bold text-foreground">Order status confirmed · DOE-2847 on track</div>
                 </div>
-            )}
+            ) : null}
 
             <DataSourcesBar groups={[
                 { sources: [SOURCES.CORE_PO, SOURCES.CORE_AR] },

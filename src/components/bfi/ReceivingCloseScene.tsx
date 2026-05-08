@@ -8,7 +8,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { CheckCircle2, ArrowRight } from 'lucide-react'
+import { CheckCircle2, ArrowRight, Unlock } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -61,9 +61,24 @@ export default function ReceivingCloseScene({ onClose }: ReceivingCloseSceneProp
                 </div>
             </div>
 
+            {/* Agency Fee UNBLOCKED card — always visible as the "unlock" visual */}
+            <div className="border border-ai/30 bg-ai/5 rounded-xl p-3.5 space-y-2.5 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2">
+                    <Unlock className="h-4 w-4 text-ai shrink-0" />
+                    <div className="text-xs font-bold text-foreground">Agency Fee flow · UNBLOCKED by receiving close</div>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground pl-6">
+                    <ArrowRight className="h-3 w-3 text-ai shrink-0" />
+                    DOH-0671 receiving complete → CPR gate → agency fee calculation
+                </div>
+                <div className="pl-6 text-[11px] text-ai font-medium">
+                    Lauren can now run agency fee verification for DOH-0671
+                </div>
+            </div>
+
             {/* Bridge to Agency Fee */}
             <div className="border border-border rounded-xl p-3.5 bg-card">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2.5">Agency Fee flow · now unblocked</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2.5">Next steps unlocked</div>
                 <div className="space-y-2">
                     {[
                         'CPR reconciliation — certified hours vs quoted labor',
@@ -86,7 +101,7 @@ export default function ReceivingCloseScene({ onClose }: ReceivingCloseSceneProp
                         className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
                     >
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        Confirm receiving close
+                        Close receiving &amp; open agency fee
                     </button>
                 </div>
             ) : (

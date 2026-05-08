@@ -8,25 +8,22 @@
  *   Tab 2 — Receiving AI (bfi-receiving)
  *     8-step wizard: Dashboard · FedEx Gap · Bingo Parse · Alert · Work Order · Walter · Storage · Close
  *
- * ROLE SYSTEM:
- *   activeRole drives the persona badge and changes per scene.
- *   b1.4 → Michael (Director of Strategic Accounts)
- *   b1.7 → Michael (CPR Relay to Nancy)
- *   b1.8 → Patricia (Finance / AR)
- *   b2.3 → Lena (Receiving Coordinator)
- *   b2.6 → Walter (CoNY Project Manager)
- *   All others → Lauren (CoNY Account Lead)
+ * ROLE → SHELL:
+ *   account-lead (Lauren) → BFIAppShell "CoNY Account Management"
+ *   michael               → BFIAppShell "Strategic Accounts"
+ *   lena                  → BFIAppShell "Receiving Operations"
+ *   patricia              → BFIAppShell "Finance & AR"
+ *   walter  (b2.6)        → MobileDeviceFrame on bg-zinc-950 (client PM on phone)
  *
  * INTERACTION PRINCIPLE:
- *   No "Next" buttons. Every scene has one semantic action (Approve, Apply,
- *   Confirm, Send) that calls nextStep() as a side effect.
+ *   No "Next" buttons. No stepper chips. Every scene has one semantic action
+ *   (Approve, Apply, Confirm, Send) that calls nextStep() as a side effect.
  */
 
 import { useEffect, useState, useCallback } from 'react'
 import { Building2, Package } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
-import MBIWizardShell, { type WizardStepSpec } from '../mbi/MBIWizardShell'
-import MBIPersonaBadge from '../mbi/MBIPersonaBadge'
+import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import CoNYMorningQueue from './CoNYMorningQueue'
 import PricingValidationScene from './PricingValidationScene'
 import DiscountCalcScene from './DiscountCalcScene'
@@ -48,16 +45,9 @@ import { useDemo } from '../../context/DemoContext'
 // ── Role system ───────────────────────────────────────────────────────────────
 
 type BFIRole = 'account-lead' | 'michael' | 'lena' | 'walter' | 'patricia'
+type BFIShellRole = Exclude<BFIRole, 'walter'>
 
-const ROLE_CONFIG: Record<BFIRole, { name: string; role: string; tone: 'ai' | 'neutral' | 'info' }> = {
-    'account-lead': { name: 'CoNY Account Lead',              role: 'Agency Fee · Receiving',  tone: 'ai'      },
-    'michael':      { name: 'Director of Strategic Accounts', role: 'Labor · CPR Relay',       tone: 'neutral' },
-    'lena':         { name: 'Receiving Coordinator',          role: 'WIG · CORE Entry',        tone: 'neutral' },
-    'walter':       { name: 'CoNY Project Manager',           role: 'Dispatch · Scheduling',   tone: 'info'    },
-    'patricia':     { name: 'Finance / AR',                   role: 'Agency Fee Close',        tone: 'neutral' },
-}
-
-// Step → default role (steps not listed default to 'account-lead')
+// Step → role (unlisted steps default to 'account-lead')
 const STEP_ROLE: Record<string, BFIRole> = {
     'b1.4': 'michael',
     'b1.7': 'michael',
@@ -66,18 +56,61 @@ const STEP_ROLE: Record<string, BFIRole> = {
     'b2.6': 'walter',
 }
 
-// ── Agency Fee wizard (Flow 1 · b1.x) ────────────────────────────────────────
+// ── BFI App Shell config ──────────────────────────────────────────────────────
 
-const AGENCY_FEE_STEPS: WizardStepSpec[] = [
-    { id: 'queue',    label: 'Active orders · AI triage',          shortLabel: '1. Queue'    },
-    { id: 'pricing',  label: 'Pricing · SIF vs CoNY contract',     shortLabel: '2. Pricing'  },
-    { id: 'discount', label: 'Discount · sell÷list-1 · true-up',   shortLabel: '3. Discount' },
-    { id: 'labor',    label: 'Labor · WIG quote parsed',           shortLabel: '4. Labor'    },
-    { id: 'tracker',  label: 'Order tracker · CORE + Omni',        shortLabel: '5. Tracker'  },
-    { id: 'cpr',      label: 'CPR · certified vs quoted hours',    shortLabel: '6. CPR'      },
-    { id: 'relay',    label: 'CPR relay · Michael → Nancy',        shortLabel: '7. Relay'    },
-    { id: 'fee',      label: 'Agency fee · contract verification', shortLabel: '8. Fee'      },
-]
+interface BFIShellTab {
+    label: string
+    activeForSteps?: string[]
+    badge?: string
+}
+
+interface BFIShellConfig {
+    name: string
+    initials: string
+    appTitle: string
+    tabs: BFIShellTab[]
+}
+
+const SHELL_CONFIG: Record<BFIShellRole, BFIShellConfig> = {
+    'account-lead': {
+        name: 'Lauren G.', initials: 'LG', appTitle: 'CoNY Account Management',
+        tabs: [
+            { label: 'Orders' },
+            { label: 'Agency Fee', activeForSteps: ['b1.1', 'b1.2', 'b1.3', 'b1.5', 'b1.6'] },
+            { label: 'Receiving',  activeForSteps: ['b2.1', 'b2.2', 'b2.4', 'b2.5', 'b2.7', 'b2.8'] },
+            { label: 'Reports' },
+        ],
+    },
+    michael: {
+        name: 'Michael B.', initials: 'MB', appTitle: 'Strategic Accounts',
+        tabs: [
+            { label: 'Dashboard' },
+            { label: 'Pending',      badge: '1' },
+            { label: 'Labor Quotes', activeForSteps: ['b1.4'] },
+            { label: 'CPR Relay',    activeForSteps: ['b1.7'] },
+        ],
+    },
+    lena: {
+        name: 'Lena S.', initials: 'LS', appTitle: 'Receiving Operations',
+        tabs: [
+            { label: 'Incoming',   badge: '1' },
+            { label: 'Processing', activeForSteps: ['b2.3'] },
+            { label: 'CORE Sync' },
+            { label: 'Queue' },
+        ],
+    },
+    patricia: {
+        name: 'Patricia L.', initials: 'PL', appTitle: 'Finance & AR',
+        tabs: [
+            { label: 'AR Aging' },
+            { label: 'Agency Fees', badge: '1', activeForSteps: ['b1.8'] },
+            { label: 'CORE Sync' },
+            { label: 'Reports' },
+        ],
+    },
+}
+
+// ── Step index maps ───────────────────────────────────────────────────────────
 
 const AF_STEP_TO_IDX: Record<string, number> = {
     'b1.1': 0, 'b1.2': 1, 'b1.3': 2, 'b1.4': 3,
@@ -88,19 +121,6 @@ const AF_IDX_TO_STEP: Record<number, string> = {
     4: 'b1.5', 5: 'b1.6', 6: 'b1.7', 7: 'b1.8',
 }
 
-// ── Receiving wizard (Flow 2 · b2.x) ─────────────────────────────────────────
-
-const RECEIVING_STEPS: WizardStepSpec[] = [
-    { id: 'dashboard', label: 'Receiving · WIG order status',       shortLabel: '1. Dashboard' },
-    { id: 'fedex',     label: 'FedEx gap · POD request sent',       shortLabel: '2. FedEx'    },
-    { id: 'bingo',     label: 'WIG doc · Bingo sheet parsed',       shortLabel: '3. Bingo'    },
-    { id: 'alert',     label: '100% receipt · alert triggered',     shortLabel: '4. Alert'    },
-    { id: 'workorder', label: 'Work order · NYC signature',         shortLabel: '5. WO'       },
-    { id: 'walter',    label: 'CoNY PM · Walter notified',          shortLabel: '6. Walter'   },
-    { id: 'storage',   label: '30-day storage monitor',             shortLabel: '7. Storage'  },
-    { id: 'close',     label: 'Receiving close · invoiceable',      shortLabel: '8. Close'    },
-]
-
 const REC_STEP_TO_IDX: Record<string, number> = {
     'b2.1': 0, 'b2.2': 1, 'b2.3': 2, 'b2.4': 3,
     'b2.5': 4, 'b2.6': 5, 'b2.7': 6, 'b2.8': 7,
@@ -109,8 +129,6 @@ const REC_IDX_TO_STEP: Record<number, string> = {
     0: 'b2.1', 1: 'b2.2', 2: 'b2.3', 3: 'b2.4',
     4: 'b2.5', 5: 'b2.6', 6: 'b2.7', 7: 'b2.8',
 }
-
-// ── Tab type ──────────────────────────────────────────────────────────────────
 
 type BFITab = 'agency-fee' | 'receiving'
 
@@ -132,7 +150,11 @@ export default function BFIPage() {
     const [recStep, setRecStep]       = useState(0)
     const [activeRole, setActiveRole] = useState<BFIRole>('account-lead')
 
-    // Sync tab + wizard index + role when the demo tour navigates
+    const currentStepId = activeTab === 'agency-fee'
+        ? (AF_IDX_TO_STEP[afStep] ?? 'b1.1')
+        : (REC_IDX_TO_STEP[recStep] ?? 'b2.1')
+
+    // Sync tab + step index + role when the demo tour navigates
     useEffect(() => {
         if (!demoStepId) return
         const tab = STEP_TO_TAB[demoStepId]
@@ -164,16 +186,12 @@ export default function BFIPage() {
         if (tourIdx >= 0) goToStep(tourIdx)
     }, [isDemoActive, currentStep, tourSteps, goToStep])
 
-    const roleConfig = ROLE_CONFIG[activeRole]
+    // Walter (b2.6) is the one step that leaves the BFI app shell entirely
+    const isWalterStep = activeTab === 'receiving' && recStep === 5
 
-    const persona = (
-        <MBIPersonaBadge
-            key={activeRole}
-            name={roleConfig.name}
-            role={roleConfig.role}
-            tone={roleConfig.tone}
-        />
-    )
+    // Shell role — walter never reaches BFIAppShell, falls back to account-lead as guard
+    const shellRole: BFIShellRole =
+        activeRole === 'walter' ? 'account-lead' : (activeRole as BFIShellRole)
 
     const tabSwitcher = (
         <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 w-fit">
@@ -204,52 +222,129 @@ export default function BFIPage() {
                 : <Package className="h-5 w-5" />}
             activeApp={activeTab === 'agency-fee' ? 'bfi-agency-fee' : 'bfi-receiving'}
         >
-            {/* Agency Fee tab — Flow 1 (b1.1 → b1.8) */}
+            {/* ── Walter b2.6 — client PM on phone, outside the BFI app ── */}
+            {isWalterStep && (
+                <div className="flex items-center justify-center min-h-[calc(100vh-12rem)] bg-zinc-950 rounded-2xl animate-in fade-in duration-500">
+                    <MobileDeviceFrame>
+                        <WalterNotifScene
+                            onConfirm={() => navigateRec(6)}
+                            onRoleChange={r => setActiveRole(r as BFIRole)}
+                        />
+                    </MobileDeviceFrame>
+                </div>
+            )}
+
+            {/* ── Agency Fee tab (b1.x) ── */}
             {activeTab === 'agency-fee' && (
-                <MBIWizardShell
-                    steps={AGENCY_FEE_STEPS}
-                    activeStep={afStep}
-                    onStepClick={navigateAF}
-                    onPrev={() => navigateAF(Math.max(0, afStep - 1))}
-                    onNext={() => navigateAF(Math.min(AGENCY_FEE_STEPS.length - 1, afStep + 1))}
-                    canAdvance
-                    persona={persona}
-                >
+                <BFIAppShell role={shellRole} currentStepId={currentStepId}>
                     {afStep === 0 && <CoNYMorningQueue onSelectOrder={() => navigateAF(1)} />}
                     {afStep === 1 && <PricingValidationScene />}
                     {afStep === 2 && <DiscountCalcScene onApply={() => navigateAF(3)} />}
-                    {afStep === 3 && <LaborQuoteParserScene onApprove={() => navigateAF(4)} onRoleChange={r => setActiveRole(r as BFIRole)} />}
+                    {afStep === 3 && (
+                        <LaborQuoteParserScene
+                            onApprove={() => navigateAF(4)}
+                            onRoleChange={r => setActiveRole(r as BFIRole)}
+                        />
+                    )}
                     {afStep === 4 && <OrderTrackerScene onConfirm={() => navigateAF(5)} />}
                     {afStep === 5 && <CPRReconciliationScene />}
-                    {afStep === 6 && <CPRRelayScene onSend={() => navigateAF(7)} onRoleChange={r => setActiveRole(r as BFIRole)} />}
+                    {afStep === 6 && (
+                        <CPRRelayScene
+                            onSend={() => navigateAF(7)}
+                            onRoleChange={r => setActiveRole(r as BFIRole)}
+                        />
+                    )}
                     {afStep === 7 && <AgencyFeeVerifyScene />}
-                </MBIWizardShell>
+                </BFIAppShell>
             )}
 
-            {/* Receiving tab — Flow 2 (b2.1 → b2.8) */}
-            {activeTab === 'receiving' && (
-                <MBIWizardShell
-                    steps={RECEIVING_STEPS}
-                    activeStep={recStep}
-                    onStepClick={navigateRec}
-                    onPrev={() => navigateRec(Math.max(0, recStep - 1))}
-                    onNext={() => navigateRec(Math.min(RECEIVING_STEPS.length - 1, recStep + 1))}
-                    canAdvance
-                    persona={persona}
-                >
+            {/* ── Receiving tab (b2.x) — Walter excluded ── */}
+            {activeTab === 'receiving' && !isWalterStep && (
+                <BFIAppShell role={shellRole} currentStepId={currentStepId}>
                     {recStep === 0 && <CoNYOrderMonitorScene onDispatch={() => navigateRec(1)} />}
                     {recStep === 1 && <FedExGapScene onSend={() => navigateRec(2)} />}
-                    {recStep === 2 && <WIGDocParserScene onConfirm={() => navigateRec(3)} onRoleChange={r => setActiveRole(r as BFIRole)} />}
+                    {recStep === 2 && (
+                        <WIGDocParserScene
+                            onConfirm={() => navigateRec(3)}
+                            onRoleChange={r => setActiveRole(r as BFIRole)}
+                        />
+                    )}
                     {recStep === 3 && <ReceiptAlertScene onAcknowledge={() => navigateRec(4)} />}
                     {recStep === 4 && <WorkOrderScene onApprove={() => navigateRec(5)} />}
-                    {recStep === 5 && <WalterNotifScene onConfirm={() => navigateRec(6)} onRoleChange={r => setActiveRole(r as BFIRole)} />}
                     {recStep === 6 && <StorageMonitorScene onConfirm={() => navigateRec(7)} />}
                     {recStep === 7 && <ReceivingCloseScene />}
-                </MBIWizardShell>
+                </BFIAppShell>
             )}
         </MBIPageShell>
     )
 }
+
+// ── BFIAppShell ───────────────────────────────────────────────────────────────
+
+function BFIAppShell({
+    role,
+    currentStepId,
+    children,
+}: {
+    role: BFIShellRole
+    currentStepId: string
+    children: React.ReactNode
+}) {
+    const cfg = SHELL_CONFIG[role]
+
+    return (
+        <div
+            key={role}
+            className="flex flex-col border border-border rounded-2xl overflow-hidden bg-background shadow-sm animate-in fade-in duration-300"
+        >
+            {/* App header */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
+                <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-black tracking-widest text-foreground">BFI</span>
+                    <span className="text-border text-sm leading-none">│</span>
+                    <span className="text-xs font-semibold text-foreground">{cfg.appTitle}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                        <span className="text-[9px] font-bold text-primary-foreground leading-none">{cfg.initials}</span>
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-foreground">{cfg.name}</span>
+                </div>
+            </div>
+
+            {/* App nav tabs */}
+            <div className="flex items-center gap-0.5 px-3 pt-1 border-b border-border bg-card">
+                {cfg.tabs.map(tab => {
+                    const isActive = tab.activeForSteps?.includes(currentStepId) ?? false
+                    return (
+                        <div
+                            key={tab.label}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                isActive
+                                    ? 'border-primary text-foreground'
+                                    : 'border-transparent text-muted-foreground'
+                            }`}
+                        >
+                            {tab.label}
+                            {tab.badge && (
+                                <span className="h-4 w-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center leading-none shrink-0">
+                                    {tab.badge}
+                                </span>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
+
+            {/* Content area */}
+            <div className="flex-1 p-4 space-y-4">
+                {children}
+            </div>
+        </div>
+    )
+}
+
+// ── TabButton ─────────────────────────────────────────────────────────────────
 
 function TabButton({ active, onClick, icon, label }: {
     active: boolean

@@ -28,6 +28,8 @@ export default function StorageMonitorScene({ onConfirm }: StorageMonitorScenePr
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
     const [confirmed, setConfirmed] = useState(false)
+    const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
+    const [alertSet, setAlertSet] = useState(false)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -75,14 +77,20 @@ export default function StorageMonitorScene({ onConfirm }: StorageMonitorScenePr
                     const isWarning = order.remaining <= 15 && !isUrgent
                     const pct = Math.round((order.daysIn / order.total) * 100)
 
+                    const isExpanded = expandedOrder === order.id
+                    const isDOE = order.id === 'DOE-2847'
+
                     return (
                         <div
                             key={order.id}
-                            className={`border rounded-xl p-3.5 ${
+                            className={`border rounded-xl p-3.5 transition-colors ${
                                 isUrgent
                                     ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5'
+                                    : isDOE
+                                    ? 'border-warning/40 bg-warning/5 cursor-pointer hover:bg-warning/10'
                                     : 'border-border bg-card'
-                            }`}
+                            } ${isDOE ? 'cursor-pointer' : ''}`}
+                            onClick={isDOE ? () => setExpandedOrder(isExpanded ? null : order.id) : undefined}
                         >
                             <div className="flex items-start justify-between gap-2 mb-2">
                                 <div>
@@ -127,6 +135,32 @@ export default function StorageMonitorScene({ onConfirm }: StorageMonitorScenePr
                                 <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 rounded px-1.5 py-1">
                                     <CalendarDays className="h-2.5 w-2.5 shrink-0" />
                                     Expires during peak season · elevated storage fees if delayed past Jun 30
+                                </div>
+                            )}
+
+                            {/* Expanded detail for DOE-2847 */}
+                            {isDOE && isExpanded && (
+                                <div className="mt-3 pt-3 border-t border-border space-y-2 animate-in fade-in duration-200">
+                                    <div className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                                        <AlertTriangle className="h-3 w-3 text-warning shrink-0" />
+                                        Approaching peak season window
+                                    </div>
+                                    <div className="text-[11px] text-muted-foreground">
+                                        Order expires Jun 3 — during Mar–Jul peak. WIG fees accelerate if delayed past Jun 30.
+                                    </div>
+                                    {!alertSet ? (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setAlertSet(true) }}
+                                            className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold rounded-lg bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all"
+                                        >
+                                            Set priority alert for DOE-2847 →
+                                        </button>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5 text-[11px] text-success font-medium animate-in fade-in duration-200">
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                            Alert set ✓ · Strata monitoring · alert at day 20 · Lauren notified
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
