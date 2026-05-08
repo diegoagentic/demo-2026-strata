@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { CheckCircle2, Clock, Circle, Sparkles, X, Bell } from 'lucide-react'
+import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import { MobileNavbar } from './ExpenseSubmitScene'
@@ -48,6 +48,15 @@ export default function ExpenseStatusScene() {
     isPausedRef.current = isPaused
 
     const [scene, setScene] = useState<SceneState>('watching')
+    const [expanded, setExpanded] = useState<Set<string>>(new Set(['Approved']))
+
+    const toggleStep = (label: string) => {
+        setExpanded(prev => {
+            const next = new Set(prev)
+            next.has(label) ? next.delete(label) : next.add(label)
+            return next
+        })
+    }
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -122,30 +131,46 @@ export default function ExpenseStatusScene() {
 
                     {/* Timeline */}
                     <div className="space-y-0">
-                        {timeline.map((step, i) => (
-                            <div key={step.label} className="flex gap-3">
-                                <div className="flex flex-col items-center">
-                                    {step.done
-                                        ? <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5 animate-in zoom-in duration-300" />
-                                        : <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0 mt-0.5" />
-                                    }
-                                    {i < timeline.length - 1 && (
-                                        <div className={`w-px flex-1 mt-1 mb-1 min-h-[16px] transition-colors duration-500 ${step.done ? 'bg-success/30' : 'bg-border'}`} />
-                                    )}
-                                </div>
-                                <div className="pb-3">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <p className={`text-xs font-semibold transition-colors duration-300 ${step.done ? 'text-foreground' : 'text-muted-foreground/50'}`}>
-                                            {step.label}
-                                        </p>
-                                        <span className={`text-[10px] transition-colors duration-300 ${step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
-                                            {step.time}
-                                        </span>
+                        {timeline.map((step, i) => {
+                            const isOpen = expanded.has(step.label)
+                            const hasNote = !!step.note
+                            return (
+                                <div key={step.label} className="flex gap-3">
+                                    <div className="flex flex-col items-center">
+                                        {step.done
+                                            ? <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5 animate-in zoom-in duration-300" />
+                                            : <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0 mt-0.5" />
+                                        }
+                                        {i < timeline.length - 1 && (
+                                            <div className={`w-px flex-1 mt-1 mb-1 min-h-[16px] transition-colors duration-500 ${step.done ? 'bg-success/30' : 'bg-border'}`} />
+                                        )}
                                     </div>
-                                    {step.note && <p className="text-[10px] text-muted-foreground mt-0.5">{step.note}</p>}
+                                    <div className="pb-3 flex-1 min-w-0">
+                                        <button
+                                            onClick={() => hasNote && toggleStep(step.label)}
+                                            className={`w-full flex items-center justify-between gap-2 text-left ${hasNote ? 'cursor-pointer' : 'cursor-default'}`}
+                                        >
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className={`text-xs font-semibold transition-colors duration-300 ${step.done ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                                                    {step.label}
+                                                </p>
+                                                <span className={`text-[10px] transition-colors duration-300 ${step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+                                                    {step.time}
+                                                </span>
+                                            </div>
+                                            {hasNote && (
+                                                <ChevronDown className={`h-3 w-3 shrink-0 text-muted-foreground/50 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                                            )}
+                                        </button>
+                                        {isOpen && hasNote && (
+                                            <p className="text-[10px] text-muted-foreground mt-1 animate-in fade-in duration-200">
+                                                {step.note}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
 
                     <div className="flex items-center gap-2 pt-1 border-t border-border">
