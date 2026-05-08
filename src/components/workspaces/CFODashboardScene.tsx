@@ -171,7 +171,7 @@ function ReportPreviewModal({ onClose }: { onClose: () => void }) {
     const totalDelta = Math.round(((mayTotal - aprTotal) / aprTotal) * 100)
 
     return (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed left-80 top-0 right-0 bottom-0 z-[400] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
             <div className="bg-card border border-border rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
                 {/* Modal header */}
                 <div className="flex items-center justify-between px-5 py-3 border-b border-border sticky top-0 bg-card z-10">
