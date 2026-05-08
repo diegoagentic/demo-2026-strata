@@ -562,13 +562,13 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                                             <div className="pb-3 flex-1 min-w-0">
                                                 <div className="flex items-center justify-between gap-2">
                                                     <p className={`text-xs font-semibold ${
-                                                        step.current ? 'text-primary' : step.done ? 'text-foreground' : 'text-muted-foreground/50'
+                                                        step.current ? 'text-foreground font-bold' : step.done ? 'text-foreground' : 'text-muted-foreground/50'
                                                     }`}>{step.label}</p>
                                                     <span className={`text-[10px] shrink-0 ${step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
                                                         {step.time}
                                                     </span>
                                                 </div>
-                                                <p className={`text-[10px] ${step.current ? 'text-primary/70' : step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+                                                <p className={`text-[10px] ${step.current ? 'text-muted-foreground' : step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
                                                     {step.actor}
                                                 </p>
                                             </div>
