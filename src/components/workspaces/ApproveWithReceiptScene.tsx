@@ -626,22 +626,30 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
             {(appState === 'pending') && (
                 <div className="space-y-2">
 
+                    {/* Decision divider */}
+                    <div className="flex items-center gap-3 pt-1">
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Decision</span>
+                        <div className="flex-1 h-px bg-border" />
+                    </div>
+
                     {/* ── Normal approval scenario ── */}
                     {mode === 'approve' && (
                         <div className="space-y-2">
                             <button
                                 onClick={handleApprove}
-                                className="w-full flex items-center justify-center gap-2 bg-success/10 text-success border border-success/20 font-bold text-sm py-3 rounded-xl hover:bg-success/15 transition-colors"
+                                className="w-full flex items-center justify-center gap-2 bg-success text-white font-bold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
-                                Approve expense
+                                Approve & route to accounting
                             </button>
                             {!showReject ? (
                                 <button
                                     onClick={() => setShowReject(true)}
-                                    className="w-full text-xs text-muted-foreground py-1.5 hover:text-foreground transition-colors"
+                                    className="w-full flex items-center justify-center gap-2 bg-card border border-border text-foreground text-xs font-semibold py-2.5 rounded-xl hover:bg-muted/40 transition-colors"
                                 >
-                                    Request changes ↓
+                                    <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                                    Return to employee
                                 </button>
                             ) : (
                                 <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
@@ -674,23 +682,23 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                         </div>
                     )}
 
-                    {/* ── Request changes scenario ── */}
+                    {/* ── Return path scenario ── */}
                     {mode === 'reject' && (
                         <div className="space-y-2">
                             {!showReject ? (
                                 <>
                                     <button
                                         onClick={() => setShowReject(true)}
-                                        className="w-full flex items-center justify-center gap-2 bg-muted text-foreground border border-border font-bold text-sm py-3 rounded-xl hover:bg-muted/80 transition-colors"
+                                        className="w-full flex items-center justify-center gap-2 bg-card border-2 border-border text-foreground font-bold text-sm py-3 rounded-xl hover:bg-muted/40 transition-colors"
                                     >
                                         <RotateCcw className="h-4 w-4" />
-                                        Request changes with note
+                                        Return to employee with note
                                     </button>
                                     <button
                                         onClick={handleApprove}
                                         className="w-full text-xs text-muted-foreground py-1.5 hover:text-foreground transition-colors"
                                     >
-                                        Approve anyway ↑
+                                        Approve instead →
                                     </button>
                                 </>
                             ) : (
@@ -731,19 +739,19 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                                 <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-sm font-semibold text-foreground">Policy exception required</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">$142.50 exceeds the $125.00 per-diem cap for Field Staff · Fuel + Parking. Override with a reason or reject.</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Amount exceeds the per-diem cap for this category. Override with a documented reason or reject.</p>
                                 </div>
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setShowOverride(true)}
-                                    className="flex-1 flex items-center justify-center gap-1.5 bg-warning/10 text-warning border border-warning/30 text-xs font-bold py-2.5 rounded-xl hover:bg-warning/20 transition-colors"
+                                    className="flex-1 flex items-center justify-center gap-1.5 bg-warning text-white text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
                                 >
                                     Override with reason
                                 </button>
                                 <button
                                     onClick={() => setShowReject(true)}
-                                    className="flex-1 flex items-center justify-center gap-1.5 bg-muted text-muted-foreground text-xs font-medium py-2.5 rounded-xl hover:text-foreground transition-colors"
+                                    className="flex-1 flex items-center justify-center gap-1.5 bg-card border border-border text-muted-foreground text-xs font-semibold py-2.5 rounded-xl hover:text-foreground transition-colors"
                                 >
                                     <X className="h-3.5 w-3.5" />
                                     Reject
@@ -897,7 +905,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                 <div className="flex gap-1">
                     {([
                         { key: 'approve', label: 'Normal approval' },
-                        { key: 'reject',  label: 'Request changes' },
+                        { key: 'reject',  label: 'Return path'    },
                         { key: 'planb',   label: 'Policy flag ⚠'  },
                     ] as { key: ScenarioMode; label: string }[]).map(s => (
                         <button

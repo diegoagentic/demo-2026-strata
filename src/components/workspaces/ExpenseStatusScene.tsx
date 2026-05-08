@@ -79,7 +79,7 @@ const HISTORY = [
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) {
-    const { isPaused } = useDemo()
+    const { isPaused, nextStep } = useDemo()
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
@@ -337,6 +337,39 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                             </div>
                         </div>
                     </div>
+                )}
+
+                {/* Handoff bridge — approved + updated: signals transition to AP view */}
+                {scenarioMode === 'approved' && scene === 'updated' && (
+                    <div
+                        className="bg-ai/5 border border-ai/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-500"
+                        style={{ animationDelay: '400ms' }}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
+                            <p className="text-xs font-semibold text-foreground">Expense fully processed</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            Routed to the accounting team · accounting codes pre-filled · entry posted automatically · payment scheduled. No calls to AP needed.
+                        </p>
+                        <button
+                            onClick={nextStep}
+                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                        >
+                            See accounting team's view
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                )}
+
+                {/* Continue demo — rejected + resubmitted: presenter control to advance */}
+                {scenarioMode === 'rejected' && scene === 'resubmitted' && (
+                    <button
+                        onClick={nextStep}
+                        className="w-full flex items-center justify-center gap-1 text-xs text-muted-foreground py-2 hover:text-foreground transition-colors"
+                    >
+                        Continue demo <ChevronRight className="h-3 w-3" />
+                    </button>
                 )}
 
                 {/* Current expense — status timeline */}
