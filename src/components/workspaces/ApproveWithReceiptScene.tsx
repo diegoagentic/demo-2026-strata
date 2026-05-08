@@ -150,7 +150,6 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
         setAppState('sending')
         setTimeout(() => {
             setAppState('approved')
-            setTimeout(() => onApprove?.(), 1800)
         }, 1200)
     }
 
@@ -859,11 +858,19 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                             {appState === 'overridden'
-                                ? 'Override logged in audit trail · flagged on CFO dashboard · Letza notified'
-                                : 'Letza notified · John Smith will receive a status update · GL 6200 + 6210 pre-filled'
+                                ? 'Override logged in audit trail · flagged on CFO dashboard · AP team notified'
+                                : 'AP team notified · employee will receive a status update · accounting codes pre-filled'
                             }
                         </p>
                     </div>
+                    {/* Explicit handoff — presenter controls when to switch to employee view */}
+                    <button
+                        onClick={() => onApprove?.()}
+                        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground text-xs font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+                    >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                        See employee status update
+                    </button>
                 </div>
             )}
 

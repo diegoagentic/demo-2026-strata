@@ -106,7 +106,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
     }, [])
 
     useEffect(() => {
-        pauseAware(() => setScene('notified'), 4000)
+        pauseAware(() => setScene('notified'), 1800)
     }, [pauseAware, scenarioMode])
 
     // Derive the active timeline from mode + scene
@@ -180,36 +180,28 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
 
                 {/* Approved path notification */}
                 {scenarioMode === 'approved' && scene === 'notified' && (
-                    <button
-                        onClick={() => setScene('updated')}
-                        className="w-full animate-in slide-in-from-top duration-500 flex items-start gap-2.5 bg-card border border-ai/40 rounded-2xl px-3 py-3 text-left shadow-lg hover:border-ai/70 transition-all group"
-                    >
-                        <div className="relative shrink-0 mt-0.5">
-                            <div className="h-8 w-8 rounded-xl bg-ai/10 flex items-center justify-center">
-                                <Sparkles className="h-3.5 w-3.5 text-ai" />
+                    <div className="animate-in slide-in-from-top duration-500 space-y-2">
+                        <div className="flex items-start gap-2.5 bg-card border border-ai/40 rounded-2xl px-3 py-3 shadow-lg">
+                            <div className="relative shrink-0 mt-0.5">
+                                <div className="h-8 w-8 rounded-xl bg-ai/10 flex items-center justify-center">
+                                    <Sparkles className="h-3.5 w-3.5 text-ai" />
+                                </div>
+                                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-ai border-2 border-card animate-pulse" />
                             </div>
-                            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-ai border-2 border-card animate-pulse" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · Expense update</p>
-                            <p className="text-xs font-semibold text-foreground leading-snug">
-                                Your expense was posted to CORE
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                                $142.50 · Fuel + Parking · Payment scheduled May 8
-                            </p>
-                            <div className="flex items-center gap-1 mt-1.5">
-                                <p className="text-xs font-semibold text-ai group-hover:underline">Tap to see full status</p>
-                                <ChevronRight className="h-3.5 w-3.5 text-ai" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · Expense update</p>
+                                <p className="text-xs font-semibold text-foreground leading-snug">Your expense was posted to the accounting system</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Payment scheduled · full status updated</p>
                             </div>
                         </div>
                         <button
-                            onClick={e => { e.stopPropagation(); setScene('watching') }}
-                            className="shrink-0 text-muted-foreground hover:text-foreground mt-0.5"
+                            onClick={() => setScene('updated')}
+                            className="w-full flex items-center justify-center gap-1.5 bg-ai text-white text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
                         >
-                            <X className="h-3 w-3" />
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Update my timeline
                         </button>
-                    </button>
+                    </div>
                 )}
 
                 {/* Rejected path notification */}
@@ -455,14 +447,17 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     </div>
                 </div>
 
-                {/* Bell icon prompt — only while watching */}
+                {/* Watching state — incoming notification hint + presenter skip */}
                 {scene === 'watching' && (
-                    <div className="flex items-center gap-2 justify-center">
-                        <Bell className="h-3 w-3 text-muted-foreground animate-pulse" />
-                        <p className="text-[10px] text-muted-foreground">
-                            {scenarioMode === 'approved' ? 'Waiting for AP to post to CORE...' : 'Waiting for manager review...'}
+                    <button
+                        onClick={() => setScene('notified')}
+                        className="w-full flex items-center justify-center gap-2 bg-muted/40 border border-dashed border-border rounded-xl px-3 py-3 hover:bg-muted/60 transition-colors group"
+                    >
+                        <Bell className="h-3.5 w-3.5 text-muted-foreground animate-pulse group-hover:text-foreground transition-colors" />
+                        <p className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
+                            {scenarioMode === 'approved' ? 'Notification incoming — tap to receive update' : 'Notification incoming — tap to receive update'}
                         </p>
-                    </div>
+                    </button>
                 )}
 
                 {/* Expense history */}
