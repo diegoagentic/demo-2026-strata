@@ -19,6 +19,7 @@ import { useState } from 'react'
 import {
     CheckCircle2, XCircle, Receipt, AlertTriangle, ChevronRight,
     RotateCcw, Sparkles, Pencil, X, ShieldCheck, Clock, User, Send,
+    Wand2,
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import { ReceiptImage } from './ExpenseSubmitScene'
@@ -56,7 +57,12 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     const [glExpanded,    setGlExpanded]    = useState(false)
     const [editAmount,    setEditAmount]    = useState('$142.50')
     const [editCategory,  setEditCategory]  = useState('Fuel + Parking')
+    const [editDesc,      setEditDesc]      = useState('Business client dinner — The Capital Grille')
+    const [aiApplied,     setAiApplied]    = useState(false)
     const [receiptIdx,    setReceiptIdx]    = useState(0)
+
+    // AI detects category mismatch: restaurant vendor → Fuel + Parking is inconsistent
+    const categoryMismatch = editCategory === 'Fuel + Parking' && !aiApplied
 
     const checks = mode === 'planb' ? AI_CHECKS_PLANB : AI_CHECKS
     const policyViolation = mode === 'planb'
@@ -69,6 +75,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
         setShowOverride(false)
         setEditAmount('$142.50')
         setEditCategory('Fuel + Parking')
+        setEditDesc('Business client dinner — The Capital Grille')
+        setAiApplied(false)
     }
 
     const switchMode = (m: ScenarioMode) => { setMode(m); reset() }
@@ -161,9 +169,36 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                     )}
                 </div>
             ) : (
-                /* ── Inline edit form ── */
-                <div className="bg-card border border-primary/40 rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
-                    <p className="text-xs font-semibold text-foreground">Edit expense before approving</p>
+                /* ── Inline edit form — full fields + AI flags ── */
+                <div className="bg-card border border-primary/30 rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-foreground">Review &amp; edit expense</p>
+                        <span className="text-[10px] text-muted-foreground">Fields pre-filled by AI</span>
+                    </div>
+
+                    {/* Row 1 — Vendor (read-only) + Date (read-only) */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Vendor</label>
+                            <div className="flex items-center justify-between bg-muted/40 border border-border rounded-lg px-3 py-1.5">
+                                <span className="text-sm text-foreground">The Capital Grille</span>
+                                <span className="text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
+                                    <Sparkles className="h-2 w-2" /> AI
+                                </span>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Date</label>
+                            <div className="flex items-center justify-between bg-muted/40 border border-border rounded-lg px-3 py-1.5">
+                                <span className="text-sm text-foreground">May 5, 2026</span>
+                                <span className="text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
+                                    <Sparkles className="h-2 w-2" /> AI
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Row 2 — Amount (editable) + Category (editable, AI flag) */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Amount</label>
@@ -174,20 +209,87 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Category</label>
+                            <div className="flex items-center gap-1.5">
+                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Category</label>
+                                {categoryMismatch && (
+                                    <span className="text-[9px] font-bold text-warning bg-warning/10 border border-warning/20 px-1.5 py-0.5 rounded-full">⚠ AI flag</span>
+                                )}
+                                {!categoryMismatch && aiApplied && (
+                                    <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded-full">✓ Updated</span>
+                                )}
+                            </div>
                             <select
                                 value={editCategory}
                                 onChange={e => setEditCategory(e.target.value)}
-                                className="w-full text-sm bg-background border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                className={`w-full text-sm bg-background border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 ${
+                                    categoryMismatch
+                                        ? 'border-warning/50 focus:ring-warning/30'
+                                        : 'border-border focus:ring-primary/50'
+                                }`}
                             >
                                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
                             </select>
                         </div>
                     </div>
+
+                    {/* AI inconsistency flag — category mismatch */}
+                    {categoryMismatch && (
+                        <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 space-y-2 animate-in fade-in duration-200">
+                            <div className="flex items-start gap-2">
+                                <Wand2 className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-bold text-foreground">AI detected a category mismatch</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                                        Vendor <span className="font-medium text-foreground">"The Capital Grille"</span> is a restaurant.
+                                        Current category <span className="font-medium text-foreground">Fuel + Parking</span> may be incorrect —
+                                        Strata suggests <span className="font-medium text-foreground">Meals &amp; Entertainment</span>.
+                                        This would remap GL from <span className="text-ai font-medium">6210 Travel</span> → <span className="text-ai font-medium">6100 Meals &amp; Entertainment</span>.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 pl-5">
+                                <button
+                                    onClick={() => { setEditCategory('Meals & Entertainment'); setAiApplied(true) }}
+                                    className="flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 px-2.5 py-1 rounded-lg hover:bg-warning/20 transition-colors"
+                                >
+                                    <Sparkles className="h-2.5 w-2.5" />
+                                    Apply AI suggestion
+                                </button>
+                                <button
+                                    onClick={() => setAiApplied(true)}
+                                    className="text-[10px] font-medium text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-lg transition-colors"
+                                >
+                                    Keep as Fuel + Parking
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Applied confirmation */}
+                    {aiApplied && editCategory === 'Meals & Entertainment' && (
+                        <div className="flex items-center gap-2 bg-success/5 border border-success/20 rounded-lg px-3 py-2 animate-in fade-in duration-200">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                            <p className="text-[10px] text-foreground">Category updated · GL will remap to <span className="font-bold text-ai">6100 Meals &amp; Entertainment</span> on save</p>
+                        </div>
+                    )}
+
+                    {/* Row 3 — Description */}
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Description</label>
+                        <input
+                            value={editDesc}
+                            onChange={e => setEditDesc(e.target.value)}
+                            placeholder="Add a description..."
+                            className="w-full text-sm bg-background border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                        />
+                    </div>
+
+                    {/* Audit trail note */}
                     <div className="flex items-start gap-2 bg-ai/5 border border-ai/20 rounded-lg px-2.5 py-2">
                         <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
                         <p className="text-[10px] text-foreground">Any edits are logged in the audit trail · GL codes will update automatically on save</p>
                     </div>
+
                     <div className="flex gap-2">
                         <button
                             onClick={() => setAppState('pending')}
@@ -196,7 +298,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                             Save &amp; continue
                         </button>
                         <button
-                            onClick={() => { setEditAmount('$142.50'); setEditCategory('Fuel + Parking'); setAppState('pending') }}
+                            onClick={() => { setEditAmount('$142.50'); setEditCategory('Fuel + Parking'); setEditDesc('Business client dinner — The Capital Grille'); setAiApplied(false); setAppState('pending') }}
                             className="px-3 text-xs py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground"
                         >
                             Cancel
