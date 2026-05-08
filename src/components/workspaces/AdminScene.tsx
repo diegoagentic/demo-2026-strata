@@ -5,7 +5,7 @@
  *   PP8 (GL codes manual lookup → rules engine)
  */
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -57,6 +57,18 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     const [showCatDropdown, setShowCatDropdown] = useState(false)
     const [showCustomCat, setShowCustomCat] = useState(false)
     const [customCatInput, setCustomCatInput] = useState('')
+    const catDropdownRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!showCatDropdown) return
+        const handler = (e: MouseEvent) => {
+            if (catDropdownRef.current && !catDropdownRef.current.contains(e.target as Node)) {
+                setShowCatDropdown(false)
+            }
+        }
+        document.addEventListener('mousedown', handler)
+        return () => document.removeEventListener('mousedown', handler)
+    }, [showCatDropdown])
 
     // ── Manager CRUD ─────────────────────────────────────────────────────────
 
@@ -310,7 +322,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
             </div>
 
             {/* Section 2 — Expense Categories */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-xl">
                 <div className="px-4 py-3 border-b border-border">
                     <p className="text-xs font-bold text-foreground">Expense Categories</p>
                     <p className="text-[10px] text-muted-foreground">Feed the GL rules engine — changes apply to new submissions immediately</p>
@@ -326,7 +338,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                     ))}
 
                     {/* Add category trigger */}
-                    <div className="relative">
+                    <div className="relative" ref={catDropdownRef}>
                         <button
                             onClick={() => { setShowCatDropdown(!showCatDropdown); setShowCustomCat(false) }}
                             className="inline-flex items-center gap-1 text-xs text-ai border border-dashed border-ai/40 hover:border-ai/80 hover:bg-ai/5 px-2.5 py-1 rounded-full transition-all"
