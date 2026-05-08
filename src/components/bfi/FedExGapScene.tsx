@@ -102,11 +102,40 @@ export default function FedExGapScene({ onSend }: FedExGapSceneProps) {
                     </button>
                 </div>
             ) : (
-                <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-center gap-2 animate-in fade-in duration-300">
-                    <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                    <div className="text-xs">
-                        <div className="font-bold text-foreground">POD request sent · tracking 3 FedEx items</div>
-                        <div className="text-muted-foreground mt-0.5">DCAS-1182 · response from HM pending</div>
+                <div className="space-y-3 animate-in fade-in duration-300">
+                    <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                            <div className="font-bold text-foreground">POD request sent · Andy (HM) · May 6 · 8:06 AM</div>
+                            <div className="text-muted-foreground mt-0.5">DCAS-1182 · 3 FedEx items · awaiting Proof of Delivery</div>
+                        </div>
+                    </div>
+
+                    {/* Tracking panel */}
+                    <div className="border border-border rounded-xl p-3.5 bg-card space-y-2.5">
+                        <div className="flex items-center justify-between">
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Tracking · response pending</div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                                Awaiting HM
+                            </div>
+                        </div>
+                        <div className="space-y-1 text-[11px]">
+                            {GAP_ITEMS.map(item => (
+                                <div key={item.tracking} className="flex items-center justify-between">
+                                    <span className="font-mono text-foreground">{item.tracking}</span>
+                                    <span className="text-muted-foreground">{item.product}</span>
+                                    <span className="text-amber-600 dark:text-amber-400 text-[10px] font-medium">POD requested</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground border-t border-border pt-2.5">
+                            Expected response: 1–2 business days · Strata will notify Lauren on reply
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                            Before Strata: Lauren tracked this via email threads — no status visibility.
+                            3 items × manual email follow-up = chasing Andy while managing 4 other active orders
+                        </div>
                     </div>
                 </div>
             )}

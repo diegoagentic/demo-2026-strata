@@ -172,6 +172,15 @@ function OrderMonitorCard({ order, fedexExpanded, onToggleFedex, onDispatch, dis
                             </span>
                         </div>
 
+                        {/* Mini bingo progress — DOH-0671 only */}
+                        {order.id === 'DOH-0671' && (
+                            <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                <span className="text-success font-medium">35/36 Bingo #s confirmed</span>
+                                <span>·</span>
+                                <span className="text-amber-600 dark:text-amber-400 font-medium">1 FedEx subpath</span>
+                            </div>
+                        )}
+
                         {/* FedEx gap alert */}
                         {order.fedexGap && (
                             <button

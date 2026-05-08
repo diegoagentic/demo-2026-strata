@@ -15,7 +15,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, Building2, Edit3 } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, Building2, Edit3, ArrowRight } from 'lucide-react'
 import { ReasonDialog } from '../shared'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -86,13 +86,27 @@ export default function CPRReconciliationScene() {
 
     return (
         <div className="space-y-4">
+            {/* Stakes banner — always visible */}
+            <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <div className="text-xs flex-1">
+                    <div className="font-bold text-foreground">Payment-critical · City of New York</div>
+                    <div className="text-muted-foreground mt-0.5 leading-relaxed">
+                        Union labor (Teamsters · Carpenters) — if any CPR line has an error →{' '}
+                        <span className="font-bold text-foreground">City of NY does not pay</span>.
+                        75% of orders have at least one discrepancy. CPR = Certified Payroll Records, mandated by City contracts.
+                    </div>
+                </div>
+            </div>
+
             {/* Context banner */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">CPR Reconciliation · DOE-2847 · NYC Dept. of Education</div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Strata compared quoted hours against the certified payroll records from WIG. 2 discrepancies detected — review each line before approving.
+                        Strata cross-referenced quoted hours vs. certified payroll records from WIG — 2 discrepancies detected.
+                        Before Strata: Lauren compared these manually line by line (~45–60 min, error-prone).
                     </div>
                 </div>
             </div>
@@ -189,13 +203,36 @@ export default function CPRReconciliationScene() {
                 </div>
             </div>
 
-            {/* Post-approval confirmation */}
+            {/* Post-approval confirmation + chain */}
             {allApproved && (
-                <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-bottom-1 duration-400">
-                    <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                    <div className="text-xs">
-                        <div className="font-bold text-foreground">CORE updated · −$2,340 applied to DOE-2847</div>
-                        <div className="text-muted-foreground mt-0.5">Director of Strategic Accounts notified automatically</div>
+                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-400">
+                    <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2.5">
+                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                            <div className="font-bold text-foreground">CORE updated · −$2,340 applied to DOE-2847</div>
+                            <div className="text-muted-foreground mt-0.5">Carpenters: 50h → 45h · OT Carpenters: 8h → 6h</div>
+                        </div>
+                    </div>
+
+                    {/* Approval chain */}
+                    <div className="border border-border rounded-xl p-3.5 bg-card space-y-2.5">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Chain initiated automatically</div>
+                        {[
+                            { actor: 'Michael (Dir. Strategic Accounts)', action: 'Notified · pre-drafted relay to Nancy', done: true  },
+                            { actor: 'Nancy Bos (HM Invoice Processor)',  action: 'Invoice update required · relay pending',  done: false },
+                            { actor: 'City of NY payment',                action: 'UNBLOCKED — CPR now correct',             done: false },
+                        ].map((step, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                                <ArrowRight className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${step.done ? 'text-success' : 'text-muted-foreground'}`} />
+                                <div className="text-xs">
+                                    <span className={`font-medium ${step.done ? 'text-foreground' : 'text-muted-foreground'}`}>{step.actor}</span>
+                                    <span className="text-muted-foreground"> · {step.action}</span>
+                                </div>
+                            </div>
+                        ))}
+                        <div className="text-[10px] text-muted-foreground border-t border-border pt-2.5 mt-1">
+                            Before Strata: this chain took 1–3 days via email + phone · now automatic
+                        </div>
                     </div>
                 </div>
             )}

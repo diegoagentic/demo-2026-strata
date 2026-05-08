@@ -63,6 +63,16 @@ export default function ReceiptAlertScene({ onAcknowledge }: ReceiptAlertScenePr
                 </div>
             </div>
 
+            {/* Before Strata contrast */}
+            <div className="bg-muted/60 border border-border rounded-xl p-3 space-y-1">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Before Strata</div>
+                <div className="text-xs text-foreground leading-relaxed">
+                    Lauren checked CORE manually every morning for each active WIG order — no automatic alert.
+                    She also fielded Walter's status calls while chasing receiving confirmations.{' '}
+                    <span className="font-medium">4 orders × daily manual check = ~20 min/day with zero value-add.</span>
+                </div>
+            </div>
+
             {/* What happens next */}
             <div className="border border-border rounded-xl p-3.5 bg-card space-y-2">
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Next steps unlocked</div>
@@ -78,6 +88,24 @@ export default function ReceiptAlertScene({ onAcknowledge }: ReceiptAlertScenePr
                         </div>
                     ))}
                 </div>
+            </div>
+
+            {/* Stakeholder Visibility */}
+            <div className="border border-border rounded-xl p-3.5 bg-card space-y-2.5">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Who knows about DOH-0671 right now</div>
+                {[
+                    { name: 'Lauren',  status: '● Informed',  time: 'May 6 · 8:06 AM', note: 'this alert',                       dot: 'bg-success' },
+                    { name: 'Lena',    status: '● Confirmed', time: 'May 6 · 9:02 AM', note: 'CORE entry',                        dot: 'bg-success' },
+                    { name: 'Walter',  status: '○ Pending',   time: '',                 note: 'notified when work order generated', dot: 'bg-muted-foreground' },
+                    { name: 'Michael', status: '○ Not yet',   time: '',                 note: 'notified after CPR reconciliation', dot: 'bg-muted-foreground' },
+                ].map((s, i) => (
+                    <div key={i} className="flex items-center gap-2.5 text-[11px]">
+                        <span className="w-14 text-muted-foreground shrink-0">{s.name}</span>
+                        <span className={`font-medium shrink-0 ${s.time ? 'text-success' : 'text-muted-foreground'}`}>{s.status}</span>
+                        {s.time && <span className="text-muted-foreground tabular-nums shrink-0">{s.time}</span>}
+                        <span className="text-muted-foreground text-[10px] truncate">— {s.note}</span>
+                    </div>
+                ))}
             </div>
 
             {/* Action */}
