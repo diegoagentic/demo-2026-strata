@@ -54,7 +54,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'CoNY Order Queue',
         description: 'Strata surfaces the CoNY Account Lead\'s active orders by priority — CPR discrepancies, pricing under review, and receiving gaps — so the most critical work surfaces first without manual triage.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b1.2',
@@ -63,7 +63,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Pricing Validation',
         description: 'Strata validates the SIF received from the Miller Knoll designer against the CoNY contract and flags restricted items, grommet exceptions, and missing catalog numbers — eliminating the 65-minute OmniQuote cycle.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b1.3',
@@ -72,7 +72,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Discount Calculation',
         description: 'Strata auto-calculates the discount for every line using sell ÷ list − 1, inserts the true-up line to zero GP, and confirms Cost = Sale before pushing to CORE — replacing 20 minutes of manual calculation.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b1.4',
@@ -81,7 +81,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Labor Quote Parser',
         description: 'Strata parses the WIG labor quote from free-text email into a structured table by union category — Inside Delivery, Teamsters, Carpenters, OT, Strike Truck. Director of Strategic Accounts reviews and approves before CORE entry.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Operations Manager',
     },
     {
         id: 'b1.5',
@@ -90,7 +90,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Order Tracker',
         description: 'Strata consolidates the order across CORE, OmniQuote, and the R Drive tracking sheet into a single live view — PO received, EDI acknowledgment, delivery date, and receiving status — eliminating the three-system check.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b1.6',
@@ -99,7 +99,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'CPR Reconciliation',
         description: 'Payment-critical — if any CPR line has an error, City of NY does not pay. Strata cross-references quoted hours vs. certified payroll records (75% of orders have a discrepancy). Lauren reviews each line with per-line approve/edit; on approval, CORE updates and the Lauren→Michael→Nancy→City of NY chain is initiated automatically.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b1.7',
@@ -108,7 +108,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'CPR Relay & Invoice',
         description: 'Strata pre-drafts the labor revision message from the Director of Strategic Accounts to the Miller Knoll Invoice Processor, including adjusted hours and dollar impact per category — replacing the 1-3 day manual relay chain.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Operations Manager',
     },
     {
         id: 'b1.8',
@@ -117,12 +117,12 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Agency Fee Verify',
         description: 'Strata calculates the expected agency fee from CoNY contract T-codes and compares it to the MK Invoice Processor report — verifying every dollar before Finance closes the order. Patricia confirms with one click.',
         app: 'bfi-agency-fee',
-        role: 'Dealer',
+        role: 'Finance / AR',
     },
 
     // ═══════════════════════════════════════════
     // FLOW 2: Receiving AI
-    // CoNY Account Lead · 8 scenes
+    // Multi-role: Account Lead · Receiving Coordinator · Project Manager
     // ═══════════════════════════════════════════
     {
         id: 'b2.1',
@@ -131,7 +131,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Receiving Dashboard',
         description: 'Strata monitors received% in CORE for each CoNY order at WIG, distinguishes Freight from FedEx small-parcel shipments, calculates storage countdown per order, and alerts the Account Lead before the 30-day window expires.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b2.2',
@@ -140,7 +140,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'FedEx Gap Resolution',
         description: 'Strata detects FedEx small-parcel items shipped without WIG confirmation by cross-referencing OmniQuote against the WIG receiving log — and pre-fills the POD request to the HM contact for one-click send.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b2.3',
@@ -149,7 +149,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'WIG Doc & Bingo Parse',
         description: 'Strata eliminates Lena\'s bottleneck — WIG documents that used to sit for up to 1 week now parse instantly: each Bingo # maps to its CORE line via a visual grid, missing cartons trigger an actionable alert to Lauren, and FedEx sub-paths are flagged automatically. Lena confirms with one click.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Receiving Coordinator',
     },
     {
         id: 'b2.4',
@@ -158,7 +158,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: '100% Receipt Alert',
         description: 'Strata monitors CORE received% and fires an automatic alert the moment an order hits 100% — replacing the manual daily check Lauren performs across all active WIG orders.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b2.5',
@@ -167,7 +167,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Work Order Print',
         description: 'Strata generates the work order for the 100%-received order, calls out the NYC physical ink signature requirement, and surfaces the delivery window and remaining storage days — ready for Account Lead sign-off.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b2.6',
@@ -176,7 +176,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Walter Notification',
         description: 'Strata notifies the CoNY Project Manager (Walter) digitally before the paper work order arrives — giving him visibility into items, delivery window, and storage urgency so he can pre-coordinate the installation crew.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Project Manager',
     },
     {
         id: 'b2.7',
@@ -185,7 +185,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: '30-Day Storage Monitor',
         description: 'Strata tracks the 30-day storage window for every WIG order — alerting the Account Lead at day 20 and surfacing per-order countdown so no order silently crosses into billable storage territory.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
     {
         id: 'b2.8',
@@ -194,7 +194,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Receiving Close',
         description: 'With 100% receipt confirmed and work order dispatched, Strata marks the order invoiceable in CORE and bridges back to the Agency Fee flow — CPR and fee verification are now unblocked.',
         app: 'bfi-receiving',
-        role: 'Dealer',
+        role: 'Account Lead',
     },
 ];
 
