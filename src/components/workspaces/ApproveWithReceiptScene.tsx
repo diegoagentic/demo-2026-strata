@@ -103,25 +103,28 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     return (
         <div className="max-w-lg mx-auto space-y-4">
 
-            {/* ── Scenario selector ── */}
-            <div className="flex gap-1 bg-muted/40 border border-border rounded-xl p-1 w-fit">
-                {([
-                    { key: 'approve', label: '✓ Approve' },
-                    { key: 'reject',  label: '✗ Reject'  },
-                    { key: 'planb',   label: '⚠ Over policy' },
-                ] as { key: ScenarioMode; label: string }[]).map(s => (
-                    <button
-                        key={s.key}
-                        onClick={() => switchMode(s.key)}
-                        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-                            mode === s.key
-                                ? 'bg-card text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        {s.label}
-                    </button>
-                ))}
+            {/* ── Presenter control — scenario switcher (not part of the simulated app UI) ── */}
+            <div className="flex items-center gap-2.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">Demo scenario</span>
+                <div className="flex gap-1">
+                    {([
+                        { key: 'approve', label: 'Normal approval' },
+                        { key: 'reject',  label: 'Request changes' },
+                        { key: 'planb',   label: 'Policy flag ⚠'  },
+                    ] as { key: ScenarioMode; label: string }[]).map(s => (
+                        <button
+                            key={s.key}
+                            onClick={() => switchMode(s.key)}
+                            className={`text-[10px] px-2 py-0.5 rounded-md transition-all font-medium ${
+                                mode === s.key
+                                    ? 'bg-muted text-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {s.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* ── Expense detail card ── */}
@@ -404,28 +407,116 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                 </div>
             )}
 
-            {/* ── Actions ── */}
+            {/* ── Actions — contextual by scenario ── */}
             {(appState === 'pending') && (
                 <div className="space-y-2">
-                    {/* Approve */}
-                    {(mode === 'approve') && (
-                        <button
-                            onClick={handleApprove}
-                            className="w-full flex items-center justify-center gap-2 bg-success/10 text-success border border-success/20 font-bold text-sm py-3 rounded-xl hover:bg-success/15 transition-colors"
-                        >
-                            <CheckCircle2 className="h-4 w-4" />
-                            Approve expense
-                        </button>
+
+                    {/* ── Normal approval scenario ── */}
+                    {mode === 'approve' && (
+                        <div className="space-y-2">
+                            <button
+                                onClick={handleApprove}
+                                className="w-full flex items-center justify-center gap-2 bg-success/10 text-success border border-success/20 font-bold text-sm py-3 rounded-xl hover:bg-success/15 transition-colors"
+                            >
+                                <CheckCircle2 className="h-4 w-4" />
+                                Approve expense
+                            </button>
+                            {!showReject ? (
+                                <button
+                                    onClick={() => setShowReject(true)}
+                                    className="w-full text-xs text-muted-foreground py-1.5 hover:text-foreground transition-colors"
+                                >
+                                    Request changes ↓
+                                </button>
+                            ) : (
+                                <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="h-4 w-4 text-warning" />
+                                        <p className="text-sm font-semibold text-foreground">Note to employee required</p>
+                                    </div>
+                                    <textarea
+                                        value={rejectNote}
+                                        onChange={e => setRejectNote(e.target.value)}
+                                        placeholder="Receipt is unclear · please reattach with full amount visible"
+                                        rows={2}
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setShowReject(false)} className="px-3 text-xs py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground">
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleRejectConfirm}
+                                            disabled={!rejectNote.trim()}
+                                            className="flex-1 flex items-center justify-center gap-1.5 bg-destructive text-destructive-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            Send to employee
+                                            <ChevronRight className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
 
-                    {/* Plan B — policy exception */}
-                    {mode === 'planb' && !showOverride && (
+                    {/* ── Request changes scenario ── */}
+                    {mode === 'reject' && (
+                        <div className="space-y-2">
+                            {!showReject ? (
+                                <>
+                                    <button
+                                        onClick={() => setShowReject(true)}
+                                        className="w-full flex items-center justify-center gap-2 bg-muted text-foreground border border-border font-bold text-sm py-3 rounded-xl hover:bg-muted/80 transition-colors"
+                                    >
+                                        <RotateCcw className="h-4 w-4" />
+                                        Request changes with note
+                                    </button>
+                                    <button
+                                        onClick={handleApprove}
+                                        className="w-full text-xs text-muted-foreground py-1.5 hover:text-foreground transition-colors"
+                                    >
+                                        Approve anyway ↑
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="h-4 w-4 text-warning" />
+                                        <p className="text-sm font-semibold text-foreground">Note to employee required</p>
+                                    </div>
+                                    <textarea
+                                        value={rejectNote}
+                                        onChange={e => setRejectNote(e.target.value)}
+                                        placeholder="Receipt is unclear · please reattach with full amount visible"
+                                        rows={2}
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setShowReject(false)} className="px-3 text-xs py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground">
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleRejectConfirm}
+                                            disabled={!rejectNote.trim()}
+                                            className="flex-1 flex items-center justify-center gap-1.5 bg-destructive text-destructive-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            Send to employee
+                                            <ChevronRight className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── Policy flag scenario ── */}
+                    {mode === 'planb' && !showOverride && !showReject && (
                         <div className="space-y-2">
                             <div className="bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 flex items-start gap-2">
                                 <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-sm font-semibold text-foreground">Policy exception required</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">$142.50 exceeds the $125.00 per-diem cap for Field Staff · Fuel + Parking. You can override with a reason or reject.</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">$142.50 exceeds the $125.00 per-diem cap for Field Staff · Fuel + Parking. Override with a reason or reject.</p>
                                 </div>
                             </div>
                             <div className="flex gap-2">
@@ -446,7 +537,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                         </div>
                     )}
 
-                    {/* Plan B override form */}
+                    {/* Plan B — override form */}
                     {mode === 'planb' && showOverride && (
                         <div className="bg-card border border-warning/30 rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
                             <div className="flex items-center gap-2">
@@ -483,46 +574,33 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                         </div>
                     )}
 
-                    {/* Reject form (both reject mode and plan B reject path) */}
-                    {(mode === 'reject' || (mode === 'planb' && showReject)) && !showOverride && (
-                        <div className="space-y-2">
-                            {!showReject && (
-                                <button
-                                    onClick={() => setShowReject(true)}
-                                    className="w-full flex items-center justify-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 font-bold text-sm py-3 rounded-xl hover:bg-destructive/15 transition-colors"
-                                >
-                                    <XCircle className="h-4 w-4" />
-                                    Reject with note
+                    {/* Plan B — reject form */}
+                    {mode === 'planb' && showReject && !showOverride && (
+                        <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4 text-warning" />
+                                <p className="text-sm font-semibold text-foreground">Rejection note required</p>
+                            </div>
+                            <textarea
+                                value={rejectNote}
+                                onChange={e => setRejectNote(e.target.value)}
+                                placeholder="Amount exceeds policy cap and cannot be overridden at this time"
+                                rows={2}
+                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
+                            />
+                            <div className="flex gap-2">
+                                <button onClick={() => setShowReject(false)} className="px-3 text-xs py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground">
+                                    Cancel
                                 </button>
-                            )}
-                            {showReject && (
-                                <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
-                                    <div className="flex items-center gap-2">
-                                        <AlertTriangle className="h-4 w-4 text-warning" />
-                                        <p className="text-sm font-semibold text-foreground">Rejection note required</p>
-                                    </div>
-                                    <textarea
-                                        value={rejectNote}
-                                        onChange={e => setRejectNote(e.target.value)}
-                                        placeholder="Receipt is unclear · please reattach with full amount visible"
-                                        rows={2}
-                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
-                                    />
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setShowReject(false)} className="flex-1 text-xs text-muted-foreground py-2 rounded-lg hover:text-foreground">
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleRejectConfirm}
-                                            disabled={!rejectNote.trim()}
-                                            className="flex-1 flex items-center justify-center gap-1.5 bg-destructive text-destructive-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                                        >
-                                            Confirm rejection
-                                            <ChevronRight className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                                <button
+                                    onClick={handleRejectConfirm}
+                                    disabled={!rejectNote.trim()}
+                                    className="flex-1 flex items-center justify-center gap-1.5 bg-destructive text-destructive-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    Confirm rejection
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
