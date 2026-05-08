@@ -49,7 +49,7 @@ const GL_LINES = [
 export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () => void }) {
     const [mode,          setMode]          = useState<ScenarioMode>('approve')
     const [appState,      setAppState]      = useState<ApproveState>('pending')
-    const [rejectNote,    setRejectNote]    = useState('')
+    const [rejectNote,    setRejectNote]    = useState('Receipt is unclear · please reattach with full amount visible')
     const [overrideNote,  setOverrideNote]  = useState('Client entertainment · pre-approved by CFO · exceptional client week')
     const [showReject,    setShowReject]    = useState(false)
     const [showOverride,  setShowOverride]  = useState(false)
@@ -69,7 +69,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
 
     const reset = () => {
         setAppState('pending')
-        setRejectNote('')
+        setRejectNote('Receipt is unclear · please reattach with full amount visible')
         setOverrideNote('Client entertainment · pre-approved by CFO · exceptional client week')
         setShowReject(false)
         setShowOverride(false)
