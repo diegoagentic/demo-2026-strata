@@ -6,9 +6,10 @@ import { clsx } from 'clsx';
 interface MobileDeviceFrameProps {
     children: React.ReactNode;
     className?: string;
+    overlay?: React.ReactNode;
 }
 
-export default function MobileDeviceFrame({ children, className }: MobileDeviceFrameProps) {
+export default function MobileDeviceFrame({ children, className, overlay }: MobileDeviceFrameProps) {
     return (
         <div className={clsx('flex justify-center', className)}>
             <div className="relative w-[375px] bg-background rounded-[3rem] border-[6px] border-zinc-800 dark:border-zinc-600 shadow-2xl shadow-black/30 dark:shadow-black/60 overflow-hidden">
@@ -52,6 +53,13 @@ export default function MobileDeviceFrame({ children, className }: MobileDeviceF
                 <div className="flex justify-center py-2 bg-background">
                     <div className="w-[134px] h-[5px] rounded-full bg-foreground/30" />
                 </div>
+
+                {/* Overlay — renders above scroll content, inside phone bezel */}
+                {overlay && (
+                    <div className="absolute inset-0 z-50">
+                        {overlay}
+                    </div>
+                )}
             </div>
         </div>
     );

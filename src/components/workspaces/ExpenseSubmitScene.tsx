@@ -57,6 +57,7 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
     const [receipts, setReceipts]         = useState<number[]>([])
     const [addState, setAddState]         = useState<AddState>('idle')
     const [carouselIdx, setCarouselIdx]   = useState(0)
+    const [viewingReceipt, setViewingReceipt] = useState<number | null>(null)
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -382,8 +383,38 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
     }
 
     // ── Main form screen ──────────────────────────────────────────────────────
+    const receiptModal = viewingReceipt !== null ? (
+        <div
+            className="flex flex-col h-full bg-black/80 animate-in fade-in duration-200"
+            onClick={() => setViewingReceipt(null)}
+        >
+            <div className="flex items-center justify-between px-4 pt-14 pb-3">
+                <p className="text-xs font-semibold text-white">
+                    {RECEIPT_LABELS[viewingReceipt] ?? `Receipt ${viewingReceipt + 1}`}
+                </p>
+                <button
+                    onClick={() => setViewingReceipt(null)}
+                    className="text-white/80 hover:text-white text-xs font-medium px-3 py-1 rounded-lg bg-white/10"
+                >
+                    Close
+                </button>
+            </div>
+            <div
+                className="flex-1 flex items-center justify-center px-6 pb-8"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="w-full max-w-[240px] rounded-2xl overflow-hidden shadow-2xl">
+                    <ReceiptImage
+                        variant={(['fuel', 'parking', 'toll'] as const)[viewingReceipt] ?? 'fuel'}
+                        compact={false}
+                    />
+                </div>
+            </div>
+        </div>
+    ) : undefined
+
     return (
-        <MobileDeviceFrame>
+        <MobileDeviceFrame overlay={receiptModal}>
             <MobileNavbar title="New Expense" />
 
             <div className="px-4 py-4 space-y-4">
@@ -459,6 +490,7 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
                                 receipts={receipts}
                                 activeIdx={carouselIdx}
                                 onSelect={setCarouselIdx}
+                                onView={setViewingReceipt}
                                 addState={addState}
                             />
                         </div>
@@ -552,10 +584,11 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
 
 // ── Receipt carousel (inside the capture zone) ────────────────────────────────
 
-function ReceiptCarousel({ receipts, activeIdx, onSelect, addState }: {
+function ReceiptCarousel({ receipts, activeIdx, onSelect, onView, addState }: {
     receipts: number[]
     activeIdx: number
     onSelect: (i: number) => void
+    onView: (i: number) => void
     addState: AddState
 }) {
     const variants: Array<'fuel' | 'parking' | 'toll'> = ['fuel', 'parking', 'toll']
@@ -566,9 +599,14 @@ function ReceiptCarousel({ receipts, activeIdx, onSelect, addState }: {
                 {receipts.map((_, i) => (
                     <button
                         key={i}
-                        onClick={e => { e.stopPropagation(); onSelect(i) }}
+                        onClick={e => {
+                            e.stopPropagation()
+                            if (activeIdx === i) onView(i)
+                            else onSelect(i)
+                        }}
+                        title={activeIdx === i ? 'Tap to view full receipt' : 'Select receipt'}
                         className={`rounded-xl overflow-hidden border-2 transition-all shadow-sm ${
-                            activeIdx === i ? 'border-primary scale-105' : 'border-border/60 opacity-70 hover:opacity-90'
+                            activeIdx === i ? 'border-primary scale-105 ring-2 ring-primary/20' : 'border-border/60 opacity-70 hover:opacity-90'
                         }`}
                         style={{ width: activeIdx === i ? 120 : 76 }}
                     >
@@ -600,6 +638,7 @@ function ReceiptCarousel({ receipts, activeIdx, onSelect, addState }: {
             <p className="text-[10px] text-muted-foreground">
                 {RECEIPT_LABELS[activeIdx] ?? `Receipt ${activeIdx + 1}`}
             </p>
+            <p className="text-[9px] text-ai/70 font-medium">Tap to view full receipt</p>
         </div>
     )
 }
