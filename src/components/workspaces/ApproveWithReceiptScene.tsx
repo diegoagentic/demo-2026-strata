@@ -180,7 +180,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                     </div>
 
                     {/* Row 1 — Vendor (read-only) + Date (read-only) */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 items-end">
                         <div className="space-y-1">
                             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Vendor</label>
                             <div className="flex items-center justify-between bg-muted/40 border border-border rounded-lg px-3 py-1.5">
@@ -202,7 +202,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                     </div>
 
                     {/* Row 2 — Amount (editable) + Category (editable, AI flag) */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 items-end">
                         <div className="space-y-1">
                             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Amount</label>
                             <input
