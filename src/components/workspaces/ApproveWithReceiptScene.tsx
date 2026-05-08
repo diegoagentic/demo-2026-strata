@@ -168,30 +168,6 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     return (
         <div className="max-w-lg mx-auto space-y-4">
 
-            {/* ── Presenter control — scenario switcher (not part of the simulated app UI) ── */}
-            <div className="flex items-center gap-2.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">Demo scenario</span>
-                <div className="flex gap-1">
-                    {([
-                        { key: 'approve', label: 'Normal approval' },
-                        { key: 'reject',  label: 'Request changes' },
-                        { key: 'planb',   label: 'Policy flag ⚠'  },
-                    ] as { key: ScenarioMode; label: string }[]).map(s => (
-                        <button
-                            key={s.key}
-                            onClick={() => switchMode(s.key)}
-                            className={`text-[10px] px-2 py-0.5 rounded-md transition-all font-medium ${
-                                mode === s.key
-                                    ? 'bg-muted text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                        >
-                            {s.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
             {/* ── Expense detail card ── */}
             {appState !== 'editing' ? (
                 <div className="bg-card border border-border rounded-xl p-4 space-y-3">
@@ -914,6 +890,30 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                     </button>
                 </div>
             )}
+
+            {/* ── Presenter control — scenario switcher (below actions: review first, then decide) ── */}
+            <div className="border-t border-border/50 pt-3 flex items-center gap-2.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">Demo scenario</span>
+                <div className="flex gap-1">
+                    {([
+                        { key: 'approve', label: 'Normal approval' },
+                        { key: 'reject',  label: 'Request changes' },
+                        { key: 'planb',   label: 'Policy flag ⚠'  },
+                    ] as { key: ScenarioMode; label: string }[]).map(s => (
+                        <button
+                            key={s.key}
+                            onClick={() => switchMode(s.key)}
+                            className={`text-[10px] px-2 py-0.5 rounded-md transition-all font-medium ${
+                                mode === s.key
+                                    ? 'bg-muted text-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {s.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
         </div>

@@ -120,7 +120,7 @@ export default function ApprovalQueueScene({ onReview }: { onReview?: () => void
                     { label: 'Avg response', value: '1.2d', sub: 'your SLA',    color: 'text-muted-foreground', bg: ''                  },
                 ].map(s => (
                     <div key={s.label} className={`${s.bg} border border-border rounded-xl px-3 py-2.5 space-y-0.5`}>
-                        <p className={`text-[10px] font-semibold uppercase tracking-wide ${s.color}`}>{s.label}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</p>
                         <p className="text-xl font-bold text-foreground leading-none">{s.value}</p>
                         <p className="text-[10px] text-muted-foreground">{s.sub}</p>
                     </div>
@@ -267,7 +267,7 @@ function ExpenseListRow({ exp, onReview }: {
             return (
                 <button
                     onClick={() => onReview?.()}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full hover:bg-primary/20 transition-colors"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary text-primary-foreground px-2.5 py-1 rounded-full hover:opacity-90 transition-opacity"
                 >
                     Review
                     <ChevronRight className="h-3 w-3" />
@@ -311,7 +311,7 @@ function ExpenseListRow({ exp, onReview }: {
         )
         return (
             <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-warning font-medium">Missing</span>
+                <span className="text-[11px] font-semibold text-destructive">Missing</span>
                 <ReceiptUploadMenu onUpload={handleUpload} />
             </div>
         )
@@ -319,7 +319,7 @@ function ExpenseListRow({ exp, onReview }: {
 
     return (
         <div className={`grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-4 py-3 transition-colors ${
-            exp.focus ? 'bg-primary/3 hover:bg-primary/5' : exp.status === 'sla' ? 'hover:bg-muted/20' : 'hover:bg-muted/20'
+            exp.focus ? 'bg-muted/30 hover:bg-muted/50' : exp.status === 'sla' ? 'hover:bg-muted/20' : 'hover:bg-muted/20'
         }`}>
             <div className="min-w-0">
                 <p className={`text-sm font-semibold truncate ${exp.focus ? 'text-foreground' : 'text-foreground'}`}>{exp.name}</p>
