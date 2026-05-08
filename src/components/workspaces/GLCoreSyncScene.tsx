@@ -6,13 +6,21 @@
  */
 
 import { useState, useRef, useCallback } from 'react'
-import { Sparkles, CheckCircle2, ChevronDown, Receipt, ArrowRight } from 'lucide-react'
+import {
+    Sparkles, CheckCircle2, ChevronDown, Receipt, ArrowRight,
+    MessageSquare, CheckCheck, Send, ZoomIn, X, ChevronLeft, ChevronRight,
+} from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { ReceiptImage } from './ExpenseSubmitScene'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
-type SceneState = 'context' | 'reviewing' | 'posting' | 'posted'
-type PostingStep = 'validating' | 'creating' | 'notifying'
+type SceneState   = 'context' | 'reviewing' | 'posting' | 'posted'
+type PostingStep  = 'validating' | 'creating' | 'notifying'
+type ThreadStatus = 'open' | 'resolved'
+type MsgSide      = 'incoming' | 'ap'
+
+interface ApMessage { id: string; author: string; initials: string; side: MsgSide; text: string; time: string }
+interface ApThread  { id: string; status: ThreadStatus; messages: ApMessage[] }
 
 const GL_CODES = ['6200 · Vehicle Expenses', '6210 · Travel & Transit', '6100 · Meals & Entertainment', '6300 · Office Expenses']
 
@@ -27,15 +35,59 @@ const POSTING_STEPS: { key: PostingStep; label: string }[] = [
     { key: 'notifying',  label: 'Notifying John Smith...'         },
 ]
 
+// ── Activity data ─────────────────────────────────────────────────────────────
+
+const AP_TIMELINE = [
+    { label: 'Submitted',      actor: 'John Smith',    initials: 'JS', time: 'May 5 · 10:32 AM', done: true,  current: false, ai: false },
+    { label: 'Mgr approved',   actor: 'Sarah Johnson', initials: 'SJ', time: 'May 6 · 9:15 AM',  done: true,  current: false, ai: false },
+    { label: 'Routed to AP',   actor: 'Strata AI',     initials: '✦',  time: 'May 6 · 9:16 AM',  done: true,  current: false, ai: true  },
+    { label: 'GL pre-filled',  actor: 'Strata AI',     initials: '✦',  time: 'May 6 · 9:16 AM',  done: true,  current: false, ai: true  },
+    { label: 'AP review',      actor: 'Letza Bombard', initials: 'LB', time: 'May 6 · 2:47 PM',  done: true,  current: true,  ai: false },
+    { label: 'Post to CORE',   actor: '',              initials: '',   time: 'Pending',            done: false, current: false, ai: false },
+]
+
+const AP_INITIAL_THREADS: ApThread[] = [
+    {
+        id: 'ap-t1',
+        status: 'open',
+        messages: [
+            {
+                id: 'ap-m1',
+                author: 'Sarah Johnson',
+                initials: 'SJ',
+                side: 'incoming',
+                text: 'Approval note: John confirmed the Capital Grille is a gas station on Suncoast Pkwy — GL 6200 is correct, not meals. Receipts match amounts.',
+                time: 'May 6 · 9:15 AM',
+            },
+        ],
+    },
+]
+
+// ── Main component ────────────────────────────────────────────────────────────
+
 export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [sceneState, setSceneState] = useState<SceneState>('context')
-    const [overrides, setOverrides] = useState<Record<string, string>>({})
-    const [editingLine, setEditingLine] = useState<string | null>(null)
-    const [postingStep, setPostingStep] = useState<PostingStep>('validating')
+    const [sceneState,   setSceneState]   = useState<SceneState>('context')
+    const [overrides,    setOverrides]    = useState<Record<string, string>>({})
+    const [editingLine,  setEditingLine]  = useState<string | null>(null)
+    const [postingStep,  setPostingStep]  = useState<PostingStep>('validating')
+
+    // Receipt modal
+    const [receiptModal, setReceiptModal] = useState(false)
+    const [receiptIdx,   setReceiptIdx]   = useState(0)
+
+    // Activity & Discussion state
+    const [activityTab,  setActivityTab]  = useState<'timeline' | 'discussion'>('timeline')
+    const [activityOpen, setActivityOpen] = useState(false)
+    const [apThreads,    setApThreads]    = useState<ApThread[]>(AP_INITIAL_THREADS)
+    const [replyTexts,   setReplyTexts]   = useState<Record<string, string>>({})
+    const [newNote,      setNewNote]      = useState('')
+    const [showNoteForm, setShowNoteForm] = useState(false)
+
+    const openThreadCount = apThreads.filter(t => t.status === 'open').length
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -58,7 +110,182 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
 
     const getGL = (line: typeof LINES[0]) => overrides[line.id] ?? line.glCode
 
-    // ── Context state ──────────────────────────────────────────────────────────
+    const resolveThread = (id: string) =>
+        setApThreads(ts => ts.map(t => t.id === id ? { ...t, status: 'resolved' } : t))
+
+    const addReply = (threadId: string) => {
+        const text = (replyTexts[threadId] ?? '').trim()
+        if (!text) return
+        const msg: ApMessage = { id: Date.now().toString(), author: 'Letza Bombard', initials: 'LB', side: 'ap', text, time: 'Just now' }
+        setApThreads(ts => ts.map(t => t.id === threadId ? { ...t, messages: [...t.messages, msg] } : t))
+        setReplyTexts(r => ({ ...r, [threadId]: '' }))
+    }
+
+    const addNote = () => {
+        const text = newNote.trim()
+        if (!text) return
+        const thread: ApThread = {
+            id: Date.now().toString(),
+            status: 'open',
+            messages: [{ id: Date.now().toString(), author: 'Letza Bombard', initials: 'LB', side: 'ap', text, time: 'Just now' }],
+        }
+        setApThreads(ts => [...ts, thread])
+        setNewNote('')
+        setShowNoteForm(false)
+    }
+
+    const activityPanel = (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <button
+                onClick={() => setActivityOpen(v => !v)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            >
+                <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-foreground">Activity &amp; Notes</span>
+                    {!activityOpen && openThreadCount > 0 && (
+                        <span className="text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 px-1.5 py-0.5 rounded-full">
+                            {openThreadCount} open
+                        </span>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    {/* Participant avatars */}
+                    <div className="flex -space-x-1.5">
+                        {[
+                            { initials: 'JS', title: 'John Smith' },
+                            { initials: 'SJ', title: 'Sarah Johnson' },
+                            { initials: 'LB', title: 'Letza Bombard' },
+                        ].map(p => (
+                            <div key={p.initials} title={p.title}
+                                className="h-5 w-5 rounded-full bg-muted border-2 border-card flex items-center justify-center text-[8px] font-bold text-muted-foreground"
+                            >
+                                {p.initials}
+                            </div>
+                        ))}
+                    </div>
+                    <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${activityOpen ? 'rotate-180' : ''}`} />
+                </div>
+            </button>
+
+            {activityOpen && (
+                <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-200">
+                    {/* Tab switcher */}
+                    <div className="flex gap-1 bg-muted/40 rounded-lg p-0.5">
+                        {(['timeline', 'discussion'] as const).map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActivityTab(tab)}
+                                className={`flex-1 text-[11px] font-semibold py-1.5 rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                                    activityTab === tab ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                {tab === 'timeline' ? 'Timeline' : 'Notes'}
+                                {tab === 'discussion' && openThreadCount > 0 && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-warning shrink-0" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* ── Timeline tab ── */}
+                    {activityTab === 'timeline' && (
+                        <div className="space-y-0">
+                            {AP_TIMELINE.map((step, i) => (
+                                <div key={step.label + i} className="flex gap-3">
+                                    <div className="flex flex-col items-center">
+                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5 border-2 transition-all ${
+                                            step.current
+                                                ? 'bg-primary text-primary-foreground border-primary/30 ring-2 ring-primary/20'
+                                                : step.ai && step.done
+                                                    ? 'bg-ai/15 text-ai border-ai/30'
+                                                    : step.done
+                                                        ? 'bg-success/15 text-success border-success/30'
+                                                        : 'bg-muted text-muted-foreground/40 border-border'
+                                        }`}>
+                                            {step.ai ? '✦' : step.done && !step.current ? '✓' : step.initials[0] ?? ''}
+                                        </div>
+                                        {i < AP_TIMELINE.length - 1 && (
+                                            <div className={`w-px flex-1 mt-1 mb-1 min-h-[20px] ${step.done ? (step.ai ? 'bg-ai/20' : 'bg-success/25') : 'bg-border/50'}`} />
+                                        )}
+                                    </div>
+                                    <div className="pb-3 flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className={`text-xs font-semibold ${
+                                                step.current ? 'text-primary' : step.done ? (step.ai ? 'text-ai' : 'text-foreground') : 'text-muted-foreground/50'
+                                            }`}>{step.label}</p>
+                                            <span className={`text-[10px] shrink-0 ${step.done ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+                                                {step.time}
+                                            </span>
+                                        </div>
+                                        {step.actor && (
+                                            <p className={`text-[10px] ${step.current ? 'text-primary/70' : step.done ? (step.ai ? 'text-ai/70' : 'text-muted-foreground') : 'text-muted-foreground/40'}`}>
+                                                {step.actor}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* ── Notes/Discussion tab ── */}
+                    {activityTab === 'discussion' && (
+                        <div className="space-y-3">
+                            {apThreads.map(thread => (
+                                <ApThreadCard
+                                    key={thread.id}
+                                    thread={thread}
+                                    replyText={replyTexts[thread.id] ?? ''}
+                                    onReplyChange={text => setReplyTexts(r => ({ ...r, [thread.id]: text }))}
+                                    onReply={() => addReply(thread.id)}
+                                    onResolve={() => resolveThread(thread.id)}
+                                />
+                            ))}
+
+                            {!showNoteForm ? (
+                                <button
+                                    onClick={() => setShowNoteForm(true)}
+                                    className="w-full text-[11px] text-muted-foreground py-2.5 border border-dashed border-border rounded-xl hover:text-foreground hover:border-border/80 transition-colors"
+                                >
+                                    + Add internal AP note
+                                </button>
+                            ) : (
+                                <div className="space-y-2 animate-in fade-in duration-200">
+                                    <textarea
+                                        value={newNote}
+                                        onChange={e => setNewNote(e.target.value)}
+                                        placeholder="Add a note for this expense (visible to AP team only)..."
+                                        rows={2}
+                                        autoFocus
+                                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/50"
+                                    />
+                                    <div className="flex gap-2 justify-end">
+                                        <button
+                                            onClick={() => { setShowNoteForm(false); setNewNote('') }}
+                                            className="text-xs text-muted-foreground px-2 py-1 hover:text-foreground"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={addNote}
+                                            disabled={!newNote.trim()}
+                                            className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-lg disabled:opacity-40 hover:opacity-90 transition-opacity"
+                                        >
+                                            Add note
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+
+    // ── Context state ─────────────────────────────────────────────────────────
+
     if (sceneState === 'context') {
         return (
             <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-500">
@@ -86,14 +313,32 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                         <span className="text-[10px] text-success font-medium">2 verified ✓</span>
                     </div>
                     <div className="flex gap-3">
-                        <div className="flex-1 space-y-1">
-                            <ReceiptImage variant="fuel" className="w-full rounded-lg" />
+                        <button
+                            onClick={() => { setReceiptModal(true); setReceiptIdx(0) }}
+                            className="flex-1 space-y-1 group relative rounded-lg overflow-hidden"
+                            aria-label="Preview fuel receipt"
+                        >
+                            <div className="rounded-lg overflow-hidden border border-border/50 relative">
+                                <ReceiptImage variant="fuel" />
+                                <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
+                                    <ZoomIn className="h-4 w-4 text-foreground opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                                </div>
+                            </div>
                             <p className="text-[10px] text-center text-muted-foreground">Fuel · $95.00</p>
-                        </div>
-                        <div className="flex-1 space-y-1">
-                            <ReceiptImage variant="parking" className="w-full rounded-lg" />
+                        </button>
+                        <button
+                            onClick={() => { setReceiptModal(true); setReceiptIdx(1) }}
+                            className="flex-1 space-y-1 group relative rounded-lg overflow-hidden"
+                            aria-label="Preview parking receipt"
+                        >
+                            <div className="rounded-lg overflow-hidden border border-border/50 relative">
+                                <ReceiptImage variant="parking" />
+                                <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
+                                    <ZoomIn className="h-4 w-4 text-foreground opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                                </div>
+                            </div>
                             <p className="text-[10px] text-center text-muted-foreground">Parking · $47.50</p>
-                        </div>
+                        </button>
                     </div>
                 </div>
 
@@ -116,6 +361,12 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                     </div>
                 </div>
 
+                {activityPanel}
+
+                {receiptModal && (
+                    <GLReceiptModal idx={receiptIdx} onNavigate={setReceiptIdx} onClose={() => setReceiptModal(false)} />
+                )}
+
                 <button
                     onClick={() => setSceneState('reviewing')}
                     className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
@@ -129,7 +380,8 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
         )
     }
 
-    // ── Reviewing state ────────────────────────────────────────────────────────
+    // ── Reviewing state ───────────────────────────────────────────────────────
+
     if (sceneState === 'reviewing') {
         return (
             <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-300">
@@ -191,12 +443,18 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                     </div>
                 </div>
 
+                {activityPanel}
+
+                {receiptModal && (
+                    <GLReceiptModal idx={receiptIdx} onNavigate={setReceiptIdx} onClose={() => setReceiptModal(false)} />
+                )}
+
                 <button
                     onClick={handlePost}
                     className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
                 >
                     <Sparkles className="h-4 w-4" />
-                    Confirm & Post to CORE
+                    Confirm &amp; Post to CORE
                 </button>
 
                 <p className="text-xs text-center text-muted-foreground">
@@ -208,7 +466,8 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
         )
     }
 
-    // ── Posting state ──────────────────────────────────────────────────────────
+    // ── Posting state ─────────────────────────────────────────────────────────
+
     if (sceneState === 'posting') {
         const currentIdx = POSTING_STEPS.findIndex(s => s.key === postingStep)
         return (
@@ -241,7 +500,8 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
         )
     }
 
-    // ── Posted state ───────────────────────────────────────────────────────────
+    // ── Posted state ──────────────────────────────────────────────────────────
+
     return (
         <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-300">
             <div className="bg-success/10 border border-success/20 rounded-xl px-4 py-4 space-y-3">
@@ -251,7 +511,7 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                 </div>
                 <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">GL 6200 · $95.00 · Vehicle Expenses</p>
-                    <p className="text-xs text-muted-foreground">GL 6210 · $47.50 · Travel & Transit</p>
+                    <p className="text-xs text-muted-foreground">GL 6210 · $47.50 · Travel &amp; Transit</p>
                 </div>
                 <p className="text-xs text-muted-foreground pt-1 border-t border-success/20">
                     John Smith notified: <span className="text-foreground font-medium">"Your expense was posted · payment processing"</span>
@@ -273,6 +533,138 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
             </div>
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
+        </div>
+    )
+}
+
+// ── Receipt modal ─────────────────────────────────────────────────────────────
+
+const GL_RECEIPT_META = [
+    { label: 'The Capital Grille', sub: 'Fuel — Tampa · $95.00',  variant: 'fuel'    as const },
+    { label: 'Waterside Garage',   sub: 'Parking · $47.50',        variant: 'parking' as const },
+]
+
+function GLReceiptModal({ idx, onNavigate, onClose }: {
+    idx: number; onNavigate: (i: number) => void; onClose: () => void
+}) {
+    const total = GL_RECEIPT_META.length
+    const meta  = GL_RECEIPT_META[idx]
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            onClick={onClose}
+        >
+            <div
+                className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm animate-in zoom-in-95 duration-200 overflow-hidden"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <div>
+                        <p className="text-sm font-bold text-foreground">{meta.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{meta.sub}</p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" aria-label="Close">
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+                <div className="p-4">
+                    <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
+                        <ReceiptImage variant={meta.variant} />
+                    </div>
+                </div>
+                <div className="flex items-center justify-between px-4 pb-4">
+                    <button
+                        onClick={() => onNavigate(Math.max(0, idx - 1))}
+                        disabled={idx === 0}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground disabled:opacity-30 hover:text-foreground transition-colors disabled:cursor-default"
+                    >
+                        <ChevronLeft className="h-3.5 w-3.5" /> Previous
+                    </button>
+                    <div className="flex items-center gap-1.5">
+                        {GL_RECEIPT_META.map((_, i) => (
+                            <button key={i} onClick={() => onNavigate(i)}
+                                className={`rounded-full transition-all ${i === idx ? 'w-4 h-2 bg-foreground' : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60'}`}
+                            />
+                        ))}
+                    </div>
+                    <button
+                        onClick={() => onNavigate(Math.min(total - 1, idx + 1))}
+                        disabled={idx === total - 1}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground disabled:opacity-30 hover:text-foreground transition-colors disabled:cursor-default"
+                    >
+                        Next <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ── AP thread card ────────────────────────────────────────────────────────────
+
+function ApThreadCard({ thread, replyText, onReplyChange, onReply, onResolve }: {
+    thread: ApThread
+    replyText: string
+    onReplyChange: (v: string) => void
+    onReply: () => void
+    onResolve: () => void
+}) {
+    const resolved = thread.status === 'resolved'
+    return (
+        <div className={`rounded-xl border p-3 space-y-2.5 ${resolved ? 'border-success/20 bg-success/5' : 'border-border bg-card'}`}>
+            <div className="flex items-center justify-between">
+                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${resolved ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>
+                    {resolved ? 'Resolved' : 'Open'}
+                </span>
+                {!resolved && (
+                    <button onClick={onResolve} className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-success transition-colors">
+                        <CheckCheck className="h-3 w-3" />
+                        Mark resolved
+                    </button>
+                )}
+            </div>
+
+            {thread.messages.map(msg => (
+                <div key={msg.id} className={`flex gap-2 ${msg.side === 'ap' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        msg.side === 'ap' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                        {msg.initials}
+                    </div>
+                    <div className={`rounded-2xl px-3 py-2 max-w-[85%] ${
+                        msg.side === 'ap' ? 'bg-primary/10 rounded-tr-sm' : 'bg-muted rounded-tl-sm'
+                    }`}>
+                        <p className="text-[9px] font-bold text-muted-foreground">{msg.author} · {msg.time}</p>
+                        <p className="text-xs text-foreground mt-0.5 leading-relaxed">{msg.text}</p>
+                    </div>
+                </div>
+            ))}
+
+            {!resolved && (
+                <div className="flex gap-2 pt-0.5">
+                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-primary-foreground shrink-0">
+                        LB
+                    </div>
+                    <div className="flex-1 flex gap-1.5">
+                        <input
+                            value={replyText}
+                            onChange={e => onReplyChange(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onReply() } }}
+                            placeholder="Reply or add a note..."
+                            className="flex-1 bg-background border border-border rounded-full px-3 py-1 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 min-w-0"
+                        />
+                        <button
+                            onClick={onReply}
+                            disabled={!replyText.trim()}
+                            className="shrink-0 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-30 hover:opacity-90 transition-opacity"
+                            aria-label="Send"
+                        >
+                            <Send className="h-3 w-3" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
