@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown, ChevronLeft, Plus } from 'lucide-react'
+import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import { MobileNavbar } from './ExpenseSubmitScene'
@@ -113,7 +113,10 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                             <p className="text-[10px] text-muted-foreground mt-0.5">
                                 $142.50 · Fuel + Parking · Payment scheduled May 8
                             </p>
-                            <p className="text-[10px] text-ai font-medium mt-1 group-hover:underline">Tap to see full status →</p>
+                            <div className="flex items-center gap-1 mt-1.5">
+                                <p className="text-xs font-semibold text-ai group-hover:underline">Tap to see full status</p>
+                                <ChevronRight className="h-3.5 w-3.5 text-ai" />
+                            </div>
                         </div>
                         <button
                             onClick={e => { e.stopPropagation(); setScene('watching') }}

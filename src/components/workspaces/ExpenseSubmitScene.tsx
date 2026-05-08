@@ -683,121 +683,215 @@ export function ReceiptImage({ compact, variant = 'fuel' }: {
     compact?: boolean
     variant?: 'fuel' | 'parking' | 'toll'
 }) {
+    // Shared helpers — only rendered in full (non-compact) mode
+    const Divider = ({ thick, light }: { thick?: boolean; light?: boolean }) => (
+        <div className={`border-t ${thick ? 'border-t-[1.5px] border-gray-800' : light ? 'border-dashed border-gray-200' : 'border-dashed border-gray-300'} my-3`} />
+    )
+    const Row = ({ label, value, bold, small }: { label: string; value: string; bold?: boolean; small?: boolean }) => (
+        <div className={`flex justify-between ${small ? 'text-[10px]' : 'text-[11px]'} ${bold ? 'font-bold text-gray-900' : 'text-gray-500'}`}>
+            <span>{label}</span><span>{value}</span>
+        </div>
+    )
+    // Thermal barcode — alternating bar widths
+    const Barcode = () => (
+        <div className="flex flex-col items-center gap-1 py-2">
+            <div className="flex items-end gap-px">
+                {[2,1,3,1,2,1,1,3,2,1,1,2,3,1,2,1,3,1,2,1,1,3,2,1,1,2,1,3,2,1,2,1,1,2,3,1].map((w, i) => (
+                    <div key={i} className="bg-gray-900" style={{ width: w, height: i % 5 === 0 || i % 7 === 0 ? 36 : 28 }} />
+                ))}
+            </div>
+            <p className="text-[8px] text-gray-400 font-mono tracking-[0.12em] mt-0.5">0295 2847 0505 4892</p>
+        </div>
+    )
+    // Perforated top/bottom edge using radial gradient holes
+    const PerforatedEdge = ({ pos }: { pos: 'top' | 'bottom' }) => (
+        <div className="h-4" style={{
+            backgroundImage: `radial-gradient(circle at 50% ${pos === 'top' ? '0%' : '100%'}, white 5px, #faf5e4 5.5px)`,
+            backgroundSize: '16px 100%',
+            backgroundRepeat: 'repeat-x',
+            backgroundPosition: pos,
+        }} />
+    )
+
+    // ── PARKING ────────────────────────────────────────────────────────────────
     if (variant === 'parking') {
+        if (compact) return (
+            <div className="bg-[#faf5e4] font-mono px-3 py-2 space-y-0.5">
+                <p className="text-[8px] font-black tracking-widest text-gray-900 text-center">WATERSIDE GARAGE</p>
+                <div className="border-t border-dashed border-gray-400 my-1" />
+                <div className="flex justify-between text-[7px] text-gray-800"><span>Parking</span><span className="font-bold">$47.50</span></div>
+                <div className="border-t-2 border-gray-800 mt-1" />
+                <div className="flex justify-between text-[9px] font-black text-gray-900"><span>TOTAL</span><span>$47.50</span></div>
+            </div>
+        )
         return (
-            <div className={`bg-amber-50 font-mono ${compact ? 'px-3 py-2' : 'px-5 py-4'} space-y-0.5`}>
-                <div className="text-center">
-                    <p className={`font-black tracking-widest text-gray-900 ${compact ? 'text-[8px]' : 'text-[12px]'}`}>WATERSIDE GARAGE</p>
-                    {!compact && <p className="text-[8px] text-gray-500">Tampa Convention Center</p>}
-                </div>
-                <div className={`border-t border-dashed border-gray-400 ${compact ? 'my-1' : 'my-2'}`} />
-                {!compact && (
-                    <div className="space-y-0.5">
-                        <div className="flex justify-between text-[8px] text-gray-500"><span>Ticket #</span><span className="font-bold">P-4421</span></div>
-                        <div className="flex justify-between text-[8px] text-gray-500"><span>Date</span><span>05/05/2026</span></div>
-                        <div className="flex justify-between text-[8px] text-gray-500"><span>Duration</span><span>3h 15m</span></div>
+            <div className="bg-[#faf5e4] font-mono">
+                <PerforatedEdge pos="top" />
+                <div className="px-6 pb-2">
+                    <div className="text-center space-y-0.5 py-3">
+                        <p className="text-sm font-black tracking-widest text-gray-900">WATERSIDE GARAGE</p>
+                        <p className="text-[11px] text-gray-500">150 S Tampa St · Tampa Convention Center</p>
+                        <p className="text-[11px] text-gray-500">Tampa, FL 33602</p>
+                        <p className="text-[11px] text-gray-500">(813) 555-0193</p>
                     </div>
-                )}
-                {!compact && <div className="border-t border-dashed border-gray-300 my-1.5" />}
-                <div className="flex justify-between text-[8px] text-gray-800">
-                    <span>Parking</span><span className="font-bold">$47.50</span>
+                    <Divider />
+                    <div className="space-y-1.5">
+                        <Row label="Ticket #" value="P-4421" bold />
+                        <Row label="Date" value="05/05/2026" />
+                        <Row label="Entry time" value="9:12 AM" />
+                        <Row label="Exit time" value="12:27 PM" />
+                        <Row label="Duration" value="3h 15m" />
+                        <Row label="Space #" value="B-214" />
+                        <Row label="Business purpose" value="Site visit — Tampa" />
+                    </div>
+                    <Divider />
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Charges</p>
+                    <div className="space-y-1.5">
+                        <Row label="Parking (3h 15m × $14.00/hr)" value="$45.50" />
+                        <Row label="Processing fee" value="$2.00" />
+                    </div>
+                    <Divider light />
+                    <div className="space-y-1.5">
+                        <Row label="Subtotal" value="$47.50" />
+                        <Row label="Tax (FL exempt)" value="$0.00" />
+                        <Row label="Validation" value="None" />
+                    </div>
+                    <Divider thick />
+                    <div className="flex justify-between text-base font-black text-gray-900 mb-3">
+                        <span>TOTAL</span><span>$47.50</span>
+                    </div>
+                    <Divider />
+                    <div className="space-y-1.5">
+                        <Row label="Card" value="Visa ···· 4892" />
+                        <Row label="Auth #" value="773921" bold />
+                        <Row label="Terminal" value="G-04" />
+                        <Row label="Merchant ID" value="MCH-19342" small />
+                    </div>
+                    <p className="text-center text-[11px] font-black text-gray-900 tracking-widest mt-3">— APPROVED —</p>
+                    <Divider />
+                    <Barcode />
+                    <Divider light />
+                    <div className="text-center space-y-0.5 pb-2">
+                        <p className="text-[10px] text-gray-400 tracking-wide">THANK YOU FOR YOUR BUSINESS</p>
+                        <p className="text-[10px] text-gray-400">*** CUSTOMER COPY ***</p>
+                    </div>
                 </div>
-                <div className={`border-t-2 border-gray-800 ${compact ? 'mt-1' : 'mt-1.5'}`} />
-                <div className="flex justify-between font-black text-gray-900">
-                    <span className={compact ? 'text-[9px]' : 'text-[11px]'}>TOTAL</span>
-                    <span className={compact ? 'text-[9px]' : 'text-[11px]'}>$47.50</span>
-                </div>
-                {!compact && (
-                    <>
-                        <div className="border-t border-dashed border-gray-400 mt-2 mb-1.5" />
-                        <div className="flex justify-between text-[8px] text-gray-500"><span>Card</span><span>VISA ···· 4892</span></div>
-                        <div className="border-t border-dashed border-gray-400 mt-2 mb-1" />
-                        <p className="text-center text-[7px] text-gray-400">*** CUSTOMER COPY ***</p>
-                    </>
-                )}
+                <PerforatedEdge pos="bottom" />
             </div>
         )
     }
 
+    // ── TOLL ───────────────────────────────────────────────────────────────────
     if (variant === 'toll') {
+        if (compact) return (
+            <div className="bg-[#faf5e4] font-mono px-3 py-2 space-y-0.5">
+                <p className="text-[8px] font-black tracking-widest text-gray-900 text-center">SUNPASS TOLL</p>
+                <div className="border-t border-dashed border-gray-400 my-1" />
+                <div className="flex justify-between text-[7px] text-gray-800"><span>Toll</span><span className="font-bold">$12.00</span></div>
+                <div className="border-t-2 border-gray-800 mt-1" />
+                <div className="flex justify-between text-[9px] font-black text-gray-900"><span>TOTAL</span><span>$12.00</span></div>
+            </div>
+        )
         return (
-            <div className={`bg-amber-50 font-mono ${compact ? 'px-3 py-2' : 'px-5 py-4'} space-y-0.5`}>
-                <div className="text-center">
-                    <p className={`font-black tracking-widest text-gray-900 ${compact ? 'text-[8px]' : 'text-[12px]'}`}>SUNPASS TOLL</p>
-                    {!compact && <p className="text-[8px] text-gray-500">Suncoast Pkwy · Plaza 3</p>}
+            <div className="bg-[#faf5e4] font-mono">
+                <PerforatedEdge pos="top" />
+                <div className="px-6 pb-2">
+                    <div className="text-center space-y-0.5 py-3">
+                        <p className="text-sm font-black tracking-widest text-gray-900">SUNPASS TOLL</p>
+                        <p className="text-[11px] text-gray-500">Florida Dept of Transportation</p>
+                        <p className="text-[11px] text-gray-500">Suncoast Pkwy · Plaza 3</p>
+                    </div>
+                    <Divider />
+                    <div className="space-y-1.5">
+                        <Row label="Trans #" value="887341" bold />
+                        <Row label="Date" value="05/05/2026" />
+                        <Row label="Time" value="11:03 AM" />
+                        <Row label="Vehicle plate" value="FL · ABC-1234" />
+                        <Row label="Account" value="SunPass ···· 8821" />
+                    </div>
+                    <Divider />
+                    <Row label="Toll charge" value="$12.00" />
+                    <Divider light />
+                    <Row label="Subtotal" value="$12.00" />
+                    <Row label="Discount" value="$0.00" />
+                    <Divider thick />
+                    <div className="flex justify-between text-base font-black text-gray-900 my-2">
+                        <span>TOTAL</span><span>$12.00</span>
+                    </div>
+                    <Divider />
+                    <p className="text-[10px] text-gray-400 tracking-wide text-center mb-1">AUTO-DEDUCTED FROM SUNPASS ACCOUNT</p>
+                    <Barcode />
+                    <Divider light />
+                    <p className="text-center text-[10px] text-gray-400 pb-2">*** CUSTOMER COPY ***</p>
                 </div>
-                <div className={`border-t border-dashed border-gray-400 ${compact ? 'my-1' : 'my-2'}`} />
-                <div className="flex justify-between text-[8px] text-gray-800">
-                    <span>Toll charge</span><span className="font-bold">$12.00</span>
-                </div>
-                <div className={`border-t-2 border-gray-800 ${compact ? 'mt-1' : 'mt-1.5'}`} />
-                <div className="flex justify-between font-black text-gray-900">
-                    <span className={compact ? 'text-[9px]' : 'text-[11px]'}>TOTAL</span>
-                    <span className={compact ? 'text-[9px]' : 'text-[11px]'}>$12.00</span>
-                </div>
-                {!compact && (
-                    <>
-                        <div className="border-t border-dashed border-gray-400 mt-2 mb-1.5" />
-                        <p className="text-center text-[7px] text-gray-400">SunPass Account · Trans #887341</p>
-                    </>
-                )}
+                <PerforatedEdge pos="bottom" />
             </div>
         )
     }
 
-    // Default: fuel / The Capital Grille
+    // ── FUEL / The Capital Grille ──────────────────────────────────────────────
+    if (compact) return (
+        <div className="bg-[#faf5e4] font-mono px-3 py-2 space-y-0.5">
+            <p className="text-[8px] font-black tracking-widest text-gray-900 text-center">THE CAPITAL GRILLE</p>
+            <div className="border-t border-dashed border-gray-400 my-1" />
+            <div className="flex justify-between text-[7px] text-gray-800"><span>Fuel</span><span className="font-bold">$95.00</span></div>
+            <div className="border-t-2 border-gray-800 mt-1" />
+            <div className="flex justify-between text-[9px] font-black text-gray-900"><span>TOTAL</span><span>$95.00</span></div>
+        </div>
+    )
     return (
-        <div className={`bg-amber-50 font-mono ${compact ? 'px-3 py-2' : 'px-5 py-4'} space-y-0.5`}>
-            <div className="text-center space-y-0">
-                <p className={`font-black tracking-widest text-gray-900 ${compact ? 'text-[8px]' : 'text-[12px]'}`}>THE CAPITAL GRILLE</p>
-                {!compact && (
-                    <>
-                        <p className="text-[8px] text-gray-500 tracking-wide">2223 N. West Shore Blvd</p>
-                        <p className="text-[8px] text-gray-500">Tampa, FL 33607</p>
-                    </>
-                )}
-            </div>
-            <div className={`border-t border-dashed border-gray-400 ${compact ? 'my-1' : 'my-2'}`} />
-            {!compact && (
-                <div className="space-y-0.5">
-                    <div className="flex justify-between text-[8px] text-gray-500"><span>Check #</span><span className="font-bold">2847</span></div>
-                    <div className="flex justify-between text-[8px] text-gray-500"><span>Date</span><span>05/05/2026</span></div>
-                    <div className="flex justify-between text-[8px] text-gray-500"><span>Server</span><span>Maria V.</span></div>
+        <div className="bg-[#faf5e4] font-mono">
+            <PerforatedEdge pos="top" />
+            <div className="px-6 pb-2">
+                <div className="text-center space-y-0.5 py-3">
+                    <p className="text-sm font-black tracking-widest text-gray-900">THE CAPITAL GRILLE</p>
+                    <p className="text-[11px] text-gray-500">2223 N. West Shore Blvd</p>
+                    <p className="text-[11px] text-gray-500">Tampa, FL 33607</p>
+                    <p className="text-[11px] text-gray-500">(813) 555-0147</p>
                 </div>
-            )}
-            {!compact && <div className="border-t border-dashed border-gray-400 my-1.5" />}
-            <div className="space-y-0.5">
-                {compact ? (
-                    <div className="flex justify-between text-[8px] text-gray-800"><span>Fuel</span><span className="font-bold">$95.00</span></div>
-                ) : (
-                    <>
-                        <p className="text-[8px] text-gray-500 uppercase tracking-widest">Business Expenses</p>
-                        <div className="flex justify-between text-[8px] text-gray-800 mt-0.5">
-                            <span className="flex-1">Fuel — Suncoast Pkwy</span>
-                            <span className="ml-2 font-bold">$95.00</span>
-                        </div>
-                        <div className="border-t border-dashed border-gray-300 my-1" />
-                        <div className="flex justify-between text-[8px] text-gray-500"><span>Subtotal</span><span>$95.00</span></div>
-                        <div className="flex justify-between text-[8px] text-gray-500"><span>Tax</span><span>$0.00</span></div>
-                    </>
-                )}
+                <Divider />
+                <div className="space-y-1.5">
+                    <Row label="Check #" value="2847" bold />
+                    <Row label="Date" value="05/05/2026" />
+                    <Row label="Time" value="12:47 PM" />
+                    <Row label="Cashier" value="Maria V." />
+                    <Row label="Business purpose" value="Field ops — Tampa" />
+                </div>
+                <Divider />
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Business Expenses</p>
+                <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] text-gray-800">
+                        <span>Fuel — Suncoast Pkwy</span><span>$95.00</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 pl-2">11.8 gal · Premium · $8.05/gal</p>
+                </div>
+                <Divider light />
+                <div className="space-y-1.5">
+                    <Row label="Subtotal" value="$95.00" />
+                    <Row label="Tax (FL exempt)" value="$0.00" />
+                    <Row label="Tip / Gratuity" value="N/A" />
+                </div>
+                <Divider thick />
+                <div className="flex justify-between text-base font-black text-gray-900 mb-3">
+                    <span>TOTAL</span><span>$95.00</span>
+                </div>
+                <Divider />
+                <div className="space-y-1.5">
+                    <Row label="Card" value="Visa ···· 4892" />
+                    <Row label="Auth #" value="029441" bold />
+                    <Row label="Terminal" value="T-17" />
+                    <Row label="Merchant ID" value="MCH-48291" small />
+                </div>
+                <p className="text-center text-[11px] font-black text-gray-900 tracking-widest mt-3">— APPROVED —</p>
+                <Divider />
+                <Barcode />
+                <Divider light />
+                <div className="text-center space-y-0.5 pb-2">
+                    <p className="text-[10px] text-gray-400 tracking-wide">THANK YOU FOR YOUR BUSINESS</p>
+                    <p className="text-[10px] text-gray-400">*** CUSTOMER COPY ***</p>
+                </div>
             </div>
-            <div className={`border-t-2 border-gray-800 ${compact ? 'mt-1' : 'mt-1.5'}`} />
-            <div className="flex justify-between font-black text-gray-900">
-                <span className={compact ? 'text-[9px]' : 'text-[11px]'}>TOTAL</span>
-                <span className={compact ? 'text-[9px]' : 'text-[11px]'}>$95.00</span>
-            </div>
-            {!compact && (
-                <>
-                    <div className="border-t border-dashed border-gray-400 mt-2 mb-1.5" />
-                    <div className="flex justify-between text-[8px] text-gray-500"><span>Card</span><span>VISA ···· 4892</span></div>
-                    <div className="flex justify-between text-[8px] text-gray-500"><span>Auth #</span><span className="font-bold">029441</span></div>
-                    <div className="flex justify-between text-[8px] text-gray-500"><span>Time</span><span>12:47 PM</span></div>
-                    <div className="border-t border-dashed border-gray-400 mt-2 mb-1" />
-                    <p className="text-center text-[7px] text-gray-400 tracking-wide">THANK YOU FOR YOUR BUSINESS</p>
-                    <p className="text-center text-[7px] text-gray-400">*** CUSTOMER COPY ***</p>
-                </>
-            )}
+            <PerforatedEdge pos="bottom" />
         </div>
     )
 }

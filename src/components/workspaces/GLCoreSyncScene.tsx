@@ -8,7 +8,7 @@
 import { useState, useRef, useCallback } from 'react'
 import {
     Sparkles, CheckCircle2, ChevronDown, Receipt, ArrowRight,
-    MessageSquare, CheckCheck, Send, ZoomIn, X, ChevronLeft, ChevronRight,
+    MessageSquare, CheckCheck, Send, ZoomIn, X, ChevronLeft, ChevronRight, Check,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { ReceiptImage } from './ExpenseSubmitScene'
@@ -26,7 +26,7 @@ const GL_CODES = ['6200 · Vehicle Expenses', '6210 · Travel & Transit', '6100 
 
 const LINES = [
     { id: 'fuel',    description: 'Fuel — Tampa',  amount: '$95.00',  glCode: '6200 · Vehicle Expenses',    confidence: 94 },
-    { id: 'parking', description: 'Parking',        amount: '$47.50',  glCode: '6210 · Travel & Transit',    confidence: 97 },
+    { id: 'parking', description: 'Parking',        amount: '$47.50',  glCode: '6210 · Travel & Transit',    confidence: 72 },
 ]
 
 const POSTING_STEPS: { key: PostingStep; label: string }[] = [
@@ -70,18 +70,18 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [sceneState,   setSceneState]   = useState<SceneState>('context')
-    const [overrides,    setOverrides]    = useState<Record<string, string>>({})
-    const [editingLine,  setEditingLine]  = useState<string | null>(null)
-    const [postingStep,  setPostingStep]  = useState<PostingStep>('validating')
+    const [sceneState,    setSceneState]    = useState<SceneState>('context')
+    const [overrides,     setOverrides]     = useState<Record<string, string>>({})
+    const [acceptedLines, setAcceptedLines] = useState<Set<string>>(new Set())
+    const [postingStep,   setPostingStep]   = useState<PostingStep>('validating')
 
     // Receipt modal
     const [receiptModal, setReceiptModal] = useState(false)
     const [receiptIdx,   setReceiptIdx]   = useState(0)
 
     // Activity & Discussion state
-    const [activityTab,  setActivityTab]  = useState<'timeline' | 'discussion'>('timeline')
-    const [activityOpen, setActivityOpen] = useState(false)
+    const [activityTab,  setActivityTab]  = useState<'timeline' | 'discussion'>('discussion')
+    const [activityOpen, setActivityOpen] = useState(true)
     const [apThreads,    setApThreads]    = useState<ApThread[]>(AP_INITIAL_THREADS)
     const [replyTexts,   setReplyTexts]   = useState<Record<string, string>>({})
     const [newNote,      setNewNote]      = useState('')
@@ -303,6 +303,10 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                         </span>
                     </div>
                     <p className="text-[10px] text-muted-foreground">Employee: 3rd expense this month · avg $118.50 · history normal</p>
+                <div className="flex items-center gap-2 text-[10px] flex-wrap pt-0.5">
+                    <span className="text-success font-medium">Amounts verified ✓ $95.00 + $47.50 = $142.50</span>
+                    <span className="text-muted-foreground">· Source: Strata Mobile · OCR</span>
+                </div>
                 </div>
 
                 {/* Receipt thumbnails */}
@@ -383,64 +387,105 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
     // ── Reviewing state ───────────────────────────────────────────────────────
 
     if (sceneState === 'reviewing') {
+        const toggleAccepted = (id: string) =>
+            setAcceptedLines(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+
         return (
             <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-300">
-                <div className="bg-card border border-border rounded-xl px-4 py-3">
-                    <p className="text-sm font-bold text-foreground">GL Review · John Smith · $142.50</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                        Approved by Sarah Johnson · May 6 · <span className="text-success font-medium">2 receipts verified ✓ · amounts match GL lines</span>
-                    </p>
+
+                {/* Expense context — always visible so Letza never needs to navigate back */}
+                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <p className="text-sm font-bold text-foreground">John Smith · $142.50</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Approved by Sarah Johnson · May 6 · <span className="text-success font-medium">within SLA ✓</span>
+                            </p>
+                        </div>
+                        <span className="text-[10px] bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full font-medium shrink-0">
+                            2 receipts verified ✓
+                        </span>
+                    </div>
+                    {/* Receipt thumbnails — clickable without leaving this screen */}
+                    <div className="flex gap-2">
+                        {([
+                            { idx: 0, label: 'Fuel · $95.00',     variant: 'fuel'    as const },
+                            { idx: 1, label: 'Parking · $47.50',  variant: 'parking' as const },
+                        ] as const).map(r => (
+                            <button
+                                key={r.idx}
+                                onClick={() => { setReceiptModal(true); setReceiptIdx(r.idx) }}
+                                className="flex items-center gap-2 bg-muted/40 hover:bg-muted border border-border rounded-lg px-2 py-1.5 group transition-colors"
+                                aria-label={`Preview ${r.label} receipt`}
+                            >
+                                <div className="h-20 w-14 rounded overflow-hidden border border-border/50 shrink-0 relative">
+                                    <ReceiptImage variant={r.variant} compact />
+                                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 flex items-center justify-center transition-colors">
+                                        <ZoomIn className="h-3 w-3 text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{r.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-0">
-                        <div className="contents">
-                            {['Description', 'Amount', 'GL Code', 'Conf.'].map(h => (
-                                <div key={h} className="px-3 py-2 bg-muted/40 border-b border-border text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                                    {h}
+                {/* GL assignment — one editable card per line */}
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                        <p className="text-xs font-semibold text-foreground">GL Code Assignment</p>
+                        <span className="text-[10px] text-muted-foreground">{LINES.length} lines · edit if needed · confirm each</span>
+                    </div>
+                    {LINES.map(line => {
+                        const gl       = getGL(line)
+                        const accepted = acceptedLines.has(line.id)
+                        return (
+                            <div
+                                key={line.id}
+                                className={`bg-card border rounded-xl p-4 space-y-3 transition-all duration-200 ${accepted ? 'border-success/40 bg-success/5' : 'border-ai/20'}`}
+                            >
+                                {/* Row header */}
+                                <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                        <p className="text-xs font-semibold text-foreground">{line.description}</p>
+                                        <p className="text-xs font-mono text-muted-foreground">{line.amount}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                                        <ConfidencePill pct={line.confidence} />
+                                        <button
+                                            onClick={() => toggleAccepted(line.id)}
+                                            className={`h-7 w-7 rounded-full border-2 flex items-center justify-center transition-all ${
+                                                accepted
+                                                    ? 'border-success bg-success text-white'
+                                                    : 'border-border text-muted-foreground hover:border-success/60 hover:text-success'
+                                            }`}
+                                            aria-label={accepted ? 'Undo acceptance' : 'Accept this GL line'}
+                                            title={accepted ? 'Accepted — click to undo' : 'Accept GL line'}
+                                        >
+                                            <Check className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
-
-                        {LINES.map((line, i) => (
-                            <div key={line.id} className="contents">
-                                <div className={`px-3 py-3 text-xs text-foreground flex items-center ${i < LINES.length - 1 ? 'border-b border-border' : ''}`}>
-                                    {line.description}
-                                </div>
-                                <div className={`px-3 py-3 text-xs font-mono text-foreground flex items-center ${i < LINES.length - 1 ? 'border-b border-border' : ''}`}>
-                                    {line.amount}
-                                </div>
-                                <div className={`px-3 py-3 flex items-center gap-1.5 ${i < LINES.length - 1 ? 'border-b border-border' : ''}`}>
-                                    {editingLine === line.id ? (
+                                {/* Always-visible editable GL selector */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <Sparkles className="h-3 w-3 text-ai" />
+                                        <span className="text-[10px] text-ai font-medium">AI suggestion — change if needed</span>
+                                    </div>
+                                    <div className="relative">
                                         <select
-                                            autoFocus
-                                            value={getGL(line)}
-                                            onChange={e => { setOverrides(prev => ({ ...prev, [line.id]: e.target.value })); setEditingLine(null) }}
-                                            onBlur={() => setEditingLine(null)}
-                                            className="text-xs bg-background border border-primary rounded px-1.5 py-0.5 text-foreground outline-none"
+                                            value={gl}
+                                            onChange={e => { setOverrides(prev => ({ ...prev, [line.id]: e.target.value })); setAcceptedLines(prev => { const n = new Set(prev); n.delete(line.id); return n }) }}
+                                            className="w-full appearance-none bg-background border border-input rounded-lg px-3 py-2.5 pr-8 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/60 cursor-pointer transition-colors"
                                         >
                                             {GL_CODES.map(g => <option key={g}>{g}</option>)}
                                         </select>
-                                    ) : (
-                                        <div className="flex items-center gap-1.5">
-                                            <Sparkles className="h-3 w-3 text-ai shrink-0" />
-                                            <span className="text-[11px] text-foreground leading-tight">{getGL(line)}</span>
-                                            <button
-                                                onClick={() => setEditingLine(line.id)}
-                                                className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
-                                                title="Override GL code"
-                                            >
-                                                <ChevronDown className="h-2.5 w-2.5" />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={`px-3 py-3 flex items-center ${i < LINES.length - 1 ? 'border-b border-border' : ''}`}>
-                                    <ConfidencePill pct={line.confidence} />
+                                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                                    </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        )
+                    })}
                 </div>
 
                 {activityPanel}
@@ -551,25 +596,26 @@ function GLReceiptModal({ idx, onNavigate, onClose }: {
     const meta  = GL_RECEIPT_META[idx]
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            className="fixed left-80 top-0 right-0 bottom-0 z-[400] flex items-center justify-center p-4 animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
             onClick={onClose}
         >
             <div
-                className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm animate-in zoom-in-95 duration-200 overflow-hidden"
+                className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-xl animate-in zoom-in-95 duration-200 overflow-hidden"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                     <div>
-                        <p className="text-sm font-bold text-foreground">{meta.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{meta.sub}</p>
+                        <p className="text-base font-bold text-foreground">{meta.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{meta.sub}</p>
+                        <p className="text-[10px] text-ai mt-0.5">✦ Strata Mobile capture · OCR verified</p>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" aria-label="Close">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
-                <div className="p-4">
-                    <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
+                <div className="p-5">
+                    <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm max-h-[65vh] overflow-y-auto">
                         <ReceiptImage variant={meta.variant} />
                     </div>
                 </div>

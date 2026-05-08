@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { AlertTriangle, Sparkles, ChevronRight, Bell, CheckCircle2, X } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import { ReceiptImage } from './ExpenseSubmitScene'
 
 type SceneState = 'list' | 'notified'
 type FilterKey  = 'all' | 'pending' | 'posted' | 'sla'
@@ -24,7 +25,7 @@ const PENDING_EXPENSES = [
         approvedDate: 'May 6',
         glLines: [
             { code: '6200 · Vehicle Expenses', amount: '$95.00',  confidence: 94 },
-            { code: '6210 · Travel & Transit',  amount: '$47.50',  confidence: 97 },
+            { code: '6210 · Travel & Transit',  amount: '$47.50',  confidence: 72 },
         ],
         ageDays: 0,
         sla: false,
@@ -318,6 +319,21 @@ function ExpenseCard({ exp, expanded, onToggleExpand, onReview }: {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* Receipt thumbnails — only on focus card, so Letza can verify before drilling in */}
+            {exp.focus && (
+                <div className="space-y-1.5">
+                    <p className="text-[10px] text-success font-medium">2 receipts verified ✓</p>
+                    <div className="flex gap-2">
+                        <div className="flex-1 rounded-lg overflow-hidden border border-border/50">
+                            <ReceiptImage variant="fuel" compact />
+                        </div>
+                        <div className="flex-1 rounded-lg overflow-hidden border border-border/50">
+                            <ReceiptImage variant="parking" compact />
+                        </div>
+                    </div>
                 </div>
             )}
 

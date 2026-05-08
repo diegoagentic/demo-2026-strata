@@ -94,7 +94,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
 
     // Activity & Discussion
     const [activityTab,   setActivityTab]  = useState<'timeline' | 'discussion'>('timeline')
-    const [activityOpen,  setActivityOpen] = useState(false)
+    const [activityOpen,  setActivityOpen] = useState(true)
     const [threads,       setThreads]      = useState<Thread[]>(INITIAL_THREADS)
     const [replyTexts,    setReplyTexts]   = useState<Record<string, string>>({})
     const [newQuestion,   setNewQuestion]  = useState('')
@@ -223,6 +223,10 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                     <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3 w-3 text-success" />
                         <span className="text-[10px] text-muted-foreground">All 2 prior expenses approved within SLA · avg $118.50</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3 w-3 text-success" />
+                        <span className="text-[10px] text-muted-foreground">Receipt amounts verified · $95.00 + $47.50 = $142.50 ✓ matches claimed</span>
                     </div>
 
                     {/* Edit button */}
@@ -1001,19 +1005,20 @@ function ReceiptModal({ idx, onNavigate, onClose }: {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            className="fixed left-80 top-0 right-0 bottom-0 z-[400] flex items-center justify-center p-4 animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
             onClick={onClose}
         >
             <div
-                className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm animate-in zoom-in-95 duration-200 overflow-hidden"
+                className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-xl animate-in zoom-in-95 duration-200 overflow-hidden"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                     <div>
-                        <p className="text-sm font-bold text-foreground">{meta.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{meta.sub}</p>
+                        <p className="text-base font-bold text-foreground">{meta.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{meta.sub}</p>
+                        <p className="text-[10px] text-ai mt-0.5">✦ Strata Mobile capture · OCR verified</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -1025,8 +1030,8 @@ function ReceiptModal({ idx, onNavigate, onClose }: {
                 </div>
 
                 {/* Receipt */}
-                <div className="p-4">
-                    <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
+                <div className="p-5">
+                    <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm max-h-[65vh] overflow-y-auto">
                         <ReceiptImage variant={meta.variant} />
                     </div>
                 </div>

@@ -41,9 +41,9 @@ const KPI_BY_DEPT: Record<DeptFilter, { month: string; pending: number; sla: str
 }
 
 const FUEL_DRILL = [
-    { name: 'John Smith',   amount: '$95.00',  receipt: true  },
-    { name: 'Maria G.',     amount: '$140.00', receipt: true  },
-    { name: 'Carlos Ruiz',  amount: '$180.00', receipt: true  },
+    { name: 'John Smith',  amount: '$95.00',  receipt: true, purpose: 'Field ops — Tampa'     },
+    { name: 'Maria G.',    amount: '$140.00', receipt: true, purpose: 'Client site — Orlando' },
+    { name: 'Carlos Ruiz', amount: '$180.00', receipt: true, purpose: 'Field ops — Miami'     },
 ]
 
 const SLA_ALERTS = [
@@ -234,12 +234,12 @@ function CompanyView({ period, setPeriod, deptFilter, setDeptFilter, deptOpen, s
                                 className="animate-in fade-in duration-300"
                                 style={{ animationDelay: `${catIdx * 60}ms` }}
                             >
-                                <button onClick={() => setDrillCategory(isDrilled ? null : cat.name)} className="w-full text-left">
+                                <button onClick={() => setDrillCategory(isDrilled ? null : cat.name)} className="w-full text-left group">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-xs text-foreground w-16 shrink-0">{cat.name}</span>
                                         <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden relative">
                                             <div
-                                                className="h-full bg-primary/70 rounded-full transition-all duration-500 ease-out"
+                                                className="h-full bg-primary/70 group-hover:bg-primary/90 rounded-full transition-all duration-500 ease-out"
                                                 style={{ width: `${(cat.amount / maxCat) * 100}%` }}
                                             />
                                         </div>
@@ -249,15 +249,19 @@ function CompanyView({ period, setPeriod, deptFilter, setDeptFilter, deptOpen, s
                                                 {delta > 0 ? '+' : ''}{delta}%
                                             </span>
                                         )}
+                                        <ChevronDown className={`h-3 w-3 shrink-0 text-muted-foreground transition-all duration-200 ${isDrilled ? 'rotate-180 opacity-100' : 'opacity-0 group-hover:opacity-60'}`} />
                                     </div>
                                 </button>
 
                                 {isDrilled && (
                                     <div className="ml-[72px] space-y-1.5 mb-2 animate-in fade-in slide-in-from-top-1 duration-200">
                                         {FUEL_DRILL.map(item => (
-                                            <div key={item.name} className="flex items-center justify-between bg-muted/40 border border-border rounded-lg px-3 py-1.5">
-                                                <span className="text-xs text-foreground">{item.name}</span>
-                                                <div className="flex items-center gap-2">
+                                            <div key={item.name} className="flex items-center justify-between bg-muted/40 border border-border rounded-lg px-3 py-1.5 gap-2">
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-foreground">{item.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate">{item.purpose}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
                                                     <span className="text-xs font-mono text-foreground">{item.amount}</span>
                                                     {item.receipt && <span className="text-[10px] text-success">receipt ✓</span>}
                                                 </div>
