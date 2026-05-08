@@ -1,53 +1,34 @@
 /**
  * w1.1 — ExpenseSubmitScene
- * Employee mobile view: snap receipt → OCR auto-fill → pick manager → submit
+ * Employee mobile view: login → expense list → upload options → OCR form → submit
  * Wow moment #1: watch fields auto-fill from receipt photo
  *
  * Screen flow (all inside MobileDeviceFrame):
- *   form → [tap Submit] → manager picker → [tap Send] → sending → submitted
- *   form → [tap receipt thumbnail] → receipt detail → [Back] → form
- *   form → [+ Add another] → mini scan animation → carousel of receipts
+ *   login → expenses-list → upload-options → form → sending → submitted
+ *   form: inline edit/delete receipt buttons
+ *   form: manager shown as read-only (configured by default)
  */
 
 import { useState, useRef, useCallback } from 'react'
 import {
-    Camera, Plus, CheckCircle2, Clock, Sparkles, ChevronRight,
-    Bell, ArrowLeft, Send, Check, ChevronLeft,
+    Camera, Plus, CheckCircle2, Clock, Sparkles,
+    Bell, ArrowLeft, Send, Check, Image, FileText,
+    Pencil, Trash2, Lock, Mail,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 
 type OCRState    = 'idle' | 'scanning' | 'filling' | 'done'
-type ScreenState = 'form' | 'picking' | 'sending' | 'submitted' | 'receipt-detail'
+type ScreenState = 'login' | 'expenses-list' | 'upload-options' | 'form' | 'sending' | 'submitted'
 type AddState    = 'idle' | 'scanning' | 'done'
 
-const MANAGERS = [
-    {
-        id: 'sarah',
-        name: 'Sarah Johnson',
-        dept: 'Operations · Tampa',
-        photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
-        aiSuggested: true,
-        aiReason: 'Your team lead · Tampa · approved 12 of your past expenses',
-    },
-    {
-        id: 'mike',
-        name: 'Mike Torres',
-        dept: 'Sales · Orlando',
-        photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-        aiSuggested: false,
-        aiReason: '',
-    },
-    {
-        id: 'ana',
-        name: 'Ana Reyes',
-        dept: 'Procurement · Miami',
-        photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
-        aiSuggested: false,
-        aiReason: '',
-    },
-]
+const DEFAULT_MANAGER = {
+    id: 'sarah',
+    name: 'Sarah Johnson',
+    dept: 'Operations · Tampa',
+    photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
+}
 
 const FIELDS = [
     { key: 'vendor',   label: 'Vendor',   value: 'The Capital Grille' },
@@ -56,21 +37,26 @@ const FIELDS = [
     { key: 'category', label: 'Category', value: 'Fuel + Parking' },
 ]
 
-// Labels shown in the carousel — each simulates a different document
 const RECEIPT_LABELS = ['Fuel Receipt · $95.00', 'Parking Ticket · $47.50', 'Toll Receipt · $12.00']
+
+const PAST_EXPENSES = [
+    { label: 'Office Supplies',    amount: '$23.40',  date: 'Apr 15', status: 'paid'    },
+    { label: 'Parking',            amount: '$47.50',  date: 'Apr 28', status: 'paid'    },
+    { label: 'Travel — Orlando',   amount: '$210.00', date: 'May 1',  status: 'pending' },
+]
 
 export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void }) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
+    const [screen, setScreen]             = useState<ScreenState>('login')
+    const [signingIn, setSigningIn]       = useState(false)
     const [ocrState, setOcrState]         = useState<OCRState>('idle')
     const [filledFields, setFilledFields] = useState<string[]>([])
-    const [receipts, setReceipts]         = useState<number[]>([])       // indices of captured receipts
+    const [receipts, setReceipts]         = useState<number[]>([])
     const [addState, setAddState]         = useState<AddState>('idle')
     const [carouselIdx, setCarouselIdx]   = useState(0)
-    const [screen, setScreen]             = useState<ScreenState>('form')
-    const [selectedMgr, setSelectedMgr]  = useState<typeof MANAGERS[0] | null>(null)
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -82,21 +68,50 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
         setTimeout(tick, 0)
     }, [])
 
-    const handleCapture = useCallback(() => {
-        if (ocrState !== 'idle') return
-        setOcrState('scanning')
+    // Login → expense list
+    const handleSignIn = useCallback(() => {
+        setSigningIn(true)
         pauseAware(() => {
-            setOcrState('filling')
-            setReceipts([0])
-            let idx = 0
-            const fillNext = () => {
-                if (idx >= FIELDS.length) { setOcrState('done'); return }
-                setFilledFields(prev => [...prev, FIELDS[idx++].key])
-                pauseAware(fillNext, 240)
-            }
-            fillNext()
-        }, 800)
-    }, [ocrState, pauseAware])
+            setSigningIn(false)
+            setScreen('expenses-list')
+        }, 700)
+    }, [pauseAware])
+
+    // Upload option → OCR
+    const handleUploadOption = useCallback(() => {
+        setScreen('form')
+        pauseAware(() => {
+            setOcrState('scanning')
+            pauseAware(() => {
+                setOcrState('filling')
+                setReceipts([0])
+                let idx = 0
+                const fillNext = () => {
+                    if (idx >= FIELDS.length) { setOcrState('done'); return }
+                    setFilledFields(prev => [...prev, FIELDS[idx++].key])
+                    pauseAware(fillNext, 240)
+                }
+                fillNext()
+            }, 800)
+        }, 200)
+    }, [pauseAware])
+
+    // Edit receipt → back to upload options
+    const handleEditReceipt = useCallback(() => {
+        setReceipts([])
+        setOcrState('idle')
+        setFilledFields([])
+        setCarouselIdx(0)
+        setScreen('upload-options')
+    }, [])
+
+    // Delete receipt → clear, stay in form
+    const handleDeleteReceipt = useCallback(() => {
+        setReceipts([])
+        setOcrState('idle')
+        setFilledFields([])
+        setCarouselIdx(0)
+    }, [])
 
     const handleAddAnother = useCallback(() => {
         if (addState !== 'idle') return
@@ -112,68 +127,65 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
         }, 900)
     }, [addState, pauseAware])
 
+    // Send → submitted
     const handleSend = useCallback(() => {
-        if (!selectedMgr) return
         setScreen('sending')
         pauseAware(() => {
             setScreen('submitted')
             pauseAware(() => { onSubmit?.() }, 1800)
         }, 900)
-    }, [selectedMgr, pauseAware, onSubmit])
+    }, [pauseAware, onSubmit])
 
-    // ── Receipt detail screen ─────────────────────────────────────────────────
-    if (screen === 'receipt-detail') {
+    // ── Login screen ──────────────────────────────────────────────────────────
+    if (screen === 'login') {
         return (
             <MobileDeviceFrame>
-                <MobileNavbar title="Receipt Detail" />
-                <div className="px-4 py-4 space-y-4 animate-in fade-in duration-300">
-                    <button onClick={() => setScreen('form')} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <ArrowLeft className="h-3.5 w-3.5" />
-                        Back to expense
-                    </button>
-
-                    {/* Carousel nav if multiple receipts */}
-                    {receipts.length > 1 && (
-                        <div className="flex items-center justify-between px-1">
-                            <button
-                                onClick={() => setCarouselIdx(i => Math.max(0, i - 1))}
-                                disabled={carouselIdx === 0}
-                                className="p-1 rounded-lg bg-muted disabled:opacity-30"
-                            >
-                                <ChevronLeft className="h-4 w-4 text-foreground" />
-                            </button>
-                            <p className="text-[11px] font-medium text-muted-foreground">
-                                {RECEIPT_LABELS[carouselIdx] ?? `Receipt ${carouselIdx + 1}`}
-                                <span className="text-[10px] ml-1.5 text-muted-foreground/60">({carouselIdx + 1} of {receipts.length})</span>
-                            </p>
-                            <button
-                                onClick={() => setCarouselIdx(i => Math.min(receipts.length - 1, i + 1))}
-                                disabled={carouselIdx === receipts.length - 1}
-                                className="p-1 rounded-lg bg-muted disabled:opacity-30"
-                            >
-                                <ChevronRight className="h-4 w-4 text-foreground" />
-                            </button>
+                <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] px-6 py-8 space-y-6 animate-in fade-in duration-300">
+                    {/* Logo + brand */}
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="h-14 w-14 rounded-2xl bg-primary flex items-center justify-center shadow-sm">
+                            <span className="text-primary-foreground text-2xl font-black leading-none">S</span>
                         </div>
-                    )}
-
-                    {/* Scan-style receipt */}
-                    <div className="rounded-2xl overflow-hidden shadow-lg border border-border/50">
-                        <ReceiptImage variant={carouselIdx === 1 ? 'parking' : 'fuel'} />
+                        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">Workscapes, Inc.</p>
+                        <p className="text-lg font-bold text-foreground">Strata Expenses</p>
                     </div>
 
-                    {/* AI extraction note */}
-                    <div className="flex items-start gap-2 bg-ai/5 border border-ai/20 rounded-xl px-3 py-2.5">
-                        <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
-                        <p className="text-[11px] text-foreground">
-                            Strata extracted <span className="font-semibold">vendor · date · amount · category</span> automatically
-                        </p>
+                    {/* Fields */}
+                    <div className="w-full space-y-3">
+                        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-3">
+                            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">Email</p>
+                                <p className="text-sm text-foreground font-medium">john.smith@workscapes.com</p>
+                            </div>
+                        </div>
+                        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-3">
+                            <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">Password</p>
+                                <p className="text-sm text-foreground font-medium tracking-widest">••••••••</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-xl px-3 py-2.5 space-y-1">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{receipts.length} receipt{receipts.length > 1 ? 's' : ''} attached</p>
-                        <p className="text-[11px] text-foreground">Fuel $95.00 · Parking $47.50{receipts.length > 2 ? ' · Toll $12.00' : ''}</p>
-                        <p className="text-[10px] text-muted-foreground">Visa ···· 4892 · Auth #029441</p>
-                    </div>
+                    {/* Sign In CTA */}
+                    <button
+                        onClick={handleSignIn}
+                        disabled={signingIn}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold bg-primary text-primary-foreground shadow-sm transition-all disabled:opacity-70"
+                    >
+                        {signingIn ? (
+                            <>
+                                <Sparkles className="h-4 w-4 animate-pulse" />
+                                Signing in...
+                            </>
+                        ) : (
+                            <>
+                                Sign In
+                                <Check className="h-4 w-4" />
+                            </>
+                        )}
+                    </button>
 
                     <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
                 </div>
@@ -181,92 +193,104 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
         )
     }
 
-    // ── Manager picker screen ─────────────────────────────────────────────────
-    if (screen === 'picking') {
+    // ── Expense list screen ───────────────────────────────────────────────────
+    if (screen === 'expenses-list') {
         return (
             <MobileDeviceFrame>
                 <MobileNavbar title="New Expense" />
                 <div className="px-4 py-4 space-y-4 animate-in fade-in duration-300">
-                    <div>
-                        <p className="text-sm font-bold text-foreground">Select Approving Manager</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Who should review this $142.50 expense?</p>
+                    {/* Page title + filters */}
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm font-bold text-foreground">My Expenses</p>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] text-muted-foreground border border-border rounded-lg px-2 py-0.5">All ▾</span>
+                            <span className="text-[11px] text-muted-foreground border border-border rounded-lg px-2 py-0.5">This Month ▾</span>
+                        </div>
                     </div>
 
-                    {/* AI suggestion header */}
-                    <div className="flex items-center gap-2 bg-ai/5 border border-ai/20 rounded-xl px-3 py-2">
-                        <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
-                        <p className="text-[11px] text-foreground">
-                            <span className="font-semibold">Strata suggests</span> the best match based on your team and location
-                        </p>
-                    </div>
-
-                    <div className="space-y-2">
-                        {MANAGERS.map(m => (
-                            <button
-                                key={m.id}
-                                onClick={() => setSelectedMgr(m)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all text-left ${
-                                    selectedMgr?.id === m.id
-                                        ? 'border-primary/60 bg-primary/5'
-                                        : m.aiSuggested
-                                        ? 'border-ai/40 bg-ai/5 hover:bg-ai/10'
-                                        : 'border-border bg-card hover:bg-muted/40'
-                                }`}
-                            >
-                                <div className="relative h-10 w-10 shrink-0">
-                                    <div className="h-10 w-10 rounded-full overflow-hidden border border-border">
-                                        <img src={m.photo} alt={m.name} className="h-full w-full object-cover" />
-                                    </div>
-                                    {m.aiSuggested && (
-                                        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-ai flex items-center justify-center border border-card">
-                                            <Sparkles className="h-2 w-2 text-white" />
-                                        </div>
-                                    )}
+                    {/* Past expenses */}
+                    <div className="bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border/60">
+                        {PAST_EXPENSES.map((exp) => (
+                            <div key={exp.label} className="flex items-center gap-3 px-4 py-3">
+                                <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 ${
+                                    exp.status === 'paid' ? 'bg-success/10' : 'bg-amber-500/10'
+                                }`}>
+                                    {exp.status === 'paid'
+                                        ? <CheckCircle2 className="h-4 w-4 text-success" />
+                                        : <Clock className="h-4 w-4 text-amber-500" />
+                                    }
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        <p className="text-sm font-semibold text-foreground">{m.name}</p>
-                                        {m.aiSuggested && !selectedMgr && (
-                                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full animate-in fade-in duration-300">
-                                                ✦ AI pick
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-[11px] text-muted-foreground">{m.dept}</p>
-                                    {m.aiSuggested && !selectedMgr && (
-                                        <p className="text-[10px] text-ai mt-0.5">{m.aiReason}</p>
-                                    )}
-                                    {selectedMgr?.id === m.id && (
-                                        <p className="text-[10px] text-ai font-medium mt-0.5 animate-in fade-in duration-200">
-                                            ✦ Will review &amp; approve
-                                        </p>
-                                    )}
+                                    <p className="text-xs font-semibold text-foreground truncate">{exp.label}</p>
+                                    <p className="text-[10px] text-muted-foreground">{exp.date}</p>
                                 </div>
-                                {selectedMgr?.id === m.id && (
-                                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-                                        <Check className="h-3 w-3 text-primary-foreground" />
-                                    </div>
-                                )}
-                            </button>
+                                <div className="text-right shrink-0">
+                                    <p className="text-xs font-bold text-foreground">{exp.amount}</p>
+                                    <p className={`text-[9px] font-medium capitalize ${
+                                        exp.status === 'paid' ? 'text-success' : 'text-amber-500'
+                                    }`}>
+                                        {exp.status === 'pending' ? '⚠️ 4 days' : 'Paid'}
+                                    </p>
+                                </div>
+                            </div>
                         ))}
                     </div>
 
+                    {/* Add new CTA */}
                     <button
-                        onClick={handleSend}
-                        disabled={!selectedMgr}
-                        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all ${
-                            selectedMgr
-                                ? 'bg-primary text-primary-foreground shadow-sm'
-                                : 'bg-muted text-muted-foreground cursor-not-allowed'
-                        }`}
+                        onClick={() => setScreen('upload-options')}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold bg-primary text-primary-foreground shadow-sm transition-all hover:opacity-90"
                     >
-                        <Send className="h-4 w-4" />
-                        Send for Approval
+                        <Plus className="h-4 w-4" />
+                        Add New Expense
                     </button>
 
-                    <button onClick={() => setScreen('form')} className="w-full text-center text-[11px] text-muted-foreground py-1">
-                        Cancel
+                    <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
+                </div>
+            </MobileDeviceFrame>
+        )
+    }
+
+    // ── Upload options screen ─────────────────────────────────────────────────
+    if (screen === 'upload-options') {
+        return (
+            <MobileDeviceFrame>
+                <MobileNavbar title="New Expense" />
+                <div className="px-4 py-4 space-y-4 animate-in fade-in duration-300">
+                    <button
+                        onClick={() => setScreen('expenses-list')}
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                    >
+                        <ArrowLeft className="h-3.5 w-3.5" />
+                        Back
                     </button>
+
+                    <div>
+                        <p className="text-sm font-bold text-foreground">New Expense</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">How would you like to attach your receipt?</p>
+                    </div>
+
+                    <div className="space-y-2.5">
+                        {[
+                            { icon: Camera,   label: 'Take a photo',         sub: 'Use your camera' },
+                            { icon: Image,    label: 'Upload from gallery',   sub: 'Choose from photos' },
+                            { icon: FileText, label: 'Upload file',           sub: 'PDF, JPG, PNG' },
+                        ].map(({ icon: Icon, label, sub }) => (
+                            <button
+                                key={label}
+                                onClick={handleUploadOption}
+                                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all text-left"
+                            >
+                                <div className="h-10 w-10 rounded-xl bg-ai/10 flex items-center justify-center shrink-0">
+                                    <Icon className="h-5 w-5 text-ai" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                                    <p className="text-[11px] text-muted-foreground">{sub}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
 
                     <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
                 </div>
@@ -284,7 +308,7 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
                         <Send className="h-7 w-7 text-primary animate-pulse" />
                     </div>
                     <div className="text-center space-y-1">
-                        <p className="text-sm font-bold text-foreground">Sending to {selectedMgr?.name}...</p>
+                        <p className="text-sm font-bold text-foreground">Sending to {DEFAULT_MANAGER.name}...</p>
                         <p className="text-[11px] text-muted-foreground">Attaching receipts · routing for approval</p>
                     </div>
                 </div>
@@ -305,24 +329,22 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
                         <div>
                             <p className="text-sm font-bold text-foreground">Expense submitted</p>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                                Sent to <span className="font-semibold text-foreground">{selectedMgr?.name}</span> for approval
+                                Sent to <span className="font-semibold text-foreground">{DEFAULT_MANAGER.name}</span> for approval
                             </p>
-                            <p className="text-[11px] text-muted-foreground">John Smith · $142.50 · {receipts.length} receipt{receipts.length > 1 ? 's' : ''}</p>
+                            <p className="text-[11px] text-muted-foreground">John Smith · $142.50 · {receipts.length} receipt{receipts.length !== 1 ? 's' : ''}</p>
                         </div>
                     </div>
 
-                    {selectedMgr && (
-                        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full overflow-hidden shrink-0 border border-border">
-                                <img src={selectedMgr.photo} alt={selectedMgr.name} className="h-full w-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs font-semibold text-foreground">{selectedMgr.name}</p>
-                                <p className="text-[10px] text-muted-foreground">{selectedMgr.dept}</p>
-                            </div>
-                            <span className="text-[10px] bg-ai/10 text-ai border border-ai/20 px-2 py-0.5 rounded-full font-medium">Notified ✓</span>
+                    <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full overflow-hidden shrink-0 border border-border">
+                            <img src={DEFAULT_MANAGER.photo} alt={DEFAULT_MANAGER.name} className="h-full w-full object-cover" />
                         </div>
-                    )}
+                        <div className="flex-1">
+                            <p className="text-xs font-semibold text-foreground">{DEFAULT_MANAGER.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{DEFAULT_MANAGER.dept}</p>
+                        </div>
+                        <span className="text-[10px] bg-ai/10 text-ai border border-ai/20 px-2 py-0.5 rounded-full font-medium">Notified ✓</span>
+                    </div>
 
                     <div className="bg-card border border-border rounded-2xl px-4 py-4">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-3">Status</p>
@@ -365,92 +387,98 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
             <MobileNavbar title="New Expense" />
 
             <div className="px-4 py-4 space-y-4">
-                {/* Receipt capture zone */}
+                {/* Back button */}
                 <button
-                    onClick={
-                        ocrState === 'idle' ? handleCapture
-                        : ocrState === 'done' ? () => { setCarouselIdx(0); setScreen('receipt-detail') }
-                        : undefined
-                    }
-                    disabled={ocrState === 'scanning' || ocrState === 'filling'}
-                    className={`w-full border-2 border-dashed rounded-2xl transition-all ${
-                        ocrState === 'idle' ? 'border-border cursor-pointer'
-                        : ocrState === 'done' ? 'border-success/40 cursor-pointer hover:border-success/60'
-                        : 'border-border bg-muted/20 cursor-default'
-                    }`}
+                    onClick={() => {
+                        setScreen('upload-options')
+                        setReceipts([])
+                        setOcrState('idle')
+                        setFilledFields([])
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground"
                 >
-                    {ocrState === 'idle' && (
-                        <div className="py-6 flex flex-col items-center gap-3">
-                            <div className="h-14 w-14 rounded-full bg-ai/10 flex items-center justify-center">
-                                <Camera className="h-7 w-7 text-ai" />
-                            </div>
-                            <div className="text-center">
-                                <p className="text-sm font-bold text-foreground">Tap to scan receipt</p>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">Camera · Gallery · File</p>
-                                <p className="text-[10px] text-muted-foreground">JPG PNG PDF · multiple receipts OK</p>
-                            </div>
-                        </div>
-                    )}
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Back
+                </button>
 
-                    {ocrState === 'scanning' && (
-                        <div className="py-5 flex flex-col items-center gap-3">
-                            <div className="relative w-full max-w-[220px] rounded-xl overflow-hidden border border-border">
-                                <ReceiptImage variant="fuel" />
-                                <div className="absolute inset-0 bg-ai/10 flex flex-col items-center justify-center gap-2">
-                                    <Sparkles className="h-5 w-5 text-ai animate-pulse" />
-                                    <p className="text-xs font-semibold text-ai">Reading receipt...</p>
-                                    <div className="absolute inset-x-0 h-0.5 bg-ai/60 animate-bounce" style={{ top: '50%' }} />
+                {/* Receipt area */}
+                {receipts.length === 0 ? (
+                    /* Scanning state — no receipts yet */
+                    <div className={`w-full border-2 border-dashed rounded-2xl ${
+                        ocrState === 'scanning' ? 'border-ai/60 bg-ai/5' : 'border-border bg-muted/20'
+                    }`}>
+                        {ocrState === 'scanning' && (
+                            <div className="py-5 flex flex-col items-center gap-3">
+                                <div className="relative w-full max-w-[220px] rounded-xl overflow-hidden border border-border">
+                                    <ReceiptImage variant="fuel" />
+                                    <div className="absolute inset-0 bg-ai/10 flex flex-col items-center justify-center gap-2">
+                                        <Sparkles className="h-5 w-5 text-ai animate-pulse" />
+                                        <p className="text-xs font-semibold text-ai">Reading receipt...</p>
+                                        <div className="absolute inset-x-0 h-0.5 bg-ai/60 animate-bounce" style={{ top: '50%' }} />
+                                    </div>
                                 </div>
+                                <p className="text-[11px] text-muted-foreground">Extracting vendor · date · amount · category</p>
                             </div>
-                            <p className="text-[11px] text-muted-foreground">Extracting vendor · date · amount · category</p>
+                        )}
+                        {ocrState === 'idle' && (
+                            <div className="py-6 flex flex-col items-center gap-2">
+                                <Camera className="h-6 w-6 text-muted-foreground" />
+                                <p className="text-[11px] text-muted-foreground">No receipt attached yet</p>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* Receipts captured — thumbnail + edit/delete */
+                    <div className="border border-border rounded-2xl bg-card overflow-hidden">
+                        <div className="px-3 py-2.5 border-b border-border/60 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                <span className="text-[11px] font-semibold text-success">
+                                    {receipts.length} receipt{receipts.length !== 1 ? 's' : ''} captured
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={handleEditReceipt}
+                                    className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-lg hover:bg-muted transition-colors"
+                                >
+                                    <Pencil className="h-2.5 w-2.5" />
+                                    Edit
+                                </button>
+                                <button
+                                    onClick={handleDeleteReceipt}
+                                    className="flex items-center gap-0.5 text-[10px] text-destructive hover:text-destructive px-2 py-1 rounded-lg hover:bg-destructive/10 transition-colors"
+                                >
+                                    <Trash2 className="h-2.5 w-2.5" />
+                                    Delete
+                                </button>
+                            </div>
                         </div>
-                    )}
-
-                    {(ocrState === 'filling' || ocrState === 'done') && (
-                        <div className="py-3 flex flex-col items-center gap-2">
-                            {/* Receipt carousel thumbnails */}
+                        <div className="py-3 flex flex-col items-center">
                             <ReceiptCarousel
                                 receipts={receipts}
                                 activeIdx={carouselIdx}
                                 onSelect={setCarouselIdx}
                                 addState={addState}
                             />
-                            <div className="flex items-center gap-1.5">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                                <span className="text-[11px] font-semibold text-success">
-                                    {receipts.length} receipt{receipts.length > 1 ? 's' : ''} captured
-                                </span>
-                                {ocrState === 'done' && (
-                                    <span className="text-[10px] text-muted-foreground">· tap to view</span>
-                                )}
-                            </div>
                         </div>
-                    )}
-                </button>
+                    </div>
+                )}
 
                 {/* Add another — triggers mini scan */}
                 {receipts.length > 0 && ocrState === 'done' && (
-                    <div className="flex items-center justify-between px-1">
-                        <span className="text-[11px] text-muted-foreground">
-                            {receipts.length} receipt{receipts.length > 1 ? 's' : ''} attached
-                        </span>
+                    <div className="flex justify-end">
                         <button
-                            onClick={e => { e.stopPropagation(); handleAddAnother() }}
+                            onClick={handleAddAnother}
                             disabled={addState === 'scanning'}
                             className={`flex items-center gap-1 text-[11px] font-medium transition-all ${
                                 addState === 'scanning' ? 'text-muted-foreground' : 'text-ai'
                             }`}
                         >
                             {addState === 'scanning' ? (
-                                <>
-                                    <Sparkles className="h-3 w-3 animate-pulse" />
-                                    Scanning...
-                                </>
+                                <><Sparkles className="h-3 w-3 animate-pulse" />Scanning...</>
                             ) : (
-                                <>
-                                    <Plus className="h-3 w-3" />
-                                    Add another
-                                </>
+                                <><Plus className="h-3 w-3" />Add another receipt</>
                             )}
                         </button>
                     </div>
@@ -476,18 +504,23 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
                             </div>
                         )
                     })}
-                    <div className="px-4 py-3 border-t border-border/60">
+
+                    {/* Manager — read-only */}
+                    <div className="px-4 py-3 border-t border-border/60 bg-muted/20">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Approving Manager</p>
-                        {ocrState === 'done'
-                            ? <p className="text-sm text-muted-foreground">Select when submitting →</p>
-                            : <div className="h-4 bg-muted/40 rounded-md w-1/2" />
-                        }
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">{DEFAULT_MANAGER.name}</p>
+                                <p className="text-[10px] text-muted-foreground">{DEFAULT_MANAGER.dept} · Configured by admin</p>
+                            </div>
+                            <span className="text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full border border-ai/20">✦ Default</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Submit CTA */}
+                {/* Send for Approval CTA */}
                 <button
-                    onClick={() => ocrState === 'done' && setScreen('picking')}
+                    onClick={ocrState === 'done' ? handleSend : undefined}
                     disabled={ocrState !== 'done'}
                     className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all ${
                         ocrState === 'done'
@@ -495,8 +528,8 @@ export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void
                             : 'bg-muted text-muted-foreground cursor-not-allowed'
                     }`}
                 >
-                    Submit Expense
-                    <ChevronRight className="h-4 w-4" />
+                    <Send className="h-4 w-4" />
+                    Send for Approval
                 </button>
 
                 {ocrState === 'filling' && (
@@ -529,7 +562,6 @@ function ReceiptCarousel({ receipts, activeIdx, onSelect, addState }: {
 
     return (
         <div className="w-full flex flex-col items-center gap-2">
-            {/* Thumbnails row */}
             <div className="flex gap-2 items-end justify-center">
                 {receipts.map((_, i) => (
                     <button
@@ -543,8 +575,6 @@ function ReceiptCarousel({ receipts, activeIdx, onSelect, addState }: {
                         <ReceiptImage variant={variants[i] ?? 'fuel'} compact />
                     </button>
                 ))}
-
-                {/* Scanning slot — appears while adding */}
                 {addState === 'scanning' && (
                     <div className="w-[76px] rounded-xl border-2 border-dashed border-ai/60 bg-ai/5 flex flex-col items-center justify-center py-3 gap-1">
                         <Sparkles className="h-4 w-4 text-ai animate-pulse" />
@@ -553,7 +583,6 @@ function ReceiptCarousel({ receipts, activeIdx, onSelect, addState }: {
                 )}
             </div>
 
-            {/* Dot indicators */}
             {receipts.length > 1 && (
                 <div className="flex gap-1.5 items-center">
                     {receipts.map((_, i) => (
@@ -568,7 +597,6 @@ function ReceiptCarousel({ receipts, activeIdx, onSelect, addState }: {
                 </div>
             )}
 
-            {/* Active receipt label */}
             <p className="text-[10px] text-muted-foreground">
                 {RECEIPT_LABELS[activeIdx] ?? `Receipt ${activeIdx + 1}`}
             </p>
@@ -718,7 +746,7 @@ export function ReceiptImage({ compact, variant = 'fuel' }: {
             <div className={`border-t-2 border-gray-800 ${compact ? 'mt-1' : 'mt-1.5'}`} />
             <div className="flex justify-between font-black text-gray-900">
                 <span className={compact ? 'text-[9px]' : 'text-[11px]'}>TOTAL</span>
-                <span className={compact ? 'text-[9px]' : 'text-[11px]'}>{compact ? '$95.00' : '$95.00'}</span>
+                <span className={compact ? 'text-[9px]' : 'text-[11px]'}>$95.00</span>
             </div>
             {!compact && (
                 <>
