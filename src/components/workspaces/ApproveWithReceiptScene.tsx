@@ -825,8 +825,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
             {appState === 'sending' && (
                 <div className="space-y-3 animate-in fade-in duration-300">
                     <div className="bg-card border border-border rounded-xl px-4 py-5 flex flex-col items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Send className="h-5 w-5 text-primary animate-pulse" />
+                        <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center animate-pulse">
+                            <Send className="h-5 w-5 text-primary-foreground" />
                         </div>
                         <div className="text-center space-y-1">
                             <p className="text-sm font-bold text-foreground">Approving expense...</p>
