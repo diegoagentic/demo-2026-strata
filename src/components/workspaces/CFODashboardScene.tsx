@@ -592,9 +592,9 @@ function CompanyView({
     }
 
     // Close all dropdowns when clicking one
-    const openDept = () => { setDeptOpen(v => !v); setLocationOpen(false); setCategoryOpen(false) }
-    const openLoc  = () => { setLocationOpen(v => !v); setDeptOpen(false); setCategoryOpen(false) }
-    const openCat  = () => { setCategoryOpen(v => !v); setDeptOpen(false); setLocationOpen(false) }
+    const openDept = () => { setDeptOpen(!deptOpen); setLocationOpen(false); setCategoryOpen(false) }
+    const openLoc  = () => { setLocationOpen(!locationOpen); setDeptOpen(false); setCategoryOpen(false) }
+    const openCat  = () => { setCategoryOpen(!categoryOpen); setDeptOpen(false); setLocationOpen(false) }
 
     return (
         <div className="space-y-4">
@@ -604,7 +604,7 @@ function CompanyView({
                 <div className="relative">
                     <button
                         onClick={openDept}
-                        className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded-full transition-colors ${deptFilter !== 'all' ? 'bg-primary/10 border-primary/30 text-primary font-medium' : 'bg-card border-border text-foreground hover:border-primary'}`}
+                        className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded-full transition-colors ${deptFilter !== 'all' ? 'bg-foreground text-background border-foreground font-semibold' : 'bg-card border-border text-foreground hover:border-primary'}`}
                     >
                         {DEPT_LABELS[deptFilter]} <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
                     </button>
@@ -624,7 +624,7 @@ function CompanyView({
                 <div className="relative">
                     <button
                         onClick={openLoc}
-                        className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded-full transition-colors ${locationFilter !== 'all' ? 'bg-primary/10 border-primary/30 text-primary font-medium' : 'bg-card border-border text-foreground hover:border-primary'}`}
+                        className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded-full transition-colors ${locationFilter !== 'all' ? 'bg-foreground text-background border-foreground font-semibold' : 'bg-card border-border text-foreground hover:border-primary'}`}
                     >
                         {LOCATION_LABELS[locationFilter]} <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
                     </button>
@@ -644,7 +644,7 @@ function CompanyView({
                 <div className="relative">
                     <button
                         onClick={openCat}
-                        className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded-full transition-colors ${categoryFilter !== 'all' ? 'bg-primary/10 border-primary/30 text-primary font-medium' : 'bg-card border-border text-foreground hover:border-primary'}`}
+                        className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded-full transition-colors ${categoryFilter !== 'all' ? 'bg-foreground text-background border-foreground font-semibold' : 'bg-card border-border text-foreground hover:border-primary'}`}
                     >
                         {CATEGORY_FILTER_LABELS[categoryFilter]} <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
                     </button>
