@@ -77,10 +77,11 @@ export default function WorkspacesPage() {
     const { currentStep, isDemoActive, steps: tourSteps, goToStep } = useDemo()
     const demoStepId = isDemoActive ? currentStep?.id : null
 
-    const [activeTab, setActiveTab]   = useState<WorkspacesTab>('submission')
-    const [subStep, setSubStep]       = useState(0)
-    const [procStep, setProcStep]     = useState(0)
-    const [activeRole, setActiveRole] = useState<WorkspacesRole>('employee')
+    const [activeTab, setActiveTab]     = useState<WorkspacesTab>('submission')
+    const [subStep, setSubStep]         = useState(0)
+    const [procStep, setProcStep]       = useState(0)
+    const [activeRole, setActiveRole]   = useState<WorkspacesRole>('employee')
+    const [returnToList, setReturnToList] = useState(false)
 
     // Sync tab + step index + role when the demo tour navigates
     useEffect(() => {
@@ -120,8 +121,15 @@ export default function WorkspacesPage() {
     if (activeTab === 'submission' && (subStep === 0 || subStep === 3)) {
         return (
             <div className="min-h-screen bg-zinc-950 dark:bg-zinc-900 flex flex-col items-center justify-center py-8 gap-6 animate-in fade-in duration-500">
-                {subStep === 0 && <ExpenseSubmitScene onSubmit={() => navigateSub(1)} />}
-                {subStep === 3 && <ExpenseStatusScene onBack={() => navigateSub(0)} />}
+                {subStep === 0 && (
+                    <ExpenseSubmitScene
+                        onSubmit={() => { setReturnToList(false); navigateSub(1) }}
+                        initialScreen={returnToList ? 'expenses-list' : 'login'}
+                    />
+                )}
+                {subStep === 3 && (
+                    <ExpenseStatusScene onBack={() => { setReturnToList(true); navigateSub(0) }} />
+                )}
             </div>
         )
     }

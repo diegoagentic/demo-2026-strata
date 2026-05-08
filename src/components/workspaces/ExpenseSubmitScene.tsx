@@ -45,12 +45,12 @@ const PAST_EXPENSES = [
     { label: 'Travel — Orlando',   amount: '$210.00', date: 'May 1',  status: 'pending' },
 ]
 
-export default function ExpenseSubmitScene({ onSubmit }: { onSubmit?: () => void }) {
+export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubmit?: () => void; initialScreen?: ScreenState }) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [screen, setScreen]             = useState<ScreenState>('login')
+    const [screen, setScreen]             = useState<ScreenState>(initialScreen ?? 'login')
     const [signingIn, setSigningIn]       = useState(false)
     const [ocrState, setOcrState]         = useState<OCRState>('idle')
     const [filledFields, setFilledFields] = useState<string[]>([])
