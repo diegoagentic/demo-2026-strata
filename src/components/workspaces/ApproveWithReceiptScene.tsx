@@ -19,7 +19,7 @@ import { useState } from 'react'
 import {
     CheckCircle2, XCircle, Receipt, AlertTriangle, ChevronRight,
     RotateCcw, Sparkles, Pencil, X, ShieldCheck, Clock, User, Send,
-    Wand2,
+    Wand2, ZoomIn, ChevronLeft,
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import { ReceiptImage } from './ExpenseSubmitScene'
@@ -60,6 +60,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     const [editDesc,      setEditDesc]      = useState('Business client dinner — The Capital Grille')
     const [aiApplied,     setAiApplied]    = useState(false)
     const [receiptIdx,    setReceiptIdx]    = useState(0)
+    const [receiptModal,  setReceiptModal]  = useState(false)
 
     // AI detects category mismatch: restaurant vendor → Fuel + Parking is inconsistent
     const categoryMismatch = editCategory === 'Fuel + Parking' && !aiApplied
@@ -379,7 +380,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                     <div className="px-4 pt-3 pb-2 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Receipt className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-xs font-semibold text-foreground">Receipts · visible inline</span>
+                            <span className="text-xs font-semibold text-foreground">Receipts</span>
+                            <span className="text-[10px] text-success font-medium">2 verified ✓</span>
                         </div>
                         <div className="flex items-center gap-2">
                             {/* Carousel nav */}
@@ -397,14 +399,34 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                         </div>
                     </div>
 
-                    <div className="mx-4 mb-2 rounded-xl overflow-hidden border border-border/50 shadow-sm">
+                    {/* Receipt thumbnail — clickable to open modal */}
+                    <button
+                        onClick={() => setReceiptModal(true)}
+                        className="mx-4 mb-2 w-[calc(100%-2rem)] rounded-xl overflow-hidden border border-border/50 shadow-sm group relative"
+                        aria-label="Open receipt preview"
+                    >
                         <ReceiptImage variant={receiptIdx === 0 ? 'fuel' : 'parking'} />
-                    </div>
+                        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-card/90 backdrop-blur-sm border border-border rounded-full px-3 py-1.5 flex items-center gap-1.5 shadow-sm">
+                                <ZoomIn className="h-3.5 w-3.5 text-foreground" />
+                                <span className="text-[11px] font-semibold text-foreground">View full receipt</span>
+                            </div>
+                        </div>
+                    </button>
 
                     <p className="px-4 pb-3 text-[10px] text-muted-foreground italic">
                         Before Strata: managers approved without seeing receipts — GlobalSearch showed none
                     </p>
                 </div>
+            )}
+
+            {/* ── Receipt modal ── */}
+            {receiptModal && (
+                <ReceiptModal
+                    idx={receiptIdx}
+                    onNavigate={setReceiptIdx}
+                    onClose={() => setReceiptModal(false)}
+                />
             )}
 
             {/* ── Actions — contextual by scenario ── */}
@@ -671,6 +693,90 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
             )}
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OUTLOOK] }]} />
+        </div>
+    )
+}
+
+// ── Receipt modal ─────────────────────────────────────────────────────────────
+
+const RECEIPT_META = [
+    { label: 'The Capital Grille', sub: 'Fuel — Tampa · $95.00', variant: 'fuel'    as const },
+    { label: 'Waterside Garage',   sub: 'Parking · $47.50',      variant: 'parking' as const },
+]
+
+function ReceiptModal({ idx, onNavigate, onClose }: {
+    idx: number
+    onNavigate: (i: number) => void
+    onClose: () => void
+}) {
+    const total = RECEIPT_META.length
+    const meta  = RECEIPT_META[idx]
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            onClick={onClose}
+        >
+            <div
+                className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm animate-in zoom-in-95 duration-200 overflow-hidden"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <div>
+                        <p className="text-sm font-bold text-foreground">{meta.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{meta.sub}</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Close"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+
+                {/* Receipt */}
+                <div className="p-4">
+                    <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
+                        <ReceiptImage variant={meta.variant} />
+                    </div>
+                </div>
+
+                {/* Navigation footer */}
+                <div className="flex items-center justify-between px-4 pb-4">
+                    <button
+                        onClick={() => onNavigate(Math.max(0, idx - 1))}
+                        disabled={idx === 0}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground disabled:opacity-30 hover:text-foreground transition-colors disabled:cursor-default"
+                    >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                        Previous
+                    </button>
+
+                    {/* Dots */}
+                    <div className="flex items-center gap-1.5">
+                        {RECEIPT_META.map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => onNavigate(i)}
+                                className={`rounded-full transition-all ${i === idx ? 'w-4 h-2 bg-foreground' : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60'}`}
+                                aria-label={`Receipt ${i + 1}`}
+                            />
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={() => onNavigate(Math.min(total - 1, idx + 1))}
+                        disabled={idx === total - 1}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground disabled:opacity-30 hover:text-foreground transition-colors disabled:cursor-default"
+                    >
+                        Next
+                        <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }
