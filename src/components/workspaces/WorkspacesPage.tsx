@@ -26,7 +26,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
-import { Receipt, BarChart2, MousePointerClick } from 'lucide-react'
+import { Receipt, BarChart2 } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
 import MBIPersonaBadge from '../mbi/MBIPersonaBadge'
 import { WORKSPACES_STEP_BEHAVIOR } from '../../config/profiles/workspaces'
@@ -150,13 +150,17 @@ export default function WorkspacesPage() {
         <MBIPersonaBadge key={activeRole} name={roleConfig.name} role={roleConfig.role} tone={roleConfig.tone} />
     )
 
+    // Dynamic subtitle: step hint text for the active step
+    const activeStepId = activeTab === 'submission' ? SUB_IDX_TO_STEP[subStep] : PROC_IDX_TO_STEP[procStep]
+    const stepSubtitle = WORKSPACES_STEP_BEHAVIOR[activeStepId]?.userAction
+
     return (
         <MBIPageShell
             preHeader={tabSwitcher}
             title={activeTab === 'submission' ? 'Expense Submission & Approval' : 'AP Processing & Reporting'}
-            subtitle={activeTab === 'submission'
+            subtitle={stepSubtitle ?? (activeTab === 'submission'
                 ? 'Mobile OCR · inline receipt approval · audit trail · resubmit loop'
-                : 'GL auto-fill · CORE sync · admin self-service · spend dashboard'}
+                : 'GL auto-fill · CORE sync · admin self-service · spend dashboard')}
             icon={activeTab === 'submission'
                 ? <Receipt className="h-5 w-5" />
                 : <BarChart2 className="h-5 w-5" />}
@@ -165,7 +169,6 @@ export default function WorkspacesPage() {
             {/* Flow 1 — desktop steps only (w1.2, w1.3) */}
             {activeTab === 'submission' && (
                 <div className="space-y-4 animate-in fade-in duration-500">
-                    <StepHint stepId={SUB_IDX_TO_STEP[subStep]} />
                     {subStep === 1 && <ApprovalQueueScene onReview={() => navigateSub(2)} />}
                     {subStep === 2 && <ApproveWithReceiptScene onApprove={() => navigateSub(3)} />}
                 </div>
@@ -175,7 +178,6 @@ export default function WorkspacesPage() {
             {activeTab === 'processing' && (
                 <div className="space-y-4 animate-in fade-in duration-500">
                     {personaBadge}
-                    <StepHint stepId={PROC_IDX_TO_STEP[procStep]} />
                     {procStep === 0 && <APReviewQueueScene onReview={() => navigateProc(1)} />}
                     {procStep === 1 && <GLCoreSyncScene onPost={() => navigateProc(2)} />}
                     {procStep === 2 && <AdminScene onSave={() => navigateProc(3)} />}
@@ -183,20 +185,6 @@ export default function WorkspacesPage() {
                 </div>
             )}
         </MBIPageShell>
-    )
-}
-
-// ── Step hint — replaces the orange AI banner for desktop steps ───────────────
-
-function StepHint({ stepId }: { stepId: string | undefined }) {
-    if (!stepId) return null
-    const behavior = WORKSPACES_STEP_BEHAVIOR[stepId]
-    if (!behavior?.userAction) return null
-    return (
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-            <span>{behavior.userAction}</span>
-        </div>
     )
 }
 
