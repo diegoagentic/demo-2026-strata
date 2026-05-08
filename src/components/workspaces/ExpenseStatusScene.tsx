@@ -342,13 +342,13 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                             <p className="text-xs font-semibold text-foreground">Expense fully processed</p>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Routed to the accounting team · accounting codes pre-filled · entry posted automatically · payment scheduled. No calls to AP needed.
+                            Your expense completed the full approval cycle. The accounting team confirmed the entry and issued payment — no follow-up needed on your end.
                         </p>
                         <button
                             onClick={nextStep}
                             className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
                         >
-                            See accounting team's view
+                            View payment confirmation
                             <ChevronRight className="h-3.5 w-3.5" />
                         </button>
                     </div>
