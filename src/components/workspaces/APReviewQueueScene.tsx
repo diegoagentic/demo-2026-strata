@@ -9,7 +9,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { AlertTriangle, Sparkles, ChevronRight, Bell, CheckCircle2, X } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
-import { ReceiptImage } from './ExpenseSubmitScene'
 
 type SceneState = 'list' | 'notified'
 type FilterKey  = 'all' | 'pending' | 'posted' | 'sla'
@@ -119,7 +118,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
     }, [])
 
     useEffect(() => {
-        pauseAware(() => setScene('notified'), 4000)
+        pauseAware(() => setScene('notified'), 2000)
     }, [pauseAware])
 
     const filteredExpenses = useMemo(() => {
@@ -174,15 +173,13 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                 ))}
             </div>
 
-            {/* Confidence legend — visible once queue is notified */}
-            {scene === 'notified' && (
-                <div className="flex items-center gap-1.5 flex-wrap px-1 animate-in fade-in duration-300">
-                    <span className="text-[9px] text-muted-foreground font-medium">Confidence:</span>
-                    <span className="text-[9px] bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full font-medium">≥ 90% safe</span>
-                    <span className="text-[9px] bg-warning/10 text-warning border border-warning/20 px-1.5 py-0.5 rounded-full font-medium">75–89% review</span>
-                    <span className="text-[9px] bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded-full font-medium">&lt; 75% manual</span>
-                </div>
-            )}
+            {/* Confidence legend — always visible */}
+            <div className="flex items-center gap-1.5 flex-wrap px-1">
+                <span className="text-[9px] text-muted-foreground font-medium">Confidence:</span>
+                <span className="text-[9px] bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full font-medium">≥ 90% safe</span>
+                <span className="text-[9px] bg-warning/10 text-warning border border-warning/20 px-1.5 py-0.5 rounded-full font-medium">75–89% review</span>
+                <span className="text-[9px] bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded-full font-medium">&lt; 75% manual</span>
+            </div>
 
             {/* Filter bar */}
             <FilterBar active={filter} onChange={setFilter} />
@@ -197,7 +194,6 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                             exp={exp}
                             expanded={expandedCard === exp.id}
                             onToggleExpand={() => setExpandedCard(expandedCard === exp.id ? null : exp.id)}
-                            onReview={onReview}
                           />
                 ))}
                 {filteredExpenses.length === 0 && (
@@ -298,11 +294,10 @@ function FilterBar({ active, onChange }: { active: FilterKey; onChange: (k: Filt
 
 type PendingExpense = typeof PENDING_EXPENSES[0]
 
-function ExpenseCard({ exp, expanded, onToggleExpand, onReview }: {
+function ExpenseCard({ exp, expanded, onToggleExpand }: {
     exp: PendingExpense
     expanded: boolean
     onToggleExpand: () => void
-    onReview?: () => void
 }) {
     return (
         <div className={`bg-card border rounded-xl p-4 space-y-3 ${exp.sla ? 'border-warning/50' : exp.focus ? 'border-ai/30' : 'border-border'}`}>
@@ -356,31 +351,26 @@ function ExpenseCard({ exp, expanded, onToggleExpand, onReview }: {
                 </div>
             )}
 
-            {/* Receipt thumbnails — only on focus card, so Letza can verify before drilling in */}
+            {/* GL lines preview — focus card shows inline, non-focus cards expand on demand */}
             {exp.focus && (
-                <div className="space-y-1.5">
-                    <p className="text-[10px] text-success font-medium">2 receipts verified ✓</p>
-                    <div className="flex gap-2">
-                        <div className="flex-1 rounded-lg overflow-hidden border border-border/50">
-                            <ReceiptImage variant="fuel" compact />
+                <div className="border border-border rounded-lg overflow-hidden">
+                    {exp.glLines.map((line, i) => (
+                        <div key={line.code} className={`flex items-center justify-between px-3 py-2 gap-2 ${i > 0 ? 'border-t border-border' : ''}`}>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <Sparkles className="h-2.5 w-2.5 text-ai shrink-0" />
+                                <span className="text-[11px] text-foreground truncate">{line.code}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[11px] font-mono text-foreground">{line.amount}</span>
+                                <ConfidencePill pct={line.confidence} />
+                            </div>
                         </div>
-                        <div className="flex-1 rounded-lg overflow-hidden border border-border/50">
-                            <ReceiptImage variant="parking" compact />
-                        </div>
-                    </div>
+                    ))}
                 </div>
             )}
 
-            {/* CTA */}
-            {exp.focus ? (
-                <button
-                    onClick={onReview}
-                    className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-lg hover:opacity-90 transition-opacity"
-                >
-                    Review GL — John Smith
-                    <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-            ) : (
+            {/* Non-focus toggle */}
+            {!exp.focus && (
                 <button
                     onClick={onToggleExpand}
                     className="w-full text-xs text-muted-foreground py-2 rounded-lg hover:text-foreground border border-border transition-colors"

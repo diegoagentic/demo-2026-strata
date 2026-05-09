@@ -7,14 +7,14 @@
 
 import { useState, useRef, useCallback } from 'react'
 import {
-    Sparkles, CheckCircle2, ChevronDown, Receipt, ArrowRight,
+    Sparkles, CheckCircle2, ChevronDown,
     MessageSquare, CheckCheck, Send, ZoomIn, X, ChevronLeft, ChevronRight, Check,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { ReceiptImage } from './ExpenseSubmitScene'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
-type SceneState   = 'context' | 'reviewing' | 'posting' | 'posted'
+type SceneState   = 'reviewing' | 'posting' | 'posted'
 type PostingStep  = 'validating' | 'creating' | 'notifying'
 type ThreadStatus = 'open' | 'resolved'
 type MsgSide      = 'incoming' | 'ap'
@@ -70,7 +70,7 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [sceneState,    setSceneState]    = useState<SceneState>('context')
+    const [sceneState,    setSceneState]    = useState<SceneState>('reviewing')
     const [overrides,     setOverrides]     = useState<Record<string, string>>({})
     const [acceptedLines, setAcceptedLines] = useState<Set<string>>(new Set())
     const [postingStep,   setPostingStep]   = useState<PostingStep>('validating')
@@ -283,106 +283,6 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
             )}
         </div>
     )
-
-    // ── Context state ─────────────────────────────────────────────────────────
-
-    if (sceneState === 'context') {
-        return (
-            <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-500">
-                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                        <div>
-                            <p className="text-sm font-bold text-foreground">John Smith · $142.50</p>
-                            <p className="text-xs text-muted-foreground">Fuel + Parking · May 5, 2026</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Approved by Sarah Johnson · May 6, 9:15 AM · <span className="text-success">within SLA ✓</span>
-                            </p>
-                        </div>
-                        <span className="text-[10px] bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full font-medium shrink-0">
-                            Manager approved
-                        </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">Employee: 3rd expense this month · avg $118.50 · history normal</p>
-                <div className="flex items-center gap-2 text-[10px] flex-wrap pt-0.5">
-                    <span className="text-success font-medium">Amounts verified ✓ $95.00 + $47.50 = $142.50</span>
-                    <span className="text-muted-foreground">· Source: Strata Mobile · OCR</span>
-                </div>
-                </div>
-
-                {/* Receipt thumbnails */}
-                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                        <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-xs font-bold text-foreground">Receipts</p>
-                        <span className="text-[10px] text-success font-medium">2 verified ✓</span>
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => { setReceiptModal(true); setReceiptIdx(0) }}
-                            className="flex-1 space-y-1 group relative rounded-lg overflow-hidden"
-                            aria-label="Preview fuel receipt"
-                        >
-                            <div className="rounded-lg overflow-hidden border border-border/50 relative">
-                                <ReceiptImage variant="fuel" />
-                                <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
-                                    <ZoomIn className="h-4 w-4 text-foreground opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
-                                </div>
-                            </div>
-                            <p className="text-[10px] text-center text-muted-foreground">Fuel · $95.00</p>
-                        </button>
-                        <button
-                            onClick={() => { setReceiptModal(true); setReceiptIdx(1) }}
-                            className="flex-1 space-y-1 group relative rounded-lg overflow-hidden"
-                            aria-label="Preview parking receipt"
-                        >
-                            <div className="rounded-lg overflow-hidden border border-border/50 relative">
-                                <ReceiptImage variant="parking" />
-                                <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
-                                    <ZoomIn className="h-4 w-4 text-foreground opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
-                                </div>
-                            </div>
-                            <p className="text-[10px] text-center text-muted-foreground">Parking · $47.50</p>
-                        </button>
-                    </div>
-                </div>
-
-                {/* AI analysis */}
-                <div className="bg-ai/5 border border-ai/20 rounded-xl px-4 py-3 space-y-2">
-                    <div className="flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-ai" />
-                        <p className="text-xs font-semibold text-ai">Strata found 2 GL codes with high confidence</p>
-                    </div>
-                    <div className="space-y-1.5">
-                        {LINES.map(line => (
-                            <div key={line.id} className="flex items-center justify-between gap-2">
-                                <span className="text-[11px] text-foreground">{line.glCode}</span>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-[11px] font-mono text-muted-foreground">{line.amount}</span>
-                                    <ConfidencePill pct={line.confidence} />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {activityPanel}
-
-                {receiptModal && (
-                    <GLReceiptModal idx={receiptIdx} onNavigate={setReceiptIdx} onClose={() => setReceiptModal(false)} />
-                )}
-
-                <button
-                    onClick={() => setSceneState('reviewing')}
-                    className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
-                >
-                    Review GL Codes
-                    <ArrowRight className="h-4 w-4" />
-                </button>
-
-                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
-            </div>
-        )
-    }
 
     // ── Reviewing state ───────────────────────────────────────────────────────
 
