@@ -40,7 +40,7 @@ import { useDemo } from '../../context/DemoContext'
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function WorkspacesPage() {
-    const { currentStep, nextStep } = useDemo()
+    const { currentStep, nextStep, prevStep } = useDemo()
     const stepId = currentStep?.id ?? 'w1.1'
 
     // ── Mobile steps — dark viewport, phone is the only UI ───────────────────
@@ -86,7 +86,7 @@ export default function WorkspacesPage() {
                 {stepId === 'w1.2' && <ApprovalQueueScene  onReview={nextStep} />}
                 {stepId === 'w1.3' && <ApproveWithReceiptScene onApprove={nextStep} />}
                 {stepId === 'w2.1' && <APReviewQueueScene  onReview={nextStep} />}
-                {stepId === 'w2.2' && <GLCoreSyncScene     onPost={nextStep} />}
+                {stepId === 'w2.2' && <GLCoreSyncScene     onPost={nextStep} onBack={prevStep} />}
                 {stepId === 'w2.3' && <AdminScene          onSave={nextStep} />}
                 {stepId === 'w2.4' && <CFODashboardScene />}
             </div>

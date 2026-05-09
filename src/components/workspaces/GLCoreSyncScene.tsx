@@ -7,8 +7,8 @@
 
 import { useState, useRef, useCallback } from 'react'
 import {
-    Sparkles, CheckCircle2, ChevronDown,
-    MessageSquare, CheckCheck, Send, ZoomIn, X, ChevronLeft, ChevronRight, Check,
+    Sparkles, CheckCircle2, ChevronDown, ChevronLeft,
+    MessageSquare, CheckCheck, Send, Check,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { ReceiptImage } from './ExpenseSubmitScene'
@@ -65,19 +65,16 @@ const AP_INITIAL_THREADS: ApThread[] = [
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
+export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => void; onBack?: () => void }) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [sceneState,    setSceneState]    = useState<SceneState>('reviewing')
-    const [overrides,     setOverrides]     = useState<Record<string, string>>({})
-    const [acceptedLines, setAcceptedLines] = useState<Set<string>>(new Set())
-    const [postingStep,   setPostingStep]   = useState<PostingStep>('validating')
-
-    // Receipt modal
-    const [receiptModal, setReceiptModal] = useState(false)
-    const [receiptIdx,   setReceiptIdx]   = useState(0)
+    const [sceneState,      setSceneState]      = useState<SceneState>('reviewing')
+    const [overrides,       setOverrides]       = useState<Record<string, string>>({})
+    const [acceptedLines,   setAcceptedLines]   = useState<Set<string>>(new Set())
+    const [postingStep,     setPostingStep]     = useState<PostingStep>('validating')
+    const [selectedReceipt, setSelectedReceipt] = useState<'fuel' | 'parking'>('fuel')
 
     // Activity & Discussion state
     const [activityTab,  setActivityTab]  = useState<'timeline' | 'discussion'>('discussion')
@@ -293,48 +290,66 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
         return (
             <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-300">
 
-                {/* Expense context — always visible so Letza never needs to navigate back */}
-                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                        <div>
-                            <p className="text-sm font-bold text-foreground">John Smith · $142.50</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Approved by Sarah Johnson · May 6 · <span className="text-success font-medium">within SLA ✓</span>
-                            </p>
-                        </div>
-                        <span className="text-[10px] bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full font-medium shrink-0">
-                            2 receipts verified ✓
-                        </span>
+                {/* Back to queue */}
+                {onBack && (
+                    <button
+                        onClick={onBack}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                        Back to AP queue
+                    </button>
+                )}
+
+                {/* Expense header */}
+                <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div>
+                        <p className="text-sm font-bold text-foreground">John Smith · $142.50</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            Approved by Sarah Johnson · May 6 · <span className="text-success font-medium">within SLA ✓</span>
+                        </p>
                     </div>
-                    {/* Receipt thumbnails — clickable without leaving this screen */}
-                    <div className="flex gap-2">
+                    <span className="text-[10px] bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full font-medium shrink-0">
+                        2 receipts verified ✓
+                    </span>
+                </div>
+
+                {/* Receipts — inline tab viewer, no modal */}
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                    <div className="flex border-b border-border">
                         {([
-                            { idx: 0, label: 'Fuel · $95.00',     variant: 'fuel'    as const },
-                            { idx: 1, label: 'Parking · $47.50',  variant: 'parking' as const },
-                        ] as const).map(r => (
+                            { key: 'fuel'    as const, label: 'Fuel · $95.00'    },
+                            { key: 'parking' as const, label: 'Parking · $47.50' },
+                        ]).map(r => (
                             <button
-                                key={r.idx}
-                                onClick={() => { setReceiptModal(true); setReceiptIdx(r.idx) }}
-                                className="flex items-center gap-2 bg-muted/40 hover:bg-muted border border-border rounded-lg px-2 py-1.5 group transition-colors"
-                                aria-label={`Preview ${r.label} receipt`}
+                                key={r.key}
+                                onClick={() => setSelectedReceipt(r.key)}
+                                className={`flex-1 text-xs font-semibold py-2.5 px-3 transition-colors border-b-2 ${
+                                    selectedReceipt === r.key
+                                        ? 'text-foreground border-primary bg-background'
+                                        : 'text-muted-foreground border-transparent hover:text-foreground'
+                                }`}
                             >
-                                <div className="h-20 w-14 rounded overflow-hidden border border-border/50 shrink-0 relative">
-                                    <ReceiptImage variant={r.variant} compact />
-                                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 flex items-center justify-center transition-colors">
-                                        <ZoomIn className="h-3 w-3 text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
-                                </div>
-                                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{r.label}</span>
+                                {r.label}
                             </button>
                         ))}
                     </div>
+                    <div className="max-h-[260px] overflow-y-auto">
+                        <ReceiptImage variant={selectedReceipt} />
+                    </div>
+                    <div className="px-3 py-2 bg-muted/30 border-t border-border">
+                        <p className="text-[10px] text-ai">✦ Strata Mobile capture · OCR verified · amounts match GL lines</p>
+                    </div>
                 </div>
 
-                {/* GL assignment — one editable card per line */}
+                {/* GL assignment */}
                 <div className="space-y-2">
-                    <div className="flex items-center justify-between px-1">
-                        <p className="text-xs font-semibold text-foreground">GL Code Assignment</p>
-                        <span className="text-[10px] text-muted-foreground">{LINES.length} lines · edit if needed · confirm each</span>
+                    <p className="text-xs font-semibold text-foreground px-1">GL Code Assignment</p>
+                    <div className="flex items-center gap-2 bg-ai/5 border border-ai/15 rounded-xl px-3 py-2.5">
+                        <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
+                        <p className="text-[11px] text-ai leading-snug">
+                            Review each line · override the code if needed · accept ✓ to confirm before posting
+                        </p>
                     </div>
                     {LINES.map(line => {
                         const gl       = getGL(line)
@@ -342,9 +357,14 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                         return (
                             <div
                                 key={line.id}
-                                className={`bg-card border rounded-xl p-4 space-y-3 transition-all duration-200 ${accepted ? 'border-success/40 bg-success/5' : line.confidence < 75 ? 'border-destructive/30 bg-destructive/5' : 'border-ai/20'}`}
+                                className={`bg-card border rounded-xl p-4 space-y-3 transition-all duration-200 ${
+                                    accepted
+                                        ? 'border-success/40 bg-success/5'
+                                        : line.confidence < 75
+                                        ? 'border-destructive/30 bg-destructive/5'
+                                        : 'border-ai/20'
+                                }`}
                             >
-                                {/* Row header */}
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
                                         <p className="text-xs font-semibold text-foreground">{line.description}</p>
@@ -366,7 +386,6 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                                         </button>
                                     </div>
                                 </div>
-                                {/* Always-visible editable GL selector */}
                                 <div className="space-y-1.5">
                                     <div className="flex items-center gap-1.5">
                                         <Sparkles className="h-3 w-3 text-ai" />
@@ -375,7 +394,10 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
                                     <div className="relative">
                                         <select
                                             value={gl}
-                                            onChange={e => { setOverrides(prev => ({ ...prev, [line.id]: e.target.value })); setAcceptedLines(prev => { const n = new Set(prev); n.delete(line.id); return n }) }}
+                                            onChange={e => {
+                                                setOverrides(prev => ({ ...prev, [line.id]: e.target.value }))
+                                                setAcceptedLines(prev => { const n = new Set(prev); n.delete(line.id); return n })
+                                            }}
                                             className="w-full appearance-none bg-background border border-input rounded-lg px-3 py-2.5 pr-8 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/60 cursor-pointer transition-colors"
                                         >
                                             {GL_CODES.map(g => <option key={g}>{g}</option>)}
@@ -390,21 +412,19 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
 
                 {activityPanel}
 
-                {receiptModal && (
-                    <GLReceiptModal idx={receiptIdx} onNavigate={setReceiptIdx} onClose={() => setReceiptModal(false)} />
-                )}
-
-                <button
-                    onClick={handlePost}
-                    className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
-                >
-                    <Sparkles className="h-4 w-4" />
-                    Confirm &amp; Post to CORE
-                </button>
-
-                <p className="text-xs text-center text-muted-foreground">
-                    Before Strata: Letza copied each field from GlobalSearch into CORE manually — ~15 min per expense
-                </p>
+                {/* CTA + sub-label */}
+                <div className="space-y-1.5">
+                    <button
+                        onClick={handlePost}
+                        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+                    >
+                        <Sparkles className="h-4 w-4" />
+                        Confirm &amp; Post to CORE
+                    </button>
+                    <p className="text-[11px] text-center text-muted-foreground">
+                        {LINES.length} lines ready · entry posts automatically · no manual re-entry
+                    </p>
+                </div>
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
             </div>
@@ -482,70 +502,6 @@ export default function GLCoreSyncScene({ onPost }: { onPost?: () => void }) {
     )
 }
 
-// ── Receipt modal ─────────────────────────────────────────────────────────────
-
-const GL_RECEIPT_META = [
-    { label: 'The Capital Grille', sub: 'Fuel — Tampa · $95.00',  variant: 'fuel'    as const },
-    { label: 'Waterside Garage',   sub: 'Parking · $47.50',        variant: 'parking' as const },
-]
-
-function GLReceiptModal({ idx, onNavigate, onClose }: {
-    idx: number; onNavigate: (i: number) => void; onClose: () => void
-}) {
-    const total = GL_RECEIPT_META.length
-    const meta  = GL_RECEIPT_META[idx]
-    return (
-        <div
-            className="fixed left-80 top-0 right-0 bottom-0 z-[400] flex items-center justify-center p-4 animate-in fade-in duration-200"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-            onClick={onClose}
-        >
-            <div
-                className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-xl animate-in zoom-in-95 duration-200 overflow-hidden"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                    <div>
-                        <p className="text-base font-bold text-foreground">{meta.label}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{meta.sub}</p>
-                        <p className="text-[10px] text-ai mt-0.5">✦ Strata Mobile capture · OCR verified</p>
-                    </div>
-                    <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" aria-label="Close">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-                <div className="p-5">
-                    <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm max-h-[65vh] overflow-y-auto">
-                        <ReceiptImage variant={meta.variant} />
-                    </div>
-                </div>
-                <div className="flex items-center justify-between px-4 pb-4">
-                    <button
-                        onClick={() => onNavigate(Math.max(0, idx - 1))}
-                        disabled={idx === 0}
-                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground disabled:opacity-30 hover:text-foreground transition-colors disabled:cursor-default"
-                    >
-                        <ChevronLeft className="h-3.5 w-3.5" /> Previous
-                    </button>
-                    <div className="flex items-center gap-1.5">
-                        {GL_RECEIPT_META.map((_, i) => (
-                            <button key={i} onClick={() => onNavigate(i)}
-                                className={`rounded-full transition-all ${i === idx ? 'w-4 h-2 bg-foreground' : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60'}`}
-                            />
-                        ))}
-                    </div>
-                    <button
-                        onClick={() => onNavigate(Math.min(total - 1, idx + 1))}
-                        disabled={idx === total - 1}
-                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground disabled:opacity-30 hover:text-foreground transition-colors disabled:cursor-default"
-                    >
-                        Next <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
 
 // ── AP thread card ────────────────────────────────────────────────────────────
 
