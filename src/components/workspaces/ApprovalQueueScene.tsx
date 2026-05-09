@@ -14,7 +14,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
     AlertTriangle, CheckCircle2, Receipt,
     Bell, Clock, Sparkles, X, Upload, FileText, Image,
-    Filter, Search, ChevronRight,
+    Filter, Search, ChevronRight, Check,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -262,16 +262,32 @@ function ExpenseListRow({ exp, onReview }: {
     }
 
     const statusCell = () => {
-        // John Smith (focus) — show Review button
+        // John Smith (focus) — Review + quick Approve/Reject (brief S2 spec)
         if (exp.focus) {
             return (
-                <button
-                    onClick={() => onReview?.()}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary text-primary-foreground px-2.5 py-1 rounded-full hover:opacity-90 transition-opacity"
-                >
-                    Review
-                    <ChevronRight className="h-3 w-3" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                    <button
+                        onClick={() => onReview?.()}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary text-primary-foreground px-2.5 py-1 rounded-full hover:opacity-90 transition-opacity"
+                    >
+                        Review
+                        <ChevronRight className="h-3 w-3" />
+                    </button>
+                    <button
+                        onClick={() => onReview?.()}
+                        className="h-6 w-6 flex items-center justify-center rounded-full bg-success/15 text-success hover:bg-success/25 transition-colors"
+                        title="Approve"
+                    >
+                        <Check className="h-3 w-3" />
+                    </button>
+                    <button
+                        onClick={() => onReview?.()}
+                        className="h-6 w-6 flex items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                        title="Reject"
+                    >
+                        <X className="h-3 w-3" />
+                    </button>
+                </div>
             )
         }
         if (exp.status === 'approved') return (

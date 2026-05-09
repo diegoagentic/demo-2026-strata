@@ -509,7 +509,15 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 {/* Edit mode */}
                 {editingHierarchy && (
                     <div className="px-4 py-4 space-y-3 animate-in fade-in duration-200">
-                        <p className="text-[10px] text-muted-foreground">Drag to reorder · Each level reports to the next</p>
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] text-muted-foreground">Drag to reorder · each level reports up to the next</p>
+                            <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+                                <span className="bg-foreground/10 text-foreground px-1.5 py-0.5 rounded font-semibold">1</span>
+                                <span>= submits first</span>
+                                <span className="bg-foreground/10 text-foreground px-1.5 py-0.5 rounded font-semibold">4</span>
+                                <span>= final approver</span>
+                            </div>
+                        </div>
                         <div className="space-y-2">
                             {hierarchy.map((level, i) => (
                                 <div
@@ -525,14 +533,16 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                                             : 'border-border bg-card hover:bg-muted/30'
                                     }`}
                                 >
-                                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                     <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                        i === 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                                        i === 0
+                                            ? 'bg-foreground text-background'
+                                            : 'bg-muted text-foreground/70'
                                     }`}>{i + 1}</div>
                                     <p className="text-xs font-medium text-foreground flex-1">{level}</p>
-                                    <span className="text-[9px] text-muted-foreground/60 font-medium uppercase tracking-wide">
-                                        {i === 0 ? 'submits' : i === 1 ? 'approves' : i === 2 ? 'oversees' : 'final authority'}
-                                    </span>
+                                    {i < hierarchy.length - 1 && (
+                                        <span className="text-[10px] text-muted-foreground font-medium">reports to ↑</span>
+                                    )}
                                 </div>
                             ))}
                         </div>

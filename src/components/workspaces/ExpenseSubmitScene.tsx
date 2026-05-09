@@ -58,6 +58,8 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
     const [addState, setAddState]         = useState<AddState>('idle')
     const [carouselIdx, setCarouselIdx]   = useState(0)
     const [viewingReceipt, setViewingReceipt] = useState<number | null>(null)
+    const [categoryOpen, setCategoryOpen]     = useState(false)
+    const [selectedCategory, setSelectedCategory] = useState('Fuel + Parking')
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -524,15 +526,39 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                 <div className="bg-card border border-border rounded-2xl overflow-hidden">
                     {FIELDS.map((f, i) => {
                         const filled = filledFields.includes(f.key)
+                        const isCategory = f.key === 'category'
+                        const displayValue = isCategory ? selectedCategory : f.value
                         return (
                             <div key={f.key} className={`px-4 py-3 ${i < FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
                                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{f.label}</p>
                                 {filled ? (
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-foreground animate-in fade-in duration-300">{f.value}</span>
-                                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full">
-                                            <Sparkles className="h-2 w-2" /> AI
-                                        </span>
+                                    <div>
+                                        <button
+                                            onClick={() => isCategory ? setCategoryOpen(o => !o) : undefined}
+                                            className={`flex items-center justify-between w-full ${isCategory ? 'cursor-pointer' : 'cursor-default'}`}
+                                        >
+                                            <span className="text-sm font-semibold text-foreground animate-in fade-in duration-300">{displayValue}</span>
+                                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full">
+                                                <Sparkles className="h-2 w-2" /> AI{isCategory && ' ▾'}
+                                            </span>
+                                        </button>
+                                        {isCategory && categoryOpen && (
+                                            <div className="mt-2 space-y-1 animate-in fade-in duration-200">
+                                                {['Fuel + Parking', 'Meals & Entertainment', 'Travel', 'Office Supplies', 'Other'].map(cat => (
+                                                    <button
+                                                        key={cat}
+                                                        onClick={() => { setSelectedCategory(cat); setCategoryOpen(false) }}
+                                                        className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors ${
+                                                            selectedCategory === cat
+                                                                ? 'bg-ai/10 text-ai font-semibold border border-ai/20'
+                                                                : 'text-foreground hover:bg-muted/40'
+                                                        }`}
+                                                    >
+                                                        {cat}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="h-4 bg-muted/60 rounded-md w-3/4" />
