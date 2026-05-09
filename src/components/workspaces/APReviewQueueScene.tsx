@@ -151,7 +151,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                         <Bell className="h-4 w-4 text-muted-foreground" />
                         <div className="h-8 w-8 rounded-full overflow-hidden border border-border shrink-0">
                             <img
-                                src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&h=80&fit=crop&crop=face"
+                                src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face"
                                 alt="Letza Bombard"
                                 className="h-full w-full object-cover"
                             />

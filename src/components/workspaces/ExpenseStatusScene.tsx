@@ -169,7 +169,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full overflow-hidden border border-border shrink-0">
                             <img
-                                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face"
+                                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face"
                                 alt="John Smith"
                                 className="h-full w-full object-cover"
                             />
