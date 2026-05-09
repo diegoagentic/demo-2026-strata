@@ -7,7 +7,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import {
-    Sparkles, CheckCircle2, ChevronDown, ChevronLeft,
+    Sparkles, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
     MessageSquare, CheckCheck, Send, Check,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
@@ -27,6 +27,11 @@ const GL_CODES = ['6200 · Vehicle Expenses', '6210 · Travel & Transit', '6100 
 const LINES = [
     { id: 'fuel',    description: 'Fuel — Tampa',  amount: '$95.00',  glCode: '6200 · Vehicle Expenses',    confidence: 94 },
     { id: 'parking', description: 'Parking',        amount: '$47.50',  glCode: '6210 · Travel & Transit',    confidence: 72 },
+]
+
+const RECEIPTS = [
+    { variant: 'fuel'    as const, title: 'Fuel Receipt',     sub: 'Suncoast Fuel Services · $95.00' },
+    { variant: 'parking' as const, title: 'Parking Receipt',  sub: 'Waterside Garage · $47.50'       },
 ]
 
 const POSTING_STEPS: { key: PostingStep; label: string }[] = [
@@ -74,7 +79,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
     const [overrides,       setOverrides]       = useState<Record<string, string>>({})
     const [acceptedLines,   setAcceptedLines]   = useState<Set<string>>(new Set())
     const [postingStep,     setPostingStep]     = useState<PostingStep>('validating')
-    const [selectedReceipt, setSelectedReceipt] = useState<'fuel' | 'parking'>('fuel')
+    const [receiptIdx,      setReceiptIdx]      = useState(0)
 
     // Activity & Discussion state
     const [activityTab,  setActivityTab]  = useState<'timeline' | 'discussion'>('discussion')
@@ -288,7 +293,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
             setAcceptedLines(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
 
         return (
-            <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-300">
+            <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-300">
 
                 {/* Back to queue */}
                 {onBack && (
@@ -314,30 +319,45 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                     </span>
                 </div>
 
-                {/* Receipts — inline tab viewer, no modal */}
+                {/* Receipts — carousel, full document, no scroll */}
                 <div className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="flex border-b border-border">
-                        {([
-                            { key: 'fuel'    as const, label: 'Fuel · $95.00'    },
-                            { key: 'parking' as const, label: 'Parking · $47.50' },
-                        ]).map(r => (
-                            <button
-                                key={r.key}
-                                onClick={() => setSelectedReceipt(r.key)}
-                                className={`flex-1 text-xs font-semibold py-2.5 px-3 transition-colors border-b-2 ${
-                                    selectedReceipt === r.key
-                                        ? 'text-foreground border-primary bg-background'
-                                        : 'text-muted-foreground border-transparent hover:text-foreground'
-                                }`}
-                            >
-                                {r.label}
-                            </button>
-                        ))}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                        <div>
+                            <p className="text-sm font-semibold text-foreground">{RECEIPTS[receiptIdx].title}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{RECEIPTS[receiptIdx].sub}</p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                            <div className="flex items-center gap-1.5">
+                                {RECEIPTS.map((_, i) => (
+                                    <button key={i} onClick={() => setReceiptIdx(i)}
+                                        className={`rounded-full transition-all duration-200 ${i === receiptIdx ? 'w-5 h-2 bg-foreground' : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60'}`}
+                                        aria-label={`Receipt ${i + 1}`}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground tabular-nums">{receiptIdx + 1} / {RECEIPTS.length}</span>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setReceiptIdx(i => Math.max(0, i - 1))}
+                                    disabled={receiptIdx === 0}
+                                    className="h-7 w-7 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-default transition-colors"
+                                    aria-label="Previous receipt"
+                                >
+                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                    onClick={() => setReceiptIdx(i => Math.min(RECEIPTS.length - 1, i + 1))}
+                                    disabled={receiptIdx === RECEIPTS.length - 1}
+                                    className="h-7 w-7 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-default transition-colors"
+                                    aria-label="Next receipt"
+                                >
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="max-h-[260px] overflow-y-auto">
-                        <ReceiptImage variant={selectedReceipt} />
-                    </div>
-                    <div className="px-3 py-2 bg-muted/30 border-t border-border">
+                    <ReceiptImage variant={RECEIPTS[receiptIdx].variant} />
+                    <div className="px-4 py-2 bg-muted/30 border-t border-border">
                         <p className="text-[10px] text-ai">✦ Strata Mobile capture · OCR verified · amounts match GL lines</p>
                     </div>
                 </div>
@@ -436,7 +456,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
     if (sceneState === 'posting') {
         const currentIdx = POSTING_STEPS.findIndex(s => s.key === postingStep)
         return (
-            <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-200">
+            <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-200">
                 <div className="bg-card border border-border rounded-xl px-4 py-5 space-y-4">
                     <div className="flex items-center gap-3">
                         <div className="h-5 w-5 border-2 border-ai border-t-transparent rounded-full animate-spin shrink-0" />
@@ -468,7 +488,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
     // ── Posted state ──────────────────────────────────────────────────────────
 
     return (
-        <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-300">
+        <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-300">
             <div className="bg-success/10 border border-success/20 rounded-xl px-4 py-4 space-y-3">
                 <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-success" />
