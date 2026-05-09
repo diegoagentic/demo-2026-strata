@@ -121,7 +121,6 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
         pauseAware(() => setPostingStep('creating'),  450)
         pauseAware(() => setPostingStep('notifying'), 900)
         pauseAware(() => setSceneState('posted'),     1300)
-        pauseAware(() => onPost?.(),                  3300)
     }
 
     const getGL = (line: typeof LINES[0]) => overrides[line.id] ?? line.glCode
@@ -694,6 +693,27 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                 <p className="text-[10px] text-muted-foreground pt-1">
                     Letza saved ~15 min on this expense · ~45 min for a batch of 3 → now under 4 min
                 </p>
+            </div>
+
+            {/* Bridge card — one thing to improve */}
+            <div className="bg-warning/5 border border-warning/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-700">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
+                    <p className="text-xs font-semibold text-foreground">One thing to improve</p>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    The <span className="font-semibold text-foreground">Parking</span> line matched at{' '}
+                    <span className="font-semibold text-warning">72% confidence</span> — it needed manual review this time.
+                    Updating the classification rule takes two minutes and will auto-classify future parking expenses at 97%+ with no manual step.
+                </p>
+                <p className="text-[10px] text-ai font-medium">✦ Strata flagged this automatically — no IT ticket needed to fix it</p>
+                <button
+                    onClick={() => onPost?.()}
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold border border-border text-foreground py-2 rounded-xl hover:bg-muted/30 transition-colors"
+                >
+                    Fix the Parking rule in Admin
+                    <ChevronRight className="h-3.5 w-3.5" />
+                </button>
             </div>
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />

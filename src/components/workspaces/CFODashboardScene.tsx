@@ -556,17 +556,11 @@ export default function CFODashboardScene() {
 
     // ── Fase: inbox / notified ──
     if (phase === 'inbox' || phase === 'notified') {
+        const aprCategories = CATEGORIES_BY_DEPT.all.april
+        const aprMax = Math.max(...aprCategories.map(c => c.amount))
+
         return (
             <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-400">
-                {/* Header context */}
-                <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center justify-between">
-                    <div>
-                        <p className="text-sm font-bold text-foreground">CFO Dashboard · Mehmet B.</p>
-                        <p className="text-[10px] text-muted-foreground">Executive Expense Overview</p>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">May 8, 2026</p>
-                </div>
-
                 {/* Strata notification — slide-in on 'notified' */}
                 {phase === 'notified' && (
                     <button
@@ -581,18 +575,58 @@ export default function CFODashboardScene() {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · Expense cycle complete</p>
-                            <p className="text-xs font-semibold text-foreground">May 2026 · $48K posted to CORE</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">Letza Bombard · 2:48 PM · All receipts verified ✓</p>
-                            <div className="flex items-center gap-1.5 mt-1.5">
+                            <p className="text-xs font-semibold text-foreground">May 2026 · $48K posted to accounting system</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">AP Coordinator · 2:48 PM · All receipts verified ✓</p>
+                            <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
                                 <span className="text-[10px] bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full font-medium">23 expenses posted</span>
-                                <span className="text-[10px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">1 GL rule improved</span>
+                                <span className="text-[10px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">1 rule improved · Parking 72%→97%</span>
                             </div>
                             <p className="text-xs font-semibold text-ai mt-1.5 group-hover:underline flex items-center gap-1">
-                                View full report <ChevronRight className="h-3 w-3" />
+                                View May dashboard <ChevronRight className="h-3 w-3" />
                             </p>
                         </div>
                     </button>
                 )}
+
+                {/* Mehmet in context — reviewing April 2026 */}
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 flex items-center justify-between border-b border-border">
+                        <div>
+                            <p className="text-sm font-bold text-foreground">CFO Dashboard · Mehmet B.</p>
+                            <p className="text-[10px] text-muted-foreground">Currently reviewing: April 2026 · Closed cycle</p>
+                        </div>
+                        <span className="text-[10px] font-medium text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full">Closed ✓</span>
+                    </div>
+                    {/* April KPIs */}
+                    <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
+                        {[
+                            { label: 'Total spend',   value: '$43K'  },
+                            { label: 'Expenses',      value: '19'    },
+                            { label: 'On-time SLA',   value: '97%'   },
+                        ].map(kpi => (
+                            <div key={kpi.label} className="px-3 py-2.5 text-center">
+                                <p className="text-base font-bold text-foreground">{kpi.value}</p>
+                                <p className="text-[10px] text-muted-foreground">{kpi.label}</p>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Mini spend bars — April (muted, static) */}
+                    <div className="px-4 py-3 space-y-2">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Spend by category — April</p>
+                        {aprCategories.map(cat => (
+                            <div key={cat.name} className="flex items-center gap-2.5">
+                                <span className="text-[11px] text-muted-foreground w-14 shrink-0">{cat.name}</span>
+                                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-muted-foreground/25 rounded-full"
+                                        style={{ width: `${(cat.amount / aprMax) * 100}%` }}
+                                    />
+                                </div>
+                                <span className="text-[11px] text-muted-foreground w-9 text-right shrink-0">${(cat.amount / 1000).toFixed(1)}K</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
                 {/* Expense cycles list */}
                 <div className="bg-card border border-border rounded-xl overflow-hidden">
