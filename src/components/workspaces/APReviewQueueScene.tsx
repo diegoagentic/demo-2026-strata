@@ -13,6 +13,14 @@ import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 type SceneState = 'list' | 'notified' | 'rejecting' | 'rejected'
 type FilterKey  = 'all' | 'pending' | 'posted' | 'sla'
 
+const QUICK_REASONS = [
+    'Receipt is unclear or incomplete',
+    'GL code doesn\'t match expense type',
+    'Amount doesn\'t match the receipt',
+    'Missing itemization',
+    'Expense exceeds policy limit',
+]
+
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const PENDING_EXPENSES = [
@@ -134,7 +142,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
 
             {/* Toast — overlays above list, slides in when notified */}
             {scene === 'notified' && (
-                <APQueueToast onReview={onReview} onDismiss={() => setScene('list')} onFlag={() => setScene('rejecting')} />
+                <APQueueToast onReview={onReview} onDismiss={() => setScene('list')} onFlag={() => { setRejectNote('Receipt is unclear or incomplete'); setScene('rejecting') }} />
             )}
 
             {/* Rejecting overlay */}
@@ -144,12 +152,29 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                         <p className="text-xs font-semibold text-foreground">Flag expense for revision</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">Returning before GL review · manager and employee will be notified</p>
                     </div>
-                    <textarea
-                        value={rejectNote}
-                        onChange={e => setRejectNote(e.target.value)}
-                        placeholder="Reason for returning — e.g. missing receipt, wrong category"
-                        className="w-full border border-border rounded-xl px-3 py-2.5 text-xs text-foreground bg-background resize-none h-20 focus:outline-none focus:ring-1 focus:ring-destructive/40 placeholder:text-muted-foreground/60"
-                    />
+                    <div className="space-y-2">
+                        <div className="flex flex-wrap gap-1.5">
+                            {QUICK_REASONS.map(r => (
+                                <button
+                                    key={r}
+                                    onClick={() => setRejectNote(r)}
+                                    className={`text-[10px] font-medium px-2 py-1 rounded-full border transition-colors ${
+                                        rejectNote === r
+                                            ? 'bg-destructive/10 border-destructive/30 text-destructive'
+                                            : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted/70'
+                                    }`}
+                                >
+                                    {r}
+                                </button>
+                            ))}
+                        </div>
+                        <textarea
+                            value={rejectNote}
+                            onChange={e => setRejectNote(e.target.value)}
+                            placeholder="Reason for returning — e.g. missing receipt, wrong category"
+                            className="w-full border border-border rounded-xl px-3 py-2.5 text-xs text-foreground bg-background resize-none h-16 focus:outline-none focus:ring-1 focus:ring-destructive/40 placeholder:text-muted-foreground/60"
+                        />
+                    </div>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setScene('notified')}
@@ -169,19 +194,27 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
 
             {/* Rejected confirmation */}
             {scene === 'rejected' && (
-                <div className="bg-destructive/5 border border-destructive/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-300">
-                    <div className="flex items-center gap-2">
-                        <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
-                        <p className="text-xs font-semibold text-destructive">Expense returned before GL review</p>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">John Smith · $142.50 · removed from AP queue</p>
-                    {rejectNote && (
-                        <div className="bg-background border border-border rounded-lg px-2.5 py-2">
-                            <p className="text-[10px] text-muted-foreground italic">"{rejectNote}"</p>
+                <>
+                    <div className="bg-destructive/5 border border-destructive/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                            <p className="text-xs font-semibold text-destructive">Expense returned before GL review</p>
                         </div>
-                    )}
-                    <p className="text-[10px] text-muted-foreground">Manager and employee notified · expense requires resubmission</p>
-                </div>
+                        <p className="text-[10px] text-muted-foreground">John Smith · $142.50 · removed from AP queue</p>
+                        {rejectNote && (
+                            <div className="bg-background border border-border rounded-lg px-2.5 py-2">
+                                <p className="text-[10px] text-muted-foreground italic">"{rejectNote}"</p>
+                            </div>
+                        )}
+                        <p className="text-[10px] text-muted-foreground">Manager and employee notified · expense requires resubmission</p>
+                    </div>
+                    <button
+                        onClick={() => { setScene('list'); setRejectNote('') }}
+                        className="w-full text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors py-1.5 text-center"
+                    >
+                        ← Back to AP queue
+                    </button>
+                </>
             )}
 
             {/* Header — Letza persona, consistent with Sarah's header in ApprovalQueueScene */}

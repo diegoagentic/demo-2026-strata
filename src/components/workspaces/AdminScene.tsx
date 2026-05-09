@@ -53,6 +53,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     const [saved, setSaved]                 = useState(false)
     const [editingRule, setEditingRule]     = useState<string | null>(null)
     const [ruleImproved, setRuleImproved]   = useState(false)
+    const [confirmedRules, setConfirmedRules] = useState<Set<string>>(new Set())
     const [editingManager, setEditingManager] = useState<string | null>(null)
     const [editMgrData, setEditMgrData]     = useState({ name: '', customName: '', dept: '', location: '' })
     const [showCatDropdown, setShowCatDropdown] = useState(false)
@@ -221,6 +222,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 <div className="divide-y divide-border">
                     {glRules.map(rule => {
                         const isLowConf = rule.category === 'Parking' && !ruleImproved
+                        const isConfirmed = confirmedRules.has(rule.category)
                         return (
                             <div key={rule.category} className={`flex items-center gap-2 px-4 py-2.5 transition-colors ${isLowConf ? 'bg-warning/5' : ''}`}>
                                 <div className="flex items-center gap-1.5 w-28 shrink-0">
@@ -240,17 +242,41 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                                         ))}
                                     </select>
                                 ) : (
-                                    <button
-                                        onClick={() => setEditingRule(rule.category)}
-                                        title="Click to edit GL mapping"
-                                        className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2 py-1 -mx-2 hover:bg-muted/50 transition-colors cursor-pointer group text-left"
-                                    >
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <span className="text-[11px] font-mono text-muted-foreground shrink-0">{rule.glCode}</span>
                                         <span className="text-[11px] text-foreground truncate">· {rule.glName}</span>
                                         <ConfidencePill pct={rule.confidence} />
-                                        <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-auto" />
-                                    </button>
+                                    </div>
                                 )}
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                        onClick={() => setEditingRule(editingRule === rule.category ? null : rule.category)}
+                                        className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground border border-border px-2 py-0.5 rounded-full hover:bg-muted/50 transition-colors"
+                                        title="Edit GL mapping"
+                                    >
+                                        <Pencil className="h-2.5 w-2.5" />
+                                        Edit
+                                    </button>
+                                    {isLowConf && !isConfirmed ? (
+                                        <button
+                                            onClick={() => setConfirmedRules(prev => new Set([...prev, rule.category]))}
+                                            className="flex items-center gap-1 text-[10px] font-semibold text-success border border-success/30 bg-success/5 px-2 py-0.5 rounded-full hover:bg-success/15 transition-colors"
+                                            title="Approve this GL mapping"
+                                        >
+                                            <Check className="h-2.5 w-2.5" />
+                                            Approve
+                                        </button>
+                                    ) : (
+                                        <span className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                                            isConfirmed
+                                                ? 'text-success bg-success/10 border-success/20'
+                                                : 'text-muted-foreground bg-muted/30 border-border'
+                                        }`}>
+                                            <Check className="h-2.5 w-2.5" />
+                                            {isConfirmed ? 'Approved' : 'Verified'}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         )
                     })}
