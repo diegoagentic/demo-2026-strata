@@ -583,6 +583,10 @@ export default function CFODashboardScene() {
                             <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · Expense cycle complete</p>
                             <p className="text-xs font-semibold text-foreground">May 2026 · $48K posted to CORE</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">Letza Bombard · 2:48 PM · All receipts verified ✓</p>
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                                <span className="text-[10px] bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full font-medium">23 expenses posted</span>
+                                <span className="text-[10px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">1 GL rule improved</span>
+                            </div>
                             <p className="text-xs font-semibold text-ai mt-1.5 group-hover:underline flex items-center gap-1">
                                 View full report <ChevronRight className="h-3 w-3" />
                             </p>
@@ -873,6 +877,27 @@ function CompanyView({
                         <p className="text-[10px] text-muted-foreground">{kpi.sub}</p>
                     </div>
                 ))}
+            </div>
+
+            {/* Cycle summary — connects to w2.2 (posted) + w2.3 (rule improved) */}
+            <div className="bg-card border border-border rounded-xl px-4 py-3 space-y-2">
+                <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-ai shrink-0" />
+                    <p className="text-[10px] font-semibold text-ai">May 2026 · Cycle closed by Letza Bombard · 2:48 PM</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                    {[
+                        { value: '23',   label: 'Expenses posted',    color: 'text-foreground' },
+                        { value: '100%', label: 'Receipts verified',  color: 'text-success'    },
+                        { value: '1 ↑',  label: 'GL rule improved',   color: 'text-ai'         },
+                    ].map(stat => (
+                        <div key={stat.label} className="bg-muted/40 rounded-xl px-2 py-2">
+                            <p className={`text-sm font-bold ${stat.color} leading-none`}>{stat.value}</p>
+                            <p className="text-[9px] text-muted-foreground mt-1 leading-tight">{stat.label}</p>
+                        </div>
+                    ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground">Parking auto-classification updated · next submissions will match at 97%+</p>
             </div>
 
             {/* Spend bars */}

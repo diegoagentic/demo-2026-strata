@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check, Link2, GripVertical } from 'lucide-react'
+import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check, Link2, GripVertical, AlertTriangle, TrendingUp } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 const INITIAL_MANAGERS = [
@@ -52,6 +52,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     const [newMgr, setNewMgr]               = useState({ name: '', customName: '', dept: '', location: '' })
     const [saved, setSaved]                 = useState(false)
     const [editingRule, setEditingRule]     = useState<string | null>(null)
+    const [ruleImproved, setRuleImproved]   = useState(false)
     const [editingManager, setEditingManager] = useState<string | null>(null)
     const [editMgrData, setEditMgrData]     = useState({ name: '', customName: '', dept: '', location: '' })
     const [showCatDropdown, setShowCatDropdown] = useState(false)
@@ -160,8 +161,9 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
         const option = GL_CODE_OPTIONS.find(o => o.code === glCode)
         if (!option) return
         setGlRules(prev => prev.map(r =>
-            r.category === category ? { ...r, glCode: option.code, glName: option.name } : r
+            r.category === category ? { ...r, glCode: option.code, glName: option.name, confidence: category === 'Parking' ? 97 : r.confidence } : r
         ))
+        if (category === 'Parking') setRuleImproved(true)
         setEditingRule(null)
     }
 
@@ -177,7 +179,89 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 <p className="text-xs text-muted-foreground">Self-service · No IT ticket required · Changes apply immediately</p>
             </div>
 
-            {/* Section 1 — Manager List */}
+            {/* Triggered context — connects to w2.2 Parking 72% */}
+            {!ruleImproved && (
+                <div className="bg-warning/5 border border-warning/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
+                        <p className="text-xs font-semibold text-foreground">1 mapping rule needs attention</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        The <span className="font-semibold text-foreground">Parking</span> category matched at <span className="font-semibold text-warning">72% confidence</span> on the expense you just reviewed. Update the GL rule so future parking expenses auto-classify correctly — no IT ticket needed.
+                    </p>
+                    <p className="text-[10px] text-ai">✦ Strata flagged this automatically after the manual verification in GL review</p>
+                </div>
+            )}
+            {ruleImproved && (
+                <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-3 space-y-1 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2">
+                        <TrendingUp className="h-3.5 w-3.5 text-success shrink-0" />
+                        <p className="text-xs font-semibold text-success">Parking rule updated</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Confidence will improve from 72% → 97% for future submissions · rule is live immediately</p>
+                </div>
+            )}
+
+            {/* Section GL Mapping Rules — first, it's the triggered action from w2.2 */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border">
+                    <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-ai" />
+                        <p className="text-xs font-bold text-foreground">GL Mapping Rules</p>
+                        {!ruleImproved && (
+                            <span className="ml-auto text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 px-1.5 py-0.5 rounded-full">1 needs attention</span>
+                        )}
+                        {ruleImproved && (
+                            <span className="ml-auto text-[10px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded-full">Updated ✓</span>
+                        )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Powers AI confidence scores in AP review — click any row to edit</p>
+                </div>
+
+                <div className="divide-y divide-border">
+                    {glRules.map(rule => {
+                        const isLowConf = rule.category === 'Parking' && !ruleImproved
+                        return (
+                            <div key={rule.category} className={`flex items-center gap-2 px-4 py-2.5 transition-colors ${isLowConf ? 'bg-warning/5' : ''}`}>
+                                <div className="flex items-center gap-1.5 w-28 shrink-0">
+                                    <span className="text-xs text-foreground">{rule.category}</span>
+                                    {isLowConf && <AlertTriangle className="h-3 w-3 text-warning shrink-0" />}
+                                </div>
+                                {editingRule === rule.category ? (
+                                    <select
+                                        autoFocus
+                                        value={rule.glCode}
+                                        onChange={e => updateGlRule(rule.category, e.target.value)}
+                                        onBlur={() => setEditingRule(null)}
+                                        className="flex-1 text-xs bg-background border border-primary rounded px-2 py-1 text-foreground outline-none"
+                                    >
+                                        {GL_CODE_OPTIONS.map(o => (
+                                            <option key={o.code} value={o.code}>{o.code} · {o.name}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <button
+                                        onClick={() => setEditingRule(rule.category)}
+                                        title="Click to edit GL mapping"
+                                        className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2 py-1 -mx-2 hover:bg-muted/50 transition-colors cursor-pointer group text-left"
+                                    >
+                                        <span className="text-[11px] font-mono text-muted-foreground shrink-0">{rule.glCode}</span>
+                                        <span className="text-[11px] text-foreground truncate">· {rule.glName}</span>
+                                        <ConfidencePill pct={rule.confidence} />
+                                        <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-auto" />
+                                    </button>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+
+                <div className="px-4 py-3 border-t border-border">
+                    <p className="text-[10px] text-muted-foreground">Before Strata: Letza looked up GL codes manually for each expense — no rules engine, no consistency</p>
+                </div>
+            </div>
+
+            {/* Section — Manager List */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                     <div>
@@ -413,55 +497,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 </div>
             </div>
 
-            {/* Section 3 — GL Mapping Rules */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border">
-                    <div className="flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-ai" />
-                        <p className="text-xs font-bold text-foreground">GL Mapping Rules</p>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">Powers AI confidence scores in AP review — click any row to edit</p>
-                </div>
-
-                <div className="divide-y divide-border">
-                    {glRules.map(rule => (
-                        <div key={rule.category} className="flex items-center gap-2 px-4 py-2.5">
-                            <span className="text-xs text-foreground w-28 shrink-0">{rule.category}</span>
-
-                            {editingRule === rule.category ? (
-                                <select
-                                    autoFocus
-                                    value={rule.glCode}
-                                    onChange={e => updateGlRule(rule.category, e.target.value)}
-                                    onBlur={() => setEditingRule(null)}
-                                    className="flex-1 text-xs bg-background border border-primary rounded px-2 py-1 text-foreground outline-none"
-                                >
-                                    {GL_CODE_OPTIONS.map(o => (
-                                        <option key={o.code} value={o.code}>{o.code} · {o.name}</option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <button
-                                    onClick={() => setEditingRule(rule.category)}
-                                    title="Click to edit GL mapping"
-                                    className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2 py-1 -mx-2 hover:bg-muted/50 transition-colors cursor-pointer group text-left"
-                                >
-                                    <span className="text-[11px] font-mono text-muted-foreground shrink-0">{rule.glCode}</span>
-                                    <span className="text-[11px] text-foreground truncate">· {rule.glName}</span>
-                                    <ConfidencePill pct={rule.confidence} />
-                                    <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-auto" />
-                                </button>
-                            )}
-                        </div>
-                    ))}
-                </div>
-
-                <div className="px-4 py-3 border-t border-border">
-                    <p className="text-[10px] text-muted-foreground">Before Strata: Letza looked up GL codes manually for each expense — no rules engine, no consistency</p>
-                </div>
-            </div>
-
-            {/* Section 4 — Approval Hierarchy */}
+            {/* Section — Approval Hierarchy */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                     <div>
