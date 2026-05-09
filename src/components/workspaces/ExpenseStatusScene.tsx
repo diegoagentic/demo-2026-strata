@@ -17,7 +17,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { CheckCircle2, Clock, Circle, Sparkles, X, Bell, ChevronDown, ChevronLeft, ChevronRight, Plus, AlertCircle, Camera, Send } from 'lucide-react'
+import { CheckCircle2, Clock, Circle, Sparkles, ChevronDown, ChevronLeft, ChevronRight, Plus, AlertCircle, Camera, Send } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import { useDemo } from '../../context/DemoContext'
@@ -110,6 +110,11 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
         pauseAware(() => setScene('notified'), 1800)
     }, [pauseAware, scenarioMode])
 
+    useEffect(() => {
+        if (scene !== 'notified') return
+        pauseAware(() => setScene('updated'), 1600)
+    }, [scene, pauseAware])
+
     // Derive the active timeline from mode + scene
     const timeline =
         scenarioMode === 'rejected'
@@ -155,8 +160,22 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
             </div>
 
             <div className="px-4 py-4 space-y-4">
-                {/* User context */}
-                <p className="text-[10px] text-muted-foreground">John Smith · Field Staff</p>
+                {/* User context — avatar + name */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm font-bold text-foreground">My Expenses</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">John Smith · Field Staff</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full overflow-hidden border border-border shrink-0">
+                            <img
+                                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face"
+                                alt="John Smith"
+                                className="h-full w-full object-cover"
+                            />
+                        </div>
+                    </div>
+                </div>
 
                 {/* Scenario toggle */}
                 <div className="flex gap-1 bg-muted/40 rounded-xl p-0.5 w-fit">
@@ -181,7 +200,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
 
                 {/* Approved path notification */}
                 {scenarioMode === 'approved' && scene === 'notified' && (
-                    <div className="animate-in slide-in-from-top duration-500 space-y-2">
+                    <div className="animate-in slide-in-from-top duration-500">
                         <div className="flex items-start gap-2.5 bg-card border border-ai/40 rounded-2xl px-3 py-3 shadow-lg">
                             <div className="relative shrink-0 mt-0.5">
                                 <div className="h-8 w-8 rounded-xl bg-ai/10 flex items-center justify-center">
@@ -195,26 +214,17 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                                 <p className="text-[10px] text-muted-foreground mt-0.5">Payment scheduled · full status updated</p>
                             </div>
                         </div>
-                        <button
-                            onClick={() => setScene('updated')}
-                            className="w-full flex items-center justify-center gap-1.5 bg-ai text-white text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-                        >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            Update my timeline
-                        </button>
                     </div>
                 )}
 
                 {/* Rejected path notification */}
                 {scenarioMode === 'rejected' && scene === 'notified' && (
-                    <button
-                        onClick={() => setScene('updated')}
-                        className="w-full animate-in slide-in-from-top duration-500 flex items-start gap-2.5 bg-card border border-destructive/40 rounded-2xl px-3 py-3 text-left shadow-lg hover:border-destructive/70 transition-all group"
-                    >
+                    <div className="animate-in slide-in-from-top duration-500 flex items-start gap-2.5 bg-card border border-destructive/40 rounded-2xl px-3 py-3 shadow-lg">
                         <div className="relative shrink-0 mt-0.5">
                             <div className="h-8 w-8 rounded-xl bg-destructive/10 flex items-center justify-center">
                                 <AlertCircle className="h-3.5 w-3.5 text-destructive" />
                             </div>
+                            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive border-2 border-card animate-pulse" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-bold text-destructive uppercase tracking-wide mb-0.5">Sarah Johnson · Returned</p>
@@ -222,20 +232,10 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                                 Receipt is unclear — correction needed
                             </p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">
-                                $142.50 · Fuel + Parking · see rejection note
+                                $142.50 · Fuel + Parking · updating your timeline
                             </p>
-                            <div className="flex items-center gap-1 mt-1.5">
-                                <p className="text-xs font-semibold text-destructive group-hover:underline">Tap to see details</p>
-                                <ChevronRight className="h-3.5 w-3.5 text-destructive" />
-                            </div>
                         </div>
-                        <button
-                            onClick={e => { e.stopPropagation(); setScene('watching') }}
-                            className="shrink-0 text-muted-foreground hover:text-foreground mt-0.5"
-                        >
-                            <X className="h-3 w-3" />
-                        </button>
-                    </button>
+                    </div>
                 )}
 
                 {/* Rejection card — appears when rejected + updated */}
@@ -349,8 +349,8 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                         {/* Role selector */}
                         <div className="space-y-1.5">
                             {[
-                                { role: 'AP Coordinator', name: 'Letza Bombard',      sub: 'Accounting review & payment posting' },
-                                { role: 'Finance Team',   name: 'Workscapes Finance', sub: 'General ledger & reporting'          },
+                                { role: 'AP Coordinator', name: 'Letza Bombard',   sub: 'Accounting review & payment posting' },
+                                { role: 'My manager',     name: 'Sarah Johnson',   sub: 'Operations Manager · approved this expense' },
                             ].map(r => (
                                 <button
                                     key={r.role}
@@ -476,17 +476,12 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     </div>
                 </div>
 
-                {/* Watching state — incoming notification hint + presenter skip */}
+                {/* Watching state — subtle live indicator */}
                 {scene === 'watching' && (
-                    <button
-                        onClick={() => setScene('notified')}
-                        className="w-full flex items-center justify-center gap-2 bg-muted/40 border border-dashed border-border rounded-xl px-3 py-3 hover:bg-muted/60 transition-colors group"
-                    >
-                        <Bell className="h-3.5 w-3.5 text-muted-foreground animate-pulse group-hover:text-foreground transition-colors" />
-                        <p className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
-                            {scenarioMode === 'approved' ? 'Notification incoming — tap to receive update' : 'Notification incoming — tap to receive update'}
-                        </p>
-                    </button>
+                    <div className="flex items-center justify-center gap-2 py-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-ai animate-pulse" />
+                        <p className="text-[10px] text-muted-foreground/60">Live · updating in real time</p>
+                    </div>
                 )}
 
                 {/* Expense history */}
