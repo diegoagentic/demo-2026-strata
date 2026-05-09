@@ -87,6 +87,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
     const [scenarioMode, setScenarioMode] = useState<ScenarioMode>('approved')
     const [expanded,     setExpanded]     = useState<Set<string>>(new Set(['Approved']))
     const [selectedRole, setSelectedRole] = useState<string | null>(null)
+    const [photoState,   setPhotoState]   = useState<'idle' | 'capturing' | 'captured'>('idle')
 
     const toggleStep = (label: string) => {
         setExpanded(prev => {
@@ -184,7 +185,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                         {(['approved', 'rejected'] as const).map(m => (
                             <button
                                 key={m}
-                                onClick={() => { setScenarioMode(m); setScene('watching'); setSelectedRole(null) }}
+                                onClick={() => { setScenarioMode(m); setScene('watching'); setSelectedRole(null); setPhotoState('idle') }}
                                 className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-all ${
                                     scenarioMode === m
                                         ? m === 'approved'
@@ -293,31 +294,93 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                             <span className="text-[9px] bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded-full font-bold shrink-0">Action needed</span>
                         </div>
 
-                        {/* Re-attach camera UI */}
-                        <div className="border-2 border-dashed border-destructive/30 rounded-xl p-4 flex flex-col items-center gap-2 bg-destructive/3 cursor-pointer hover:border-destructive/50 transition-colors">
-                            <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                                <Camera className="h-5 w-5 text-destructive/70" />
+                        {/* Re-attach camera — 3 states: idle → capturing → captured */}
+                        {photoState === 'idle' && (
+                            <button
+                                onClick={() => {
+                                    setPhotoState('capturing')
+                                    setTimeout(() => setPhotoState('captured'), 1800)
+                                }}
+                                className="w-full border-2 border-dashed border-destructive/30 rounded-xl p-4 flex flex-col items-center gap-2 bg-destructive/5 hover:border-destructive/50 hover:bg-destructive/8 transition-all"
+                            >
+                                <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                                    <Camera className="h-5 w-5 text-destructive/70" />
+                                </div>
+                                <p className="text-xs font-semibold text-foreground">Tap to re-attach corrected receipt</p>
+                                <p className="text-[10px] text-muted-foreground">Camera · Gallery · JPG, PNG, PDF</p>
+                            </button>
+                        )}
+
+                        {photoState === 'capturing' && (
+                            <div className="border-2 border-foreground/20 rounded-xl overflow-hidden animate-in fade-in duration-200">
+                                <div className="bg-zinc-900 h-32 flex flex-col items-center justify-center gap-2 relative">
+                                    <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-white/60 rounded-tl-sm" />
+                                    <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-white/60 rounded-tr-sm" />
+                                    <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-white/60 rounded-bl-sm" />
+                                    <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-white/60 rounded-br-sm" />
+                                    <div className="absolute inset-x-6 h-0.5 bg-primary/80 animate-bounce" style={{ top: '50%' }} />
+                                    <Camera className="h-5 w-5 text-white/30" />
+                                </div>
+                                <div className="bg-zinc-950 px-3 py-2 flex items-center justify-center gap-2">
+                                    <Sparkles className="h-3 w-3 text-ai animate-pulse" />
+                                    <p className="text-[10px] text-white/70 font-medium">Scanning receipt — hold steady</p>
+                                </div>
                             </div>
-                            <p className="text-xs font-semibold text-foreground">Re-attach corrected receipt</p>
-                            <p className="text-[10px] text-muted-foreground text-center">Tap to open camera or choose from gallery · JPG, PNG, PDF</p>
-                        </div>
+                        )}
+
+                        {photoState === 'captured' && (
+                            <div className="space-y-2 animate-in fade-in duration-300">
+                                {/* Compact receipt preview */}
+                                <div className="border border-success/30 bg-card rounded-xl overflow-hidden shadow-sm">
+                                    <div className="bg-zinc-800 px-3 py-2 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-black text-white tracking-tight">SUNCOAST FUEL SERVICES</p>
+                                            <p className="text-[9px] text-zinc-400">Fuel Receipt · May 5, 2026 · #TX-2847</p>
+                                        </div>
+                                        <p className="text-[12px] font-bold text-white font-mono">$95.00</p>
+                                    </div>
+                                    <div className="px-3 py-2 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] text-foreground font-medium">Premium Unleaded · 11.8 gal</p>
+                                            <p className="text-[9px] text-muted-foreground font-mono">Auth: 029441 · Visa ···· 4892</p>
+                                        </div>
+                                        <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">APPROVED ✓</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between px-0.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                        <p className="text-[11px] font-semibold text-success">Receipt captured · image quality: good</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setPhotoState('idle')}
+                                        className="text-[10px] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+                                    >
+                                        Retake
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Note to manager */}
                         <div>
                             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Note to manager <span className="normal-case font-normal">(optional)</span></p>
                             <textarea
+                                key={photoState}
+                                defaultValue={photoState === 'captured' ? "Here's the corrected receipt — full amount visible this time. Sorry for the trouble." : ''}
                                 placeholder="Add context for Sarah (e.g. 'Attached cleaner scan of the fuel receipt')"
                                 className="w-full border border-border rounded-xl px-3 py-2.5 text-xs text-foreground bg-background resize-none h-16 focus:outline-none focus:ring-1 focus:ring-destructive/40 placeholder:text-muted-foreground/60"
                             />
                         </div>
 
-                        {/* Resubmit button */}
+                        {/* Resubmit button — enabled only after photo captured */}
                         <button
                             onClick={() => setScene('resubmitted')}
-                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+                            disabled={photoState !== 'captured'}
+                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                         >
                             <Send className="h-3.5 w-3.5" />
-                            Resubmit for Approval
+                            {photoState === 'captured' ? 'Resubmit for Approval' : 'Attach receipt to resubmit'}
                         </button>
                     </div>
                 )}

@@ -368,7 +368,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                     <div className="flex items-center gap-2 bg-ai/5 border border-ai/15 rounded-xl px-3 py-2.5">
                         <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                         <p className="text-[11px] text-ai leading-snug">
-                            Review each line · override the code if needed · accept ✓ to confirm before posting
+                            Strata analyzed these lines from the receipt — verify each code looks right, then post to CORE
                         </p>
                     </div>
                     {LINES.map(line => {
@@ -399,8 +399,8 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                                                     ? 'border-success bg-success text-white'
                                                     : 'border-border text-muted-foreground hover:border-success/60 hover:text-success'
                                             }`}
-                                            aria-label={accepted ? 'Undo acceptance' : 'Accept this GL line'}
-                                            title={accepted ? 'Accepted — click to undo' : 'Accept GL line'}
+                                            aria-label={accepted ? 'Confirmed — click to undo' : 'Confirm this code'}
+                                            title={accepted ? 'Confirmed ✓ — click to undo' : 'Confirm this code'}
                                         >
                                             <Check className="h-3.5 w-3.5" />
                                         </button>
@@ -408,8 +408,14 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                                 </div>
                                 <div className="space-y-1.5">
                                     <div className="flex items-center gap-1.5">
-                                        <Sparkles className="h-3 w-3 text-ai" />
-                                        <span className="text-[10px] text-ai font-medium">AI suggestion — change if needed</span>
+                                        <Sparkles className={`h-3 w-3 shrink-0 ${line.confidence >= 90 ? 'text-ai' : line.confidence >= 75 ? 'text-warning' : 'text-destructive'}`} />
+                                        <span className={`text-[10px] font-medium ${line.confidence >= 90 ? 'text-ai' : line.confidence >= 75 ? 'text-warning' : 'text-destructive'}`}>
+                                            {line.confidence >= 90
+                                                ? 'Strata matched this with high confidence — confirm to continue'
+                                                : line.confidence >= 75
+                                                ? 'Strata matched this — verify before confirming'
+                                                : 'Lower confidence — please verify this code before confirming'}
+                                        </span>
                                     </div>
                                     <div className="relative">
                                         <select
@@ -597,7 +603,7 @@ function ConfidencePill({ pct }: { pct: number }) {
         : pct >= 75
         ? 'text-warning bg-warning/10 border border-warning/20'
         : 'text-destructive bg-destructive/10 border border-destructive/20'
-    const label = pct >= 75 ? `${pct}%` : 'Manual review'
+    const label = pct >= 75 ? `${pct}%` : 'Verify'
     return (
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{label}</span>
     )
