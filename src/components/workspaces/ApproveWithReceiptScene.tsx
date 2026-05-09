@@ -643,13 +643,24 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                                 Approve & route to accounting
                             </button>
                             {!showReject ? (
-                                <button
-                                    onClick={() => setShowReject(true)}
-                                    className="w-full flex items-center justify-center gap-2 bg-card border border-border text-foreground text-xs font-semibold py-2.5 rounded-xl hover:bg-muted/40 transition-colors"
-                                >
-                                    <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
-                                    Return to employee
-                                </button>
+                                <>
+                                    <button
+                                        onClick={() => setShowReject(true)}
+                                        className="w-full flex items-center justify-center gap-2 bg-card border border-border text-foreground text-xs font-semibold py-2.5 rounded-xl hover:bg-muted/40 transition-colors"
+                                    >
+                                        <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                                        Return to employee
+                                    </button>
+                                    <p className="text-center text-[10px] text-muted-foreground">
+                                        To show the full return loop with resubmit:{' '}
+                                        <button
+                                            onClick={() => switchMode('reject')}
+                                            className="text-destructive font-semibold hover:underline"
+                                        >
+                                            switch to Return path →
+                                        </button>
+                                    </p>
+                                </>
                             ) : (
                                 <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
                                     <div className="flex items-center gap-2">
@@ -906,22 +917,26 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                 </div>
             )}
 
-            {/* ── Presenter control — scenario switcher (below actions: review first, then decide) ── */}
-            <div className="border-t border-border/50 pt-3 flex items-center gap-2.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">Demo scenario</span>
-                <div className="flex gap-1">
+            {/* ── Presenter control — scenario switcher ── */}
+            <div className="bg-muted/30 border border-border rounded-xl px-3 py-2.5 space-y-1.5">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Presenter: switch scenario</p>
+                <div className="flex gap-1 flex-wrap">
                     {([
-                        { key: 'approve', label: 'Normal approval' },
-                        { key: 'reject',  label: 'Return path'    },
-                        { key: 'planb',   label: 'Policy flag ⚠'  },
+                        { key: 'approve', label: '✓ Normal approval' },
+                        { key: 'reject',  label: '↩ Return path'     },
+                        { key: 'planb',   label: '⚠ Policy flag'     },
                     ] as { key: ScenarioMode; label: string }[]).map(s => (
                         <button
                             key={s.key}
                             onClick={() => switchMode(s.key)}
-                            className={`text-[10px] px-2 py-0.5 rounded-md transition-all font-medium ${
+                            className={`text-[10px] px-2.5 py-1 rounded-lg transition-all font-semibold border ${
                                 mode === s.key
-                                    ? 'bg-muted text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    ? s.key === 'reject'
+                                        ? 'bg-destructive/10 text-destructive border-destructive/20'
+                                        : s.key === 'planb'
+                                        ? 'bg-warning/10 text-warning border-warning/20'
+                                        : 'bg-success/10 text-success border-success/20'
+                                    : 'text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/60'
                             }`}
                         >
                             {s.label}

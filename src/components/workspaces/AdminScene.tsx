@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check, Link2 } from 'lucide-react'
+import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check, Link2, GripVertical } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 const INITIAL_MANAGERS = [
@@ -60,6 +60,23 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     const catDropdownRef = useRef<HTMLDivElement>(null)
     const [editingHierarchy, setEditingHierarchy] = useState(false)
     const [hierarchySaved, setHierarchySaved]     = useState(false)
+    const [hierarchy, setHierarchy]               = useState(['Employee', 'Manager', 'Dept Head', 'CFO / AP'])
+    const hierarchySnapshot                       = useRef<string[]>([])
+    const dragIdx                                 = useRef<number | null>(null)
+    const [dragOver, setDragOver]                 = useState<number | null>(null)
+
+    const handleDragStart = (i: number) => { dragIdx.current = i }
+    const handleDragOver  = (e: React.DragEvent, i: number) => { e.preventDefault(); setDragOver(i) }
+    const handleDrop      = (i: number) => {
+        if (dragIdx.current === null || dragIdx.current === i) { setDragOver(null); return }
+        const next = [...hierarchy]
+        const [item] = next.splice(dragIdx.current, 1)
+        next.splice(i, 0, item)
+        setHierarchy(next)
+        dragIdx.current = null
+        setDragOver(null)
+    }
+    const handleDragEnd = () => { dragIdx.current = null; setDragOver(null) }
 
     useEffect(() => {
         if (!showCatDropdown) return
@@ -453,7 +470,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                     </div>
                     {!editingHierarchy && !hierarchySaved && (
                         <button
-                            onClick={() => setEditingHierarchy(true)}
+                            onClick={() => { hierarchySnapshot.current = [...hierarchy]; setEditingHierarchy(true) }}
                             className="flex items-center gap-1 text-[10px] font-semibold bg-primary text-primary-foreground px-2.5 py-1 rounded-lg hover:opacity-90 transition-opacity"
                         >
                             <Pencil className="h-3 w-3" />
@@ -472,7 +489,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 {!editingHierarchy && (
                     <div className="px-4 py-4">
                         <div className="flex items-center gap-2 flex-wrap">
-                            {['Employee', 'Manager', 'Dept Head', 'CFO / AP'].map((level, i, arr) => (
+                            {hierarchy.map((level, i, arr) => (
                                 <div key={level} className="flex items-center gap-2">
                                     <span className={`text-xs border px-3 py-1.5 rounded-full font-medium transition-colors ${
                                         hierarchySaved ? 'bg-success/10 border-success/30 text-success' : 'bg-muted border-border text-foreground'
@@ -494,10 +511,25 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                     <div className="px-4 py-4 space-y-3 animate-in fade-in duration-200">
                         <p className="text-[10px] text-muted-foreground">Drag to reorder · Each level reports to the next</p>
                         <div className="space-y-2">
-                            {['Employee', 'Manager', 'Dept Head', 'CFO / AP'].map((level, i) => (
-                                <div key={level} className="flex items-center gap-3 bg-muted/40 border border-border rounded-lg px-3 py-2">
-                                    <span className="text-[10px] text-muted-foreground font-bold w-4">{i + 1}</span>
-                                    <span className="text-xs font-medium text-foreground flex-1">{level}</span>
+                            {hierarchy.map((level, i) => (
+                                <div
+                                    key={level}
+                                    draggable
+                                    onDragStart={() => handleDragStart(i)}
+                                    onDragOver={(e) => handleDragOver(e, i)}
+                                    onDrop={() => handleDrop(i)}
+                                    onDragEnd={handleDragEnd}
+                                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all cursor-grab active:cursor-grabbing ${
+                                        dragOver === i
+                                            ? 'border-ai/40 bg-ai/5 scale-[1.01]'
+                                            : 'border-border bg-card hover:bg-muted/30'
+                                    }`}
+                                >
+                                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                        i === 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                                    }`}>{i + 1}</div>
+                                    <p className="text-xs font-medium text-foreground flex-1">{level}</p>
                                     <span className="text-[9px] text-muted-foreground/60 font-medium uppercase tracking-wide">
                                         {i === 0 ? 'submits' : i === 1 ? 'approves' : i === 2 ? 'oversees' : 'final authority'}
                                     </span>
@@ -513,7 +545,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                                 Confirm Hierarchy
                             </button>
                             <button
-                                onClick={() => setEditingHierarchy(false)}
+                                onClick={() => { setHierarchy(hierarchySnapshot.current); setEditingHierarchy(false) }}
                                 className="px-3 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
                             >
                                 Cancel

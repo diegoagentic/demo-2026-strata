@@ -177,23 +177,28 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                     </div>
                 </div>
 
-                {/* Scenario toggle */}
-                <div className="flex gap-1 bg-muted/40 rounded-xl p-0.5 w-fit">
-                    {(['approved', 'rejected'] as const).map(m => (
-                        <button
-                            key={m}
-                            onClick={() => { setScenarioMode(m); setScene('watching'); setSelectedRole(null) }}
-                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-all ${
-                                scenarioMode === m
-                                    ? m === 'approved'
-                                        ? 'bg-success/15 text-success'
-                                        : 'bg-destructive/15 text-destructive'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                        >
-                            {m === 'approved' ? '✓ Approved path' : '✗ Returned path'}
-                        </button>
-                    ))}
+                {/* Scenario toggle — presenter control */}
+                <div className="space-y-1">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Presenter: show both paths</p>
+                    <div className="flex gap-1 bg-muted/40 border border-border rounded-xl p-0.5 w-fit">
+                        {(['approved', 'rejected'] as const).map(m => (
+                            <button
+                                key={m}
+                                onClick={() => { setScenarioMode(m); setScene('watching'); setSelectedRole(null) }}
+                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-all ${
+                                    scenarioMode === m
+                                        ? m === 'approved'
+                                            ? 'bg-success/15 text-success'
+                                            : 'bg-destructive/15 text-destructive'
+                                        : m === 'rejected'
+                                            ? 'text-destructive/50 hover:text-destructive hover:bg-destructive/5'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                {m === 'approved' ? '✓ Approved path' : '↩ Returned path'}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Push notification — slides in after delay */}
