@@ -6,8 +6,9 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Pencil, X, CheckCircle2, ChevronRight, Sparkles, Check, Link2, GripVertical, AlertTriangle, TrendingUp } from 'lucide-react'
+import { Plus, Pencil, X, CheckCircle2, ChevronRight, ChevronDown, Sparkles, Check, Link2, GripVertical, AlertTriangle, TrendingUp, ArrowRight } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import { useDemo } from '../../context/DemoContext'
 
 const INITIAL_MANAGERS = [
     { name: 'Sarah Johnson', dept: 'Operations', location: 'Tampa' },
@@ -31,7 +32,7 @@ const GL_RULES_INITIAL = [
     { category: 'Fuel',                  glCode: '6200', glName: 'Vehicle Expenses',      confidence: 94 },
     { category: 'Meals & Entertainment', glCode: '6100', glName: 'Meals & Entertainment', confidence: 91 },
     { category: 'Travel',                glCode: '6210', glName: 'Travel & Transit',       confidence: 96 },
-    { category: 'Parking',               glCode: '6210', glName: 'Travel & Transit',       confidence: 97 },
+    { category: 'Parking',               glCode: '6210', glName: 'Travel & Transit',       confidence: 72 },
     { category: 'Office',                glCode: '6300', glName: 'Office Expenses',         confidence: 89 },
 ]
 
@@ -45,6 +46,7 @@ const GL_CODE_OPTIONS = [
 ]
 
 export default function AdminScene({ onSave }: { onSave?: () => void }) {
+    const { nextStep } = useDemo()
     const [managers, setManagers]           = useState(INITIAL_MANAGERS)
     const [categories, setCategories]       = useState(INITIAL_CATEGORIES)
     const [glRules, setGlRules]             = useState(GL_RULES_INITIAL)
@@ -60,6 +62,10 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     const [showCustomCat, setShowCustomCat] = useState(false)
     const [customCatInput, setCustomCatInput] = useState('')
     const catDropdownRef = useRef<HTMLDivElement>(null)
+    const [openSections, setOpenSections]         = useState<Set<string>>(new Set(['gl-rules']))
+    const toggleSection = (id: string) => setOpenSections(prev => {
+        const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n
+    })
     const [editingHierarchy, setEditingHierarchy] = useState(false)
     const [hierarchySaved, setHierarchySaved]     = useState(false)
     const [hierarchy, setHierarchy]               = useState(['Employee', 'Manager', 'Dept Head', 'CFO / AP'])
@@ -194,12 +200,20 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 </div>
             )}
             {ruleImproved && (
-                <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-3 space-y-1 animate-in fade-in duration-300">
+                <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-300">
                     <div className="flex items-center gap-2">
                         <TrendingUp className="h-3.5 w-3.5 text-success shrink-0" />
-                        <p className="text-xs font-semibold text-success">Parking rule updated</p>
+                        <p className="text-xs font-semibold text-success">Parking rule corrected — live immediately</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Confidence will improve from 72% → 97% for future submissions · rule is live immediately</p>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-destructive/70 bg-destructive/10 border border-destructive/20 px-1.5 py-0.5 rounded-full">72%</span>
+                            <ArrowRight className="h-2.5 w-2.5 text-muted-foreground" />
+                            <span className="text-[10px] font-bold text-success bg-success/15 border border-success/25 px-1.5 py-0.5 rounded-full">97%</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Auto-classification · no manual verification needed</p>
+                    </div>
+                    <p className="text-[10px] text-ai">✦ Every future parking expense auto-classifies correctly — this fix applies retroactively to the rules engine</p>
                 </div>
             )}
 
@@ -245,7 +259,15 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <span className="text-[11px] font-mono text-muted-foreground shrink-0">{rule.glCode}</span>
                                         <span className="text-[11px] text-foreground truncate">· {rule.glName}</span>
-                                        <ConfidencePill pct={rule.confidence} />
+                                        {rule.category === 'Parking' && ruleImproved ? (
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <span className="text-[10px] font-bold text-muted-foreground/50 line-through">72%</span>
+                                                <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/40" />
+                                                <ConfidencePill pct={rule.confidence} />
+                                            </div>
+                                        ) : (
+                                            <ConfidencePill pct={rule.confidence} />
+                                        )}
                                     </div>
                                 )}
                                 <div className="flex items-center gap-1 shrink-0">
@@ -289,11 +311,22 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
 
             {/* Section — Manager List */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                    <div>
+                <button
+                    onClick={() => toggleSection('managers')}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                >
+                    <div className="text-left">
                         <p className="text-xs font-bold text-foreground">Approval Managers</p>
                         <p className="text-[10px] text-muted-foreground">Feeds the submission dropdown — always current</p>
                     </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] text-muted-foreground">{managers.length} managers</span>
+                        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${openSections.has('managers') ? 'rotate-180' : ''}`} />
+                    </div>
+                </button>
+                {openSections.has('managers') && (
+                <div className="border-t border-border">
+                <div className="px-4 py-2 flex justify-end border-b border-border">
                     <button
                         onClick={() => { setShowAddMgr(!showAddMgr); setEditingManager(null) }}
                         className="flex items-center gap-1 text-xs text-ai font-medium hover:text-ai/80 transition-colors"
@@ -301,7 +334,6 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                         <Plus className="h-3.5 w-3.5" /> Add
                     </button>
                 </div>
-
                 <div className="divide-y divide-border">
                     {managers.map(m => (
                         <div key={m.name}>
@@ -448,181 +480,232 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                         <p className="text-[10px] text-muted-foreground">Before Strata: required an IT ticket to update this dropdown</p>
                     </div>
                 )}
+                </div>
+                )}
             </div>
 
             {/* Section 2 — Expense Categories */}
             <div className="bg-card border border-border rounded-xl">
-                <div className="px-4 py-3 border-b border-border">
-                    <p className="text-xs font-bold text-foreground">Expense Categories</p>
-                    <p className="text-[10px] text-muted-foreground">Feed the GL rules engine — changes apply to new submissions immediately</p>
-                </div>
-                <div className="px-4 py-3 flex flex-wrap gap-2">
-                    {categories.map(cat => (
-                        <span key={cat} className="group inline-flex items-center gap-1 text-xs bg-muted border border-border text-foreground px-2.5 py-1 rounded-full">
-                            {cat}
-                            <button onClick={() => removeCategory(cat)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all" aria-label={`Remove ${cat}`}>
-                                <X className="h-2.5 w-2.5" />
-                            </button>
-                        </span>
-                    ))}
-
-                    {/* Add category trigger */}
-                    <div className="relative" ref={catDropdownRef}>
-                        <button
-                            onClick={() => { setShowCatDropdown(!showCatDropdown); setShowCustomCat(false) }}
-                            className="inline-flex items-center gap-1 text-xs text-ai border border-dashed border-ai/40 hover:border-ai/80 hover:bg-ai/5 px-2.5 py-1 rounded-full transition-all"
-                        >
-                            <Plus className="h-3 w-3" /> Add category
-                        </button>
-
-                        {showCatDropdown && (
-                            <div className="absolute left-0 top-full mt-1 z-10 bg-card border border-border rounded-xl shadow-lg min-w-[180px] py-1 animate-in fade-in duration-150">
-                                {availableSuggestions.map(s => (
-                                    <button
-                                        key={s}
-                                        onClick={() => addCategorySuggestion(s)}
-                                        className="w-full text-left px-3 py-1.5 text-xs text-foreground hover:bg-muted/60 transition-colors"
-                                    >
-                                        {s}
+                <button
+                    onClick={() => toggleSection('categories')}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                >
+                    <div className="text-left">
+                        <p className="text-xs font-bold text-foreground">Expense Categories</p>
+                        <p className="text-[10px] text-muted-foreground">Feed the GL rules engine — changes apply immediately</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] text-muted-foreground">{categories.length} categories</span>
+                        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${openSections.has('categories') ? 'rotate-180' : ''}`} />
+                    </div>
+                </button>
+                {openSections.has('categories') && (
+                    <div className="border-t border-border">
+                        <div className="px-4 py-3 flex flex-wrap gap-2">
+                            {categories.map(cat => (
+                                <span key={cat} className="group inline-flex items-center gap-1 text-xs bg-muted border border-border text-foreground px-2.5 py-1 rounded-full">
+                                    {cat}
+                                    <button onClick={() => removeCategory(cat)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all" aria-label={`Remove ${cat}`}>
+                                        <X className="h-2.5 w-2.5" />
                                     </button>
-                                ))}
-                                {availableSuggestions.length > 0 && <div className="border-t border-border my-1" />}
+                                </span>
+                            ))}
+                            <div className="relative" ref={catDropdownRef}>
                                 <button
-                                    onClick={() => addCategorySuggestion('__other__')}
-                                    className="w-full text-left px-3 py-1.5 text-xs text-ai hover:bg-ai/5 transition-colors"
+                                    onClick={() => { setShowCatDropdown(!showCatDropdown); setShowCustomCat(false) }}
+                                    className="inline-flex items-center gap-1 text-xs text-ai border border-dashed border-ai/40 hover:border-ai/80 hover:bg-ai/5 px-2.5 py-1 rounded-full transition-all"
                                 >
-                                    Other (type name) →
+                                    <Plus className="h-3 w-3" /> Add category
+                                </button>
+                                {showCatDropdown && (
+                                    <div className="absolute left-0 top-full mt-1 z-10 bg-card border border-border rounded-xl shadow-lg min-w-[180px] py-1 animate-in fade-in duration-150">
+                                        {availableSuggestions.map(s => (
+                                            <button
+                                                key={s}
+                                                onClick={() => addCategorySuggestion(s)}
+                                                className="w-full text-left px-3 py-1.5 text-xs text-foreground hover:bg-muted/60 transition-colors"
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                        {availableSuggestions.length > 0 && <div className="border-t border-border my-1" />}
+                                        <button
+                                            onClick={() => addCategorySuggestion('__other__')}
+                                            className="w-full text-left px-3 py-1.5 text-xs text-ai hover:bg-ai/5 transition-colors"
+                                        >
+                                            Other (type name) →
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        {showCustomCat && (
+                            <div className="px-4 pb-3 flex items-center gap-2 animate-in fade-in duration-150">
+                                <input
+                                    value={customCatInput}
+                                    onChange={e => setCustomCatInput(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && addCustomCategory()}
+                                    placeholder="Category name"
+                                    autoFocus
+                                    className="flex-1 text-xs bg-background border border-border rounded-lg px-3 py-1.5 text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
+                                />
+                                <button onClick={addCustomCategory} className="text-xs bg-primary text-primary-foreground font-bold px-3 py-1.5 rounded-lg hover:opacity-90 disabled:opacity-40" disabled={!customCatInput.trim()}>
+                                    Add
+                                </button>
+                                <button onClick={() => { setShowCustomCat(false); setCustomCatInput('') }} className="text-xs text-muted-foreground hover:text-foreground">
+                                    <X className="h-3.5 w-3.5" />
                                 </button>
                             </div>
                         )}
-                    </div>
-                </div>
-
-                {/* Custom category input */}
-                {showCustomCat && (
-                    <div className="px-4 pb-3 flex items-center gap-2 animate-in fade-in duration-150">
-                        <input
-                            value={customCatInput}
-                            onChange={e => setCustomCatInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && addCustomCategory()}
-                            placeholder="Category name"
-                            autoFocus
-                            className="flex-1 text-xs bg-background border border-border rounded-lg px-3 py-1.5 text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
-                        />
-                        <button onClick={addCustomCategory} className="text-xs bg-primary text-primary-foreground font-bold px-3 py-1.5 rounded-lg hover:opacity-90 disabled:opacity-40" disabled={!customCatInput.trim()}>
-                            Add
-                        </button>
-                        <button onClick={() => { setShowCustomCat(false); setCustomCatInput('') }} className="text-xs text-muted-foreground hover:text-foreground">
-                            <X className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="px-4 pb-3">
+                            <p className="text-[10px] text-muted-foreground">Before Strata: categories lived in a spreadsheet, disconnected from the GL lookup</p>
+                        </div>
                     </div>
                 )}
-
-                <div className="px-4 pb-3">
-                    <p className="text-[10px] text-muted-foreground">Before Strata: categories lived in a spreadsheet, disconnected from the GL lookup</p>
-                </div>
             </div>
 
             {/* Section — Approval Hierarchy */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                    <div>
+                <button
+                    onClick={() => toggleSection('hierarchy')}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                >
+                    <div className="text-left">
                         <p className="text-xs font-bold text-foreground">Approval Hierarchy</p>
-                        <p className="text-[10px] text-muted-foreground">Powers Tammy's division rollup on the spend dashboard</p>
+                        <p className="text-[10px] text-muted-foreground">Powers division rollup on the spend dashboard</p>
                     </div>
-                    {!editingHierarchy && !hierarchySaved && (
-                        <button
-                            onClick={() => { hierarchySnapshot.current = [...hierarchy]; setEditingHierarchy(true) }}
-                            className="flex items-center gap-1 text-[10px] font-semibold bg-primary text-primary-foreground px-2.5 py-1 rounded-lg hover:opacity-90 transition-opacity"
-                        >
-                            <Pencil className="h-3 w-3" />
-                            Edit Hierarchy
-                        </button>
-                    )}
-                    {hierarchySaved && (
-                        <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
-                            <Check className="h-3 w-3" />
-                            Saved
-                        </span>
-                    )}
-                </div>
-
-                {/* Read-only view */}
-                {!editingHierarchy && (
-                    <div className="px-4 py-4">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {hierarchy.map((level, i, arr) => (
-                                <div key={level} className="flex items-center gap-2">
-                                    <span className={`text-xs border px-3 py-1.5 rounded-full font-medium transition-colors ${
-                                        hierarchySaved ? 'bg-success/10 border-success/30 text-success' : 'bg-muted border-border text-foreground'
-                                    }`}>{level}</span>
-                                    {i < arr.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-                                </div>
-                            ))}
+                    <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] text-muted-foreground">Employee → Manager → Dept Head → CFO/AP</span>
+                        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${openSections.has('hierarchy') ? 'rotate-180' : ''}`} />
+                    </div>
+                </button>
+                {openSections.has('hierarchy') && (
+                    <div className="border-t border-border">
+                        <div className="px-4 py-2.5 flex items-center justify-between border-b border-border">
+                            {!editingHierarchy && !hierarchySaved && (
+                                <button
+                                    onClick={() => { hierarchySnapshot.current = [...hierarchy]; setEditingHierarchy(true) }}
+                                    className="flex items-center gap-1 text-[10px] font-semibold bg-primary text-primary-foreground px-2.5 py-1 rounded-lg hover:opacity-90 transition-opacity"
+                                >
+                                    <Pencil className="h-3 w-3" />
+                                    Edit Hierarchy
+                                </button>
+                            )}
+                            {hierarchySaved && (
+                                <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
+                                    <Check className="h-3 w-3" />
+                                    Saved
+                                </span>
+                            )}
                         </div>
-                        {hierarchySaved && (
-                            <p className="text-[10px] text-success mt-2 animate-in fade-in duration-300">
-                                Hierarchy updated · Tammy's dashboard rollup will reflect changes
-                            </p>
+                        {!editingHierarchy && (
+                            <div className="px-4 py-4">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {hierarchy.map((level, i, arr) => (
+                                        <div key={level} className="flex items-center gap-2">
+                                            <span className={`text-xs border px-3 py-1.5 rounded-full font-medium transition-colors ${
+                                                hierarchySaved ? 'bg-success/10 border-success/30 text-success' : 'bg-muted border-border text-foreground'
+                                            }`}>{level}</span>
+                                            {i < arr.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                                        </div>
+                                    ))}
+                                </div>
+                                {hierarchySaved && (
+                                    <p className="text-[10px] text-success mt-2 animate-in fade-in duration-300">
+                                        Hierarchy updated · division rollup will reflect changes
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        {editingHierarchy && (
+                            <div className="px-4 py-4 space-y-3 animate-in fade-in duration-200">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[10px] text-muted-foreground">Drag to reorder · each level reports up</p>
+                                    <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+                                        <span className="bg-foreground/10 text-foreground px-1.5 py-0.5 rounded font-semibold">1</span>
+                                        <span>= submits first</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {hierarchy.map((level, i) => (
+                                        <div
+                                            key={level}
+                                            draggable
+                                            onDragStart={() => handleDragStart(i)}
+                                            onDragOver={(e) => handleDragOver(e, i)}
+                                            onDrop={() => handleDrop(i)}
+                                            onDragEnd={handleDragEnd}
+                                            className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all cursor-grab active:cursor-grabbing ${
+                                                dragOver === i ? 'border-ai/40 bg-ai/5 scale-[1.01]' : 'border-border bg-card hover:bg-muted/30'
+                                            }`}
+                                        >
+                                            <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                            <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                                i === 0 ? 'bg-foreground text-background' : 'bg-muted text-foreground/70'
+                                            }`}>{i + 1}</div>
+                                            <p className="text-xs font-medium text-foreground flex-1">{level}</p>
+                                            {i < hierarchy.length - 1 && (
+                                                <span className="text-[10px] text-muted-foreground font-medium">reports to ↑</span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                    <button
+                                        onClick={() => { setEditingHierarchy(false); setHierarchySaved(true) }}
+                                        className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 transition-opacity"
+                                    >
+                                        <Check className="h-3.5 w-3.5" />
+                                        Confirm Hierarchy
+                                    </button>
+                                    <button
+                                        onClick={() => { setHierarchy(hierarchySnapshot.current); setEditingHierarchy(false) }}
+                                        className="px-3 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
                         )}
                     </div>
                 )}
+            </div>
 
-                {/* Edit mode */}
-                {editingHierarchy && (
-                    <div className="px-4 py-4 space-y-3 animate-in fade-in duration-200">
-                        <div className="flex items-center justify-between">
-                            <p className="text-[10px] text-muted-foreground">Drag to reorder · each level reports up to the next</p>
-                            <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
-                                <span className="bg-foreground/10 text-foreground px-1.5 py-0.5 rounded font-semibold">1</span>
-                                <span>= submits first</span>
-                                <span className="bg-foreground/10 text-foreground px-1.5 py-0.5 rounded font-semibold">4</span>
-                                <span>= final approver</span>
-                            </div>
+            {/* Section — Accounting System Integration */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <button
+                    onClick={() => toggleSection('core-integration')}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                >
+                    <div className="flex items-center gap-2 text-left">
+                        <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <div>
+                            <p className="text-xs font-bold text-foreground">Accounting System Integration</p>
+                            <p className="text-[10px] text-muted-foreground">Auto-post on AP approval · no manual re-entry</p>
                         </div>
-                        <div className="space-y-2">
-                            {hierarchy.map((level, i) => (
-                                <div
-                                    key={level}
-                                    draggable
-                                    onDragStart={() => handleDragStart(i)}
-                                    onDragOver={(e) => handleDragOver(e, i)}
-                                    onDrop={() => handleDrop(i)}
-                                    onDragEnd={handleDragEnd}
-                                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all cursor-grab active:cursor-grabbing ${
-                                        dragOver === i
-                                            ? 'border-ai/40 bg-ai/5 scale-[1.01]'
-                                            : 'border-border bg-card hover:bg-muted/30'
-                                    }`}
-                                >
-                                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                        i === 0
-                                            ? 'bg-foreground text-background'
-                                            : 'bg-muted text-foreground/70'
-                                    }`}>{i + 1}</div>
-                                    <p className="text-xs font-medium text-foreground flex-1">{level}</p>
-                                    {i < hierarchy.length - 1 && (
-                                        <span className="text-[10px] text-muted-foreground font-medium">reports to ↑</span>
-                                    )}
-                                </div>
-                            ))}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded-full">Active ✓</span>
+                        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${openSections.has('core-integration') ? 'rotate-180' : ''}`} />
+                    </div>
+                </button>
+                {openSections.has('core-integration') && (
+                    <div className="border-t border-border px-3 py-3 space-y-2">
+                        <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-muted-foreground">Connection method</span>
+                            <span className="font-medium text-foreground">REST API · OAuth 2.0</span>
                         </div>
-                        <div className="flex gap-2 pt-1">
-                            <button
-                                onClick={() => { setEditingHierarchy(false); setHierarchySaved(true) }}
-                                className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 transition-opacity"
-                            >
-                                <Check className="h-3.5 w-3.5" />
-                                Confirm Hierarchy
-                            </button>
-                            <button
-                                onClick={() => { setHierarchy(hierarchySnapshot.current); setEditingHierarchy(false) }}
-                                className="px-3 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
-                            >
-                                Cancel
-                            </button>
+                        <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-muted-foreground">Auto-post on AP approval</span>
+                            <span className="font-medium text-success">Enabled</span>
                         </div>
+                        <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-muted-foreground">Last sync</span>
+                            <span className="font-medium text-foreground">Today, 9:41 AM</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed pt-1 border-t border-border/50">
+                            Approved entries post automatically — no manual re-entry, no copy-paste, no accounting errors.
+                        </p>
                     </div>
                 )}
             </div>
@@ -636,43 +719,55 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 {saved ? (
                     <>
                         <CheckCircle2 className="h-4 w-4" />
-                        Changes applied · GL rules updated
+                        Changes applied · classification rules updated
                     </>
                 ) : (
                     'Save all changes →'
                 )}
             </button>
             {saved && (
-                <p className="text-[10px] text-success text-center animate-in fade-in duration-300">
-                    Live for all new submissions · CORE sync triggered ✓
-                </p>
+                <div className="space-y-3 animate-in fade-in duration-400">
+                    {/* Who sees the change */}
+                    <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-3 space-y-2.5">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                            <p className="text-xs font-semibold text-success">Rule live · classification engine updated</p>
+                        </div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Who sees this change</p>
+                        <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 shrink-0" />
+                                <p className="text-[11px] text-foreground leading-snug"><span className="font-semibold">AP Coordinator</span> — next parking expense auto-classifies at 97%+, no manual review needed</p>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 shrink-0" />
+                                <p className="text-[11px] text-foreground leading-snug"><span className="font-semibold">CFO / CAO</span> — May spend report shows corrected category breakdown immediately</p>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 shrink-0" />
+                                <p className="text-[11px] text-foreground leading-snug"><span className="font-semibold">Employees</span> — Parking maps correctly on next submission · no IT ticket required</p>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Bridge to CFO dashboard */}
+                    <div className="bg-ai/5 border border-ai/20 rounded-xl px-3 py-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
+                            <p className="text-xs font-semibold text-foreground">May 2026 cycle closed</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            23 expenses posted · all receipts verified · 1 classification rule improved · CFO notified
+                        </p>
+                        <button
+                            onClick={nextStep}
+                            className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                        >
+                            See CFO spend dashboard
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                </div>
             )}
-
-            {/* Section 5 — Accounting System Integration */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border bg-muted/30">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    <p className="text-xs font-semibold text-foreground">Accounting System Integration</p>
-                    <span className="ml-auto text-[10px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded-full">Active ✓</span>
-                </div>
-                <div className="px-3 py-3 space-y-2">
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Connection method</span>
-                        <span className="font-medium text-foreground">REST API · OAuth 2.0</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Auto-post on AP approval</span>
-                        <span className="font-medium text-success">Enabled</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Last sync</span>
-                        <span className="font-medium text-foreground">Today, 9:41 AM</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed pt-1 border-t border-border/50">
-                        Approved entries post automatically — no manual re-entry, no copy-paste, no accounting errors.
-                    </p>
-                </div>
-            </div>
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>
