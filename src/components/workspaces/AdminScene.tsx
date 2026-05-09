@@ -454,7 +454,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                     {!editingHierarchy && !hierarchySaved && (
                         <button
                             onClick={() => setEditingHierarchy(true)}
-                            className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg hover:bg-primary/15 transition-colors"
+                            className="flex items-center gap-1 text-[10px] font-semibold bg-primary text-primary-foreground px-2.5 py-1 rounded-lg hover:opacity-90 transition-opacity"
                         >
                             <Pencil className="h-3 w-3" />
                             Edit Hierarchy
