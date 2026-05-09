@@ -62,7 +62,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     const [showCustomCat, setShowCustomCat] = useState(false)
     const [customCatInput, setCustomCatInput] = useState('')
     const catDropdownRef = useRef<HTMLDivElement>(null)
-    const [openSections, setOpenSections]         = useState<Set<string>>(new Set(['gl-rules']))
+    const [openSections, setOpenSections]         = useState<Set<string>>(new Set(['gl-rules', 'managers', 'categories', 'hierarchy', 'core-integration']))
     const toggleSection = (id: string) => setOpenSections(prev => {
         const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n
     })
