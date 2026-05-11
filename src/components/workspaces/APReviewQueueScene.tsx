@@ -138,10 +138,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
     }, [filter])
 
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-6">
-
-            {/* ── LEFT — main action area ── */}
-            <div className="space-y-4">
+        <div className="space-y-4">
 
             {/* Toast — overlays above list, slides in when notified */}
             {scene === 'notified' && (
@@ -302,7 +299,6 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>
-    </div>
     )
 }
 
