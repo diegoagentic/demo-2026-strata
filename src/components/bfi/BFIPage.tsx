@@ -200,23 +200,6 @@ export default function BFIPage() {
     const shellRole: BFIShellRole =
         activeRole === 'walter' ? 'account-lead' : (activeRole as BFIShellRole)
 
-    const tabSwitcher = (
-        <div className="flex gap-1 bg-muted/40 dark:bg-zinc-800/60 border border-border rounded-xl p-1 w-fit">
-            <TabButton
-                active={activeTab === 'agency-fee'}
-                onClick={() => setActiveTab('agency-fee')}
-                icon={<Building2 className="h-3.5 w-3.5" />}
-                label="Agency Fee AI"
-            />
-            <TabButton
-                active={activeTab === 'receiving'}
-                onClick={() => setActiveTab('receiving')}
-                icon={<Package className="h-3.5 w-3.5" />}
-                label="Receiving AI"
-            />
-        </div>
-    )
-
     // Show real Login screen as first step of b1.1 — full page, no app shell
     if (showBFILogin && activeTab === 'agency-fee' && afStep === 0) {
         return <Login onSignIn={() => setShowBFILogin(false)} />
@@ -224,7 +207,7 @@ export default function BFIPage() {
 
     return (
         <MBIPageShell
-            preHeader={tabSwitcher}
+            preHeader={null}
             title={activeTab === 'agency-fee' ? 'Agency Fee AI' : 'Receiving AI'}
             subtitle={activeTab === 'agency-fee'
                 ? 'CoNY Account Lead · pricing validation · CPR reconciliation · fee verification'
@@ -356,25 +339,3 @@ function BFIAppShell({
     )
 }
 
-// ── TabButton ─────────────────────────────────────────────────────────────────
-
-function TabButton({ active, onClick, icon, label }: {
-    active: boolean
-    onClick: () => void
-    icon: React.ReactNode
-    label: string
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                active
-                    ? 'bg-card dark:bg-zinc-700 text-foreground shadow-sm border border-border'
-                    : 'text-muted-foreground hover:text-foreground'
-            }`}
-        >
-            {icon}
-            {label}
-        </button>
-    )
-}
