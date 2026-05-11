@@ -71,6 +71,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'detail' | 'quote-detail' | 'order-detail' | 'ack-detail' | 'ack-detail-ai' | 'workspace' | 'inventory' | 'catalogs' | 'mac' | 'transactions' | 'crm' | 'pricing'>('transactions')
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState(false)
   const [showArchSlide, setShowArchSlide] = useState(false)
+  const [bfiLoginActive, setBfiLoginActive] = useState(false)
 
   // Set initial page for CRM steps
   useEffect(() => {
@@ -397,7 +398,7 @@ function App() {
         return <LelandReviewQueueApp />;
       case 'bfi-agency-fee':
       case 'bfi-receiving':
-        return <BFIPage />;
+        return <BFIPage onLoginShowing={setBfiLoginActive} />;
       case 'workspaces-submit':
       case 'workspaces-approval':
       case 'workspaces-ap':
@@ -461,6 +462,7 @@ function App() {
         ? currentStep.app !== 'email-marketplace'
           && currentStep.app !== 'wrg-estimator'
           && currentStep.app !== 'workspaces-submit'
+          && !bfiLoginActive
           && !['1.6', '2.1', '4.4'].includes(currentStep.id)
           && !(currentStep.id === '1.8' && currentStep.app !== 'crm')
           && !(currentStep.id === '3.5' && !isContinua)
@@ -481,7 +483,7 @@ function App() {
       )}
 
       {/* MAIN CONTENT VIEWPORT */}
-      <main className={`transition-all duration-300 ${(isDemoActive ? currentStep.app !== 'email-marketplace' && currentStep.app !== 'wrg-estimator' && currentStep.app !== 'workspaces-submit' : currentPage !== 'detail' && currentPage !== 'workspace') ? 'pt-16' : ''} ${isDemoActive ? (isSidebarCollapsed ? 'pl-0' : 'pl-80') + ' animate-in fade-in duration-500' : ''} min-h-screen bg-background`}>
+      <main className={`transition-all duration-300 ${(isDemoActive ? currentStep.app !== 'email-marketplace' && currentStep.app !== 'wrg-estimator' && currentStep.app !== 'workspaces-submit' && !bfiLoginActive : currentPage !== 'detail' && currentPage !== 'workspace') ? 'pt-16' : ''} ${isDemoActive ? (isSidebarCollapsed ? 'pl-0' : 'pl-80') + ' animate-in fade-in duration-500' : ''} min-h-screen bg-background`}>
         {isDemoActive && <DemoAIIndicator />}
         {isDemoActive ? renderSimulation() : renderCurrentPage()}
       </main>

@@ -142,7 +142,7 @@ const STEP_TO_TAB: Record<string, BFITab> = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function BFIPage() {
+export default function BFIPage({ onLoginShowing }: { onLoginShowing?: (v: boolean) => void } = {}) {
     const { currentStep, isDemoActive, steps: tourSteps, goToStep } = useDemo()
     const demoStepId = isDemoActive ? currentStep?.id : null
 
@@ -155,6 +155,13 @@ export default function BFIPage() {
     const currentStepId = activeTab === 'agency-fee'
         ? (AF_IDX_TO_STEP[afStep] ?? 'b1.1')
         : (REC_IDX_TO_STEP[recStep] ?? 'b2.1')
+
+    const loginVisible = showBFILogin && activeTab === 'agency-fee' && afStep === 0
+
+    // Notify parent when login visibility changes so it can hide the navbar
+    useEffect(() => {
+        onLoginShowing?.(loginVisible)
+    }, [loginVisible, onLoginShowing])
 
     // Reset login screen when presenter navigates back to b1.1
     useEffect(() => {
@@ -200,8 +207,8 @@ export default function BFIPage() {
     const shellRole: BFIShellRole =
         activeRole === 'walter' ? 'account-lead' : (activeRole as BFIShellRole)
 
-    // Show real Login screen as first step of b1.1 — full page, no app shell
-    if (showBFILogin && activeTab === 'agency-fee' && afStep === 0) {
+    // Show real Login screen as first step of b1.1 — full page, no app shell, no navbar
+    if (loginVisible) {
         return <Login onSignIn={() => setShowBFILogin(false)} />
     }
 
