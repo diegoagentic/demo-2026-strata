@@ -19,7 +19,7 @@ import { useState } from 'react'
 import {
     CheckCircle2, XCircle, Receipt, AlertTriangle, ChevronRight,
     RotateCcw, Sparkles, Pencil, X, ShieldCheck, Clock, User, Send,
-    Wand2, ZoomIn, ChevronLeft, MessageSquare, CheckCheck,
+    Wand2, ZoomIn, ChevronLeft, MessageSquare, CheckCheck, Download,
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import { ReceiptImage } from './ExpenseSubmitScene'
@@ -98,7 +98,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     const [threads,       setThreads]      = useState<Thread[]>(INITIAL_THREADS)
     const [replyTexts,    setReplyTexts]   = useState<Record<string, string>>({})
     const [newQuestion,   setNewQuestion]  = useState('')
-    const [showAskForm,   setShowAskForm]  = useState(false)
+    const [showAskForm,        setShowAskForm]        = useState(false)
+    const [approvalDownloaded, setApprovalDownloaded] = useState(false)
 
     const openThreadCount = threads.filter(t => t.status === 'open').length
 
@@ -142,6 +143,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
         setEditCategory('Fuel + Parking')
         setEditDesc('Business client dinner — The Capital Grille')
         setAiApplied(false)
+        setApprovalDownloaded(false)
     }
 
     const switchMode = (m: ScenarioMode) => { setMode(m); reset() }
@@ -165,7 +167,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     }
 
     return (
-        <div className="max-w-lg mx-auto space-y-4">
+        <div className="space-y-4">
 
             {/* ── Expense detail card ── */}
             {appState !== 'editing' ? (
@@ -874,6 +876,19 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                             }
                         </p>
                     </div>
+                    {/* Download approval record */}
+                    <button
+                        onClick={() => setApprovalDownloaded(true)}
+                        className={`w-full flex items-center justify-center gap-1.5 border text-xs font-semibold py-2.5 rounded-xl transition-colors ${
+                            approvalDownloaded
+                                ? 'border-success/30 text-success bg-success/5'
+                                : 'border-border text-foreground hover:bg-muted/30'
+                        }`}
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                        {approvalDownloaded ? 'Approval record downloaded ✓' : 'Download approval record (PDF)'}
+                    </button>
+
                     {/* Explicit handoff — presenter controls when to switch to employee view */}
                     <button
                         onClick={() => onApprove?.()}

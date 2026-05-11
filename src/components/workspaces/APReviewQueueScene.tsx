@@ -138,7 +138,10 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
     }, [filter])
 
     return (
-        <div className="max-w-lg mx-auto space-y-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-6">
+
+            {/* ── LEFT — main action area ── */}
+            <div className="space-y-4">
 
             {/* Toast — overlays above list, slides in when notified */}
             {scene === 'notified' && (
@@ -225,7 +228,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                         </p>
                         <p className="text-sm font-bold text-foreground">Good morning, Letza</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Letza Bombard · AP Coordinator — Workscapes, Inc.</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Letza Bombard · Accountant — Workscapes, Inc.</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <Bell className="h-4 w-4 text-muted-foreground" />
@@ -299,6 +302,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>
+    </div>
     )
 }
 

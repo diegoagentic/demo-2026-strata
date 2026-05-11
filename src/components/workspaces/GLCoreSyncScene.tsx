@@ -8,7 +8,7 @@
 import { useState, useRef, useCallback } from 'react'
 import {
     Sparkles, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
-    MessageSquare, CheckCheck, Send, Check, Flag, AlertCircle,
+    MessageSquare, CheckCheck, Send, Check, Flag, AlertCircle, Download,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { ReceiptImage } from './ExpenseSubmitScene'
@@ -99,6 +99,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
     const [replyTexts,   setReplyTexts]   = useState<Record<string, string>>({})
     const [newNote,      setNewNote]      = useState('')
     const [showNoteForm, setShowNoteForm] = useState(false)
+    const [glDownloaded, setGlDownloaded] = useState(false)
 
     const openThreadCount = apThreads.filter(t => t.status === 'open').length
 
@@ -306,7 +307,10 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
             setAcceptedLines(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
 
         return (
-            <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-300">
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-6 animate-in fade-in duration-300">
+
+                {/* ── LEFT — GL review action area ── */}
+                <div className="space-y-4">
 
                 {/* Back to queue */}
                 {onBack && (
@@ -330,49 +334,6 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                     <span className="text-[10px] bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full font-medium shrink-0">
                         2 receipts verified ✓
                     </span>
-                </div>
-
-                {/* Receipts — carousel, full document, no scroll */}
-                <div className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">{RECEIPTS[receiptIdx].title}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{RECEIPTS[receiptIdx].sub}</p>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                            <div className="flex items-center gap-1.5">
-                                {RECEIPTS.map((_, i) => (
-                                    <button key={i} onClick={() => setReceiptIdx(i)}
-                                        className={`rounded-full transition-all duration-200 ${i === receiptIdx ? 'w-5 h-2 bg-foreground' : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60'}`}
-                                        aria-label={`Receipt ${i + 1}`}
-                                    />
-                                ))}
-                            </div>
-                            <span className="text-[10px] text-muted-foreground tabular-nums">{receiptIdx + 1} / {RECEIPTS.length}</span>
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setReceiptIdx(i => Math.max(0, i - 1))}
-                                    disabled={receiptIdx === 0}
-                                    className="h-7 w-7 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-default transition-colors"
-                                    aria-label="Previous receipt"
-                                >
-                                    <ChevronLeft className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setReceiptIdx(i => Math.min(RECEIPTS.length - 1, i + 1))}
-                                    disabled={receiptIdx === RECEIPTS.length - 1}
-                                    className="h-7 w-7 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-default transition-colors"
-                                    aria-label="Next receipt"
-                                >
-                                    <ChevronRight className="h-3.5 w-3.5" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <ReceiptImage variant={RECEIPTS[receiptIdx].variant} />
-                    <div className="px-4 py-2 bg-muted/30 border-t border-border">
-                        <p className="text-[10px] text-ai">✦ Strata Mobile capture · OCR verified · amounts match GL lines</p>
-                    </div>
                 </div>
 
                 {/* GL assignment */}
@@ -541,6 +502,55 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                 </div>
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
+                </div>{/* end LEFT */}
+
+                {/* ── RIGHT — receipt carousel ── */}
+                <div className="space-y-4">
+                    <div className="bg-card border border-border rounded-xl overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">{RECEIPTS[receiptIdx].title}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{RECEIPTS[receiptIdx].sub}</p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-1.5">
+                                    {RECEIPTS.map((_, i) => (
+                                        <button key={i} onClick={() => setReceiptIdx(i)}
+                                            className={`rounded-full transition-all duration-200 ${i === receiptIdx ? 'w-5 h-2 bg-foreground' : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60'}`}
+                                            aria-label={`Receipt ${i + 1}`}
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-[10px] text-muted-foreground tabular-nums">{receiptIdx + 1} / {RECEIPTS.length}</span>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => setReceiptIdx(i => Math.max(0, i - 1))}
+                                        disabled={receiptIdx === 0}
+                                        className="h-7 w-7 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-default transition-colors"
+                                        aria-label="Previous receipt"
+                                    >
+                                        <ChevronLeft className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setReceiptIdx(i => Math.min(RECEIPTS.length - 1, i + 1))}
+                                        disabled={receiptIdx === RECEIPTS.length - 1}
+                                        className="h-7 w-7 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-default transition-colors"
+                                        aria-label="Next receipt"
+                                    >
+                                        <ChevronRight className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="max-h-[60vh] overflow-y-auto">
+                            <ReceiptImage variant={RECEIPTS[receiptIdx].variant} />
+                        </div>
+                        <div className="px-4 py-2 bg-muted/30 border-t border-border">
+                            <p className="text-[10px] text-ai">✦ Strata Mobile capture · OCR verified · amounts match GL lines</p>
+                        </div>
+                    </div>
+                </div>{/* end RIGHT */}
+
             </div>
         )
     }
@@ -549,7 +559,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
 
     if (sceneState === 'rejecting') {
         return (
-            <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-300">
+            <div className="space-y-4 animate-in fade-in duration-300">
                 <div className="bg-card border border-border rounded-xl px-3 py-2.5">
                     <p className="text-xs font-semibold text-foreground">John Smith · $142.50</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">Flagging for revision — message will be sent to the approving manager</p>
@@ -601,7 +611,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
 
     if (sceneState === 'rejected') {
         return (
-            <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-300">
+            <div className="space-y-4 animate-in fade-in duration-300">
                 <div className="bg-destructive/5 border border-destructive/20 rounded-xl px-3 py-3 space-y-2">
                     <div className="flex items-center gap-2">
                         <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
@@ -634,7 +644,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
     if (sceneState === 'posting') {
         const currentIdx = POSTING_STEPS.findIndex(s => s.key === postingStep)
         return (
-            <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-200">
+            <div className="space-y-4 animate-in fade-in duration-200">
                 <div className="bg-card border border-border rounded-xl px-4 py-5 space-y-4">
                     <div className="flex items-center gap-3">
                         <div className="h-5 w-5 border-2 border-ai border-t-transparent rounded-full animate-spin shrink-0" />
@@ -666,7 +676,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
     // ── Posted state ──────────────────────────────────────────────────────────
 
     return (
-        <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-300">
+        <div className="space-y-4 animate-in fade-in duration-300">
             <div className="bg-success/10 border border-success/20 rounded-xl px-4 py-4 space-y-3">
                 <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-success" />
@@ -680,6 +690,19 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                     John Smith notified: <span className="text-foreground font-medium">"Your expense was posted · payment processing"</span>
                 </p>
             </div>
+
+            {/* Download GL entry */}
+            <button
+                onClick={() => setGlDownloaded(true)}
+                className={`w-full flex items-center justify-center gap-1.5 border text-xs font-semibold py-2.5 rounded-xl transition-colors ${
+                    glDownloaded
+                        ? 'border-success/30 text-success bg-success/5'
+                        : 'border-border text-foreground hover:bg-muted/30'
+                }`}
+            >
+                <Download className="h-3.5 w-3.5" />
+                {glDownloaded ? 'GL entry downloaded ✓' : 'Download GL entry (PDF)'}
+            </button>
 
             <div className="bg-card border border-border rounded-xl px-4 py-3 space-y-1.5">
                 <div className="flex items-center justify-between">

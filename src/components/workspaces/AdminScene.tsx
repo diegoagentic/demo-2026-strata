@@ -180,7 +180,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
     }
 
     return (
-        <div className="max-w-lg mx-auto space-y-5">
+        <div className="space-y-5">
             <div className="bg-card border border-border rounded-xl px-4 py-3">
                 <p className="text-sm font-bold text-foreground">Admin · Letza Bombard</p>
                 <p className="text-xs text-muted-foreground">Self-service · No IT ticket required · Changes apply immediately</p>
@@ -737,7 +737,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                         <div className="space-y-2">
                             <div className="flex items-start gap-2">
                                 <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 shrink-0" />
-                                <p className="text-[11px] text-foreground leading-snug"><span className="font-semibold">AP Coordinator</span> — next parking expense auto-classifies at 97%+, no manual review needed</p>
+                                <p className="text-[11px] text-foreground leading-snug"><span className="font-semibold">Accountant</span> — next parking expense auto-classifies at 97%+, no manual review needed</p>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 shrink-0" />

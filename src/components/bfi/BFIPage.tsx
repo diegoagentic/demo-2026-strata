@@ -223,6 +223,8 @@ export default function BFIPage({ onLoginShowing }: { onLoginShowing?: (v: boole
                 ? <Building2 className="h-5 w-5" />
                 : <Package className="h-5 w-5" />}
             activeApp={activeTab === 'agency-fee' ? 'bfi-agency-fee' : 'bfi-receiving'}
+            tenantLabel="BFI"
+            productLabel="Strata for BFI"
         >
             {/* ── Walter b2.6 — client PM on phone, outside the BFI app ── */}
             {isWalterStep && (

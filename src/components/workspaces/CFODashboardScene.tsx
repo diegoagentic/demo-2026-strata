@@ -114,7 +114,7 @@ function RoleSwitchBanner() {
     }, [])
 
     return (
-        <div className="max-w-lg mx-auto animate-in fade-in duration-300">
+        <div className="animate-in fade-in duration-300">
             <div className="bg-card border border-border rounded-xl px-6 py-8 text-center space-y-5">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Switching view</p>
                 <div className="flex items-center justify-center gap-4">
@@ -368,7 +368,7 @@ function ReportPreviewModal({ onClose }: { onClose: () => void }) {
                         <p className="text-xs font-bold text-foreground uppercase tracking-widest">Strata Financial</p>
                         <p className="text-[10px] text-muted-foreground">Expense Report — May 2026</p>
                         <p className="text-[10px] text-muted-foreground">Generated May 8, 2026 · 2:48 PM</p>
-                        <p className="text-[10px] text-muted-foreground">Posted to CORE by Letza Bombard · AP Coordinator</p>
+                        <p className="text-[10px] text-muted-foreground">Posted to CORE by Letza Bombard · Accountant</p>
                     </div>
 
                     <div className="border-t border-border" />
@@ -560,7 +560,7 @@ export default function CFODashboardScene() {
         const aprMax = Math.max(...aprCategories.map(c => c.amount))
 
         return (
-            <div className="max-w-lg mx-auto space-y-4 animate-in fade-in duration-400">
+            <div className="space-y-4 animate-in fade-in duration-400">
                 {/* Strata notification — slide-in on 'notified' */}
                 {phase === 'notified' && (
                     <button
@@ -576,7 +576,7 @@ export default function CFODashboardScene() {
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · Expense cycle complete</p>
                             <p className="text-xs font-semibold text-foreground">May 2026 · $48K posted to accounting system</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">AP Coordinator · 2:48 PM · All receipts verified ✓</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Accountant · 2:48 PM · All receipts verified ✓</p>
                             <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
                                 <span className="text-[10px] bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full font-medium">23 expenses posted</span>
                                 <span className="text-[10px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">1 rule improved · Parking 72%→97%</span>
@@ -691,7 +691,7 @@ export default function CFODashboardScene() {
 
     // ── Fases: company + division ──
     return (
-        <div className="max-w-lg mx-auto space-y-4">
+        <div className="space-y-4">
             {/* PDF preview modal */}
             {showPreview && <ReportPreviewModal onClose={() => setShowPreview(false)} />}
 

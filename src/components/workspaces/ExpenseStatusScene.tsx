@@ -417,7 +417,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                         {/* Role selector */}
                         <div className="space-y-1.5">
                             {[
-                                { role: 'AP Coordinator', name: 'Letza Bombard',   sub: 'Accounting review & payment posting' },
+                                { role: 'Accountant', name: 'Letza Bombard',   sub: 'Accounting review & payment posting' },
                                 { role: 'My manager',     name: 'Sarah Johnson',   sub: 'Operations Manager · approved this expense' },
                             ].map(r => (
                                 <button

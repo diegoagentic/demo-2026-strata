@@ -34,7 +34,7 @@ export interface DemoStep {
     title: string;
     description: string;
     app: SimulationApp;
-    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Lead' | 'Receiving Coordinator' | 'Finance / AR';
+    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Lead' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant';
     highlightId?: string;
 }
 

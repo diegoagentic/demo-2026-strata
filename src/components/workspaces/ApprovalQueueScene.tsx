@@ -81,7 +81,7 @@ export default function ApprovalQueueScene({ onReview }: { onReview?: () => void
 
     // Single render — list always visible, toast overlays when notified
     return (
-        <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-400">
+        <div className="space-y-4 animate-in fade-in duration-400">
 
             {/* ── Notification toast — overlays list, slides from top ── */}
             {scene === 'notified' && (

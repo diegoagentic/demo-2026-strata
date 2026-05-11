@@ -82,7 +82,7 @@ export const WORKSPACES_STEPS: DemoStep[] = [
         title: 'AP Review Queue',
         description: 'The AP coordinator\'s queue receives all manager-approved expenses with accounting codes pre-suggested by the rules engine. A confidence legend guides attention: ≥90% is safe to confirm, 75–89% warrants a look, <75% needs manual review. The batch that used to take 45 minutes now takes under 5.',
         app: 'workspaces-ap',
-        role: 'AP Coordinator',
+        role: 'Accountant',
     },
     {
         id: 'w2.2',
@@ -91,7 +91,7 @@ export const WORKSPACES_STEPS: DemoStep[] = [
         title: 'GL + CORE Sync',
         description: 'Strata pre-fills accounting codes per expense line with a confidence percentage from the category rules engine. The coordinator confirms or overrides inline, then approves — triggering an automatic 3-step post to the accounting system (Validate → Create entry → Notify). Manual re-entry eliminated entirely.',
         app: 'workspaces-ap',
-        role: 'AP Coordinator',
+        role: 'Accountant',
     },
     {
         id: 'w2.3',
@@ -100,7 +100,7 @@ export const WORKSPACES_STEPS: DemoStep[] = [
         title: 'Admin Self-Service',
         description: 'The Parking line just matched at 72% confidence — Letza opens Admin to fix the GL rule directly, no IT ticket needed. She updates the mapping, adjusts the approval managers, and refines the category list. Changes apply immediately: the next parking expense will auto-classify at 97%+. Self-service configuration that used to take two weeks now takes two minutes.',
         app: 'workspaces-ap',
-        role: 'AP Coordinator',
+        role: 'Accountant',
     },
     {
         id: 'w2.4',
@@ -109,7 +109,7 @@ export const WORKSPACES_STEPS: DemoStep[] = [
         title: 'CFO / CAO Dashboard',
         description: 'After Letza confirms GL codes and improves the Parking rule, the CFO receives a real-time notification: May cycle closed — 23 expenses posted, all receipts verified, 1 GL rule improved. The dashboard aggregates spend by category with month-over-month comparison, surfaces SLA outliers, and has the full report ready to export. Switch to Tammy\'s view to see how Ops & Procurement performed.',
         app: 'workspaces-reporting',
-        role: 'CFO',
+        role: 'Accountant',
     },
 ];
 
