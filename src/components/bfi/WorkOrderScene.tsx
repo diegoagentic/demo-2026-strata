@@ -132,6 +132,15 @@ export default function WorkOrderScene({ onApprove }: WorkOrderSceneProps) {
                 </div>
             </div>
 
+            {/* Before Strata contrast */}
+            <div className="bg-muted/60 border border-border rounded-xl p-3 space-y-1 animate-in fade-in duration-300">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Before Strata</div>
+                <div className="text-xs text-foreground leading-relaxed">
+                    Work order assembled manually — delivery address from CORE, contact from a separate sheet, NYC signature reminder from memory.{' '}
+                    <span className="font-medium">15–20 min per order. The ink signature requirement was sometimes missed, delaying installation.</span>
+                </div>
+            </div>
+
             {/* Actions */}
             {!approved ? (
                 <div className="flex items-center gap-2 justify-end">

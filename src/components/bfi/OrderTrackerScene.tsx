@@ -42,7 +42,7 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
     const handleCheck = () => {
         setChecking(true)
         TRACKER_ROWS.forEach((_, i) => {
-            setTimeout(pauseAware(() => setRevealedRows(i + 1)), 350 * (i + 1))
+            setTimeout(pauseAware(() => setRevealedRows(i + 1)), 400 * (i + 1))
         })
     }
 

@@ -93,6 +93,15 @@ export default function ReceivingCloseScene({ onClose }: ReceivingCloseSceneProp
                 </div>
             </div>
 
+            {/* Before Strata contrast */}
+            <div className="bg-muted/60 border border-border rounded-xl p-3 space-y-1">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Before Strata</div>
+                <div className="text-xs text-foreground leading-relaxed">
+                    Lauren manually updated CORE status, emailed Patricia to notify the close, and waited 1–2 days before Agency Fee calculation could begin.{' '}
+                    <span className="font-medium">The handoff was invisible — Patricia never knew when to start.</span>
+                </div>
+            </div>
+
             {/* Action */}
             {!closed ? (
                 <div className="flex justify-end">

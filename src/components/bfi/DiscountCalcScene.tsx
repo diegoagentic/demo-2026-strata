@@ -118,6 +118,17 @@ export default function DiscountCalcScene({ onApply }: DiscountCalcSceneProps) {
                 Formula: (Sale ÷ List) − 1 · Applied to all 3 lines
             </div>
 
+            {/* Before Strata contrast */}
+            {sceneState === 'ready' && (
+                <div className="bg-muted/60 border border-border rounded-xl p-3 space-y-1 animate-in fade-in duration-500">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Before Strata</div>
+                    <div className="text-xs text-foreground leading-relaxed">
+                        Lauren opened Excel, manually entered (Sale ÷ List) − 1 per line, recalculated the true-up to zero GP, and verified Cost = Sale.{' '}
+                        <span className="font-medium">~20 minutes per order. One formula error meant a wrong GP post.</span>
+                    </div>
+                </div>
+            )}
+
             {/* Action */}
             {!applied && sceneState === 'ready' ? (
                 <div className="flex justify-end animate-in fade-in duration-300">

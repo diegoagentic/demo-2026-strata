@@ -84,7 +84,7 @@ export default function PricingValidationScene() {
     useEffect(() => {
         if (sceneState !== 'validating') return
         if (revealedCount >= LINE_ITEMS.length) return
-        const t = setTimeout(pauseAware(() => setRevealedCount(c => c + 1)), 350)
+        const t = setTimeout(pauseAware(() => setRevealedCount(c => c + 1)), 400)
         return () => clearTimeout(t)
     }, [revealedCount, pauseAware, sceneState])
 
