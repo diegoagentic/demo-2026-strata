@@ -100,21 +100,36 @@ export default function PricingValidationScene() {
     if (sceneState === 'idle') {
         return (
             <div className="space-y-3">
-                {/* Order header */}
-                <div className="border border-border rounded-xl p-3.5 bg-card">
-                    <div className="flex items-start justify-between gap-2">
+                {/* Order header + summary */}
+                <div className="border border-border rounded-xl overflow-hidden bg-card">
+                    <div className="flex items-start justify-between gap-2 px-3.5 pt-3.5 pb-3">
                         <div>
-                            <div className="text-xs font-bold text-foreground">NYPD-0394 · Quote received from designer</div>
-                            <div className="text-[11px] text-muted-foreground mt-0.5">NYC Police Dept. · Precinct 40 · MK designer quote · May 6, 7:52 AM</div>
+                            <div className="text-xs font-bold text-foreground">NYPD-0394 · SIF received from Miller Knoll designer</div>
+                            <div className="text-[11px] text-muted-foreground mt-0.5">NYC Police Dept. · Precinct 40 · May 6, 7:52 AM</div>
                         </div>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">Pending</span>
+                    </div>
+                    {/* Summary metrics */}
+                    <div className="grid grid-cols-3 border-t border-border divide-x divide-border">
+                        <div className="px-3.5 py-2.5">
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">SIF Total</div>
+                            <div className="text-sm font-bold text-foreground tabular-nums mt-0.5">$152,700</div>
+                        </div>
+                        <div className="px-3.5 py-2.5">
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Line Items</div>
+                            <div className="text-sm font-bold text-foreground tabular-nums mt-0.5">4 items</div>
+                        </div>
+                        <div className="px-3.5 py-2.5">
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Contract</div>
+                            <div className="text-sm font-bold text-foreground tabular-nums mt-0.5">CoNY 42.3%</div>
+                        </div>
                     </div>
                 </div>
 
                 {/* SIF items — visible before validation so presenter can point them out */}
                 <div className="border border-border rounded-xl overflow-hidden">
                     <div className="grid grid-cols-3 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <span className="col-span-2">Product · SIF quote</span>
+                        <span className="col-span-2">Product · SIF</span>
                         <span className="text-right">SIF Price</span>
                     </div>
                     {LINE_ITEMS.map((item) => (
@@ -124,7 +139,7 @@ export default function PricingValidationScene() {
                         </div>
                     ))}
                     <div className="px-3.5 py-2 border-t border-border bg-muted/20 flex items-center justify-between">
-                        <span className="text-[11px] text-muted-foreground">4 items · not yet validated against CoNY contract</span>
+                        <span className="text-[11px] text-muted-foreground">4 SIF items · not yet validated against CoNY contract</span>
                         <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">Unverified</span>
                     </div>
                 </div>
