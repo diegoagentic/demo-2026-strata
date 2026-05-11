@@ -9,7 +9,7 @@ import { useToast, ToastContainer } from './components/AuthToast'
 
 type ViewMode = 'login' | 'register' | 'forgot-password';
 
-export default function Login() {
+export default function Login({ onSignIn }: { onSignIn?: () => void } = {}) {
     const { signIn, validateCredentials, completeMfaLogin, signUp, resetPassword, clearError } = useAuth()
     const { toasts, addToast, dismissToast } = useToast()
 
@@ -173,6 +173,7 @@ export default function Login() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (onSignIn) { onSignIn(); return }
         setIsSubmitting(true)
 
         // Validate credentials first without logging in
@@ -226,6 +227,7 @@ export default function Login() {
     }
 
     const handleMicrosoftLogin = async () => {
+        if (onSignIn) { onSignIn(); return }
         setIsSubmitting(true)
         // Microsoft auto-uses goavanto account — show access selection
         setMfaEmail('test@goavanto.com')

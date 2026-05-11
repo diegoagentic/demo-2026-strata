@@ -22,6 +22,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Building2, Package } from 'lucide-react'
+import Login from '../../Login'
 import MBIPageShell from '../mbi/MBIPageShell'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import CoNYMorningQueue from './CoNYMorningQueue'
@@ -149,10 +150,16 @@ export default function BFIPage() {
     const [afStep, setAfStep]         = useState(0)
     const [recStep, setRecStep]       = useState(0)
     const [activeRole, setActiveRole] = useState<BFIRole>('account-lead')
+    const [showBFILogin, setShowBFILogin] = useState(true)
 
     const currentStepId = activeTab === 'agency-fee'
         ? (AF_IDX_TO_STEP[afStep] ?? 'b1.1')
         : (REC_IDX_TO_STEP[recStep] ?? 'b2.1')
+
+    // Reset login screen when presenter navigates back to b1.1
+    useEffect(() => {
+        if (demoStepId === 'b1.1') setShowBFILogin(true)
+    }, [demoStepId])
 
     // Sync tab + step index + role when the demo tour navigates
     useEffect(() => {
@@ -209,6 +216,11 @@ export default function BFIPage() {
             />
         </div>
     )
+
+    // Show real Login screen as first step of b1.1 — full page, no app shell
+    if (showBFILogin && activeTab === 'agency-fee' && afStep === 0) {
+        return <Login onSignIn={() => setShowBFILogin(false)} />
+    }
 
     return (
         <MBIPageShell

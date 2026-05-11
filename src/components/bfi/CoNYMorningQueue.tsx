@@ -1,14 +1,17 @@
 /**
  * COMPONENT: CoNYMorningQueue
- * PURPOSE: Flow 1 · Scene 1 — Login simulation → AI triage of active CoNY orders.
- *          login → monitoring (4 orders, DOE-2847 neutral) → notified (AI alert arrives,
- *          DOE-2847 flips urgent) → click DOE-2847 → advances to Pricing Validation.
+ * PURPOSE: Flow 1 · Scene 1 — AI triage of active CoNY orders.
+ *          Starts in monitoring (4 orders, DOE-2847 neutral).
+ *          After 2.5s Strata notification arrives → DOE-2847 flips to urgent.
+ *          Click DOE-2847 → advances to Pricing Validation.
+ *
+ * NOTE: Login screen is handled by BFIPage before this component mounts.
  *
  * DS TOKENS: bg-card · bg-ai/5 · text-success · border-amber-*
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, AlertTriangle, CheckCircle2, Package, ChevronRight, Bell, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { Sparkles, AlertTriangle, CheckCircle2, Package, ChevronRight, Bell, Loader2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -16,7 +19,7 @@ interface CoNYMorningQueueProps {
     onSelectOrder?: () => void
 }
 
-type SceneState = 'login' | 'signing-in' | 'monitoring' | 'notified'
+type SceneState = 'monitoring' | 'notified'
 
 const ORDERS = [
     { id: 'DOE-2847',  agency: 'NYC Dept. of Education', value: '$48,200',  detail: 'Carpenters: 50h → 45h · OT: 8h → 6h · Impact: −$2,340' },
@@ -25,11 +28,11 @@ const ORDERS = [
     { id: 'DOH-0671',  agency: 'NYC Dept. of Health',    value: '$22,100',  detail: null },
 ]
 
-const ORDER_STATUS: Record<string, Record<'monitoring' | 'notified', { label: string; priority: 'high' | 'medium' | 'done' | 'processing' }>> = {
-    'DOE-2847':  { monitoring: { label: 'Agency fee · SIF submitted',                          priority: 'processing' }, notified: { label: 'CPR · 2 discrepancies detected',              priority: 'high'   } },
-    'NYPD-0394': { monitoring: { label: 'Pricing · validation in progress',                    priority: 'medium'     }, notified: { label: 'Pricing · validation in progress',             priority: 'medium' } },
-    'DCAS-1182': { monitoring: { label: 'Receiving · 18 days in WIG · 12 days remaining',     priority: 'medium'     }, notified: { label: 'Receiving · 18 days in WIG · 12 days remaining', priority: 'medium' } },
-    'DOH-0671':  { monitoring: { label: 'Fee verified · ready to invoice',                     priority: 'done'       }, notified: { label: 'Fee verified · ready to invoice',              priority: 'done'   } },
+const ORDER_STATUS: Record<string, Record<SceneState, { label: string; priority: 'high' | 'medium' | 'done' | 'processing' }>> = {
+    'DOE-2847':  { monitoring: { label: 'Agency fee · SIF submitted',                           priority: 'processing' }, notified: { label: 'CPR · 2 discrepancies detected',               priority: 'high'   } },
+    'NYPD-0394': { monitoring: { label: 'Pricing · validation in progress',                     priority: 'medium'     }, notified: { label: 'Pricing · validation in progress',              priority: 'medium' } },
+    'DCAS-1182': { monitoring: { label: 'Receiving · 18 days in WIG · 12 days remaining',      priority: 'medium'     }, notified: { label: 'Receiving · 18 days in WIG · 12 days remaining', priority: 'medium' } },
+    'DOH-0671':  { monitoring: { label: 'Fee verified · ready to invoice',                      priority: 'done'       }, notified: { label: 'Fee verified · ready to invoice',               priority: 'done'   } },
 }
 
 export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProps) {
@@ -37,7 +40,7 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
-    const [sceneState, setSceneState] = useState<SceneState>('login')
+    const [sceneState, setSceneState] = useState<SceneState>('monitoring')
     const [expandedId, setExpandedId] = useState<string | null>(null)
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
@@ -49,17 +52,11 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
         return () => clearInterval(poll)
     }, [])
 
-    // Once monitoring starts, auto-advance to notified after 2.5s
+    // Auto-advance to notified after 2.5s
     useEffect(() => {
-        if (sceneState !== 'monitoring') return
         const cleanup = pauseAware(() => setSceneState('notified'), 2500)
         return cleanup
-    }, [sceneState, pauseAware])
-
-    const handleSignIn = () => {
-        setSceneState('signing-in')
-        setTimeout(() => setSceneState('monitoring'), 1400)
-    }
+    }, [pauseAware])
 
     const handleOrderClick = (orderId: string) => {
         if (orderId !== 'DOE-2847' || sceneState !== 'notified') return
@@ -67,88 +64,8 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
         setTimeout(() => { onSelectOrder?.(); nextStep() }, 900)
     }
 
-    // ── Login screen ────────────────────────────────────────────────────────────
-    if (sceneState === 'login' || sceneState === 'signing-in') {
-        return (
-            <div className="space-y-4 animate-in fade-in duration-300">
-                <div className="border border-border rounded-xl overflow-hidden bg-card">
-                    {/* App header */}
-                    <div className="bg-zinc-900 dark:bg-zinc-950 px-4 py-3 flex items-center gap-2.5">
-                        <div className="flex gap-1.5">
-                            <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
-                            <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/80" />
-                            <span className="h-2.5 w-2.5 rounded-full bg-green-500/80" />
-                        </div>
-                        <div className="flex-1 mx-2 bg-zinc-800 rounded px-3 py-1 text-[10px] text-zinc-400 font-mono">
-                            app.strata.ai/bfi
-                        </div>
-                    </div>
-
-                    {/* Login form */}
-                    <div className="px-6 py-8 flex flex-col items-center gap-5">
-                        {/* Logo area */}
-                        <div className="text-center space-y-1">
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                <div className="h-8 w-8 rounded-lg bg-ai/15 border border-ai/30 flex items-center justify-center">
-                                    <Sparkles className="h-4 w-4 text-ai" />
-                                </div>
-                                <span className="text-sm font-bold text-foreground">Strata · BFI</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">Sign in to your workspace</p>
-                        </div>
-
-                        {/* Fields */}
-                        <div className="w-full space-y-2.5">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Email</label>
-                                <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-muted/30">
-                                    <span className="text-xs text-foreground flex-1">lauren@bfiinc.com</span>
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Password</label>
-                                <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-muted/30">
-                                    <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
-                                    <span className="text-xs text-muted-foreground tracking-widest">••••••••</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* CTA */}
-                        <button
-                            onClick={handleSignIn}
-                            disabled={sceneState === 'signing-in'}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-70"
-                        >
-                            {sceneState === 'signing-in' ? (
-                                <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    Signing in…
-                                </>
-                            ) : (
-                                <>
-                                    Sign in
-                                    <ArrowRight className="h-3.5 w-3.5" />
-                                </>
-                            )}
-                        </button>
-
-                        {sceneState === 'signing-in' && (
-                            <p className="text-[10px] text-muted-foreground animate-in fade-in duration-300">
-                                Loading your CoNY order queue…
-                            </p>
-                        )}
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    // ── Queue screen (monitoring + notified) ────────────────────────────────────
-    const queueState = sceneState as 'monitoring' | 'notified'
-
     return (
-        <div className="space-y-3 animate-in fade-in duration-500">
+        <div className="space-y-3">
             {/* Strata notification — slides in when notified */}
             {sceneState === 'notified' && (
                 <button
@@ -171,7 +88,7 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                 </button>
             )}
 
-            {/* Context banner — monitoring placeholder */}
+            {/* Monitoring banner */}
             {sceneState === 'monitoring' && (
                 <div className="bg-muted/40 border border-border rounded-xl p-3 flex items-center gap-2.5 animate-in fade-in duration-300">
                     <Loader2 className="h-4 w-4 text-muted-foreground animate-spin shrink-0" />
@@ -182,7 +99,7 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
             {/* Orders list */}
             <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
                 {ORDERS.map((order) => {
-                    const { label, priority } = ORDER_STATUS[order.id][queueState]
+                    const { label, priority } = ORDER_STATUS[order.id][sceneState]
                     const isHigh       = priority === 'high'
                     const isDone       = priority === 'done'
                     const isProcessing = priority === 'processing'
@@ -192,13 +109,12 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                             key={order.id}
                             onClick={() => handleOrderClick(order.id)}
                             className={`p-3.5 transition-all duration-500 ${
-                                isHigh      ? 'bg-amber-50 dark:bg-amber-500/5 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-500/10'
-                                : isDone    ? 'bg-card opacity-60'
+                                isHigh   ? 'bg-amber-50 dark:bg-amber-500/5 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-500/10'
+                                : isDone ? 'bg-card opacity-60'
                                 : 'bg-card'
                             }`}
                         >
                             <div className="flex items-start gap-3">
-                                {/* Priority icon */}
                                 <div className="shrink-0 mt-0.5">
                                     {isHigh && (
                                         <div className="relative">
@@ -206,11 +122,10 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                                             <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-ai animate-pulse" />
                                         </div>
                                     )}
-                                    {isDone       && <CheckCircle2 className="h-4 w-4 text-success" />}
+                                    {isDone        && <CheckCircle2 className="h-4 w-4 text-success" />}
                                     {(isProcessing || priority === 'medium') && <Package className="h-4 w-4 text-muted-foreground" />}
                                 </div>
 
-                                {/* Content */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
                                         <div>
@@ -228,7 +143,6 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                                         {label}
                                     </div>
 
-                                    {/* Expanded CPR detail */}
                                     {expandedId === order.id && order.detail && (
                                         <div className="mt-2 text-[11px] text-foreground bg-amber-100 dark:bg-amber-500/10 rounded-lg px-2.5 py-1.5 border border-amber-200 dark:border-amber-500/20 animate-in fade-in slide-in-from-top-1 duration-300">
                                             {order.detail}
