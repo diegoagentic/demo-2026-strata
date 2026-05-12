@@ -6,12 +6,12 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { AlertTriangle, Sparkles, ChevronRight, Bell, CheckCircle2, X, Flag, AlertCircle } from 'lucide-react'
+import { Sparkles, ChevronRight, Bell, CheckCircle2, X, Flag, AlertCircle } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 type SceneState = 'list' | 'notified' | 'rejecting' | 'rejected'
-type FilterKey  = 'all' | 'pending' | 'posted' | 'sla'
+type FilterKey  = 'all' | 'pending' | 'posted'
 
 const QUICK_REASONS = [
     'Receipt is unclear or incomplete',
@@ -27,7 +27,7 @@ const PENDING_EXPENSES = [
     {
         id: 'john',
         name: 'John Smith',
-        amount: '$142.50',
+        amount: '$95.00',
         approvedBy: 'Sarah Johnson',
         approvedDate: 'May 6',
         glLines: [
@@ -65,7 +65,7 @@ const PENDING_EXPENSES = [
             { code: 'Misc Cost', amount: '$35.00',  confidence: 85 },
         ],
         ageDays: 4,
-        sla: true,
+        sla: false,
         focus: false,
         posted: false,
     },
@@ -133,7 +133,6 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
     const filteredExpenses = useMemo(() => {
         if (filter === 'pending') return PENDING_EXPENSES
         if (filter === 'posted')  return POSTED_EXPENSES
-        if (filter === 'sla')     return ALL_EXPENSES.filter(e => e.sla)
         return ALL_EXPENSES
     }, [filter])
 
@@ -200,7 +199,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                             <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
                             <p className="text-xs font-semibold text-destructive">Expense returned before GL review</p>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">John Smith · $142.50 · removed from AP queue</p>
+                        <p className="text-[10px] text-muted-foreground">John Smith · $95.00 · removed from AP queue</p>
                         {rejectNote && (
                             <div className="bg-background border border-border rounded-lg px-2.5 py-2">
                                 <p className="text-[10px] text-muted-foreground italic">"{rejectNote}"</p>
@@ -222,7 +221,7 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                 {[
                     { value: '8',    label: 'Processed yesterday' },
                     { value: '0',    label: 'Pending now' },
-                    { value: '100%', label: 'SLA on-time' },
+                    { value: '< 1d', label: 'Avg processing' },
                 ].map(stat => (
                     <div key={stat.label} className="bg-card border border-border rounded-xl px-3 py-3 text-center">
                         <p className="text-base font-bold text-foreground leading-none">{stat.value}</p>
@@ -294,7 +293,7 @@ function APQueueToast({ onReview, onDismiss, onFlag }: { onReview?: () => void; 
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · AP Queue ready</p>
                     <p className="text-xs font-semibold text-foreground leading-snug">
-                        John Smith · $142.50 · Mileage · Tolls/Parking — approved by Sarah Johnson
+                        John Smith · $95.00 · Mileage · Tolls / Cab / Parking — approved by Sarah Johnson
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                         Categories mapped · ready to confirm and post
@@ -332,7 +331,6 @@ const FILTER_LABELS: Record<FilterKey, string> = {
     all:     'All',
     pending: 'Pending GL',
     posted:  'Posted ✓',
-    sla:     '⚠ SLA',
 }
 
 function FilterBar({ active, onChange }: { active: FilterKey; onChange: (k: FilterKey) => void }) {
@@ -365,16 +363,11 @@ function ExpenseCard({ exp, expanded, onToggleExpand }: {
     onToggleExpand: () => void
 }) {
     return (
-        <div className={`bg-card border rounded-xl p-4 space-y-3 ${exp.sla ? 'border-warning/50' : exp.focus ? 'border-ai/30' : 'border-border'}`}>
+        <div className={`bg-card border rounded-xl p-4 space-y-3 ${exp.focus ? 'border-ai/30' : 'border-border'}`}>
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                         <p className="text-sm font-bold text-foreground">{exp.name}</p>
-                        {exp.sla && (
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 px-1.5 py-0.5 rounded-full shrink-0">
-                                <AlertTriangle className="h-2.5 w-2.5" /> {exp.ageDays} days · SLA
-                            </span>
-                        )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
                         Approved by {exp.approvedBy} · {exp.approvedDate}

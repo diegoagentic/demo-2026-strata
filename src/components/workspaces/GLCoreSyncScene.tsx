@@ -33,8 +33,8 @@ const QUICK_REASONS = [
 const GL_CODES = ['6200 · Vehicle Expenses', '6210 · Travel & Transit', '6100 · Meals & Entertainment', '6300 · Office Expenses']
 
 const LINES = [
-    { id: 'fuel',    description: 'Fuel — Tampa',  amount: '$95.00',  glCode: '6200 · Vehicle Expenses',    confidence: 94 },
-    { id: 'parking', description: 'Parking',        amount: '$47.50',  glCode: '6210 · Travel & Transit',    confidence: 72 },
+    { id: 'fuel',    description: 'Mileage — Tampa',          amount: '$95.00',  glCode: '6200 · Vehicle Expenses', confidence: 94 },
+    { id: 'parking', description: 'Tolls / Cab / Parking',    amount: '$47.50',  glCode: '6210 · Travel & Transit', confidence: 72 },
 ]
 
 const RECEIPTS = [
@@ -326,13 +326,13 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                 {/* Expense header */}
                 <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center justify-between gap-3">
                     <div>
-                        <p className="text-sm font-bold text-foreground">John Smith · $142.50</p>
+                        <p className="text-sm font-bold text-foreground">John Smith · $95.00</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Approved by Sarah Johnson · May 6 · <span className="text-success font-medium">within SLA ✓</span>
+                            Approved by Sarah Johnson · May 6 · <span className="text-success font-medium">on time ✓</span>
                         </p>
                     </div>
                     <span className="text-[10px] bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded-full font-medium shrink-0">
-                        2 receipts verified ✓
+                        1 receipt verified ✓
                     </span>
                 </div>
 
@@ -561,7 +561,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
         return (
             <div className="space-y-4 animate-in fade-in duration-300">
                 <div className="bg-card border border-border rounded-xl px-3 py-2.5">
-                    <p className="text-xs font-semibold text-foreground">John Smith · $142.50</p>
+                    <p className="text-xs font-semibold text-foreground">John Smith · $95.00</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">Flagging for revision — message will be sent to the approving manager</p>
                 </div>
                 <div className="space-y-2">
@@ -617,7 +617,7 @@ export default function GLCoreSyncScene({ onPost, onBack }: { onPost?: () => voi
                         <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
                         <p className="text-xs font-semibold text-destructive">Expense returned to manager</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">John Smith · $142.50 · Fuel + Parking</p>
+                    <p className="text-[10px] text-muted-foreground">John Smith · $95.00 · Mileage · Tolls / Cab / Parking</p>
                     {rejectNote && (
                         <div className="bg-background border border-border rounded-lg px-2.5 py-2">
                             <p className="text-[10px] text-muted-foreground italic">"{rejectNote}"</p>

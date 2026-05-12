@@ -30,7 +30,7 @@ type ScenarioMode  = 'approved' | 'rejected'
 const TIMELINE_BASE = [
     { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',             done: true,  isRejection: false },
     { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson',            done: true,  isRejection: false },
-    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · within SLA ✓',  done: true,  isRejection: false },
+    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · on time ✓',  done: true,  isRejection: false },
     { label: 'In AP Review',     time: 'May 6, 9:16 AM',  note: "Routed to Letza's queue",               done: true,  isRejection: false },
     { label: 'Posted to CORE',   time: 'Pending',          note: '',                                       done: false, isRejection: false },
     { label: 'Payment Issued',   time: 'Pending',          note: '',                                       done: false, isRejection: false },
@@ -39,7 +39,7 @@ const TIMELINE_BASE = [
 const TIMELINE_UPDATED = [
     { label: 'Submitted',        time: 'May 5, 10:32 AM', note: 'Form submitted via mobile',             done: true, isRejection: false },
     { label: 'Manager Notified', time: 'May 5, 10:33 AM', note: 'Push sent to Sarah Johnson',            done: true, isRejection: false },
-    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · within SLA ✓',  done: true, isRejection: false },
+    { label: 'Approved',         time: 'May 6, 9:15 AM',  note: 'Sarah Johnson · 1 day · on time ✓',  done: true, isRejection: false },
     { label: 'In AP Review',     time: 'May 6, 9:16 AM',  note: "Letza confirmed · GL 6200 + 6210 · auto-posted to CORE", done: true, isRejection: false },
     { label: 'Posted to CORE',   time: 'May 6, 2:48 PM',  note: 'Entry #CR-2847 · no manual re-entry',  done: true, isRejection: false },
     { label: 'Payment Issued',   time: 'May 8, 9:00 AM',  note: 'Check #44821 · 3 days total · within avg ✓', done: true, isRejection: false },
@@ -238,7 +238,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                                 Receipt is unclear — correction needed
                             </p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">
-                                $142.50 · Fuel + Parking · updating your timeline
+                                $95.00 · Mileage · Tolls / Cab / Parking · updating your timeline
                             </p>
                         </div>
                     </div>
@@ -465,8 +465,8 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                 <div className="bg-card border border-border rounded-xl p-4 space-y-4">
                     <div className="flex items-start justify-between gap-2">
                         <div>
-                            <p className="text-sm font-bold text-foreground">Fuel + Parking</p>
-                            <p className="text-[11px] text-muted-foreground">$142.50 · May 5 · 2 receipts</p>
+                            <p className="text-sm font-bold text-foreground">Mileage · Tolls / Cab / Parking</p>
+                            <p className="text-[11px] text-muted-foreground">$95.00 · May 5 · 1 receipt</p>
                         </div>
                         <span className={`text-[10px] border px-2 py-0.5 rounded-full font-medium shrink-0 transition-all duration-500 ${badgeClass}`}>
                             {badgeLabel}
@@ -538,7 +538,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                         <p className="text-[11px] text-muted-foreground">
                             {scenarioMode === 'approved' && scene === 'updated'
                                 ? <>Total: <span className="text-foreground font-medium">3 days</span> · within avg · <span className="text-success font-medium">On time ✓</span></>
-                                : <>Avg payment: <span className="text-foreground font-medium">3.2 days</span> · 3-day SLA</>
+                                : <>Avg payment: <span className="text-foreground font-medium">3.2 days</span> · 3-day turnaround</>
                             }
                         </p>
                     </div>

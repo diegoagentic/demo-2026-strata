@@ -40,13 +40,13 @@ const RECEIPT_DATA = [
 const EXPENSE_CATEGORIES = [
     'Air Fare', 'Car Rental', 'Lodging', 'Tolls / Cab / Parking',
     'Mileage', 'Misc Cost', 'Personal Meals',
-    'Business Meals & Ent.', 'Market Events', 'Other',
+    'Business Meals & Entertainment', 'Market Events', 'Other',
 ]
 
 const PAST_EXPENSES = [
-    { label: 'Office Supplies',    amount: '$23.40',  date: 'Apr 15', status: 'paid'    },
-    { label: 'Parking',            amount: '$47.50',  date: 'Apr 28', status: 'paid'    },
-    { label: 'Travel — Orlando',   amount: '$210.00', date: 'May 1',  status: 'pending' },
+    { label: 'Misc Cost',                    amount: '$23.40',  date: 'Apr 15', status: 'paid'    },
+    { label: 'Tolls / Cab / Parking',        amount: '$47.50',  date: 'Apr 28', status: 'paid'    },
+    { label: 'Air Fare — Orlando',           amount: '$210.00', date: 'May 1',  status: 'pending' },
 ]
 
 export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubmit?: () => void; initialScreen?: ScreenState }) {
@@ -105,7 +105,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                 const fillNext = () => {
                     if (idx >= FIELD_KEYS.length) { setOcrState('done'); return }
                     setFilledFields(prev => [...prev, FIELD_KEYS[idx++]])
-                    pauseAware(fillNext, 240)
+                    pauseAware(fillNext, 100)
                 }
                 fillNext()
             }, 800)
@@ -390,7 +390,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                     <div className="flex items-center gap-2 px-1">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                         <p className="text-[11px] text-muted-foreground">
-                            Expected: <span className="font-semibold text-foreground">3-day SLA</span>
+                            Expected: <span className="font-semibold text-foreground">3-day turnaround</span>
                             <span className="text-muted-foreground/70"> · With: Sarah Johnson</span>
                         </p>
                     </div>

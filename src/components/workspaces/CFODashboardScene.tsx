@@ -20,7 +20,7 @@ type ScenePhase    = 'inbox' | 'notified' | 'company' | 'role-switch' | 'divisio
 type Period        = 'may' | 'april'
 type DeptFilter    = 'all' | 'operations' | 'sales' | 'procurement'
 type LocationFilter = 'all' | 'tampa' | 'orlando' | 'miami'
-type CategoryFilter = 'all' | 'Fuel' | 'Meals' | 'Travel' | 'Office'
+type CategoryFilter = 'all' | 'Mileage' | 'Personal Meals' | 'Air Fare' | 'Misc Cost'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -33,20 +33,20 @@ const EXPENSE_CYCLES = [
 
 const CATEGORIES_BY_DEPT: Record<DeptFilter, Record<Period, { name: string; amount: number }[]>> = {
     all: {
-        may:   [{ name: 'Fuel', amount: 12000 }, { name: 'Meals', amount: 8500  }, { name: 'Travel', amount: 6000 }, { name: 'Office', amount: 4000 }],
-        april: [{ name: 'Fuel', amount: 9000  }, { name: 'Meals', amount: 7800  }, { name: 'Travel', amount: 5500 }, { name: 'Office', amount: 4200 }],
+        may:   [{ name: 'Mileage', amount: 12000 }, { name: 'Personal Meals', amount: 8500  }, { name: 'Air Fare', amount: 6000 }, { name: 'Misc Cost', amount: 4000 }],
+        april: [{ name: 'Mileage', amount: 9000  }, { name: 'Personal Meals', amount: 7800  }, { name: 'Air Fare', amount: 5500 }, { name: 'Misc Cost', amount: 4200 }],
     },
     operations: {
-        may:   [{ name: 'Fuel', amount: 8000  }, { name: 'Travel', amount: 4000 }, { name: 'Meals', amount: 3000  }, { name: 'Office', amount: 2000 }],
-        april: [{ name: 'Fuel', amount: 6000  }, { name: 'Travel', amount: 3500 }, { name: 'Meals', amount: 2800  }, { name: 'Office', amount: 2100 }],
+        may:   [{ name: 'Mileage', amount: 8000  }, { name: 'Air Fare', amount: 4000 }, { name: 'Personal Meals', amount: 3000  }, { name: 'Misc Cost', amount: 2000 }],
+        april: [{ name: 'Mileage', amount: 6000  }, { name: 'Air Fare', amount: 3500 }, { name: 'Personal Meals', amount: 2800  }, { name: 'Misc Cost', amount: 2100 }],
     },
     sales: {
-        may:   [{ name: 'Meals', amount: 5000 }, { name: 'Travel', amount: 3000 }, { name: 'Fuel', amount: 2000  }, { name: 'Office', amount: 1500 }],
-        april: [{ name: 'Meals', amount: 4500 }, { name: 'Travel', amount: 2800 }, { name: 'Fuel', amount: 1800  }, { name: 'Office', amount: 1600 }],
+        may:   [{ name: 'Personal Meals', amount: 5000 }, { name: 'Air Fare', amount: 3000 }, { name: 'Mileage', amount: 2000  }, { name: 'Misc Cost', amount: 1500 }],
+        april: [{ name: 'Personal Meals', amount: 4500 }, { name: 'Air Fare', amount: 2800 }, { name: 'Mileage', amount: 1800  }, { name: 'Misc Cost', amount: 1600 }],
     },
     procurement: {
-        may:   [{ name: 'Travel', amount: 4000 }, { name: 'Office', amount: 2500 }, { name: 'Meals', amount: 1500 }, { name: 'Fuel', amount: 2000 }],
-        april: [{ name: 'Travel', amount: 3500 }, { name: 'Office', amount: 2400 }, { name: 'Meals', amount: 1400 }, { name: 'Fuel', amount: 1700 }],
+        may:   [{ name: 'Air Fare', amount: 4000 }, { name: 'Misc Cost', amount: 2500 }, { name: 'Personal Meals', amount: 1500 }, { name: 'Mileage', amount: 2000 }],
+        april: [{ name: 'Air Fare', amount: 3500 }, { name: 'Misc Cost', amount: 2400 }, { name: 'Personal Meals', amount: 1400 }, { name: 'Mileage', amount: 1700 }],
     },
 }
 
@@ -63,7 +63,7 @@ const FUEL_DRILL = [
     { name: 'Carlos Ruiz', amount: '$180.00', receipt: true, purpose: 'Field ops — Miami',     location: 'Miami'   },
 ]
 
-const SLA_ALERTS = [
+const OVERDUE_ALERTS = [
     { name: 'Carlos Ruiz', amount: '$210', manager: 'Mike Torres',   days: 4 },
     { name: 'Ana Kim',     amount: '$312', manager: 'Sarah Johnson', days: 3 },
 ]
@@ -92,7 +92,7 @@ const LOCATION_LABELS: Record<LocationFilter, string> = {
     all: 'All Locations', tampa: 'Tampa', orlando: 'Orlando', miami: 'Miami'
 }
 const CATEGORY_FILTER_LABELS: Record<CategoryFilter, string> = {
-    all: 'All Categories', Fuel: 'Fuel', Meals: 'Meals', Travel: 'Travel', Office: 'Office'
+    all: 'All Categories', Mileage: 'Mileage', 'Personal Meals': 'Personal Meals', 'Air Fare': 'Air Fare', 'Misc Cost': 'Misc Cost'
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ function ReminderScheduler({ alerts }: { alerts: { name: string; manager: string
                         <p className="text-[10px] text-muted-foreground font-medium">Message</p>
                         <div className="bg-card border border-border rounded-lg px-2.5 py-2">
                             <p className="text-[10px] text-foreground leading-relaxed">
-                                You have expense reports pending approval for over 3 days. Please review and approve or escalate to maintain SLA compliance.
+                                You have expense reports pending approval for over 3 days. Please review and approve or escalate to ensure timely approval.
                             </p>
                             <p className="text-[9px] text-muted-foreground mt-1">From: Strata · Automated · Workspaces, Inc.</p>
                         </div>
@@ -381,7 +381,7 @@ function ReportPreviewModal({ onClose }: { onClose: () => void }) {
                                 { label: 'Total Spend',          value: `$${(mayTotal / 1000).toFixed(0)},000` },
                                 { label: 'vs. April 2026',       value: `+$${((mayTotal - aprTotal) / 1000).toFixed(0)},000 (+${totalDelta}%)`, highlight: 'warning' },
                                 { label: 'Expenses submitted',   value: '23' },
-                                { label: 'SLA On-time',          value: '94%' },
+                                { label: 'On-time Rate',          value: '94%' },
                                 { label: 'Receipts verified',    value: '23 / 23 ✓', highlight: 'success' },
                             ].map(row => (
                                 <div key={row.label} className="flex items-center justify-between">
@@ -602,7 +602,7 @@ export default function CFODashboardScene() {
                         {[
                             { label: 'Total spend',   value: '$43K'  },
                             { label: 'Expenses',      value: '19'    },
-                            { label: 'On-time SLA',   value: '97%'   },
+                            { label: 'On-time Rate',   value: '97%'   },
                         ].map(kpi => (
                             <div key={kpi.label} className="px-3 py-2.5 text-center">
                                 <p className="text-base font-bold text-foreground">{kpi.value}</p>
@@ -776,7 +776,7 @@ function CompanyView({
     const KPIs = [
         { label: 'This Month',        value: scaledKPI.month,            sub: 'May 2026' },
         { label: 'Pending Approvals', value: String(scaledKPI.pending),   sub: 'expenses' },
-        { label: 'On-time SLA',       value: scaledKPI.sla,              sub: '↑ from 89%' },
+        { label: 'On-time Rate',       value: scaledKPI.sla,              sub: '↑ from 89%' },
     ]
 
     const [compareMode, setCompareMode] = useState(false)
@@ -1095,10 +1095,10 @@ function CompanyView({
             <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-warning" />
-                    <p className="text-xs font-bold text-foreground">{SLA_ALERTS.length} reports pending &gt; 3 days</p>
+                    <p className="text-xs font-bold text-foreground">{OVERDUE_ALERTS.length} reports pending &gt; 3 days</p>
                 </div>
                 <div className="divide-y divide-border">
-                    {SLA_ALERTS.map(a => (
+                    {OVERDUE_ALERTS.map(a => (
                         <div key={a.name} className="flex items-center justify-between px-4 py-2.5">
                             <div>
                                 <p className="text-xs font-semibold text-foreground">{a.name} · {a.amount}</p>
@@ -1109,7 +1109,7 @@ function CompanyView({
                     ))}
                 </div>
                 <div className="px-4 py-3 border-t border-border">
-                    <ReminderScheduler alerts={SLA_ALERTS} />
+                    <ReminderScheduler alerts={OVERDUE_ALERTS} />
                 </div>
             </div>
 
@@ -1133,7 +1133,7 @@ function DivisionView({ kpisVisible, barsVisible }: { kpisVisible: boolean; bars
     const divisionKPIs = [
         { label: 'Division Spend', value: '$48K', sub: 'May 2026' },
         { label: 'Your Reports',   value: '38',   sub: 'direct + indirect' },
-        { label: 'SLA On-time',    value: '92%',  sub: 'Ops & Procurement' },
+        { label: 'On-time Rate',    value: '92%',  sub: 'Ops & Procurement' },
     ]
 
     return (

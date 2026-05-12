@@ -27,7 +27,7 @@ type CatFilter    = 'all' | 'mileage' | 'meals' | 'airfare' | 'tolls' | 'misc'
 // ── All expenses visible in the list view ────────────────────────────────────
 
 const ALL_EXPENSES = [
-    { id: 'john',   name: 'John Smith',   category: 'Mileage · Tolls/Parking', catKey: 'mileage' as CatFilter, amount: '$142.50', date: 'May 5',  status: 'pending',  receipts: 2, hasReceipt: true,  age: '< 1 day', focus: true  },
+    { id: 'john',   name: 'John Smith',   category: 'Mileage · Tolls / Cab / Parking', catKey: 'mileage' as CatFilter, amount: '$95.00', date: 'May 5',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '< 1 day', focus: true  },
     { id: 'maria',  name: 'Maria Lopez',  category: 'Personal Meals',          catKey: 'meals'   as CatFilter, amount: '$89.00',  date: 'May 4',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '1 day',   focus: false },
     { id: 'carlos', name: 'Carlos Ruiz',  category: 'Air Fare',                catKey: 'airfare' as CatFilter, amount: '$210.00', date: 'May 1',  status: 'pending',  receipts: 0, hasReceipt: false, age: '4 days',  focus: false },
     { id: 'ana',    name: 'Ana Kim',      category: 'Misc Cost',               catKey: 'misc'    as CatFilter, amount: '$34.90',  date: 'Apr 30', status: 'approved', receipts: 1, hasReceipt: true,  age: '2 days',  focus: false },
@@ -45,7 +45,7 @@ const CAT_FILTERS: { key: CatFilter; label: string }[] = [
     { key: 'mileage', label: 'Mileage' },
     { key: 'meals',   label: 'Personal Meals' },
     { key: 'airfare', label: 'Air Fare' },
-    { key: 'tolls',   label: 'Tolls/Parking' },
+    { key: 'tolls',   label: 'Tolls / Cab / Parking' },
     { key: 'misc',    label: 'Misc Cost' },
 ]
 
@@ -220,10 +220,10 @@ function NotificationToast({ onReview, onDismiss }: {
                         <span className="text-[10px] font-bold text-ai uppercase tracking-wide">Strata · Action required</span>
                     </div>
                     <p className="text-sm font-semibold text-foreground leading-snug">
-                        John Smith submitted a $142.50 expense
+                        John Smith submitted a $95.00 expense
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Mileage · Tolls/Parking · May 5 · 2 receipts attached inline
+                        Mileage · Tolls / Cab / Parking · May 5 · 1 receipt attached inline
                     </p>
                     <button
                         onClick={() => onReview?.()}

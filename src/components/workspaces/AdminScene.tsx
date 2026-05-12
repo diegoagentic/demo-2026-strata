@@ -25,15 +25,15 @@ const CORE_PEOPLE = [
     { name: 'James Wilson',  dept: 'Finance',      location: 'Miami'        },
 ]
 
-const INITIAL_CATEGORIES = ['Fuel', 'Meals', 'Travel', 'Parking', 'Office', 'Client Entertainment', 'Training', 'Equipment']
-const CATEGORY_SUGGESTIONS = ['Fuel', 'Meals', 'Travel', 'Parking', 'Office', 'Client Entertainment', 'Training', 'Equipment', 'Tolls', 'Accommodation', 'Conference', 'Subscriptions']
+const INITIAL_CATEGORIES = ['Air Fare', 'Car Rental', 'Lodging', 'Tolls / Cab / Parking', 'Mileage', 'Misc Cost', 'Personal Meals', 'Business Meals & Entertainment', 'Market Events', 'Other']
+const CATEGORY_SUGGESTIONS = ['Air Fare', 'Car Rental', 'Lodging', 'Tolls / Cab / Parking', 'Mileage', 'Misc Cost', 'Personal Meals', 'Business Meals & Entertainment', 'Market Events', 'Other', 'Conference', 'Subscriptions']
 
 const GL_RULES_INITIAL = [
-    { category: 'Fuel',                  glCode: '6200', glName: 'Vehicle Expenses',      confidence: 94 },
-    { category: 'Meals & Entertainment', glCode: '6100', glName: 'Meals & Entertainment', confidence: 91 },
-    { category: 'Travel',                glCode: '6210', glName: 'Travel & Transit',       confidence: 96 },
-    { category: 'Parking',               glCode: '6210', glName: 'Travel & Transit',       confidence: 72 },
-    { category: 'Office',                glCode: '6300', glName: 'Office Expenses',         confidence: 89 },
+    { category: 'Mileage',                       glCode: '6200', glName: 'Vehicle Expenses',      confidence: 94 },
+    { category: 'Business Meals & Entertainment', glCode: '6100', glName: 'Meals & Entertainment', confidence: 91 },
+    { category: 'Air Fare',                       glCode: '6210', glName: 'Travel & Transit',       confidence: 96 },
+    { category: 'Tolls / Cab / Parking',          glCode: '6210', glName: 'Travel & Transit',       confidence: 72 },
+    { category: 'Misc Cost',                      glCode: '6300', glName: 'Office Expenses',         confidence: 89 },
 ]
 
 const GL_CODE_OPTIONS = [
@@ -168,9 +168,9 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
         const option = GL_CODE_OPTIONS.find(o => o.code === glCode)
         if (!option) return
         setGlRules(prev => prev.map(r =>
-            r.category === category ? { ...r, glCode: option.code, glName: option.name, confidence: category === 'Parking' ? 97 : r.confidence } : r
+            r.category === category ? { ...r, glCode: option.code, glName: option.name, confidence: category === 'Tolls / Cab / Parking' ? 97 : r.confidence } : r
         ))
-        if (category === 'Parking') setRuleImproved(true)
+        if (category === 'Tolls / Cab / Parking') setRuleImproved(true)
         setEditingRule(null)
     }
 
@@ -181,12 +181,8 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
 
     return (
         <div className="space-y-5">
-            <div className="bg-card border border-border rounded-xl px-4 py-3">
-                <p className="text-sm font-bold text-foreground">Admin · Letza Bombard</p>
-                <p className="text-xs text-muted-foreground">Self-service · No IT ticket required · Changes apply immediately</p>
-            </div>
 
-            {/* Triggered context — connects to w2.2 Parking 72% */}
+            {/* Triggered context — connects to w2.2 Tolls/Cab/Parking 72% */}
             {!ruleImproved && (
                 <div className="bg-warning/5 border border-warning/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-300">
                     <div className="flex items-center gap-2">
@@ -194,7 +190,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                         <p className="text-xs font-semibold text-foreground">1 mapping rule needs attention</p>
                     </div>
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        The <span className="font-semibold text-foreground">Parking</span> category matched at <span className="font-semibold text-warning">72% confidence</span> on the expense you just reviewed. Update the GL rule so future parking expenses auto-classify correctly — no IT ticket needed.
+                        The <span className="font-semibold text-foreground">Tolls / Cab / Parking</span> category matched at <span className="font-semibold text-warning">72% confidence</span> on the expense you just reviewed. Update the GL rule so future expenses auto-classify correctly — no IT ticket needed.
                     </p>
                     <p className="text-[10px] text-ai">✦ Strata flagged this automatically after the manual verification in GL review</p>
                 </div>
@@ -203,7 +199,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                 <div className="bg-success/5 border border-success/20 rounded-xl px-3 py-3 space-y-2 animate-in fade-in duration-300">
                     <div className="flex items-center gap-2">
                         <TrendingUp className="h-3.5 w-3.5 text-success shrink-0" />
-                        <p className="text-xs font-semibold text-success">Parking rule corrected — live immediately</p>
+                        <p className="text-xs font-semibold text-success">Tolls / Cab / Parking rule corrected — live immediately</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5">
@@ -235,13 +231,20 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
 
                 <div className="divide-y divide-border">
                     {glRules.map(rule => {
-                        const isLowConf = rule.category === 'Parking' && !ruleImproved
+                        const isLowConf = rule.category === 'Tolls / Cab / Parking' && !ruleImproved
                         const isConfirmed = confirmedRules.has(rule.category)
                         return (
                             <div key={rule.category} className={`flex items-center gap-2 px-4 py-2.5 transition-colors ${isLowConf ? 'bg-warning/5' : ''}`}>
-                                <div className="flex items-center gap-1.5 w-28 shrink-0">
-                                    <span className="text-xs text-foreground">{rule.category}</span>
-                                    {isLowConf && <AlertTriangle className="h-3 w-3 text-warning shrink-0" />}
+                                <div className="flex flex-col gap-0.5 w-40 shrink-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-xs text-foreground">{rule.category}</span>
+                                        {isLowConf && <AlertTriangle className="h-3 w-3 text-warning shrink-0" />}
+                                    </div>
+                                    {isLowConf && (
+                                        <p className="text-[9px] text-warning leading-tight">
+                                            Overlaps with Mileage — toll &amp; parking receipts split between Vehicle and Transit accounts
+                                        </p>
+                                    )}
                                 </div>
                                 {editingRule === rule.category ? (
                                     <select
@@ -259,7 +262,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <span className="text-[11px] font-mono text-muted-foreground shrink-0">{rule.glCode}</span>
                                         <span className="text-[11px] text-foreground truncate">· {rule.glName}</span>
-                                        {rule.category === 'Parking' && ruleImproved ? (
+                                        {rule.category === 'Tolls / Cab / Parking' && ruleImproved ? (
                                             <div className="flex items-center gap-1 shrink-0">
                                                 <span className="text-[10px] font-bold text-muted-foreground/50 line-through">72%</span>
                                                 <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/40" />
@@ -745,7 +748,7 @@ export default function AdminScene({ onSave }: { onSave?: () => void }) {
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 shrink-0" />
-                                <p className="text-[11px] text-foreground leading-snug"><span className="font-semibold">Employees</span> — Parking maps correctly on next submission · no IT ticket required</p>
+                                <p className="text-[11px] text-foreground leading-snug"><span className="font-semibold">Employees</span> — Tolls / Cab / Parking maps correctly on next submission · no IT ticket required</p>
                             </div>
                         </div>
                     </div>

@@ -5,7 +5,7 @@
  * Scenario modes:
  *   approve   — standard flow: AI checks pass → approve → routed to AP with GL pre-filled
  *   reject    — manager sends back with required note → employee resubmit loop
- *   planb     — policy exception: $142.50 > $125 per-diem cap → override with reason OR reject
+ *   planb     — policy exception: $95.00 > $75 meal per-diem cap → override with reason OR reject
  *
  * SOT data surfaced:
  *   - Employee context: 3rd expense · avg $118.50 · all past approved within SLA
@@ -61,13 +61,13 @@ const INITIAL_THREADS: Thread[] = [
 
 const AI_CHECKS = [
     { label: 'Within $150 per-diem limit',                ok: true  },
-    { label: 'Category allowed · Mileage · Tolls/Parking', ok: true  },
+    { label: 'Category allowed · Mileage · Tolls / Cab / Parking', ok: true  },
     { label: 'No duplicate detected (last 7 days)',        ok: true  },
 ]
 
 const AI_CHECKS_PLANB = [
-    { label: '$142.50 exceeds $125 per-diem cap',          ok: false },
-    { label: 'Category allowed · Mileage · Tolls/Parking', ok: true  },
+    { label: '$95.00 exceeds $75 meal per-diem cap',       ok: false },
+    { label: 'Category allowed · Mileage · Tolls / Cab / Parking', ok: true  },
     { label: 'No duplicate detected (last 7 days)',        ok: true  },
 ]
 
@@ -85,8 +85,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     const [showOverride,  setShowOverride]  = useState(false)
     const [aiExpanded,    setAiExpanded]    = useState(true)
     const [glExpanded,    setGlExpanded]    = useState(false)
-    const [editAmount,    setEditAmount]    = useState('$142.50')
-    const [editCategory,  setEditCategory]  = useState('Mileage · Tolls/Parking')
+    const [editAmount,    setEditAmount]    = useState('$95.00')
+    const [editCategory,  setEditCategory]  = useState('Mileage · Tolls / Cab / Parking')
     const [editDesc,      setEditDesc]      = useState('Business client dinner — The Capital Grille')
     const [aiApplied,     setAiApplied]    = useState(false)
     const [receiptIdx,      setReceiptIdx]      = useState(0)
@@ -127,8 +127,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
         setShowAskForm(false)
     }
 
-    // AI detects category mismatch: restaurant vendor → Fuel + Parking is inconsistent
-    const categoryMismatch = editCategory === 'Fuel + Parking' && !aiApplied
+    // AI detects category mismatch: restaurant vendor → Mileage · Tolls / Cab / Parking is inconsistent
+    const categoryMismatch = editCategory === 'Mileage · Tolls / Cab / Parking' && !aiApplied
 
     const checks = mode === 'planb' ? AI_CHECKS_PLANB : AI_CHECKS
     const policyViolation = mode === 'planb'
@@ -139,8 +139,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
         setOverrideNote('Client entertainment · pre-approved by CFO · exceptional client week')
         setShowReject(false)
         setShowOverride(false)
-        setEditAmount('$142.50')
-        setEditCategory('Fuel + Parking')
+        setEditAmount('$95.00')
+        setEditCategory('Mileage · Tolls / Cab / Parking')
         setEditDesc('Business client dinner — The Capital Grille')
         setAiApplied(false)
         setApprovalDownloaded(false)
@@ -290,7 +290,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                                     <p className="text-[11px] font-bold text-foreground">AI detected a category mismatch</p>
                                     <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
                                         Vendor <span className="font-medium text-foreground">"The Capital Grille"</span> is a restaurant.
-                                        Current category <span className="font-medium text-foreground">Mileage · Tolls/Parking</span> may be incorrect —
+                                        Current category <span className="font-medium text-foreground">Mileage · Tolls / Cab / Parking</span> may be incorrect —
                                         Strata suggests <span className="font-medium text-foreground">Business Meals &amp; Entertainment</span>.
                                     </p>
                                 </div>
@@ -307,7 +307,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                                     onClick={() => setAiApplied(true)}
                                     className="text-[10px] font-medium text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-lg transition-colors"
                                 >
-                                    Keep as Fuel + Parking
+                                    Keep as Mileage · Tolls / Cab / Parking
                                 </button>
                             </div>
                         </div>
@@ -346,7 +346,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                             Save &amp; continue
                         </button>
                         <button
-                            onClick={() => { setEditAmount('$142.50'); setEditCategory('Fuel + Parking'); setEditDesc('Business client dinner — The Capital Grille'); setAiApplied(false); setAppState('pending') }}
+                            onClick={() => { setEditAmount('$95.00'); setEditCategory('Mileage · Tolls / Cab / Parking'); setEditDesc('Business client dinner — The Capital Grille'); setAiApplied(false); setAppState('pending') }}
                             className="px-3 text-xs py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground"
                         >
                             Cancel
