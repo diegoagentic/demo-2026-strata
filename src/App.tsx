@@ -260,10 +260,11 @@ function App() {
       { name: 'Receiving AI', page: 'bfi-receiving', icon: ReceiptIcon },
     ];
 
-    // Workspaces profile: 2-tab primary nav (Expense Submission · AP & Reporting)
+    // Workspaces profile: 3-tab primary nav (Expense Submission · AP & Reporting · Spend Dashboard)
     const workspacesNav = [
       { name: 'Expense Submission', page: 'workspaces-submit', icon: ReceiptIcon },
       { name: 'AP & Reporting', page: 'workspaces-ap', icon: Building2Icon },
+      { name: 'Spend Dashboard', page: 'workspaces-dashboard', icon: LayoutDashboardIcon },
     ];
 
     const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : expertNav;
@@ -314,7 +315,7 @@ function App() {
       'workspaces-submit': 'workspaces-submit',
       'workspaces-approval': 'workspaces-submit',
       'workspaces-ap': 'workspaces-ap',
-      'workspaces-reporting': 'workspaces-ap',
+      'workspaces-reporting': 'workspaces-dashboard',
     };
     if (isBFI && bfiDashboardActive) return 'bfi-dashboard'
     return appToTab[currentStep.app] || currentPage;
