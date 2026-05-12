@@ -1169,6 +1169,13 @@ export default function CFODashboardScene() {
         return () => clearTimeout(t)
     }, [phase])
 
+    // Auto-switch to Spend Dashboard (reports) after company KPIs animate in
+    useEffect(() => {
+        if (phase !== 'company') { setShowSpend(false); return }
+        const t = setTimeout(() => setShowSpend(true), 2800)
+        return () => clearTimeout(t)
+    }, [phase])
+
     // Resetear barras al cambiar cualquier filtro
     useEffect(() => {
         if (phase !== 'company') return
