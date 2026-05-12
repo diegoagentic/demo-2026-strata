@@ -398,7 +398,7 @@ function App() {
         return <LelandReviewQueueApp />;
       case 'bfi-agency-fee':
       case 'bfi-receiving':
-        return <BFIPage onLoginShowing={setBfiLoginActive} />;
+        return <BFIPage />;
       case 'workspaces-submit':
       case 'workspaces-approval':
       case 'workspaces-ap':
