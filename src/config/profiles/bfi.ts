@@ -41,7 +41,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'CoNY Order Queue',
         description: 'Lauren\'s morning starts with a prioritized view of active CoNY orders — CPR discrepancies, pricing flags, and receiving gaps surfaced by Strata. DOE-2847 has a critical CPR issue requiring immediate attention.',
         app: 'bfi-agency-fee',
-        role: 'Account Lead',
+        role: 'Account Manager',
     },
     {
         id: 'a1.2',
@@ -50,7 +50,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Quote + Pricing + Discount',
         description: 'Strata validates the SIF against the CoNY contract, calculates the discount automatically ((Sale ÷ List) − 1), and tracks the OmniQuote SIF cycle in real time. What used to take 65 minutes in OmniQuote takes seconds.',
         app: 'bfi-agency-fee',
-        role: 'Account Lead',
+        role: 'Account Manager',
     },
     {
         id: 'a1.3',
@@ -59,7 +59,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'CPR Reconciliation',
         description: 'Payment-critical — City of NY does not pay if CPR hours don\'t match. Strata detects the discrepancy (Carpenters −5h, OT −2h) and pre-drafts the revision message to Michael and Nancy. Lauren approves and sends without leaving the screen.',
         app: 'bfi-agency-fee',
-        role: 'Account Lead',
+        role: 'Account Manager',
     },
     {
         id: 'a1.4',
@@ -81,7 +81,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'WIG Bingo Check',
         description: 'WIG sends the Receiving Report and Bingo Sheet as a Word document. Strata captures it digitally and prepares the AI analysis — eliminating the manual cross-reference that used to take Lena up to a week.',
         app: 'bfi-receiving',
-        role: 'Account Lead',
+        role: 'Account Manager',
     },
     {
         id: 'r1.3',
@@ -90,7 +90,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'AI Analysis',
         description: 'Strata cross-references the packing list against the bingo sheet across 3 pages — carton by carton — and flags any discrepancy in under 10 seconds. Carton #34 is missing and pulsing red.',
         app: 'bfi-receiving',
-        role: 'Account Lead',
+        role: 'Account Manager',
     },
     {
         id: 'r1.4',
@@ -99,7 +99,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Alert & Claim',
         description: 'Strata auto-drafts the notification to Andy at Herman Miller and the Omni service claim — both pre-filled with the PMO, bingo number, line item, and item description. Lauren sends both with one click each.',
         app: 'bfi-receiving',
-        role: 'Account Lead',
+        role: 'Account Manager',
     },
     {
         id: 'r1.5',
@@ -108,7 +108,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Core Entry',
         description: 'With 34/35 cartons confirmed and carton #34 flagged as short-shipped, Lauren confirms receiving in CORE. Line 24 is excluded from the entry until the claim resolves.',
         app: 'bfi-receiving',
-        role: 'Account Lead',
+        role: 'Account Manager',
     },
     {
         id: 'r1.6',

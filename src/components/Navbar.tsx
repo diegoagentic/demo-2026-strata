@@ -84,9 +84,9 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'CFO',
         photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
     },
-    'BFI Account Lead': {
+    'BFI Account Manager': {
         name: 'Lauren D.',
-        role: 'CoNY Account Lead',
+        role: 'CoNY Account Manager',
         photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face',
     },
     'BFI Project Manager': {
@@ -118,7 +118,7 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
     if (app?.startsWith('bfi-')) {
         if (role === 'Project Manager') return 'BFI Project Manager';
         if (role === 'Finance / AR')    return 'BFI Finance';
-        return 'BFI Account Lead';
+        return 'BFI Account Manager';
     }
     if (role === 'System') {
         // System steps inherit the human profile of their parent app
