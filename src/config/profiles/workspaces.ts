@@ -109,7 +109,7 @@ export const WORKSPACES_STEPS: DemoStep[] = [
         title: 'CFO / CAO Dashboard',
         description: 'After Letza confirms GL codes and improves the Parking rule, the CFO receives a real-time notification: May cycle closed — 23 expenses posted, all receipts verified, 1 GL rule improved. The dashboard aggregates spend by category with month-over-month comparison, surfaces SLA outliers, and has the full report ready to export. Switch to Tammy\'s view to see how Ops & Procurement performed.',
         app: 'workspaces-reporting',
-        role: 'Accountant',
+        role: 'CFO',
     },
 ];
 

@@ -31,8 +31,8 @@ const PENDING_EXPENSES = [
         approvedBy: 'Sarah Johnson',
         approvedDate: 'May 6',
         glLines: [
-            { code: '6200 · Vehicle Expenses', amount: '$95.00',  confidence: 94 },
-            { code: '6210 · Travel & Transit',  amount: '$47.50',  confidence: 72 },
+            { code: 'Mileage',               amount: '$95.00',  confidence: 94 },
+            { code: 'Tolls / Cab / Parking', amount: '$47.50',  confidence: 72 },
         ],
         ageDays: 0,
         sla: false,
@@ -46,7 +46,7 @@ const PENDING_EXPENSES = [
         approvedBy: 'Sarah Johnson',
         approvedDate: 'May 5',
         glLines: [
-            { code: '6100 · Meals & Entertainment', amount: '$89.00', confidence: 96 },
+            { code: 'Personal Meals', amount: '$89.00', confidence: 96 },
         ],
         ageDays: 1,
         sla: false,
@@ -60,9 +60,9 @@ const PENDING_EXPENSES = [
         approvedBy: 'Mike Torres',
         approvedDate: 'May 2',
         glLines: [
-            { code: '6210 · Travel & Transit',  amount: '$120.00', confidence: 91 },
-            { code: '6200 · Vehicle Expenses',  amount: '$55.00',  confidence: 88 },
-            { code: '6300 · Office Expenses',   amount: '$35.00',  confidence: 85 },
+            { code: 'Air Fare',  amount: '$120.00', confidence: 91 },
+            { code: 'Mileage',   amount: '$55.00',  confidence: 88 },
+            { code: 'Misc Cost', amount: '$35.00',  confidence: 85 },
         ],
         ageDays: 4,
         sla: true,
@@ -78,12 +78,12 @@ const POSTED_EXPENSES = [
         amount: '$65.00',
         approvedBy: 'Sarah Johnson',
         approvedDate: 'May 3',
-        glLines: [{ code: '6100 · Meals & Entertainment', amount: '$65.00', confidence: 98 }],
+        glLines: [{ code: 'Personal Meals', amount: '$65.00', confidence: 98 }],
         ageDays: 0,
         sla: false,
         focus: false,
         posted: true,
-        postedGl: 'GL 6100 ✓',
+        postedGl: 'Personal Meals ✓',
         postedDate: 'May 3',
     },
     {
@@ -92,12 +92,12 @@ const POSTED_EXPENSES = [
         amount: '$120.00',
         approvedBy: 'Mike Torres',
         approvedDate: 'May 2',
-        glLines: [{ code: '6300 · Office Expenses', amount: '$120.00', confidence: 95 }],
+        glLines: [{ code: 'Misc Cost', amount: '$120.00', confidence: 95 }],
         ageDays: 0,
         sla: false,
         focus: false,
         posted: true,
-        postedGl: 'GL 6300 ✓',
+        postedGl: 'Misc Cost ✓',
         postedDate: 'May 2',
     },
 ]
@@ -217,29 +217,6 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
                 </>
             )}
 
-            {/* Header — Letza persona, consistent with Sarah's header in ApprovalQueueScene */}
-            <div className="bg-card border border-border rounded-xl px-4 py-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-xs text-muted-foreground">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                        </p>
-                        <p className="text-sm font-bold text-foreground">Good morning, Letza</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Letza Bombard · Accountant — Workscapes, Inc.</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Bell className="h-4 w-4 text-muted-foreground" />
-                        <div className="h-8 w-8 rounded-full overflow-hidden border border-border shrink-0">
-                            <img
-                                src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face"
-                                alt="Letza Bombard"
-                                className="h-full w-full object-cover"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* KPIs */}
             <div className="grid grid-cols-3 gap-2">
                 {[
@@ -317,10 +294,10 @@ function APQueueToast({ onReview, onDismiss, onFlag }: { onReview?: () => void; 
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">Strata · AP Queue ready</p>
                     <p className="text-xs font-semibold text-foreground leading-snug">
-                        John Smith · $142.50 · Fuel + Parking — approved by Sarah Johnson
+                        John Smith · $142.50 · Mileage · Tolls/Parking — approved by Sarah Johnson
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                        GL codes pre-filled · ready to confirm and post to CORE
+                        Categories mapped · ready to confirm and post
                     </p>
                 </div>
                 <button

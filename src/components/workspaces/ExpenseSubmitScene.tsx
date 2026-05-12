@@ -31,14 +31,17 @@ const DEFAULT_MANAGER = {
     photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
 }
 
-const FIELDS = [
-    { key: 'vendor',   label: 'Vendor',   value: 'Suncoast Fuel Services' },
-    { key: 'date',     label: 'Date',     value: 'May 5, 2026' },
-    { key: 'amount',   label: 'Amount',   value: '$142.50' },
-    { key: 'category', label: 'Category', value: 'Fuel + Parking' },
+const RECEIPT_DATA = [
+    { label: 'Fuel Receipt',   amount: 95.00  },
+    { label: 'Parking Ticket', amount: 47.50  },
+    { label: 'Toll Receipt',   amount: 12.00  },
 ]
 
-const RECEIPT_LABELS = ['Fuel Receipt · $95.00', 'Parking Ticket · $47.50', 'Toll Receipt · $12.00']
+const EXPENSE_CATEGORIES = [
+    'Air Fare', 'Car Rental', 'Lodging', 'Tolls / Cab / Parking',
+    'Mileage', 'Misc Cost', 'Personal Meals',
+    'Business Meals & Ent.', 'Market Events', 'Other',
+]
 
 const PAST_EXPENSES = [
     { label: 'Office Supplies',    amount: '$23.40',  date: 'Apr 15', status: 'paid'    },
@@ -58,9 +61,17 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
     const [receipts, setReceipts]         = useState<number[]>([])
     const [addState, setAddState]         = useState<AddState>('idle')
     const [carouselIdx, setCarouselIdx]   = useState(0)
-    const [viewingReceipt, setViewingReceipt] = useState<number | null>(null)
-    const [categoryOpen, setCategoryOpen]     = useState(false)
-    const [selectedCategory, setSelectedCategory] = useState('Fuel + Parking')
+    const [viewingReceipt, setViewingReceipt]   = useState<number | null>(null)
+    const [selectedCategories, setSelectedCategories] = useState<string[]>(['Mileage', 'Tolls / Cab / Parking'])
+    const [categoryOpen,       setCategoryOpen]       = useState(false)
+    const [editedVendor, setEditedVendor] = useState('Suncoast Fuel Services')
+    const [editedDate,   setEditedDate]   = useState('May 5, 2026')
+
+    const totalAmount    = receipts.reduce((sum, idx) => sum + (RECEIPT_DATA[idx]?.amount ?? 0), 0)
+    const formattedTotal = `$${totalAmount.toFixed(2)}`
+
+    const toggleCategory = (cat: string) =>
+        setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -90,9 +101,10 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                 setOcrState('filling')
                 setReceipts([0])
                 let idx = 0
+                const FIELD_KEYS = ['vendor', 'date', 'amount', 'category']
                 const fillNext = () => {
-                    if (idx >= FIELDS.length) { setOcrState('done'); return }
-                    setFilledFields(prev => [...prev, FIELDS[idx++].key])
+                    if (idx >= FIELD_KEYS.length) { setOcrState('done'); return }
+                    setFilledFields(prev => [...prev, FIELD_KEYS[idx++]])
                     pauseAware(fillNext, 240)
                 }
                 fillNext()
@@ -207,8 +219,8 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                     <div className="flex items-center justify-between">
                         <p className="text-sm font-bold text-foreground">My Expenses</p>
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] text-muted-foreground border border-border rounded-lg px-2 py-0.5">All â–¾</span>
-                            <span className="text-[11px] text-muted-foreground border border-border rounded-lg px-2 py-0.5">This Month â–¾</span>
+                            <span className="text-[11px] text-muted-foreground border border-border rounded-lg px-2 py-0.5">All</span>
+                            <span className="text-[11px] text-muted-foreground border border-border rounded-lg px-2 py-0.5">This Month</span>
                         </div>
                     </div>
 
@@ -233,7 +245,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                                     <p className={`text-[9px] font-medium capitalize ${
                                         exp.status === 'paid' ? 'text-success' : 'text-amber-500'
                                     }`}>
-                                        {exp.status === 'pending' ? 'âš ï¸ 4 days' : 'Paid'}
+                                        {exp.status === 'pending' ? '4 days pending' : 'Paid'}
                                     </p>
                                 </div>
                             </div>
@@ -336,7 +348,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                             <p className="text-[11px] text-muted-foreground mt-0.5">
                                 Sent to <span className="font-semibold text-foreground">{DEFAULT_MANAGER.name}</span> for approval
                             </p>
-                            <p className="text-[11px] text-muted-foreground">John Smith · $142.50 · {receipts.length} receipt{receipts.length !== 1 ? 's' : ''}</p>
+                            <p className="text-[11px] text-muted-foreground">John Smith · {formattedTotal} · {receipts.length} receipt{receipts.length !== 1 ? 's' : ''}</p>
                         </div>
                     </div>
 
@@ -398,7 +410,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
             {/* Fixed header — always visible above the scroll area */}
             <div className="shrink-0 flex items-center justify-between px-4 pt-14 pb-3">
                 <p className="text-xs font-semibold text-white">
-                    {RECEIPT_LABELS[viewingReceipt] ?? `Receipt ${viewingReceipt + 1}`}
+                    {RECEIPT_DATA[viewingReceipt] ? `${RECEIPT_DATA[viewingReceipt].label} · $${RECEIPT_DATA[viewingReceipt].amount.toFixed(2)}` : `Receipt ${viewingReceipt + 1}`}
                 </p>
                 <button
                     onClick={() => setViewingReceipt(null)}
@@ -530,48 +542,89 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
 
                 {/* Form fields */}
                 <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                    {FIELDS.map((f, i) => {
-                        const filled = filledFields.includes(f.key)
-                        const isCategory = f.key === 'category'
-                        const displayValue = isCategory ? selectedCategory : f.value
-                        return (
-                            <div key={f.key} className={`px-4 py-3 ${i < FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
-                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{f.label}</p>
-                                {filled ? (
-                                    <div>
-                                        <button
-                                            onClick={() => isCategory ? setCategoryOpen(o => !o) : undefined}
-                                            className={`flex items-center justify-between w-full ${isCategory ? 'cursor-pointer' : 'cursor-default'}`}
-                                        >
-                                            <span className="text-sm font-semibold text-foreground animate-in fade-in duration-300">{displayValue}</span>
-                                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full">
-                                                <Sparkles className="h-2 w-2" /> AI{isCategory && ' â–¾'}
-                                            </span>
-                                        </button>
-                                        {isCategory && categoryOpen && (
-                                            <div className="mt-2 space-y-1 animate-in fade-in duration-200">
-                                                {['Fuel + Parking', 'Meals & Entertainment', 'Travel', 'Office Supplies', 'Other'].map(cat => (
-                                                    <button
-                                                        key={cat}
-                                                        onClick={() => { setSelectedCategory(cat); setCategoryOpen(false) }}
-                                                        className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors ${
-                                                            selectedCategory === cat
-                                                                ? 'bg-ai/10 text-ai font-semibold border border-ai/20'
-                                                                : 'text-foreground hover:bg-muted/40'
-                                                        }`}
-                                                    >
-                                                        {cat}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
+
+                    {/* Vendor */}
+                    <div className="px-4 py-3 border-b border-border/60">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Vendor</p>
+                        {filledFields.includes('vendor') ? (
+                            <div className="flex items-center justify-between gap-2 animate-in fade-in duration-300">
+                                <input value={editedVendor} onChange={e => setEditedVendor(e.target.value)}
+                                    className="text-sm font-semibold text-foreground bg-transparent flex-1 focus:outline-none border-b border-border/40 pb-0.5" />
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full shrink-0"><Sparkles className="h-2 w-2" /> AI</span>
+                            </div>
+                        ) : <div className="h-4 bg-muted/60 rounded-md w-3/4" />}
+                    </div>
+
+                    {/* Date */}
+                    <div className="px-4 py-3 border-b border-border/60">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Date</p>
+                        {filledFields.includes('date') ? (
+                            <div className="flex items-center justify-between gap-2 animate-in fade-in duration-300">
+                                <input value={editedDate} onChange={e => setEditedDate(e.target.value)}
+                                    className="text-sm font-semibold text-foreground bg-transparent flex-1 focus:outline-none border-b border-border/40 pb-0.5" />
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full shrink-0"><Sparkles className="h-2 w-2" /> AI</span>
+                            </div>
+                        ) : <div className="h-4 bg-muted/60 rounded-md w-2/4" />}
+                    </div>
+
+                    {/* Amount — derived from receipts */}
+                    <div className="px-4 py-3 border-b border-border/60">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Amount</p>
+                        {filledFields.includes('amount') ? (
+                            <div className="flex items-center justify-between animate-in fade-in duration-300">
+                                <span className="text-sm font-semibold text-foreground">{formattedTotal}</span>
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> Auto</span>
+                            </div>
+                        ) : <div className="h-4 bg-muted/60 rounded-md w-1/3" />}
+                    </div>
+
+                    {/* Category — compact tags + dropdown multiselect on edit */}
+                    <div className="px-4 py-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Category</p>
+                            {filledFields.includes('category') && (
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> AI</span>
+                            )}
+                        </div>
+                        {filledFields.includes('category') ? (
+                            <div className="animate-in fade-in duration-300">
+                                {/* Compact selected tags + edit trigger */}
+                                <div className="flex flex-wrap gap-1 items-center">
+                                    {selectedCategories.map(cat => (
+                                        <span key={cat} className="text-[10px] px-2 py-0.5 rounded-full bg-ai/10 text-ai border border-ai/20 font-medium">{cat}</span>
+                                    ))}
+                                    <button
+                                        onClick={() => setCategoryOpen(v => !v)}
+                                        className="text-[10px] text-muted-foreground hover:text-ai border border-dashed border-border hover:border-ai/40 px-2 py-0.5 rounded-full transition-colors"
+                                    >
+                                        {categoryOpen ? 'Done' : '+ Edit'}
+                                    </button>
+                                </div>
+                                {/* Dropdown panel */}
+                                {categoryOpen && (
+                                    <div className="mt-2 border border-border rounded-xl bg-card overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                                        {EXPENSE_CATEGORIES.map(cat => {
+                                            const selected = selectedCategories.includes(cat)
+                                            return (
+                                                <button
+                                                    key={cat}
+                                                    onClick={() => toggleCategory(cat)}
+                                                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted/40 transition-colors text-left border-b border-border/50 last:border-0"
+                                                >
+                                                    <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                                        selected ? 'bg-ai border-ai' : 'border-border'
+                                                    }`}>
+                                                        {selected && <CheckCircle2 className="h-2.5 w-2.5 text-white" />}
+                                                    </div>
+                                                    <span className={`text-[11px] ${selected ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>{cat}</span>
+                                                </button>
+                                            )
+                                        })}
                                     </div>
-                                ) : (
-                                    <div className="h-4 bg-muted/60 rounded-md w-3/4" />
                                 )}
                             </div>
-                        )
-                    })}
+                        ) : <div className="h-4 bg-muted/60 rounded-md w-2/4 animate-pulse" />}
+                    </div>
 
                     {/* Manager — read-only */}
                     <div className="px-4 py-3 border-t border-border/60 bg-muted/20">
@@ -683,7 +736,7 @@ function ReceiptCarousel({ receipts, activeIdx, onSelect, onView, addState }: {
             )}
 
             <p className="text-[10px] text-muted-foreground">
-                {RECEIPT_LABELS[activeIdx] ?? `Receipt ${activeIdx + 1}`}
+                {RECEIPT_DATA[activeIdx] ? `${RECEIPT_DATA[activeIdx].label} · $${RECEIPT_DATA[activeIdx].amount.toFixed(2)}` : `Receipt ${activeIdx + 1}`}
             </p>
             <p className="text-[9px] text-ai/70 font-medium">Tap to view full receipt</p>
         </div>
@@ -709,7 +762,7 @@ export function MobileNavbar({ title }: { title: string }) {
                 <div className="flex items-center gap-1.5">
                     <div className="text-right">
                         <p className="text-[10px] font-semibold text-foreground leading-none">John Smith</p>
-                        <p className="text-[9px] text-muted-foreground leading-none">Field Staff</p>
+                        <p className="text-[9px] text-muted-foreground leading-none">Sales Rep</p>
                     </div>
                     <div className="h-6 w-6 rounded-full bg-muted overflow-hidden shrink-0">
                         <img

@@ -66,7 +66,7 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
     // Workspaces demo personas
     Employee: {
         name: 'John Smith',
-        role: 'Field Staff',
+        role: 'Sales Rep',
         photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face',
     },
     'Operations Manager': {
@@ -114,6 +114,7 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
     if (role === 'Employee') return 'Employee';
     if (role === 'Operations Manager') return 'Operations Manager';
     if (role === 'AP Coordinator') return 'AP Coordinator';
+    if (role === 'Accountant') return 'AP Coordinator';
     if (role === 'CFO') return 'CFO';
     if (app?.startsWith('bfi-')) {
         if (role === 'Project Manager') return 'BFI Project Manager';

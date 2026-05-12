@@ -12,25 +12,26 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
-    AlertTriangle, CheckCircle2, Receipt,
+    CheckCircle2, Receipt,
     Bell, Clock, Sparkles, X, Upload, FileText, Image,
-    Filter, Search, ChevronRight, Check,
+    Filter, Search, ChevronRight, Check, Eye,
 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import { ReceiptImage } from './ExpenseSubmitScene'
 
 type SceneState   = 'list' | 'notified'
 type StatusFilter = 'all' | 'pending' | 'approved'
-type CatFilter    = 'all' | 'fuel' | 'meals' | 'travel' | 'parking' | 'office'
+type CatFilter    = 'all' | 'mileage' | 'meals' | 'airfare' | 'tolls' | 'misc'
 
 // ── All expenses visible in the list view ────────────────────────────────────
 
 const ALL_EXPENSES = [
-    { id: 'john',   name: 'John Smith',   category: 'Fuel + Parking',  catKey: 'fuel',   amount: '$142.50', date: 'May 5',  status: 'pending',  receipts: 2, hasReceipt: true,  age: '< 1 day', focus: true  },
-    { id: 'maria',  name: 'Maria Lopez',  category: 'Client Meals',    catKey: 'meals',  amount: '$89.00',  date: 'May 4',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '1 day',   focus: false },
-    { id: 'carlos', name: 'Carlos Ruiz',  category: 'Travel',          catKey: 'travel', amount: '$210.00', date: 'May 1',  status: 'sla',      receipts: 0, hasReceipt: false, age: '4 days',  focus: false },
-    { id: 'ana',    name: 'Ana Kim',      category: 'Office Supplies', catKey: 'office', amount: '$34.90',  date: 'Apr 30', status: 'approved', receipts: 1, hasReceipt: true,  age: '2 days',  focus: false },
-    { id: 'mike',   name: 'Mike Torres',  category: 'Travel — Orlando',catKey: 'travel', amount: '$312.00', date: 'Apr 28', status: 'approved', receipts: 2, hasReceipt: true,  age: '3 days',  focus: false },
+    { id: 'john',   name: 'John Smith',   category: 'Mileage · Tolls/Parking', catKey: 'mileage' as CatFilter, amount: '$142.50', date: 'May 5',  status: 'pending',  receipts: 2, hasReceipt: true,  age: '< 1 day', focus: true  },
+    { id: 'maria',  name: 'Maria Lopez',  category: 'Personal Meals',          catKey: 'meals'   as CatFilter, amount: '$89.00',  date: 'May 4',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '1 day',   focus: false },
+    { id: 'carlos', name: 'Carlos Ruiz',  category: 'Air Fare',                catKey: 'airfare' as CatFilter, amount: '$210.00', date: 'May 1',  status: 'pending',  receipts: 0, hasReceipt: false, age: '4 days',  focus: false },
+    { id: 'ana',    name: 'Ana Kim',      category: 'Misc Cost',               catKey: 'misc'    as CatFilter, amount: '$34.90',  date: 'Apr 30', status: 'approved', receipts: 1, hasReceipt: true,  age: '2 days',  focus: false },
+    { id: 'mike',   name: 'Mike Torres',  category: 'Air Fare',                catKey: 'airfare' as CatFilter, amount: '$312.00', date: 'Apr 28', status: 'approved', receipts: 2, hasReceipt: true,  age: '3 days',  focus: false },
 ]
 
 const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
@@ -41,11 +42,11 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
 
 const CAT_FILTERS: { key: CatFilter; label: string }[] = [
     { key: 'all',     label: 'All categories' },
-    { key: 'fuel',    label: 'Fuel' },
-    { key: 'meals',   label: 'Meals' },
-    { key: 'travel',  label: 'Travel' },
-    { key: 'parking', label: 'Parking' },
-    { key: 'office',  label: 'Office' },
+    { key: 'mileage', label: 'Mileage' },
+    { key: 'meals',   label: 'Personal Meals' },
+    { key: 'airfare', label: 'Air Fare' },
+    { key: 'tolls',   label: 'Tolls/Parking' },
+    { key: 'misc',    label: 'Misc Cost' },
 ]
 
 export default function ApprovalQueueScene({ onReview }: { onReview?: () => void }) {
@@ -160,10 +161,10 @@ export default function ApprovalQueueScene({ onReview }: { onReview?: () => void
             </div>
 
             {/* ── Expense table ── */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-xl overflow-visible">
                 {/* Header */}
-                <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-4 py-2 border-b border-border bg-muted/30">
-                    {['Employee', 'Category', 'Amount', 'Date', 'Status'].map(h => (
+                <div className="grid grid-cols-[1fr_160px_80px_64px_110px_160px] items-center px-4 py-2 border-b border-border bg-muted/30 rounded-t-xl">
+                    {['Employee', 'Category', 'Amount', 'Date', 'Attachments', 'Status'].map(h => (
                         <p key={h} className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{h}</p>
                     ))}
                 </div>
@@ -222,7 +223,7 @@ function NotificationToast({ onReview, onDismiss }: {
                         John Smith submitted a $142.50 expense
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Fuel + Parking · May 5 · 2 receipts attached inline
+                        Mileage · Tolls/Parking · May 5 · 2 receipts attached inline
                     </p>
                     <button
                         onClick={() => onReview?.()}
@@ -251,7 +252,8 @@ function ExpenseListRow({ exp, onReview }: {
     exp: typeof ALL_EXPENSES[0]
     onReview?: () => void
 }) {
-    const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done'>('idle')
+    const [uploadState,     setUploadState]     = useState<'idle' | 'uploading' | 'done'>('idle')
+    const [viewingReceipts, setViewingReceipts] = useState(false)
 
     const handleUpload = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -260,7 +262,6 @@ function ExpenseListRow({ exp, onReview }: {
     }
 
     const statusCell = () => {
-        // John Smith (focus) — Review + quick Approve/Reject (brief S2 spec)
         if (exp.focus) {
             return (
                 <div className="flex items-center gap-1.5">
@@ -293,11 +294,6 @@ function ExpenseListRow({ exp, onReview }: {
                 <CheckCircle2 className="h-2.5 w-2.5" /> Approved
             </span>
         )
-        if (exp.status === 'sla') return (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full">
-                <AlertTriangle className="h-2.5 w-2.5" /> {exp.age}
-            </span>
-        )
         return (
             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
                 <Clock className="h-2.5 w-2.5" /> Pending
@@ -305,10 +301,10 @@ function ExpenseListRow({ exp, onReview }: {
         )
     }
 
-    const receiptCell = () => {
+    const attachmentsCell = () => {
         if (uploadState === 'done') return (
             <span className="text-[10px] text-success font-medium flex items-center gap-1 animate-in fade-in duration-200">
-                <CheckCircle2 className="h-3 w-3" /> Uploaded ✓
+                <CheckCircle2 className="h-3 w-3" /> Uploaded
             </span>
         )
         if (uploadState === 'uploading') return (
@@ -317,11 +313,14 @@ function ExpenseListRow({ exp, onReview }: {
             </span>
         )
         if (exp.hasReceipt) return (
-            <div className="flex items-center gap-1">
-                <Receipt className="h-3 w-3 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground">{exp.receipts}</span>
-                <CheckCircle2 className="h-3 w-3 text-success" />
-            </div>
+            <button
+                onClick={() => setViewingReceipts(v => !v)}
+                className="inline-flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors group"
+            >
+                <Receipt className="h-3 w-3" />
+                <span>{exp.receipts} receipt{exp.receipts !== 1 ? 's' : ''}</span>
+                <Eye className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-ai" />
+            </button>
         )
         return (
             <div className="flex items-center gap-1.5">
@@ -332,20 +331,32 @@ function ExpenseListRow({ exp, onReview }: {
     }
 
     return (
-        <div className={`grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-4 py-3 transition-colors ${
-            exp.focus ? 'bg-muted/30 hover:bg-muted/50' : exp.status === 'sla' ? 'hover:bg-muted/20' : 'hover:bg-muted/20'
-        }`}>
-            <div className="min-w-0">
-                <p className={`text-sm font-semibold truncate ${exp.focus ? 'text-foreground' : 'text-foreground'}`}>{exp.name}</p>
-                <p className="text-[10px] text-muted-foreground">{exp.age} ago</p>
+        <div className="last:rounded-b-xl overflow-visible">
+            <div className={`grid grid-cols-[1fr_160px_80px_64px_110px_160px] items-center px-4 py-3 transition-colors last:rounded-b-xl ${
+                exp.focus ? 'bg-muted/30 hover:bg-muted/50' : 'hover:bg-muted/20'
+            }`}>
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{exp.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{exp.age} ago</p>
+                </div>
+                <span className="text-xs text-muted-foreground truncate pr-2">{exp.category}</span>
+                <span className="text-sm font-bold text-foreground tabular-nums">{exp.amount}</span>
+                <span className="text-[11px] text-muted-foreground">{exp.date}</span>
+                <div>{attachmentsCell()}</div>
+                <div>{statusCell()}</div>
             </div>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">{exp.category}</span>
-            <span className="text-sm font-bold text-foreground tabular-nums">{exp.amount}</span>
-            <span className="text-[11px] text-muted-foreground whitespace-nowrap">{exp.date}</span>
-            <div className="flex items-center gap-2 justify-end">
-                {statusCell()}
-                {receiptCell()}
-            </div>
+            {viewingReceipts && exp.hasReceipt && (
+                <div className="px-4 pb-3 animate-in slide-in-from-top-1 duration-200 bg-muted/20 border-t border-border/40">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide pt-2 pb-1.5">Attached receipts</p>
+                    <div className="flex gap-2">
+                        {Array.from({ length: exp.receipts }).map((_, i) => (
+                            <div key={i} className="w-20 rounded-lg overflow-hidden border border-border shrink-0">
+                                <ReceiptImage compact />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -365,7 +376,7 @@ function ReceiptUploadMenu({ onUpload }: { onUpload: (e: React.MouseEvent) => vo
                 Upload
             </button>
             {open && (
-                <div className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-xl shadow-lg overflow-hidden w-44 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden w-44 animate-in fade-in slide-in-from-top-1 duration-150">
                     {[
                         { icon: Image,    label: 'Upload image',    sub: 'JPG, PNG' },
                         { icon: FileText, label: 'Upload document',  sub: 'PDF, DOCX' },

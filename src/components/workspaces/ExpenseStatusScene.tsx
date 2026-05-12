@@ -165,7 +165,7 @@ export default function ExpenseStatusScene({ onBack }: { onBack?: () => void }) 
                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-sm font-bold text-foreground">My Expenses</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">John Smith · Field Staff</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">John Smith · Sales Rep</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full overflow-hidden border border-border shrink-0">

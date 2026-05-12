@@ -27,7 +27,7 @@ import { ReceiptImage } from './ExpenseSubmitScene'
 type ScenarioMode = 'approve' | 'reject' | 'planb'
 type ApproveState = 'pending' | 'editing' | 'sending' | 'approved' | 'rejected' | 'overridden'
 
-const CATEGORIES = ['Fuel + Parking', 'Client Meals', 'Travel', 'Office Supplies', 'Other']
+const CATEGORIES = ['Mileage', 'Tolls / Cab / Parking', 'Personal Meals', 'Business Meals & Ent.', 'Air Fare', 'Car Rental', 'Lodging', 'Misc Cost', 'Market Events', 'Other']
 
 // ── Activity & Discussion data ─────────────────────────────────────────────────
 
@@ -60,20 +60,20 @@ const INITIAL_THREADS: Thread[] = [
 ]
 
 const AI_CHECKS = [
-    { label: 'Within $150 per-diem limit',         ok: true  },
-    { label: 'Category allowed · Fuel + Parking',   ok: true  },
-    { label: 'No duplicate detected (last 7 days)', ok: true  },
+    { label: 'Within $150 per-diem limit',                ok: true  },
+    { label: 'Category allowed · Mileage · Tolls/Parking', ok: true  },
+    { label: 'No duplicate detected (last 7 days)',        ok: true  },
 ]
 
 const AI_CHECKS_PLANB = [
-    { label: '$142.50 exceeds $125 per-diem cap',   ok: false },
-    { label: 'Category allowed · Fuel + Parking',   ok: true  },
-    { label: 'No duplicate detected (last 7 days)', ok: true  },
+    { label: '$142.50 exceeds $125 per-diem cap',          ok: false },
+    { label: 'Category allowed · Mileage · Tolls/Parking', ok: true  },
+    { label: 'No duplicate detected (last 7 days)',        ok: true  },
 ]
 
 const GL_LINES = [
-    { desc: 'Fuel — Tampa',  amount: '$95.00',  gl: '6200 · Vehicle Expenses',    confidence: 94 },
-    { desc: 'Parking',       amount: '$47.50',  gl: '6210 · Travel & Transit',     confidence: 97 },
+    { desc: 'Mileage — Tampa',          amount: '$95.00',  gl: '6200 · Vehicle Expenses',  confidence: 94 },
+    { desc: 'Tolls / Cab / Parking',    amount: '$47.50',  gl: '6210 · Travel & Transit',  confidence: 97 },
 ]
 
 export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () => void }) {
@@ -86,11 +86,11 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
     const [aiExpanded,    setAiExpanded]    = useState(true)
     const [glExpanded,    setGlExpanded]    = useState(false)
     const [editAmount,    setEditAmount]    = useState('$142.50')
-    const [editCategory,  setEditCategory]  = useState('Fuel + Parking')
+    const [editCategory,  setEditCategory]  = useState('Mileage · Tolls/Parking')
     const [editDesc,      setEditDesc]      = useState('Business client dinner — The Capital Grille')
     const [aiApplied,     setAiApplied]    = useState(false)
-    const [receiptIdx,    setReceiptIdx]    = useState(0)
-    const [receiptModal,  setReceiptModal]  = useState(false)
+    const [receiptIdx,      setReceiptIdx]      = useState(0)
+    const [receiptModal,    setReceiptModal]    = useState(false)
 
     // Activity & Discussion
     const [activityTab,   setActivityTab]  = useState<'timeline' | 'discussion'>('timeline')
@@ -176,7 +176,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                                 <p className="text-sm font-bold text-foreground">John Smith</p>
-                                <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">Field Staff</span>
+                                <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">Sales Rep</span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5">{editCategory} · May 5, 2026 · The Capital Grille — Tampa, FL</p>
                             <p className="text-xs text-muted-foreground">Approved by: Sarah Johnson — Operations · Tampa</p>
@@ -199,11 +199,11 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                     </div>
                     <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3 w-3 text-success" />
-                        <span className="text-[10px] text-muted-foreground">All 2 prior expenses approved within SLA · avg $118.50</span>
+                        <span className="text-[10px] text-muted-foreground">All 2 prior expenses approved · avg $118.50 · no policy flags</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3 w-3 text-success" />
-                        <span className="text-[10px] text-muted-foreground">Receipt amounts verified · $95.00 + $47.50 = $142.50 ✓ matches claimed</span>
+                        <Clock className="h-3 w-3 text-warning shrink-0" />
+                        <span className="text-[10px] text-muted-foreground">Receipt amounts pending verification</span>
                     </div>
 
                     {/* Edit button */}
@@ -290,9 +290,8 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                                     <p className="text-[11px] font-bold text-foreground">AI detected a category mismatch</p>
                                     <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
                                         Vendor <span className="font-medium text-foreground">"The Capital Grille"</span> is a restaurant.
-                                        Current category <span className="font-medium text-foreground">Fuel + Parking</span> may be incorrect —
-                                        Strata suggests <span className="font-medium text-foreground">Meals &amp; Entertainment</span>.
-                                        This would remap GL from <span className="text-ai font-medium">6210 Travel</span> → <span className="text-ai font-medium">6100 Meals &amp; Entertainment</span>.
+                                        Current category <span className="font-medium text-foreground">Mileage · Tolls/Parking</span> may be incorrect —
+                                        Strata suggests <span className="font-medium text-foreground">Business Meals &amp; Entertainment</span>.
                                     </p>
                                 </div>
                             </div>
@@ -402,10 +401,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                                 <div className="space-y-1.5 animate-in fade-in duration-200">
                                     {GL_LINES.map(line => (
                                         <div key={line.desc} className="flex items-center justify-between bg-ai/5 border border-ai/10 rounded-lg px-3 py-2">
-                                            <div>
-                                                <p className="text-[11px] font-medium text-foreground">{line.desc}</p>
-                                                <p className="text-[10px] text-ai">{line.gl}</p>
-                                            </div>
+                                            <p className="text-[11px] font-medium text-foreground">{line.desc}</p>
                                             <div className="text-right shrink-0">
                                                 <p className="text-[11px] font-semibold text-foreground">{line.amount}</p>
                                                 <p className="text-[10px] text-muted-foreground">{line.confidence}% confidence</p>
@@ -426,7 +422,7 @@ export default function ApproveWithReceiptScene({ onApprove }: { onApprove?: () 
                         <div className="flex items-center gap-2">
                             <Receipt className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs font-semibold text-foreground">Receipts</span>
-                            <span className="text-[10px] text-success font-medium">2 verified ✓</span>
+                            <span className="text-[10px] text-warning font-medium">Pending verification</span>
                         </div>
                         <div className="flex items-center gap-2">
                             {/* Carousel nav */}
