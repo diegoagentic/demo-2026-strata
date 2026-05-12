@@ -81,6 +81,34 @@ const LOCATIONS_LIST = [
     { city: 'Other locations', amount:  6000 },
 ]
 
+// ── Operations Spend data (from Tammy's HTML report) ─────────────────────────
+
+const OPS_DEPTS = [
+    { name: 'Field operations', amount: 18420 },
+    { name: 'Procurement',      amount: 11850 },
+    { name: 'Sales support',    amount:  8940 },
+    { name: 'Warehouse',        amount:  5620 },
+    { name: 'Install',          amount:  3380 },
+]
+
+const OPS_CATEGORIES = [
+    { name: 'Lodging', pct: 35, color: '#378ADD', dasharray: 92,  offset: 0    },
+    { name: 'Airfare', pct: 25, color: '#1D9E75', dasharray: 66,  offset: -92  },
+    { name: 'Mileage', pct: 20, color: '#EF9F27', dasharray: 53,  offset: -158 },
+    { name: 'Dining',  pct: 13, color: '#7F77DD', dasharray: 33,  offset: -211 },
+    { name: 'Other',   pct:  7, color: '#888780', dasharray: 20,  offset: -244 },
+]
+
+const OPS_RECENT = [
+    { name: 'M. Henderson', dept: 'Field operations', location: 'Orlando',      date: 'Apr 28', amount: '$842.10',   receipt: true  },
+    { name: 'J. Park',      dept: 'Procurement',      location: 'Tampa',        date: 'Apr 27', amount: '$1,240.00', receipt: true  },
+    { name: 'R. Alvarez',   dept: 'Field operations', location: 'Orlando',      date: 'Apr 26', amount: '$385.50',   receipt: true  },
+    { name: 'S. Carter',    dept: 'Sales support',    location: 'Jacksonville', date: 'Apr 25', amount: '$612.75',   receipt: false },
+    { name: 'D. Kim',       dept: 'Warehouse',        location: 'Tampa',        date: 'Apr 24', amount: '$215.00',   receipt: true  },
+    { name: 'A. Rivera',    dept: 'Procurement',      location: 'Orlando',      date: 'Apr 23', amount: '$478.90',   receipt: true  },
+    { name: 'L. Nguyen',    dept: 'Install',          location: 'Orlando',      date: 'Apr 22', amount: '$129.40',   receipt: true  },
+]
+
 const DEPT_LABELS: Record<DeptFilter, string> = {
     all: 'All Departments', operations: 'Operations', sales: 'Sales', procurement: 'Procurement'
 }
@@ -473,6 +501,614 @@ function ReportPreviewModal({ onClose }: { onClose: () => void }) {
     )
 }
 
+// ── OperationsSpendView — 2-card launcher + full report views ─────────────────
+
+function ReportCard({ title, subtitle, preview, onClick }: {
+    title: string; subtitle: string; preview: React.ReactNode; onClick: () => void
+}) {
+    return (
+        <button
+            onClick={onClick}
+            className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/40 hover:shadow-md transition-all group w-full space-y-3"
+        >
+            <div className="aspect-video bg-muted/40 rounded-lg overflow-hidden flex items-end">
+                {preview}
+            </div>
+            <div>
+                <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{title}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-[10px] text-ai font-semibold">
+                View report <ChevronRight className="h-3 w-3" />
+            </span>
+        </button>
+    )
+}
+
+function OperationsSpendView() {
+    const [activeReport, setActiveReport] = useState<null | 'ops' | 'approvals' | 'gl'>(null)
+
+    if (activeReport === 'ops')       return <OpsSpendReport      onBack={() => setActiveReport(null)} />
+    if (activeReport === 'approvals') return <ApprovalTrendsReport onBack={() => setActiveReport(null)} />
+    if (activeReport === 'gl')        return <GLSummaryReport      onBack={() => setActiveReport(null)} />
+
+    return (
+        <div className="space-y-4 animate-in fade-in duration-300">
+            <div>
+                <p className="text-xs font-bold text-foreground">Spend Dashboard</p>
+                <p className="text-[10px] text-muted-foreground">Select a report to view and export</p>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+                <ReportCard
+                    title="Operations spend"
+                    subtitle="April 2026 · all departments"
+                    onClick={() => setActiveReport('ops')}
+                    preview={
+                        <div className="w-full h-full flex items-end gap-1 px-3 pb-2">
+                            {[95, 61, 46, 29, 17].map((h, i) => (
+                                <div key={i} className="flex-1 bg-primary/50 rounded-t-sm" style={{ height: `${h}%` }} />
+                            ))}
+                        </div>
+                    }
+                />
+                <ReportCard
+                    title="Supervisor approval trends"
+                    subtitle="Last 6 months · Tammy Flick"
+                    onClick={() => setActiveReport('approvals')}
+                    preview={
+                        <div className="w-full h-full flex items-end gap-1 px-3 pb-2">
+                            {[58, 46, 70, 73, 81, 89].map((h, i) => (
+                                <div key={i} className={`flex-1 rounded-t-sm ${i === 5 ? 'bg-primary' : 'bg-primary/40'}`} style={{ height: `${h}%` }} />
+                            ))}
+                        </div>
+                    }
+                />
+                <ReportCard
+                    title="Category × GL summary"
+                    subtitle="April 2026 · ready to post to Core"
+                    onClick={() => setActiveReport('gl')}
+                    preview={
+                        <div className="w-full h-full flex flex-col gap-1.5 justify-end px-3 pb-3">
+                            {[['#378ADD', '70%'], ['#1D9E75', '50%'], ['#EF9F27', '38%'], ['#7F77DD', '24%']].map(([c, w], i) => (
+                                <div key={i} className="h-1.5 rounded-full" style={{ width: w, backgroundColor: c }} />
+                            ))}
+                        </div>
+                    }
+                />
+            </div>
+            <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
+        </div>
+    )
+}
+
+// ── OpsSpendReport — full Operations Spend report ─────────────────────────────
+
+function OpsSpendReport({ onBack }: { onBack: () => void }) {
+    const [exportState, setExportState] = useState<'idle' | 'generating' | 'done'>('idle')
+    const [showFull, setShowFull]       = useState(false)
+    const maxDept = Math.max(...OPS_DEPTS.map(d => d.amount))
+
+    const handleExport = () => {
+        setExportState('generating')
+        setTimeout(() => { setExportState('done'); setTimeout(() => setExportState('idle'), 2000) }, 800)
+    }
+
+    return (
+        <div className="space-y-4 animate-in fade-in duration-300">
+            {/* Nav */}
+            <div className="flex items-center justify-between">
+                <button onClick={onBack} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Back
+                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setShowFull(v => !v)}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:border-primary transition-colors font-medium"
+                    >
+                        <FileText className="h-3 w-3" />
+                        {showFull ? 'Collapse' : 'Preview report'}
+                    </button>
+                    <button
+                        onClick={handleExport}
+                        disabled={exportState !== 'idle'}
+                        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all border ${
+                            exportState === 'done' ? 'bg-success/10 border-success/20 text-success'
+                            : 'bg-foreground text-background border-foreground hover:opacity-90'
+                        }`}
+                    >
+                        <Download className="h-3 w-3" />
+                        {exportState === 'generating' ? 'Generating...' : exportState === 'done' ? 'PDF downloaded ✓' : 'Export PDF'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Header */}
+            <div>
+                <p className="text-sm font-bold text-foreground">Operations spend</p>
+                <p className="text-[10px] text-muted-foreground">April 2026 · all departments · Tammy Flick</p>
+            </div>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-4 gap-2">
+                {[
+                    { label: 'Total approved', value: '$48,210',  color: 'text-foreground' },
+                    { label: 'Reports',         value: '87',       color: 'text-foreground' },
+                    { label: 'Avg / report',    value: '$554',     color: 'text-foreground' },
+                    { label: 'vs. last month',  value: '+12%',     color: 'text-success'    },
+                ].map(kpi => (
+                    <div key={kpi.label} className="bg-card border border-border rounded-xl px-3 py-2.5">
+                        <p className="text-[10px] text-muted-foreground mb-1">{kpi.label}</p>
+                        <p className={`text-lg font-bold leading-none ${kpi.color}`}>{kpi.value}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Charts: dept bars + donut */}
+            <div className="grid grid-cols-[1.4fr_1fr] gap-3 items-start">
+                <div className="bg-card border border-border rounded-xl px-4 py-3 space-y-3">
+                    <p className="text-xs font-bold text-foreground">By department</p>
+                    {OPS_DEPTS.map(dept => (
+                        <div key={dept.name} className="space-y-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-foreground">{dept.name}</span>
+                                <span className="text-[11px] text-muted-foreground">${dept.amount.toLocaleString()}</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div className="h-full bg-primary/70 rounded-full" style={{ width: `${(dept.amount / maxDept) * 100}%` }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="bg-card border border-border rounded-xl px-4 py-3">
+                    <p className="text-xs font-bold text-foreground mb-2">By category</p>
+                    <div className="flex justify-center mb-3">
+                        <svg viewBox="0 0 120 120" width="110" height="110" aria-label="Donut chart of expense categories">
+                            {OPS_CATEGORIES.map(cat => (
+                                <circle key={cat.name} cx="60" cy="60" r="42" fill="none" stroke={cat.color}
+                                    strokeWidth="16" strokeDasharray={`${cat.dasharray} 264`}
+                                    strokeDashoffset={cat.offset} transform="rotate(-90 60 60)" />
+                            ))}
+                        </svg>
+                    </div>
+                    <div className="space-y-1.5">
+                        {OPS_CATEGORIES.map(cat => (
+                            <div key={cat.name} className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-sm shrink-0" style={{ backgroundColor: cat.color }} />
+                                <span className="text-[11px] text-foreground flex-1">{cat.name}</span>
+                                <span className="text-[11px] text-muted-foreground">{cat.pct}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Recent reports table — full or collapsed */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <p className="text-xs font-bold text-foreground">Recent approved reports</p>
+                    <button onClick={() => setShowFull(v => !v)} className="text-[10px] text-ai font-medium hover:underline">
+                        {showFull ? 'Collapse ↑' : 'View all →'}
+                    </button>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30">
+                                {['Employee', 'Department', 'Location', 'Date', 'Amount', ''].map((h, i) => (
+                                    <th key={i} className={`px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap ${i >= 4 ? 'text-right' : 'text-left'}`}>{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60">
+                            {(showFull ? OPS_RECENT : OPS_RECENT.slice(0, 3)).map(row => (
+                                <tr key={row.name + row.date} className="hover:bg-muted/20 transition-colors">
+                                    <td className="px-4 py-2.5 text-[11px] font-medium text-foreground whitespace-nowrap">{row.name}</td>
+                                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">{row.dept}</td>
+                                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">{row.location}</td>
+                                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">{row.date}</td>
+                                    <td className="px-4 py-2.5 text-[11px] font-bold text-foreground text-right whitespace-nowrap">{row.amount}</td>
+                                    <td className="px-4 py-2.5 text-right">
+                                        {row.receipt ? <CheckCircle2 className="h-3.5 w-3.5 text-success inline" /> : <AlertTriangle className="h-3.5 w-3.5 text-warning inline" />}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="px-4 py-2 border-t border-border bg-muted/20">
+                    <p className="text-[9px] text-muted-foreground text-center">Mockup · Workscapes AI assessment · prepared for client demo</p>
+                </div>
+            </div>
+
+            <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
+        </div>
+    )
+}
+
+// ── ApprovalTrendsReport — Supervisor approval response times ─────────────────
+
+const APPROVAL_MANAGERS = [
+    { name: 'Sarah Johnson', dept: 'Operations',   avgDays: 0.9, onTime: '98%', total: 14, color: 'bg-success/60' },
+    { name: 'Mike Torres',   dept: 'Procurement',  avgDays: 1.4, onTime: '93%', total: 11, color: 'bg-success/40' },
+    { name: 'Ana Reyes',     dept: 'Sales',        avgDays: 2.1, onTime: '88%', total:  8, color: 'bg-warning/50' },
+    { name: 'Jorge Mata',    dept: 'Install',      avgDays: 3.8, onTime: '72%', total:  4, color: 'bg-destructive/40' },
+]
+
+const GL_ROWS = [
+    { category: 'Lodging',              glCode: '6220', april: 16890, vsMarch: '+19%', up: true,  reports: 22, status: 'posted',  spark: '0,12 16,10 32,8 48,7 64,6 80,2'   },
+    { category: 'Airfare',              glCode: '6210', april: 12050, vsMarch: '+15%', up: true,  reports: 18, status: 'posted',  spark: '0,14 16,17 32,8 48,5 64,7 80,3'   },
+    { category: 'Mileage',              glCode: '6230', april:  9640, vsMarch: '-14%', up: false, reports: 31, status: 'posted',  spark: '0,5 16,11 32,3 48,4 64,4 80,14'   },
+    { category: 'Meals & dining',        glCode: '6250', april:  6275, vsMarch: '+23%', up: true,  reports: 15, status: 'pending', spark: '0,15 16,13 32,11 48,12 64,9 80,2'  },
+    { category: 'Car rental',           glCode: '6240', april:  4210, vsMarch: '+11%', up: true,  reports:  8, status: 'posted',  spark: '0,14 16,12 32,10 48,9 64,10 80,5'  },
+    { category: 'Client entertainment', glCode: '6260', april:  3440, vsMarch: '+23%', up: true,  reports:  6, status: 'pending', spark: '0,15 16,13 32,12 48,10 64,11 80,3' },
+    { category: 'Office supplies',       glCode: '6310', april:  1890, vsMarch: '-18%', up: false, reports:  4, status: 'posted',  spark: '0,9 16,6 32,8 48,5 64,7 80,13'    },
+    { category: 'Other',                glCode: '6290', april:   850, vsMarch: '+33%', up: true,  reports:  3, status: 'posted',  spark: '0,9 16,16 32,11 48,8 64,13 80,4'  },
+]
+
+const GL_PENDING_ITEMS = [
+    { initials: 'SC', name: 'S. Carter',    detail: 'Sales support · Approved Apr 25 · GL 6250', amount: '$612.75'   },
+    { initials: 'BT', name: 'B. Torres',    detail: 'Sales support · Approved Apr 24 · GL 6260', amount: '$284.50'   },
+    { initials: 'KO', name: 'K. Owens',     detail: 'Operations · Approved Apr 23 · GL 6250',    amount: '$1,142.00' },
+    { initials: 'NP', name: 'N. Patel',     detail: 'Operations · Approved Apr 22 · GL 6260',    amount: '$418.90'   },
+    { initials: 'GW', name: 'G. Whitfield', detail: 'Sales support · Approved Apr 21 · GL 6260', amount: '$2,981.50' },
+]
+
+const APPROVAL_MONTHS = [
+    { month: 'Nov', label: '$8.2k',  height: 58, current: false },
+    { month: 'Dec', label: '$6.4k',  height: 46, current: false },
+    { month: 'Jan', label: '$9.8k',  height: 70, current: false },
+    { month: 'Feb', label: '$10.2k', height: 73, current: false },
+    { month: 'Mar', label: '$11.4k', height: 81, current: false },
+    { month: 'Apr', label: '$12.5k', height: 89, current: true  },
+]
+
+const TOP_APPROVERS = [
+    { initials: 'TF', name: 'Tammy Flick',      role: 'CAO, Operations', amount: '$58.5k', width: 100 },
+    { initials: 'MC', name: 'Mike Chen',         role: 'Sales Director',  amount: '$42.3k', width: 72  },
+    { initials: 'SR', name: 'Sarah Reynolds',    role: 'PM Lead',         amount: '$38.1k', width: 65  },
+    { initials: 'DP', name: 'David Park',        role: 'Install Manager', amount: '$28.7k', width: 49  },
+    { initials: 'MB', name: 'Mehmet Bakkaloglu', role: 'CFO',             amount: '$20.4k', width: 35  },
+]
+
+const RECENT_APPROVALS = [
+    { date: 'Apr 28', employee: 'M. Henderson', dept: 'Field operations', category: 'Lodging',    amount: '$842.10',   status: 'approved' },
+    { date: 'Apr 27', employee: 'J. Park',      dept: 'Procurement',      category: 'Airfare',    amount: '$1,240.00', status: 'approved' },
+    { date: 'Apr 26', employee: 'R. Alvarez',   dept: 'Field operations', category: 'Mileage',    amount: '$385.50',   status: 'approved' },
+    { date: 'Apr 25', employee: 'S. Carter',    dept: 'Sales support',    category: 'Dining',     amount: '$612.75',   status: 'pending'  },
+    { date: 'Apr 24', employee: 'D. Kim',        dept: 'Warehouse',        category: 'Car rental', amount: '$215.00',   status: 'approved' },
+    { date: 'Apr 23', employee: 'A. Rivera',    dept: 'Procurement',      category: 'Lodging',    amount: '$478.90',   status: 'approved' },
+    { date: 'Apr 22', employee: 'L. Nguyen',    dept: 'Install',          category: 'Mileage',    amount: '$129.40',   status: 'approved' },
+]
+
+// ── GLSummaryReport — Expense category × GL summary ──────────────────────────
+
+function GLSummaryReport({ onBack }: { onBack: () => void }) {
+    const [exportState, setExportState] = useState<'idle' | 'generating' | 'done'>('idle')
+    const [postState,   setPostState]   = useState<'idle' | 'posting' | 'done'>('idle')
+
+    const handleExport = () => {
+        setExportState('generating')
+        setTimeout(() => { setExportState('done'); setTimeout(() => setExportState('idle'), 2000) }, 800)
+    }
+    const handlePost = () => {
+        setPostState('posting')
+        setTimeout(() => { setPostState('done'); setTimeout(() => setPostState('idle'), 2500) }, 1000)
+    }
+
+    return (
+        <div className="space-y-4 animate-in fade-in duration-300">
+            {/* Nav */}
+            <div className="flex items-center justify-between">
+                <button onClick={onBack} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Back
+                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExport}
+                        disabled={exportState !== 'idle'}
+                        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all border ${
+                            exportState === 'done' ? 'bg-success/10 border-success/20 text-success'
+                            : 'bg-card border-border text-foreground hover:border-primary'
+                        }`}
+                    >
+                        <Download className="h-3 w-3" />
+                        {exportState === 'generating' ? 'Generating...' : exportState === 'done' ? 'CSV downloaded ✓' : 'Export CSV'}
+                    </button>
+                    <button
+                        onClick={handlePost}
+                        disabled={postState !== 'idle'}
+                        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all border ${
+                            postState === 'done' ? 'bg-success/10 border-success/20 text-success'
+                            : 'bg-foreground text-background border-foreground hover:opacity-90'
+                        }`}
+                    >
+                        <CheckCircle2 className="h-3 w-3" />
+                        {postState === 'posting' ? 'Posting...' : postState === 'done' ? 'Posted to Core ✓' : 'Post to Core'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Header */}
+            <div>
+                <p className="text-sm font-bold text-foreground">Expense category × GL summary</p>
+                <p className="text-[10px] text-muted-foreground">April 2026 · ready to post to Core</p>
+            </div>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-4 gap-2">
+                {[
+                    { label: 'Posted this month',   value: '$55,245', color: 'text-foreground' },
+                    { label: 'Reports processed',   value: '107',     color: 'text-foreground' },
+                    { label: 'Pending to post',     value: '5',       color: 'text-warning'    },
+                    { label: 'GL accounts touched', value: '8',       color: 'text-foreground' },
+                ].map(kpi => (
+                    <div key={kpi.label} className="bg-card border border-border rounded-xl px-3 py-2.5">
+                        <p className="text-[10px] text-muted-foreground mb-1">{kpi.label}</p>
+                        <p className={`text-lg font-bold leading-none ${kpi.color}`}>{kpi.value}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Category × GL table */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <div>
+                        <p className="text-xs font-bold text-foreground">Category × GL breakdown</p>
+                        <p className="text-[10px] text-muted-foreground">April 2026 · all departments</p>
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30">
+                                {[
+                                    { label: 'Category',   right: false },
+                                    { label: 'GL Account', right: false },
+                                    { label: 'April',      right: true  },
+                                    { label: 'vs March',   right: true  },
+                                    { label: 'Reports',    right: true  },
+                                    { label: '6-mo trend', right: true  },
+                                    { label: 'Status',     right: true  },
+                                ].map(h => (
+                                    <th key={h.label} className={`px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap ${h.right ? 'text-right' : 'text-left'}`}>{h.label}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60">
+                            {GL_ROWS.map(row => (
+                                <tr key={row.category} className="hover:bg-muted/20 transition-colors">
+                                    <td className="px-4 py-2.5 text-[11px] text-foreground whitespace-nowrap">{row.category}</td>
+                                    <td className="px-4 py-2.5">
+                                        <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{row.glCode}</span>
+                                    </td>
+                                    <td className="px-4 py-2.5 text-[11px] font-medium text-foreground text-right whitespace-nowrap">${row.april.toLocaleString()}</td>
+                                    <td className={`px-4 py-2.5 text-[11px] font-semibold text-right whitespace-nowrap ${row.up ? 'text-success' : 'text-destructive'}`}>{row.vsMarch}</td>
+                                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground text-right">{row.reports}</td>
+                                    <td className="px-4 py-2.5 text-right">
+                                        <svg width="60" height="18" viewBox="0 0 80 22" aria-hidden="true">
+                                            <polyline points={row.spark} fill="none" stroke="rgb(var(--color-primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </td>
+                                    <td className="px-4 py-2.5 text-right">
+                                        <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                                            row.status === 'posted'
+                                                ? 'bg-success/10 text-success border-success/20'
+                                                : 'bg-warning/10 text-warning border-warning/20'
+                                        }`}>
+                                            {row.status === 'posted' ? 'Posted' : 'Pending'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                            <tr className="border-t-2 border-border bg-muted/10">
+                                <td className="px-4 py-2.5 text-[11px] font-bold text-foreground">Total</td>
+                                <td className="px-4 py-2.5 text-[11px] text-muted-foreground">8 accounts</td>
+                                <td className="px-4 py-2.5 text-[11px] font-bold text-foreground text-right">$55,245</td>
+                                <td className="px-4 py-2.5 text-[11px] font-semibold text-success text-right">+14%</td>
+                                <td className="px-4 py-2.5 text-[11px] font-bold text-foreground text-right">107</td>
+                                <td />
+                                <td className="px-4 py-2.5 text-[11px] text-muted-foreground text-right">102 of 107</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Pending to post */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border">
+                    <p className="text-xs font-bold text-foreground">Pending to post to Core</p>
+                    <p className="text-[10px] text-muted-foreground">5 approved reports waiting for AP processing</p>
+                </div>
+                <div className="divide-y divide-border/60">
+                    {GL_PENDING_ITEMS.map(item => (
+                        <div key={item.name} className="flex items-center gap-3 px-4 py-3">
+                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shrink-0">
+                                {item.initials}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-semibold text-foreground">{item.name}</p>
+                                <p className="text-[10px] text-muted-foreground">{item.detail}</p>
+                            </div>
+                            <span className="text-[11px] font-medium text-foreground whitespace-nowrap">{item.amount}</span>
+                            <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full border bg-warning/10 text-warning border-warning/20 shrink-0">Pending</span>
+                            <button className="text-[10px] text-foreground border border-border rounded-lg px-2.5 py-1 hover:bg-muted transition-colors shrink-0 font-medium">Post</button>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/20">
+                    <span className="text-[11px] text-muted-foreground">
+                        <span className="font-semibold text-foreground">$5,439.65</span> across 5 reports · 2 GL accounts
+                    </span>
+                    <button
+                        onClick={handlePost}
+                        disabled={postState !== 'idle'}
+                        className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg font-bold transition-all ${
+                            postState === 'done' ? 'bg-success/10 text-success' : 'bg-foreground text-background hover:opacity-90'
+                        }`}
+                    >
+                        {postState === 'posting' ? 'Posting...' : postState === 'done' ? 'Posted ✓' : 'Post all to Core'}
+                    </button>
+                </div>
+            </div>
+
+            <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
+        </div>
+    )
+}
+
+// ── ApprovalTrendsReport — Supervisor approval trends ─────────────────────────
+
+function ApprovalTrendsReport({ onBack }: { onBack: () => void }) {
+    const [exportState, setExportState] = useState<'idle' | 'generating' | 'done'>('idle')
+
+    const handleExport = () => {
+        setExportState('generating')
+        setTimeout(() => { setExportState('done'); setTimeout(() => setExportState('idle'), 2000) }, 800)
+    }
+
+    return (
+        <div className="space-y-4 animate-in fade-in duration-300">
+            {/* Nav */}
+            <div className="flex items-center justify-between">
+                <button onClick={onBack} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Back
+                </button>
+                <button
+                    onClick={handleExport}
+                    disabled={exportState !== 'idle'}
+                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all border ${
+                        exportState === 'done' ? 'bg-success/10 border-success/20 text-success'
+                        : 'bg-foreground text-background border-foreground hover:opacity-90'
+                    }`}
+                >
+                    <Download className="h-3 w-3" />
+                    {exportState === 'generating' ? 'Generating...' : exportState === 'done' ? 'PDF downloaded ✓' : 'Export PDF'}
+                </button>
+            </div>
+
+            {/* Header */}
+            <div>
+                <p className="text-sm font-bold text-foreground">Supervisor approval trends</p>
+                <p className="text-[10px] text-muted-foreground">Last 6 months · Tammy Flick — CAO, Operations &amp; Procurement</p>
+            </div>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-4 gap-2">
+                {[
+                    { label: '6-month total',      value: '$58,500', color: 'text-foreground' },
+                    { label: 'Monthly avg',         value: '$9,750',  color: 'text-foreground' },
+                    { label: 'Reports approved',    value: '142',     color: 'text-foreground' },
+                    { label: 'vs. prior 6 months', value: '+18%',    color: 'text-success'    },
+                ].map(kpi => (
+                    <div key={kpi.label} className="bg-card border border-border rounded-xl px-3 py-2.5">
+                        <p className="text-[10px] text-muted-foreground mb-1">{kpi.label}</p>
+                        <p className={`text-lg font-bold leading-none ${kpi.color}`}>{kpi.value}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Two-column: bar chart + top approvers */}
+            <div className="grid grid-cols-[1.6fr_1fr] gap-3 items-start">
+
+                {/* Approvals by month */}
+                <div className="bg-card border border-border rounded-xl px-4 py-3">
+                    <p className="text-xs font-bold text-foreground">Approvals by month</p>
+                    <p className="text-[10px] text-muted-foreground mb-3">Tammy Flick · Nov 2025 — Apr 2026</p>
+                    <div className="relative h-36 flex items-end gap-1.5">
+                        <div className="absolute left-0 right-0 border-t border-dashed border-success/50 pointer-events-none" style={{ bottom: '69%' }}>
+                            <span className="absolute right-0 text-[9px] text-success -translate-y-full pr-1 bg-card">Avg $9.7k</span>
+                        </div>
+                        {APPROVAL_MONTHS.map(m => (
+                            <div key={m.month} className="flex-1 flex flex-col items-center justify-end gap-0.5 h-full">
+                                <span className="text-[9px] text-muted-foreground whitespace-nowrap">{m.label}</span>
+                                <div
+                                    className={`w-full rounded-t-sm ${m.current ? 'bg-primary' : 'bg-primary/40'}`}
+                                    style={{ height: `${m.height}%` }}
+                                />
+                                <span className="text-[10px] text-muted-foreground">{m.month}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Top approvers */}
+                <div className="bg-card border border-border rounded-xl px-4 py-3">
+                    <p className="text-xs font-bold text-foreground">Top approvers</p>
+                    <p className="text-[10px] text-muted-foreground mb-3">Last 6 months · all supervisors</p>
+                    <div className="space-y-3">
+                        {TOP_APPROVERS.map(a => (
+                            <div key={a.name} className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold shrink-0">
+                                    {a.initials}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[11px] font-semibold text-foreground truncate">{a.name}</p>
+                                        <p className="text-[11px] font-bold text-foreground ml-2 shrink-0">{a.amount}</p>
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground">{a.role}</p>
+                                    <div className="h-1 bg-muted rounded-full mt-1 overflow-hidden">
+                                        <div className="h-full bg-primary/60 rounded-full" style={{ width: `${a.width}%` }} />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Recent approvals table */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <p className="text-xs font-bold text-foreground">Recent approvals · Tammy Flick</p>
+                    <span className="text-[10px] text-primary font-medium cursor-pointer hover:underline">View all approvals</span>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30">
+                                {[
+                                    { label: 'Date',       right: false },
+                                    { label: 'Employee',   right: false },
+                                    { label: 'Department', right: false },
+                                    { label: 'Category',   right: false },
+                                    { label: 'Amount',     right: true  },
+                                    { label: 'Status',     right: true  },
+                                ].map(h => (
+                                    <th key={h.label} className={`px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap ${h.right ? 'text-right' : 'text-left'}`}>{h.label}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60">
+                            {RECENT_APPROVALS.map(row => (
+                                <tr key={row.date + row.employee} className="hover:bg-muted/20 transition-colors">
+                                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">{row.date}</td>
+                                    <td className="px-4 py-2.5 text-[11px] font-medium text-foreground whitespace-nowrap">{row.employee}</td>
+                                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">{row.dept}</td>
+                                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">{row.category}</td>
+                                    <td className="px-4 py-2.5 text-[11px] font-bold text-foreground text-right whitespace-nowrap">{row.amount}</td>
+                                    <td className="px-4 py-2.5 text-right">
+                                        <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                                            row.status === 'approved'
+                                                ? 'bg-success/10 text-success border-success/20'
+                                                : 'bg-warning/10 text-warning border-warning/20'
+                                        }`}>
+                                            {row.status === 'approved' ? 'Approved' : 'Pending'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] }]} />
+        </div>
+    )
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function CFODashboardScene() {
@@ -483,6 +1119,7 @@ export default function CFODashboardScene() {
     const [phase, setPhase]                   = useState<ScenePhase>('inbox')
     const [may2026Complete, setMay2026Complete] = useState(false)
     const [showPreview, setShowPreview]         = useState(false)
+    const [showSpend, setShowSpend]             = useState(false)
     const [barsVisible, setBarsVisible]         = useState(false)
     const [kpisVisible, setKpisVisible]         = useState(false)
     const [period, setPeriod]                   = useState<Period>('may')
@@ -696,23 +1333,32 @@ export default function CFODashboardScene() {
             {showPreview && <ReportPreviewModal onClose={() => setShowPreview(false)} />}
 
             {/* Tab switcher */}
-            <div className="flex gap-1 bg-muted/40 border border-border rounded-xl p-1 w-fit">
+            <div className="flex gap-1 bg-muted/40 border border-border rounded-xl p-1 flex-wrap">
                 <button
-                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${phase === 'company' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground cursor-default'}`}
+                    onClick={() => setShowSpend(false)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${!showSpend && phase === 'company' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     🏢 Company — Mehmet
                 </button>
                 <button
-                    onClick={() => { if (phase === 'company') setPhase('role-switch') }}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${phase === 'division' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                    onClick={() => { setShowSpend(false); if (phase === 'company') setPhase('role-switch') }}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${!showSpend && phase === 'division' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     📊 Ops &amp; Procurement — Tammy
                 </button>
+                <button
+                    onClick={() => setShowSpend(true)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${showSpend ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                    📈 Operations Spend
+                </button>
             </div>
 
-            {phase === 'company' && <NotificationBadge />}
+            {!showSpend && phase === 'company' && <NotificationBadge />}
 
-            {phase === 'company' ? (
+            {showSpend ? (
+                <OperationsSpendView />
+            ) : phase === 'company' ? (
                 <CompanyView
                     period={period} setPeriod={setPeriod}
                     deptFilter={deptFilter} setDeptFilter={setDeptFilter}
