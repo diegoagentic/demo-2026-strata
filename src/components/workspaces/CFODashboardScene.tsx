@@ -1116,12 +1116,12 @@ export default function CFODashboardScene() {
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [phase, setPhase]                   = useState<ScenePhase>('inbox')
-    const [may2026Complete, setMay2026Complete] = useState(false)
+    const [phase, setPhase]                   = useState<ScenePhase>('company')
+    const [may2026Complete, setMay2026Complete] = useState(true)
     const [showPreview, setShowPreview]         = useState(false)
-    const [showSpend, setShowSpend]             = useState(false)
-    const [barsVisible, setBarsVisible]         = useState(false)
-    const [kpisVisible, setKpisVisible]         = useState(false)
+    const [showSpend, setShowSpend]             = useState(true)
+    const [barsVisible, setBarsVisible]         = useState(true)
+    const [kpisVisible, setKpisVisible]         = useState(true)
     const [period, setPeriod]                   = useState<Period>('may')
     const [deptFilter, setDeptFilter]           = useState<DeptFilter>('all')
     const [deptOpen, setDeptOpen]               = useState(false)
@@ -1169,12 +1169,6 @@ export default function CFODashboardScene() {
         return () => clearTimeout(t)
     }, [phase])
 
-    // Auto-switch to Spend Dashboard (reports) after company KPIs animate in
-    useEffect(() => {
-        if (phase !== 'company') { setShowSpend(false); return }
-        const t = setTimeout(() => setShowSpend(true), 2800)
-        return () => clearTimeout(t)
-    }, [phase])
 
     // Resetear barras al cambiar cualquier filtro
     useEffect(() => {
