@@ -4,13 +4,12 @@
 // CLIENT: BFI Furniture (Elizabeth, NJ · ~50 employees · Women Owned
 //         Government/Municipal furniture dealer · CoNY primary customer)
 //
-// DEMO STRUCTURE: 3 flows · 11 total steps · minimalista, un valor por paso
+// DEMO STRUCTURE: 3 flows · 10 total steps · minimalista, un valor por paso
 //
 //   FLOW 0 — Dashboard (1 step)
-//     d1.1: Operations Dashboard — overview · alerts · shipments · Walter's view
+//     d1.1: Operations Dashboard — overview · notification → PMO intake form inline
 //
-//   FLOW 1 — Product Receiving (6 steps)
-//     r1.1: PMO Intake         — form entry · PMO# · cartons · WIG location
+//   FLOW 1 — Product Receiving (5 steps)
 //     r1.2: WIG Bingo Check    — WIG doc received · ready for AI analysis
 //     r1.3: AI Analysis        — progress bar → bingo grid · #34 missing
 //     r1.4: Alert & Claim      — notify Andy (HM) · open Omni claim
@@ -47,17 +46,8 @@ export const BFI_STEPS: DemoStep[] = [
     },
 
     // ═══════════════════════════════════════════
-    // FLOW 1: Product Receiving (6 steps)
+    // FLOW 1: Product Receiving (5 steps)
     // ═══════════════════════════════════════════
-    {
-        id: 'r1.1',
-        groupId: 1,
-        groupTitle: 'Flow 1: Product Receiving',
-        title: 'PMO Intake',
-        description: 'Lauren enters the PMO details for the incoming shipment — PMO number, receipt date, expected cartons, shipment type, and WIG warehouse location. Strata pre-fills known data from CORE.',
-        app: 'bfi-receiving',
-        role: 'Account Lead',
-    },
     {
         id: 'r1.2',
         groupId: 1,
@@ -148,8 +138,7 @@ export const BFI_STEPS: DemoStep[] = [
 // ─── STEP BEHAVIOR ───────────────────────────────────────────────────────────
 
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
-    'd1.1': { mode: 'interactive', userAction: 'Review the operations dashboard — active shipments · missing carton alert · storage warnings · Walter\'s live view' },
-    'r1.1': { mode: 'interactive', userAction: 'Review the pre-filled PMO form — PMO# · receipt date · 35 cartons · WIG New Jersey · proceed to WIG bingo check' },
+    'd1.1': { mode: 'interactive', userAction: 'Review the operations dashboard — alert fires for new PMO · click to open the intake form · review pre-filled data · proceed to WIG bingo check' },
     'r1.2': { mode: 'interactive', userAction: 'Review the WIG Receiving Report — 35 cartons expected · bingo sheet attached · click Run AI Analysis' },
     'r1.3': { mode: 'interactive', userAction: 'Watch the AI cross-reference 35 cartons — progress bar runs → bingo grid reveals → carton #34 flags red' },
     'r1.4': { mode: 'interactive', userAction: 'Send the auto-drafted notification to Andy (HM) and file the Omni claim — both pre-filled · one click each' },
@@ -169,12 +158,6 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Detecting missing carton alerts and storage warnings',
         'Syncing Walter\'s visibility feed',
         'Dashboard ready · 3 alerts · 14 active shipments',
-    ],
-    'r1.1': [
-        'Loading PMO details from CORE for 2026-0412',
-        'Verifying WIG warehouse assignment',
-        'Confirming expected carton count against order',
-        'PMO intake form ready · pre-filled from CORE',
     ],
     'r1.2': [
         'WIG Receiving Report received via email',
@@ -238,6 +221,6 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const BFI_SELF_INDICATED: string[] = [
     'd1.1',
-    'r1.1', 'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
+    'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
     'a1.1', 'a1.2', 'a1.3', 'a1.4',
 ];

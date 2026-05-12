@@ -84,6 +84,21 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'CFO',
         photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
     },
+    'BFI Account Lead': {
+        name: 'Lauren G.',
+        role: 'CoNY Account Lead',
+        photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face',
+    },
+    'BFI Project Manager': {
+        name: 'Walter C.',
+        role: 'CoNY Project Manager',
+        photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
+    },
+    'BFI Finance': {
+        name: 'Patricia H.',
+        role: 'Finance & AR',
+        photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
@@ -100,6 +115,11 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
     if (role === 'Operations Manager') return 'Operations Manager';
     if (role === 'AP Coordinator') return 'AP Coordinator';
     if (role === 'CFO') return 'CFO';
+    if (app?.startsWith('bfi-')) {
+        if (role === 'Project Manager') return 'BFI Project Manager';
+        if (role === 'Finance / AR')    return 'BFI Finance';
+        return 'BFI Account Lead';
+    }
     if (role === 'System') {
         // System steps inherit the human profile of their parent app
         if (app === 'crm') return 'Sales Rep';

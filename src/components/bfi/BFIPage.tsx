@@ -13,7 +13,6 @@ import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import { useDemo } from '../../context/DemoContext'
 
 import BFIDashboardScene from './BFIDashboardScene'
-import PMOIntakeScene from './PMOIntakeScene'
 import WIGBingoCheckScene from './WIGBingoCheckScene'
 import AIAnalysisScene from './AIAnalysisScene'
 import AlertClaimScene from './AlertClaimScene'
@@ -26,7 +25,6 @@ import AgencyFeeVerifyScene from './AgencyFeeVerifyScene'
 
 const STEP_TITLES: Record<string, string> = {
     'd1.1': 'Operations Dashboard',
-    'r1.1': 'Product Receiving',
     'r1.2': 'Product Receiving',
     'r1.3': 'Product Receiving',
     'r1.4': 'Product Receiving',
@@ -70,7 +68,6 @@ export default function BFIPage() {
         >
             <div key={stepId} className="space-y-4 animate-in fade-in duration-500">
                 {stepId === 'd1.1' && <BFIDashboardScene onNavigate={nextStep} />}
-                {stepId === 'r1.1' && <PMOIntakeScene onSubmit={nextStep} />}
                 {stepId === 'r1.2' && <WIGBingoCheckScene onAnalyze={nextStep} />}
                 {stepId === 'r1.3' && <AIAnalysisScene onComplete={nextStep} />}
                 {stepId === 'r1.4' && <AlertClaimScene onProceed={nextStep} />}
