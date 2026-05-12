@@ -31,10 +31,13 @@ Lauren D. — BFI Furniture Industries`
 const CLAIM_FIELDS = [
     { label: 'PMO Number',   value: 'PMO-2026-0412' },
     { label: 'Claim Type',   value: 'Short Shipped'  },
+    { label: 'Reason',       value: 'Carton not received at destination warehouse' },
+    { label: 'Warehouse',    value: 'WIG New Jersey'  },
     { label: 'Bingo Number', value: '#34'             },
     { label: 'Line',         value: 'Line 24'         },
-    { label: 'Description',  value: 'Chair Frame Assembly ×1' },
+    { label: 'Item',         value: 'Chair Frame Assembly ×1' },
     { label: 'Vendor',       value: 'Herman Miller'   },
+    { label: 'Carrier',      value: 'ALTL'            },
 ]
 
 export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
@@ -150,7 +153,7 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
 
             {/* Modal — Notify Andy */}
             {showNotify && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6 pl-[calc(320px+1.5rem)]">
                     <div className="w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
                             <div className="text-sm font-bold text-foreground">Notify Andy · Herman Miller</div>
@@ -198,23 +201,40 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
 
             {/* Modal — Omni Claim */}
             {showClaim && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6 pl-[calc(320px+1.5rem)]">
                     <div className="w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        {/* Header */}
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
                             <div className="text-sm font-bold text-foreground">Omni Service Claim · Pre-filled</div>
                             <button onClick={() => setShowClaim(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
+
                         <div className="p-5 space-y-4">
+                            {/* Incident banner */}
+                            <div className="flex items-start gap-3 bg-destructive/5 border border-destructive/30 rounded-xl px-4 py-3">
+                                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                                <div>
+                                    <div className="text-xs font-bold text-destructive mb-0.5">Short-ship detected — AI bingo sheet analysis</div>
+                                    <div className="text-xs text-foreground">
+                                        Carton <span className="font-semibold">#34 (Bingo #34)</span> was not received at WIG New Jersey warehouse.
+                                        Carrier ALTL delivered <span className="font-semibold">34 of 35</span> cartons on May 11.
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Claim fields */}
                             <div className="border border-border rounded-xl overflow-hidden">
                                 {CLAIM_FIELDS.map((f, i) => (
-                                    <div key={f.label} className={`flex items-center justify-between gap-3 px-4 py-3 ${i < CLAIM_FIELDS.length - 1 ? 'border-b border-border' : ''}`}>
-                                        <span className="text-xs text-muted-foreground">{f.label}</span>
-                                        <span className="text-sm font-semibold text-foreground">{f.value}</span>
+                                    <div key={f.label} className={`flex items-center justify-between gap-3 px-4 py-2.5 ${i < CLAIM_FIELDS.length - 1 ? 'border-b border-border' : ''}`}>
+                                        <span className="text-xs text-muted-foreground w-28 shrink-0">{f.label}</span>
+                                        <span className="text-xs font-semibold text-foreground text-right">{f.value}</span>
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Actions */}
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowClaim(false)}
