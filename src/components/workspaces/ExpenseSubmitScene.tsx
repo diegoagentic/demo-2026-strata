@@ -57,7 +57,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
     const [screen, setScreen]             = useState<ScreenState>(initialScreen ?? 'login')
     const [signingIn, setSigningIn]       = useState(false)
     const [ocrState, setOcrState]         = useState<OCRState>('idle')
-    const [filledFields, setFilledFields] = useState<string[]>([])
+    const [isFormFilled, setIsFormFilled] = useState(false)
     const [receipts, setReceipts]         = useState<number[]>([])
     const [addState, setAddState]         = useState<AddState>('idle')
     const [carouselIdx, setCarouselIdx]   = useState(0)
@@ -98,17 +98,10 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
         pauseAware(() => {
             setOcrState('scanning')
             pauseAware(() => {
-                setOcrState('filling')
                 setReceipts([0])
-                let idx = 0
-                const FIELD_KEYS = ['vendor', 'date', 'amount', 'category']
-                const fillNext = () => {
-                    if (idx >= FIELD_KEYS.length) { setOcrState('done'); return }
-                    setFilledFields(prev => [...prev, FIELD_KEYS[idx++]])
-                    pauseAware(fillNext, 100)
-                }
-                fillNext()
-            }, 800)
+                setIsFormFilled(true)
+                setOcrState('done')
+            }, 1000)
         }, 200)
     }, [pauseAware])
 
@@ -116,7 +109,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
     const handleEditReceipt = useCallback(() => {
         setReceipts([])
         setOcrState('idle')
-        setFilledFields([])
+        setIsFormFilled(false)
         setCarouselIdx(0)
         setScreen('upload-options')
     }, [])
@@ -125,7 +118,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
     const handleDeleteReceipt = useCallback(() => {
         setReceipts([])
         setOcrState('idle')
-        setFilledFields([])
+        setIsFormFilled(false)
         setCarouselIdx(0)
     }, [])
 
@@ -445,7 +438,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                         setScreen('upload-options')
                         setReceipts([])
                         setOcrState('idle')
-                        setFilledFields([])
+                        setIsFormFilled(false)
                     }}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground"
                 >
@@ -522,7 +515,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                 )}
 
                 {/* Add another — triggers mini scan */}
-                {receipts.length > 0 && ocrState === 'done' && (
+                {receipts.length > 0 && isFormFilled && (
                     <div className="flex justify-end">
                         <button
                             onClick={handleAddAnother}
@@ -546,49 +539,46 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                     {/* Vendor */}
                     <div className="px-4 py-3 border-b border-border/60">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Vendor</p>
-                        {filledFields.includes('vendor') ? (
-                            <div className="flex items-center justify-between gap-2 animate-in fade-in duration-300">
-                                <input value={editedVendor} onChange={e => setEditedVendor(e.target.value)}
-                                    className="text-sm font-semibold text-foreground bg-transparent flex-1 focus:outline-none border-b border-border/40 pb-0.5" />
+                        {isFormFilled ? (
+                            <div className="flex items-center justify-between gap-2">
+                                <p className="text-sm font-semibold text-foreground flex-1">{editedVendor}</p>
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full shrink-0"><Sparkles className="h-2 w-2" /> AI</span>
                             </div>
-                        ) : <div className="h-4 bg-muted/60 rounded-md w-3/4" />}
+                        ) : <div className="h-4 bg-muted/40 rounded-md w-3/4" />}
                     </div>
 
                     {/* Date */}
                     <div className="px-4 py-3 border-b border-border/60">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Date</p>
-                        {filledFields.includes('date') ? (
-                            <div className="flex items-center justify-between gap-2 animate-in fade-in duration-300">
-                                <input value={editedDate} onChange={e => setEditedDate(e.target.value)}
-                                    className="text-sm font-semibold text-foreground bg-transparent flex-1 focus:outline-none border-b border-border/40 pb-0.5" />
+                        {isFormFilled ? (
+                            <div className="flex items-center justify-between gap-2">
+                                <p className="text-sm font-semibold text-foreground flex-1">{editedDate}</p>
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full shrink-0"><Sparkles className="h-2 w-2" /> AI</span>
                             </div>
-                        ) : <div className="h-4 bg-muted/60 rounded-md w-2/4" />}
+                        ) : <div className="h-4 bg-muted/40 rounded-md w-2/4" />}
                     </div>
 
                     {/* Amount — derived from receipts */}
                     <div className="px-4 py-3 border-b border-border/60">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Amount</p>
-                        {filledFields.includes('amount') ? (
-                            <div className="flex items-center justify-between animate-in fade-in duration-300">
-                                <span className="text-sm font-semibold text-foreground">{formattedTotal}</span>
+                        {isFormFilled ? (
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-semibold text-foreground">{formattedTotal}</p>
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> Auto</span>
                             </div>
-                        ) : <div className="h-4 bg-muted/60 rounded-md w-1/3" />}
+                        ) : <div className="h-4 bg-muted/40 rounded-md w-1/3" />}
                     </div>
 
                     {/* Category — compact tags + dropdown multiselect on edit */}
                     <div className="px-4 py-3">
                         <div className="flex items-center justify-between mb-2">
                             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Category</p>
-                            {filledFields.includes('category') && (
+                            {isFormFilled && (
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> AI</span>
                             )}
                         </div>
-                        {filledFields.includes('category') ? (
-                            <div className="animate-in fade-in duration-300">
-                                {/* Compact selected tags + edit trigger */}
+                        {isFormFilled ? (
+                            <div>
                                 <div className="flex flex-wrap gap-1 items-center">
                                     {selectedCategories.map(cat => (
                                         <span key={cat} className="text-[10px] px-2 py-0.5 rounded-full bg-ai/10 text-ai border border-ai/20 font-medium">{cat}</span>
@@ -600,7 +590,6 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                                         {categoryOpen ? 'Done' : '+ Edit'}
                                     </button>
                                 </div>
-                                {/* Dropdown panel */}
                                 {categoryOpen && (
                                     <div className="mt-2 border border-border rounded-xl bg-card overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
                                         {EXPENSE_CATEGORIES.map(cat => {
@@ -623,7 +612,7 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                                     </div>
                                 )}
                             </div>
-                        ) : <div className="h-4 bg-muted/60 rounded-md w-2/4 animate-pulse" />}
+                        ) : <div className="h-4 bg-muted/40 rounded-md w-2/4" />}
                     </div>
 
                     {/* Manager — read-only */}
@@ -639,9 +628,9 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                     </div>
                 </div>
 
-                {/* Notes field — optional context for manager, appears after OCR completes */}
-                {ocrState === 'done' && (
-                    <div className="animate-in fade-in duration-300">
+                {/* Notes field — visible after form is filled */}
+                {isFormFilled && (
+                    <div>
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Notes</p>
                         <textarea
                             defaultValue="Field ops — Tampa · May 5. Fuel stop on the way to the Workscapes showroom visit."
@@ -652,10 +641,10 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
 
                 {/* Send for Approval CTA */}
                 <button
-                    onClick={ocrState === 'done' ? handleSend : undefined}
-                    disabled={ocrState !== 'done'}
+                    onClick={isFormFilled ? handleSend : undefined}
+                    disabled={!isFormFilled}
                     className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all ${
-                        ocrState === 'done'
+                        isFormFilled
                             ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'bg-muted text-muted-foreground cursor-not-allowed'
                     }`}
@@ -663,10 +652,6 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
                     <Send className="h-4 w-4" />
                     Send for Approval
                 </button>
-
-                {ocrState === 'filling' && (
-                    <p className="text-center text-[11px] text-muted-foreground">Auto-filling from receipt...</p>
-                )}
             </div>
 
             {/* AS-IS contrast + DataSourcesBar — inside the phone */}
