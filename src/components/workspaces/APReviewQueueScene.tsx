@@ -5,13 +5,14 @@
  * Pain points resolved: PP8 (45 min manual → 4 min), PP10 (open one by one)
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Sparkles, ChevronRight, Bell, CheckCircle2, X, Flag, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Sparkles, ChevronRight, Bell, CheckCircle2, X, Flag, AlertCircle, Calendar, ChevronDown } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
-type SceneState = 'list' | 'notified' | 'rejecting' | 'rejected'
-type FilterKey  = 'all' | 'pending' | 'posted'
+type SceneState  = 'list' | 'notified' | 'rejecting' | 'rejected'
+type FilterKey   = 'all' | 'pending' | 'posted'
+type TimeFilter  = 'any' | 'today' | '3days' | '7days' | 'month'
 
 const QUICK_REASONS = [
     'Receipt is unclear or incomplete',
@@ -79,7 +80,7 @@ const POSTED_EXPENSES = [
         approvedBy: 'Sarah Johnson',
         approvedDate: 'May 3',
         glLines: [{ code: 'Personal Meals', amount: '$65.00', confidence: 98 }],
-        ageDays: 0,
+        ageDays: 4,
         sla: false,
         focus: false,
         posted: true,
@@ -93,7 +94,7 @@ const POSTED_EXPENSES = [
         approvedBy: 'Mike Torres',
         approvedDate: 'May 2',
         glLines: [{ code: 'Misc Cost', amount: '$120.00', confidence: 95 }],
-        ageDays: 0,
+        ageDays: 5,
         sla: false,
         focus: false,
         posted: true,
@@ -104,6 +105,8 @@ const POSTED_EXPENSES = [
 
 const ALL_EXPENSES = [...PENDING_EXPENSES, ...POSTED_EXPENSES]
 
+const MAX_AGE: Record<TimeFilter, number> = { any: Infinity, today: 0, '3days': 3, '7days': 7, month: 30 }
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function APReviewQueueScene({ onReview }: { onReview?: () => void }) {
@@ -111,10 +114,11 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
     const isPausedRef = useRef(isPaused)
     isPausedRef.current = isPaused
 
-    const [scene, setScene]             = useState<SceneState>('list')
-    const [filter, setFilter]           = useState<FilterKey>('all')
+    const [scene, setScene]               = useState<SceneState>('list')
+    const [filter, setFilter]             = useState<FilterKey>('all')
+    const [timeFilter, setTimeFilter]     = useState<TimeFilter>('any')
     const [expandedCard, setExpandedCard] = useState<string | null>(null)
-    const [rejectNote, setRejectNote]   = useState('')
+    const [rejectNote, setRejectNote]     = useState('')
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -130,11 +134,8 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
         pauseAware(() => setScene('notified'), 2000)
     }, [pauseAware])
 
-    const filteredExpenses = useMemo(() => {
-        if (filter === 'pending') return PENDING_EXPENSES
-        if (filter === 'posted')  return POSTED_EXPENSES
-        return ALL_EXPENSES
-    }, [filter])
+    const base = filter === 'pending' ? PENDING_EXPENSES : filter === 'posted' ? POSTED_EXPENSES : ALL_EXPENSES
+    const filteredExpenses = base.filter(e => e.ageDays <= MAX_AGE[timeFilter])
 
     return (
         <div className="space-y-4">
@@ -239,11 +240,14 @@ export default function APReviewQueueScene({ onReview }: { onReview?: () => void
             </div>
 
             {/* Filter bar */}
-            <FilterBar active={filter} onChange={setFilter} />
+            <div className="flex items-center gap-2 flex-wrap">
+                <FilterBar active={filter} onChange={setFilter} />
+                <TimeRangeFilter active={timeFilter} onChange={setTimeFilter} />
+            </div>
 
             {/* Expense list */}
             <div className="space-y-3">
-                {filteredExpenses.map(exp => (
+                {filteredExpenses.map((exp: typeof ALL_EXPENSES[0]) => (
                     exp.posted
                         ? <PostedCard key={exp.id} exp={exp as typeof POSTED_EXPENSES[0]} />
                         : <ExpenseCard
@@ -332,6 +336,58 @@ const FILTER_LABELS: Record<FilterKey, string> = {
     pending: 'Pending GL',
     posted:  'Posted ✓',
 }
+
+// ── Time range filter ─────────────────────────────────────────────────────────
+
+const TIME_OPTIONS: { key: TimeFilter; label: string }[] = [
+    { key: 'any',    label: 'Any time'    },
+    { key: 'today',  label: 'Today'       },
+    { key: '3days',  label: 'Last 3 days' },
+    { key: '7days',  label: 'Last 7 days' },
+    { key: 'month',  label: 'This month'  },
+]
+
+function TimeRangeFilter({ active, onChange }: { active: TimeFilter; onChange: (k: TimeFilter) => void }) {
+    const [open, setOpen] = useState(false)
+    const selected = TIME_OPTIONS.find(o => o.key === active)!
+    const isFiltered = active !== 'any'
+
+    return (
+        <div className="relative">
+            <button
+                onClick={() => setOpen(v => !v)}
+                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border transition-all ${
+                    isFiltered
+                        ? 'bg-foreground text-background border-foreground'
+                        : 'bg-card text-muted-foreground border-border hover:text-foreground'
+                }`}
+            >
+                <Calendar className="h-3 w-3" />
+                {selected.label}
+                <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
+            </button>
+
+            {open && (
+                <div className="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-lg overflow-hidden w-40 animate-in fade-in slide-in-from-top-1 duration-150">
+                    {TIME_OPTIONS.map(opt => (
+                        <button
+                            key={opt.key}
+                            onClick={() => { onChange(opt.key); setOpen(false) }}
+                            className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors hover:bg-muted/50 ${
+                                active === opt.key ? 'font-semibold text-foreground' : 'text-muted-foreground'
+                            }`}
+                        >
+                            {opt.label}
+                            {active === opt.key && <span className="text-ai text-[10px]">✓</span>}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ── Filter bar ────────────────────────────────────────────────────────────────
 
 function FilterBar({ active, onChange }: { active: FilterKey; onChange: (k: FilterKey) => void }) {
     return (

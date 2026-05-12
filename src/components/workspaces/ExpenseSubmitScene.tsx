@@ -64,11 +64,15 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
     const [viewingReceipt, setViewingReceipt]   = useState<number | null>(null)
     const [selectedCategories, setSelectedCategories] = useState<string[]>(['Mileage', 'Tolls / Cab / Parking'])
     const [categoryOpen,       setCategoryOpen]       = useState(false)
-    const [editedVendor, setEditedVendor] = useState('Suncoast Fuel Services')
-    const [editedDate,   setEditedDate]   = useState('May 5, 2026')
+    const [editedVendor,   setEditedVendor]   = useState('Suncoast Fuel Services')
+    const [editedDate,     setEditedDate]     = useState('May 5, 2026')
+    const [editingVendor,  setEditingVendor]  = useState(false)
+    const [editingDate,    setEditingDate]    = useState(false)
+    const [editingAmount,  setEditingAmount]  = useState(false)
+    const [customAmount,   setCustomAmount]   = useState('')
 
     const totalAmount    = receipts.reduce((sum, idx) => sum + (RECEIPT_DATA[idx]?.amount ?? 0), 0)
-    const formattedTotal = `$${totalAmount.toFixed(2)}`
+    const formattedTotal = customAmount || `$${totalAmount.toFixed(2)}`
 
     const toggleCategory = (cat: string) =>
         setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
@@ -538,34 +542,76 @@ export default function ExpenseSubmitScene({ onSubmit, initialScreen }: { onSubm
 
                     {/* Vendor */}
                     <div className="px-4 py-3 border-b border-border/60">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Vendor</p>
+                        <div className="flex items-center justify-between mb-1">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Vendor</p>
+                            {isFormFilled && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> AI</span>
+                                    <button onClick={() => setEditingVendor(v => !v)} className="text-[9px] text-muted-foreground hover:text-ai border border-dashed border-border hover:border-ai/40 px-1.5 py-0.5 rounded-full transition-colors">
+                                        {editingVendor ? 'Done' : '+ Edit'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         {isFormFilled ? (
-                            <div className="flex items-center justify-between gap-2">
-                                <p className="text-sm font-semibold text-foreground flex-1">{editedVendor}</p>
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full shrink-0"><Sparkles className="h-2 w-2" /> AI</span>
-                            </div>
+                            editingVendor
+                                ? <input
+                                    autoFocus
+                                    value={editedVendor}
+                                    onChange={e => setEditedVendor(e.target.value)}
+                                    className="w-full text-sm font-semibold text-foreground bg-background border border-ai/40 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ai/40"
+                                  />
+                                : <p className="text-sm font-semibold text-foreground">{editedVendor}</p>
                         ) : <div className="h-4 bg-muted/40 rounded-md w-3/4" />}
                     </div>
 
                     {/* Date */}
                     <div className="px-4 py-3 border-b border-border/60">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Date</p>
+                        <div className="flex items-center justify-between mb-1">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Date</p>
+                            {isFormFilled && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> AI</span>
+                                    <button onClick={() => setEditingDate(v => !v)} className="text-[9px] text-muted-foreground hover:text-ai border border-dashed border-border hover:border-ai/40 px-1.5 py-0.5 rounded-full transition-colors">
+                                        {editingDate ? 'Done' : '+ Edit'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         {isFormFilled ? (
-                            <div className="flex items-center justify-between gap-2">
-                                <p className="text-sm font-semibold text-foreground flex-1">{editedDate}</p>
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full shrink-0"><Sparkles className="h-2 w-2" /> AI</span>
-                            </div>
+                            editingDate
+                                ? <input
+                                    autoFocus
+                                    value={editedDate}
+                                    onChange={e => setEditedDate(e.target.value)}
+                                    className="w-full text-sm font-semibold text-foreground bg-background border border-ai/40 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ai/40"
+                                  />
+                                : <p className="text-sm font-semibold text-foreground">{editedDate}</p>
                         ) : <div className="h-4 bg-muted/40 rounded-md w-2/4" />}
                     </div>
 
-                    {/* Amount — derived from receipts */}
+                    {/* Amount */}
                     <div className="px-4 py-3 border-b border-border/60">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Amount</p>
+                        <div className="flex items-center justify-between mb-1">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Amount</p>
+                            {isFormFilled && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> Auto</span>
+                                    <button onClick={() => setEditingAmount(v => !v)} className="text-[9px] text-muted-foreground hover:text-ai border border-dashed border-border hover:border-ai/40 px-1.5 py-0.5 rounded-full transition-colors">
+                                        {editingAmount ? 'Done' : '+ Edit'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         {isFormFilled ? (
-                            <div className="flex items-center justify-between">
-                                <p className="text-sm font-semibold text-foreground">{formattedTotal}</p>
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-ai bg-ai/10 px-1.5 py-0.5 rounded-full"><Sparkles className="h-2 w-2" /> Auto</span>
-                            </div>
+                            editingAmount
+                                ? <input
+                                    autoFocus
+                                    value={customAmount || formattedTotal}
+                                    onChange={e => setCustomAmount(e.target.value)}
+                                    className="w-full text-sm font-semibold text-foreground bg-background border border-ai/40 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ai/40"
+                                  />
+                                : <p className="text-sm font-semibold text-foreground">{formattedTotal}</p>
                         ) : <div className="h-4 bg-muted/40 rounded-md w-1/3" />}
                     </div>
 

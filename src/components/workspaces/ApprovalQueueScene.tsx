@@ -21,23 +21,25 @@ import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import { ReceiptImage } from './ExpenseSubmitScene'
 
 type SceneState   = 'list' | 'notified'
-type StatusFilter = 'all' | 'pending' | 'approved'
+type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
 type CatFilter    = 'all' | 'mileage' | 'meals' | 'airfare' | 'tolls' | 'misc'
 
 // ── All expenses visible in the list view ────────────────────────────────────
 
 const ALL_EXPENSES = [
-    { id: 'john',   name: 'John Smith',   category: 'Mileage · Tolls / Cab / Parking', catKey: 'mileage' as CatFilter, amount: '$95.00', date: 'May 5',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '< 1 day', focus: true  },
-    { id: 'maria',  name: 'Maria Lopez',  category: 'Personal Meals',          catKey: 'meals'   as CatFilter, amount: '$89.00',  date: 'May 4',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '1 day',   focus: false },
-    { id: 'carlos', name: 'Carlos Ruiz',  category: 'Air Fare',                catKey: 'airfare' as CatFilter, amount: '$210.00', date: 'May 1',  status: 'pending',  receipts: 0, hasReceipt: false, age: '4 days',  focus: false },
-    { id: 'ana',    name: 'Ana Kim',      category: 'Misc Cost',               catKey: 'misc'    as CatFilter, amount: '$34.90',  date: 'Apr 30', status: 'approved', receipts: 1, hasReceipt: true,  age: '2 days',  focus: false },
-    { id: 'mike',   name: 'Mike Torres',  category: 'Air Fare',                catKey: 'airfare' as CatFilter, amount: '$312.00', date: 'Apr 28', status: 'approved', receipts: 2, hasReceipt: true,  age: '3 days',  focus: false },
+    { id: 'john',   name: 'John Smith',   category: 'Mileage · Tolls / Cab / Parking', catKey: 'mileage' as CatFilter, amount: '$95.00',  date: 'May 5',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '< 1 day', focus: true,  rejectReason: ''                                      },
+    { id: 'maria',  name: 'Maria Lopez',  category: 'Personal Meals',                  catKey: 'meals'   as CatFilter, amount: '$89.00',  date: 'May 4',  status: 'pending',  receipts: 1, hasReceipt: true,  age: '1 day',   focus: false, rejectReason: ''                                      },
+    { id: 'carlos', name: 'Carlos Ruiz',  category: 'Air Fare',                        catKey: 'airfare' as CatFilter, amount: '$210.00', date: 'May 1',  status: 'pending',  receipts: 0, hasReceipt: false, age: '4 days',  focus: false, rejectReason: ''                                      },
+    { id: 'ana',    name: 'Ana Kim',      category: 'Misc Cost',                       catKey: 'misc'    as CatFilter, amount: '$34.90',  date: 'Apr 30', status: 'approved', receipts: 1, hasReceipt: true,  age: '2 days',  focus: false, rejectReason: ''                                      },
+    { id: 'mike',   name: 'Mike Torres',  category: 'Air Fare',                        catKey: 'airfare' as CatFilter, amount: '$312.00', date: 'Apr 28', status: 'approved', receipts: 2, hasReceipt: true,  age: '3 days',  focus: false, rejectReason: ''                                      },
+    { id: 'lisa',   name: 'Lisa Nguyen',  category: 'Business Meals & Entertainment',  catKey: 'meals'   as CatFilter, amount: '$187.50', date: 'Apr 25', status: 'rejected', receipts: 1, hasReceipt: true,  age: '5 days',  focus: false, rejectReason: 'Receipt unclear · amount does not match' },
 ]
 
 const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
     { key: 'all',      label: 'All' },
     { key: 'pending',  label: 'Pending' },
     { key: 'approved', label: 'Approved' },
+    { key: 'rejected', label: 'Rejected' },
 ]
 
 const CAT_FILTERS: { key: CatFilter; label: string }[] = [
@@ -112,11 +114,12 @@ export default function ApprovalQueueScene({ onReview }: { onReview?: () => void
             </div>
 
             {/* ── KPI row ── */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
                 {[
-                    { label: 'Pending',      value: '3',    sub: 'approvals',  color: 'text-warning',          bg: 'bg-warning/5' },
-                    { label: 'Approved',     value: '14',   sub: 'this month', color: 'text-success',          bg: 'bg-success/5' },
-                    { label: 'Avg response', value: '1.2d', sub: 'this month', color: 'text-muted-foreground', bg: ''             },
+                    { label: 'Pending',      value: '3',    sub: 'approvals',  color: 'text-warning',          bg: 'bg-warning/5'      },
+                    { label: 'Approved',     value: '14',   sub: 'this month', color: 'text-success',          bg: 'bg-success/5'      },
+                    { label: 'Rejected',     value: '1',    sub: 'this month', color: 'text-destructive',      bg: 'bg-destructive/5'  },
+                    { label: 'Avg response', value: '1.2d', sub: 'this month', color: 'text-muted-foreground', bg: ''                  },
                 ].map(s => (
                     <div key={s.label} className={`${s.bg} border border-border rounded-xl px-3 py-2.5 space-y-0.5`}>
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</p>
@@ -294,6 +297,11 @@ function ExpenseListRow({ exp, onReview }: {
                 <CheckCircle2 className="h-2.5 w-2.5" /> Approved
             </span>
         )
+        if (exp.status === 'rejected') return (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-full">
+                <X className="h-2.5 w-2.5" /> Rejected
+            </span>
+        )
         return (
             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
                 <Clock className="h-2.5 w-2.5" /> Pending
@@ -333,11 +341,15 @@ function ExpenseListRow({ exp, onReview }: {
     return (
         <div className="last:rounded-b-xl overflow-visible">
             <div className={`grid grid-cols-[1fr_160px_80px_64px_110px_160px] items-center px-4 py-3 transition-colors last:rounded-b-xl ${
-                exp.focus ? 'bg-muted/30 hover:bg-muted/50' : 'hover:bg-muted/20'
+                exp.status === 'rejected' ? 'bg-destructive/5 border-l-2 border-l-destructive' : exp.focus ? 'bg-muted/30 hover:bg-muted/50' : 'hover:bg-muted/20'
             }`}>
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{exp.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{exp.age} ago</p>
+                    {exp.status === 'rejected' && exp.rejectReason ? (
+                        <p className="text-[10px] text-destructive">{exp.rejectReason}</p>
+                    ) : (
+                        <p className="text-[10px] text-muted-foreground">{exp.age} ago</p>
+                    )}
                 </div>
                 <span className="text-xs text-muted-foreground truncate pr-2">{exp.category}</span>
                 <span className="text-sm font-bold text-foreground tabular-nums">{exp.amount}</span>
