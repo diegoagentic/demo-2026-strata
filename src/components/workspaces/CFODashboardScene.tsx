@@ -6,7 +6,7 @@
  *   'notified'   — Strata notification slides in; May 2026 updates to "Complete ✓"
  *   'company'    — Mehmet full dashboard: working filters (dept/location/category/period)
  *   'role-switch'— Mehmet → Tammy transition banner (~1s auto)
- *   'division'   — Tammy CAO view with SLA alert and reminder action
+ *   'division'   — Tammy CAO view with overdue alert and reminder action
  *
  *   showPreview  — PDF report modal overlay on top of 'company'
  */
@@ -50,11 +50,11 @@ const CATEGORIES_BY_DEPT: Record<DeptFilter, Record<Period, { name: string; amou
     },
 }
 
-const KPI_BY_DEPT: Record<DeptFilter, { month: string; pending: number; sla: string }> = {
-    all:         { month: '$48K',   pending: 23, sla: '94%' },
-    operations:  { month: '$19K',   pending: 10, sla: '96%' },
-    sales:       { month: '$11.5K', pending: 7,  sla: '93%' },
-    procurement: { month: '$10K',   pending: 6,  sla: '91%' },
+const KPI_BY_DEPT: Record<DeptFilter, { month: string; pending: number; onTime: string }> = {
+    all:         { month: '$48K',   pending: 23, onTime: '94%' },
+    operations:  { month: '$19K',   pending: 10, onTime: '96%' },
+    sales:       { month: '$11.5K', pending: 7,  onTime: '93%' },
+    procurement: { month: '$10K',   pending: 6,  onTime: '91%' },
 }
 
 const FUEL_DRILL = [
@@ -1416,13 +1416,13 @@ function CompanyView({
             ? kpi.month
             : `$${Math.round(parseInt(kpi.month.replace(/\D/g, '')) * LOCATION_SCALE[locationFilter]).toFixed(0)}K`,
         pending: locationFilter === 'all' ? kpi.pending : Math.ceil(kpi.pending * LOCATION_SCALE[locationFilter]),
-        sla: kpi.sla,
+        onTime: kpi.onTime,
     }
 
     const KPIs = [
-        { label: 'This Month',        value: scaledKPI.month,            sub: 'May 2026' },
-        { label: 'Pending Approvals', value: String(scaledKPI.pending),   sub: 'expenses' },
-        { label: 'On-time Rate',       value: scaledKPI.sla,              sub: '↑ from 89%' },
+        { label: 'This Month',        value: scaledKPI.month,              sub: 'May 2026' },
+        { label: 'Pending Approvals', value: String(scaledKPI.pending),    sub: 'expenses' },
+        { label: 'On-time Rate',      value: scaledKPI.onTime,             sub: '↑ from 89%' },
     ]
 
     const [compareMode, setCompareMode] = useState(false)
@@ -1737,7 +1737,7 @@ function CompanyView({
                 Preview Full Report
             </button>
 
-            {/* SLA aging */}
+            {/* Pending > 3 days */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-warning" />
@@ -1846,7 +1846,7 @@ function DivisionView({ kpisVisible, barsVisible }: { kpisVisible: boolean; bars
                 </div>
             </div>
 
-            {/* SLA — highlighted for Tammy */}
+            {/* Overdue — highlighted for Tammy */}
             <div className="bg-card border border-border rounded-xl overflow-hidden ring-1 ring-warning/30">
                 <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-warning" />
