@@ -5,6 +5,9 @@
  *          Rendered inside MobileDeviceFrame on a bg-zinc-950 background.
  *
  *          States: 'locked' → tap → 'app' → confirm
+ *
+ *          Order: PMO-2026-0412 · NYC Dept. of Education
+ *          34/35 cartons confirmed · Carton #34 claim OM-2026-0412 filed
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -67,9 +70,9 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                             <span className="text-[11px] font-bold text-white">Strata</span>
                             <span className="text-[10px] text-zinc-400 ml-auto">now</span>
                         </div>
-                        <div className="text-xs font-semibold text-white">DOH-0671 ready for dispatch</div>
+                        <div className="text-xs font-semibold text-white">PMO-2026-0412 · 34 of 35 cartons confirmed</div>
                         <div className="text-[11px] text-zinc-300 leading-relaxed">
-                            NYC Dept. of Health · 36/36 received at WIG · 8 storage days remaining
+                            NYC Dept. of Education · Ready for scheduling · Carton #34 claim filed
                         </div>
                     </div>
                 </div>
@@ -107,7 +110,7 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                 <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2.5 animate-in fade-in duration-300">
                     <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <div className="text-xs">
-                        <div className="font-bold text-foreground">DOH-0671 · 100% received at WIG</div>
+                        <div className="font-bold text-foreground">PMO-2026-0412 · 34 of 35 cartons confirmed at WIG</div>
                         <div className="text-muted-foreground mt-1 leading-relaxed italic text-[11px]">
                             "Physical work order in transit — pre-coordination can begin now."
                         </div>
@@ -120,20 +123,20 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                     <div className="flex items-center gap-2">
                         <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <div>
-                            <div className="text-[11px] font-bold text-foreground">NYC Dept. of Health</div>
-                            <div className="text-[10px] text-muted-foreground">14 West 31st Street, New York, NY</div>
+                            <div className="text-[11px] font-bold text-foreground">NYC Dept. of Education</div>
+                            <div className="text-[10px] text-muted-foreground">52 Chambers St, New York, NY 10007</div>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                            <div className="text-muted-foreground text-[10px]">Items</div>
-                            <div className="font-medium text-foreground mt-0.5 text-[10px]">Lounge ×8 · Tables ×12<br />Storage ×4 · Chairs ×12</div>
+                            <div className="text-muted-foreground text-[10px]">Items confirmed</div>
+                            <div className="font-medium text-foreground mt-0.5 text-[10px]">Workstations ×24<br />Lounge Seating ×12</div>
                         </div>
                         <div>
                             <div className="text-muted-foreground text-[10px]">WIG status</div>
                             <div className="font-medium text-success mt-0.5 flex items-center gap-1 text-[10px]">
-                                <CheckCircle2 className="h-2.5 w-2.5" /> 100% received
+                                <CheckCircle2 className="h-2.5 w-2.5" /> 34/35 confirmed
                             </div>
                         </div>
                     </div>
@@ -149,7 +152,7 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                     </div>
                 </div>
 
-                {/* FedEx claim — expandable */}
+                {/* Short-ship claim — expandable */}
                 <div className="border border-border rounded-xl overflow-hidden bg-card">
                     <button
                         onClick={() => setClaimExpanded(v => !v)}
@@ -157,7 +160,7 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                     >
                         <div className="flex items-center gap-2">
                             <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
-                            <span className="text-[10px] font-bold text-foreground">Also: FedEx claim · DCAS-1182</span>
+                            <span className="text-[10px] font-bold text-foreground">Carton #34 · Short-ship claim filed</span>
                         </div>
                         {claimExpanded
                             ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
@@ -167,9 +170,10 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                     {claimExpanded && (
                         <div className="px-3 pb-3 space-y-1.5 border-t border-border animate-in fade-in duration-200">
                             <div className="pt-2 text-[10px] text-muted-foreground space-y-1">
-                                <div>Tracking: FX284920 · FX284921 · FX284922 · Side Chair ×3</div>
-                                <div>POD request sent to Andy (HM) · May 6 · 8:06 AM</div>
-                                <div className="text-amber-600 dark:text-amber-400 font-medium">Status: awaiting response · 1–2 days</div>
+                                <div>Item: Line 24 · Chair Frame Assembly ×1</div>
+                                <div>Claim: Omni #OM-2026-0412 · filed May 11</div>
+                                <div>POD request sent to Andy (Herman Miller) · May 11 · 8:06 AM</div>
+                                <div className="text-amber-600 dark:text-amber-400 font-medium">Status: awaiting response · excluded from this delivery</div>
                             </div>
                         </div>
                     )}
@@ -177,7 +181,7 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
 
                 {/* Before Strata */}
                 <div className="bg-muted/40 border border-border rounded-xl px-3 py-2 text-[10px] text-muted-foreground">
-                    Before Strata: Lauren called Walter → Walter called the agency → Lauren called Walter back
+                    Before Strata: Walter only found out when Lauren brought him a printed copy in person — always after the fact.
                 </div>
             </div>
 
@@ -198,7 +202,7 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                             <div className="text-[11px]">
                                 <div className="font-bold text-foreground">Crew confirmed · May 14–16</div>
                                 <div className="text-muted-foreground text-[10px] mt-0.5">
-                                    "Crew available May 14–16. Confirmed with NYC DOH agency."
+                                    "Crew available May 14–16. Confirmed with NYC DOE agency."
                                 </div>
                                 <div className="text-muted-foreground text-[10px] mt-0.5">
                                     May 6 · 9:45 AM · loop closed without a phone call

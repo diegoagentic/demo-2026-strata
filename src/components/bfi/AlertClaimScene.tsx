@@ -18,20 +18,25 @@ interface AlertClaimSceneProps {
 
 const NOTIFY_DRAFT = `Hi Andy,
 
-We're following up on a short-ship for PMO-2026-0412.
+We're reviewing PMO-2026-0412 and Carton #34 did not arrive at the WIG dock.
 
-Carton #34 (Bingo #34) was not received at our WIG New Jersey warehouse.
-Line 24 — Chair Frame Assembly ×1 is missing.
+Line 24 — Chair Frame Assembly ×1 is missing from the Bingo Sheet.
 
-Could you confirm the shipping status and provide tracking for the missing carton?
+Can you confirm the shipment and share the Proof of Delivery (POD)?
 
-Thank you,
-Lauren D. — BFI Furniture Industries`
+— Lauren D., BFI Furniture`
+
+const CLAIM_REASONS = [
+    'Short shipped — carton not received at warehouse',
+    'Damaged in transit',
+    'Wrong item shipped',
+    'Missing from bingo sheet — not shipped',
+    'Other',
+]
 
 const CLAIM_FIELDS = [
     { label: 'PMO Number',   value: 'PMO-2026-0412' },
     { label: 'Claim Type',   value: 'Short Shipped'  },
-    { label: 'Reason',       value: 'Carton not received at destination warehouse' },
     { label: 'Warehouse',    value: 'WIG New Jersey'  },
     { label: 'Bingo Number', value: '#34'             },
     { label: 'Line',         value: 'Line 24'         },
@@ -47,6 +52,8 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
     const [claimed, setClaimed]         = useState(false)
     const [sending, setSending]         = useState(false)
     const [submitting, setSubmitting]   = useState(false)
+    const [claimReason, setClaimReason] = useState(CLAIM_REASONS[0])
+    const [claimNotes, setClaimNotes]   = useState('')
 
     const handleSendNotify = () => {
         setSending(true)
@@ -232,6 +239,32 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                                         <span className="text-xs font-semibold text-foreground text-right">{f.value}</span>
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Reason dropdown */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Claim Reason</label>
+                                <select
+                                    value={claimReason}
+                                    onChange={e => setClaimReason(e.target.value)}
+                                    className="w-full text-xs bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                >
+                                    {CLAIM_REASONS.map(r => (
+                                        <option key={r} value={r}>{r}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Notes */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Notes <span className="normal-case font-normal">(optional)</span></label>
+                                <textarea
+                                    value={claimNotes}
+                                    onChange={e => setClaimNotes(e.target.value)}
+                                    placeholder="Add any additional details about the missing carton…"
+                                    rows={2}
+                                    className="w-full text-xs bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
                             </div>
 
                             {/* Actions */}

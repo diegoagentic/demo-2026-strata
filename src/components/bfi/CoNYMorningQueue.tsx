@@ -29,7 +29,7 @@ const ORDERS = [
 ]
 
 const ORDER_STATUS: Record<string, Record<SceneState, { label: string; priority: 'high' | 'medium' | 'done' | 'processing' }>> = {
-    'DOE-2847':  { monitoring: { label: 'Agency fee · SIF submitted',                           priority: 'processing' }, notified: { label: 'CPR · 2 discrepancies detected',               priority: 'high'   } },
+    'DOE-2847':  { monitoring: { label: 'Pricing · SIF validated · CPR pending',               priority: 'processing' }, notified: { label: 'CPR · 2 discrepancies detected',               priority: 'high'   } },
     'NYPD-0394': { monitoring: { label: 'Pricing · validation in progress',                     priority: 'medium'     }, notified: { label: 'Pricing · validation in progress',              priority: 'medium' } },
     'DCAS-1182': { monitoring: { label: 'Receiving · 18 days in WIG · 12 days remaining',      priority: 'medium'     }, notified: { label: 'Receiving · 18 days in WIG · 12 days remaining', priority: 'medium' } },
     'DOH-0671':  { monitoring: { label: 'Fee verified · ready to invoice',                      priority: 'done'       }, notified: { label: 'Fee verified · ready to invoice',               priority: 'done'   } },

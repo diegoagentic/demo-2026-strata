@@ -100,10 +100,22 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
                     <div className="text-xs flex-1">
                         <div className="font-bold text-foreground">Payment-critical · City of New York</div>
                         <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                            If any CPR line has an error →{' '}
-                            <span className="font-bold text-foreground">City of NY does not pay</span>.
-                            75% of orders have at least one discrepancy.
+                            Union labor (Teamsters · Carpenters) — if any CPR line has an error →{' '}
+                            <span className="font-bold text-foreground">City of NY does not pay</span>{' '}
+                            · payments must match to the cent. 75% of orders have at least one discrepancy.
                         </div>
+                    </div>
+                </div>
+
+                {/* CPR documentation chain */}
+                <div className="border border-border rounded-xl px-3 py-2.5">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">
+                        CPR Documentation · Vendor Order #17706
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {['✉ Email to Michael', '📄 Workplace Invoice', '✍ Timesheet (carpenter)', '💰 Certified Pay Stub'].map(doc => (
+                            <span key={doc} className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground">{doc}</span>
+                        ))}
                     </div>
                 </div>
 
@@ -255,7 +267,7 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
             <div className="bg-ai/5 border border-ai/20 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">Pre-drafted relay to Michael · Nancy Bos</div>
+                    <div className="font-bold text-foreground">Pre-drafted relay to Michael · Nancy Bos · Miller Knoll Invoice Processor</div>
                     <div className="text-muted-foreground mt-0.5">
                         Before Strata: this email took 1–3 days via manual follow-up. Review, edit if needed, send inline.
                     </div>

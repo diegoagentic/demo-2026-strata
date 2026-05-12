@@ -23,9 +23,8 @@ interface AgencyFeeVerifySceneProps {
 }
 
 const FEE_LINES = [
-    { product: 'Lounge Seating (×8)',  sale: '$84,000',  tcode: '18%', fee: '$15,120' },
-    { product: 'Work Tables (×12)',    sale: '$96,000',  tcode: '18%', fee: '$17,280' },
-    { product: 'Side Chairs (×12)',    sale: '$48,000',  tcode: '18%', fee: '$8,640'  },
+    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '18%', fee: '$25,920' },
+    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '18%', fee: '$15,120' },
 ]
 
 const EXPECTED_FEE = '$41,040'
@@ -74,7 +73,7 @@ export default function AgencyFeeVerifyScene({ onRoleChange }: AgencyFeeVerifySc
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">Agency Fee Verification · DOH-0671</div>
+                    <div className="font-bold text-foreground">Agency Fee Verification · DOE-2847 · NYC Dept. of Education</div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
                         Strata calculated the expected fee from CoNY contract T-codes and compared it against the MK Invoice Processor report from Nancy Bos.
                     </div>
@@ -219,7 +218,7 @@ export default function AgencyFeeVerifyScene({ onRoleChange }: AgencyFeeVerifySc
                 <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                     <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <div className="text-xs">
-                        <div className="font-bold text-foreground">DOH-0671 closed · Agency fee $41,040 verified</div>
+                        <div className="font-bold text-foreground">DOE-2847 closed · Agency fee $41,040 verified</div>
                         <div className="text-muted-foreground mt-0.5">Patricia notified to apply fee and close CORE · order invoiceable</div>
                     </div>
                 </div>
@@ -230,7 +229,7 @@ export default function AgencyFeeVerifyScene({ onRoleChange }: AgencyFeeVerifySc
                 <div className="bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                     <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                     <div className="text-xs">
-                        <div className="font-bold text-foreground">Gap flagged · DOH-0671 on hold</div>
+                        <div className="font-bold text-foreground">Gap flagged · DOE-2847 on hold</div>
                         <div className="text-muted-foreground mt-0.5">
                             Patricia and Michael notified · −$1,250 variance escalated to MK Invoice Processor · pending resolution before close
                         </div>

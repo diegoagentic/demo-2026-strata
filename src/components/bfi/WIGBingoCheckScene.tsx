@@ -45,9 +45,9 @@ export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProp
             <div className="bg-muted/60 border border-border rounded-xl p-3 space-y-1">
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Before Strata</div>
                 <div className="text-xs text-foreground leading-relaxed">
-                    WIG sends the Receiving Report as a Word doc → Lena processes on her own timeline →{' '}
-                    <span className="font-bold text-destructive">up to 1 week delay</span>.
-                    Lauren manually follows up after 1–2 days.
+                    WIG sends the Receiving Report as a Word doc → Lena loads in CORE{' '}
+                    <span className="font-bold text-destructive">without flagging partial receipts</span>{' '}
+                    → Lauren doesn't know if the order is complete or partial. Manual follow-up: 1–2 days.
                 </div>
             </div>
 
@@ -60,7 +60,7 @@ export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProp
                 </div>
                 <div className="p-3.5 space-y-2.5">
                     <div className="text-[11px] text-muted-foreground">From: warehouse@wiggroup.com</div>
-                    <div className="text-xs text-foreground font-medium">PMO-2026-0412 · Receiving Report attached · 35 cartons</div>
+                    <div className="text-xs text-foreground font-medium">PMO-2026-0412 · Vendor Order #17706 · Receiving Report attached · 35 cartons</div>
 
                     {/* Word doc thumbnail */}
                     <div className="border border-border rounded-lg p-3 bg-muted/30">
@@ -76,13 +76,18 @@ Note: carton 34 not received at dock`}</pre>
                     </div>
 
                     {/* Bingo sheet attachment */}
-                    <div className="flex items-center gap-2 bg-muted/30 border border-border rounded-lg px-2.5 py-2">
-                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <div>
-                            <div className="text-[11px] font-medium text-foreground">Bingo Sheet · BD-2026-0412</div>
-                            <div className="text-[10px] text-muted-foreground">35 cartons · 1 page · attached</div>
+                    <div className="bg-muted/30 border border-border rounded-lg px-2.5 py-2 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <div>
+                                <div className="text-[11px] font-medium text-foreground">Bingo Sheet · BD-2026-0412</div>
+                                <div className="text-[10px] text-muted-foreground">35 cartons · 1 page · attached</div>
+                            </div>
+                            <span className="ml-auto text-[9px] text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">ready for AI</span>
                         </div>
-                        <span className="ml-auto text-[9px] text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">ready for AI</span>
+                        <div className="text-[10px] text-amber-600 dark:text-amber-400">
+                            ⚠ No "missing" checkbox in the original — Workplace writes manually. Strata adds digital detection.
+                        </div>
                     </div>
                 </div>
             </div>
