@@ -46,9 +46,9 @@ import MBIBudgetPage from "./components/mbi/MBIBudgetPage"
 import MBIAccountingPage from "./components/mbi/MBIAccountingPage"
 import MBIQuotesPage from "./components/mbi/MBIQuotesPage"
 import MBIDesignPage from "./components/mbi/MBIDesignPage"
-import BFIPage from "./components/bfi/BFIPage"
+import BFIPage, { BFIDashboardPage } from "./components/bfi/BFIPage"
 import WorkspacesPage from "./components/workspaces/WorkspacesPage"
-import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon } from 'lucide-react'
+import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon, LayoutDashboard as LayoutDashboardIcon } from 'lucide-react'
 
 // Leland Demo — 4 app shells (Phase L0 · expanded in L1-L5)
 import { LelandStrataShell, LelandInboxApp, LelandSeradexApp, LelandReviewQueueApp } from "./features/leland"
@@ -72,6 +72,7 @@ function App() {
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState(false)
   const [showArchSlide, setShowArchSlide] = useState(false)
   const [bfiLoginActive, setBfiLoginActive] = useState(false)
+  const [bfiDashboardActive, setBfiDashboardActive] = useState(false)
 
   // Set initial page for CRM steps
   useEffect(() => {
@@ -87,11 +88,20 @@ function App() {
     }
   }, [currentStep?.id])
 
+  // Reset BFI dashboard mode when any demo step advances
+  useEffect(() => {
+    if (bfiDashboardActive) setBfiDashboardActive(false)
+  }, [currentStep?.id])
+
   const handleNavigate = (page: string) => {
     if (page === 'overview') {
       setCurrentPage('dashboard')
+    } else if (page === 'bfi-dashboard') {
+      // BFI Dashboard is a permanent page — not a demo step
+      setBfiDashboardActive(true)
     } else if (page.startsWith('mbi-') || page.startsWith('leland-') || page.startsWith('bfi-')) {
       // MBI/Leland/BFI nav tabs jump to the first demo step matching that module's app
+      setBfiDashboardActive(false)
       const idx = steps.findIndex(s => s.app === page)
       if (idx >= 0) goToStep(idx)
     } else {
@@ -243,8 +253,9 @@ function App() {
       { name: 'Review Queue', page: 'leland-review', icon: ShieldCheckIcon },
     ];
 
-    // BFI profile: 2-tab primary nav (Agency Fee AI · Receiving AI)
+    // BFI profile: 3-tab primary nav (Dashboard · Agency Fee AI · Receiving AI)
     const bfiNav = [
+      { name: 'Dashboard', page: 'bfi-dashboard', icon: LayoutDashboardIcon },
       { name: 'Agency Fee AI', page: 'bfi-agency-fee', icon: Building2Icon },
       { name: 'Receiving AI', page: 'bfi-receiving', icon: ReceiptIcon },
     ];
@@ -295,7 +306,8 @@ function App() {
       'mbi-accounting': 'mbi-accounting',
       'mbi-quotes': 'mbi-quotes',
       'mbi-design': 'mbi-design',
-      // BFI Demo: two modules, each owns its primary nav tab (see bfiNav)
+      // BFI Demo: three tabs (Dashboard is permanent page, not a step)
+      'bfi-dashboard': 'bfi-dashboard',
       'bfi-agency-fee': 'bfi-agency-fee',
       'bfi-receiving': 'bfi-receiving',
       // Workspaces Demo: two flows, submission tabs → submit nav, ap/reporting → ap nav
@@ -304,6 +316,7 @@ function App() {
       'workspaces-ap': 'workspaces-ap',
       'workspaces-reporting': 'workspaces-ap',
     };
+    if (isBFI && bfiDashboardActive) return 'bfi-dashboard'
     return appToTab[currentStep.app] || currentPage;
   };
 
@@ -398,6 +411,7 @@ function App() {
         return <LelandReviewQueueApp />;
       case 'bfi-agency-fee':
       case 'bfi-receiving':
+        if (bfiDashboardActive) return <BFIDashboardPage />
         return <BFIPage />;
       case 'workspaces-submit':
       case 'workspaces-approval':

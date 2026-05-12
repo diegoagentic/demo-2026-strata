@@ -4,13 +4,12 @@
 // CLIENT: BFI Furniture (Elizabeth, NJ · ~50 employees · Women Owned
 //         Government/Municipal furniture dealer · CoNY primary customer)
 //
-// DEMO STRUCTURE: 3 flows · 10 total steps · minimalista, un valor por paso
+// DEMO STRUCTURE: 2 flows · 9 total steps · minimalista, un valor por paso
 //
-//   FLOW 0 — Dashboard (1 step)
-//     d1.1: Operations Dashboard — overview · notification → PMO intake form inline
+//   Dashboard — navbar tab permanente (no es un paso del demo)
 //
 //   FLOW 1 — Product Receiving (5 steps)
-//     r1.2: WIG Bingo Check    — WIG doc received · ready for AI analysis
+//     r1.2: WIG Bingo Check    — comienza con dashboard overview + notif WIG · ready for AI analysis
 //     r1.3: AI Analysis        — progress bar → bingo grid · #34 missing
 //     r1.4: Alert & Claim      — notify Andy (HM) · open Omni claim
 //     r1.5: Core Entry         — 34/35 confirmed · confirm in CORE
@@ -31,19 +30,6 @@ import type { StepBehavior } from '../../components/demo/DemoStepBanner';
 // ─── STEPS ───────────────────────────────────────────────────────────────────
 
 export const BFI_STEPS: DemoStep[] = [
-
-    // ═══════════════════════════════════════════
-    // FLOW 0: Dashboard
-    // ═══════════════════════════════════════════
-    {
-        id: 'd1.1',
-        groupId: 0,
-        groupTitle: 'Dashboard',
-        title: 'Operations Dashboard',
-        description: 'Strata gives the BFI account team a live view of all active CoNY shipments — missing carton alerts, storage countdowns, and CPR mismatches surfaced automatically. Walter sees real-time updates on his phone before paper arrives.',
-        app: 'bfi-agency-fee',
-        role: 'Account Lead',
-    },
 
     // ═══════════════════════════════════════════
     // FLOW 1: Product Receiving (5 steps)
@@ -138,8 +124,7 @@ export const BFI_STEPS: DemoStep[] = [
 // ─── STEP BEHAVIOR ───────────────────────────────────────────────────────────
 
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
-    'd1.1': { mode: 'interactive', userAction: 'Review the operations dashboard — alert fires for new PMO · click to open the intake form · review pre-filled data · proceed to WIG bingo check' },
-    'r1.2': { mode: 'interactive', userAction: 'Review the WIG Receiving Report — 35 cartons expected · bingo sheet attached · click Run AI Analysis' },
+    'r1.2': { mode: 'interactive', userAction: 'Dashboard overview · WIG document notification slides in → click → review Receiving Report + Bingo Sheet · click Run AI Analysis' },
     'r1.3': { mode: 'interactive', userAction: 'Watch the AI cross-reference 35 cartons — progress bar runs → bingo grid reveals → carton #34 flags red' },
     'r1.4': { mode: 'interactive', userAction: 'Send the auto-drafted notification to Andy (HM) and file the Omni claim — both pre-filled · one click each' },
     'r1.5': { mode: 'interactive', userAction: 'Confirm 34/35 cartons received in CORE — Line 24 flagged short-shipped · click Confirm Receiving in Core' },
@@ -153,12 +138,6 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
 // ─── STEP MESSAGES (AI Agent Progress) ───────────────────────────────────────
 
 export const BFI_STEP_MESSAGES: Record<string, string[]> = {
-    'd1.1': [
-        'Loading active CoNY shipments from CORE',
-        'Detecting missing carton alerts and storage warnings',
-        'Syncing Walter\'s visibility feed',
-        'Dashboard ready · 3 alerts · 14 active shipments',
-    ],
     'r1.2': [
         'WIG Receiving Report received via email',
         'Bingo Sheet attachment detected',
@@ -220,7 +199,6 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const BFI_SELF_INDICATED: string[] = [
-    'd1.1',
     'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
     'a1.1', 'a1.2', 'a1.3', 'a1.4',
 ];

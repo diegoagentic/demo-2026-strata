@@ -1,24 +1,34 @@
 /**
- * COMPONENT: BFIDashboardScene  (d1.1)
- * PURPOSE: Entry point dashboard — live view of all active CoNY shipments,
- *          alerts, storage countdowns, CPR mismatches, Walter's live view.
+ * COMPONENT: BFIDashboardScene
+ * PURPOSE: Operations dashboard — live view of CoNY shipments, alerts, and Walter's feed.
  *
- * Sub-states:
- *   'overview' — dashboard with stats + alerts + shipments + Walter's view.
- *               After ~2s a PMO notification slides in from top.
- *               Click notification OR alert CTA → transitions to 'intake'.
- *   'intake'   — PMO form (pre-filled from CORE) + ReceivingProcessBar (Step 1 active)
- *               CTA "Proceed to WIG Bingo Check" → onNavigate() → nextStep
+ * Props:
+ *   staticMode       — true: no notification timer (used when accessed via navbar tab)
+ *   notificationConfig — overrides default notification text (used by WIGBingoCheckScene)
+ *   onNavigate       — called when notification or primary alert CTA is clicked
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { AlertTriangle, Package, Clock, DollarSign, ChevronRight, Bell, CheckCircle2, ClipboardList, Sparkles } from 'lucide-react'
+import { AlertTriangle, Package, Clock, DollarSign, ChevronRight, Bell, CheckCircle2, Sparkles } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
-import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+
+interface NotificationConfig {
+    title: string
+    desc: string
+    cta: string
+}
 
 interface BFIDashboardSceneProps {
     onNavigate?: () => void
+    staticMode?: boolean
+    notificationConfig?: NotificationConfig
+}
+
+const DEFAULT_NOTIF: NotificationConfig = {
+    title: 'New PMO received',
+    desc: 'PMO-2026-0412 · 35 cartons · WIG New Jersey',
+    cta: 'Start receiving →',
 }
 
 const STAT_CARDS = [
@@ -68,22 +78,16 @@ const WALTER_EVENTS = [
     { time: '9:45 AM', actor: 'Walter', action: 'Crew scheduling confirmed · May 14–16',  tag: 'loop closed' },
 ]
 
-const PMO_FIELDS = [
-    { label: 'PMO Number',       value: '2026-0412',    tag: 'from CORE' },
-    { label: 'Receipt Date',     value: '2026-05-11',   tag: 'from CORE' },
-    { label: 'Expected Cartons', value: '35',           tag: 'from CORE' },
-    { label: 'Shipment Type',    value: 'Large Truck',  tag: 'from CORE' },
-    { label: 'WIG Location',     value: 'WIG New Jersey', tag: 'from CORE' },
-]
-
-export default function BFIDashboardScene({ onNavigate }: BFIDashboardSceneProps) {
+export default function BFIDashboardScene({
+    onNavigate,
+    staticMode = false,
+    notificationConfig,
+}: BFIDashboardSceneProps) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
-    const [subState, setSubState] = useState<'overview' | 'intake'>('overview')
     const [showNotif, setShowNotif] = useState(false)
-    const [submitted, setSubmitted]   = useState(false)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -92,90 +96,27 @@ export default function BFIDashboardScene({ onNavigate }: BFIDashboardSceneProps
         }, 200)
     }, [])
 
-    // Slide in the PMO notification after ~2s
+    const notif = notificationConfig ?? DEFAULT_NOTIF
+
     useEffect(() => {
-        if (subState !== 'overview') return
+        if (staticMode) return
         const id = setTimeout(pauseAware(() => setShowNotif(true)), 2000)
         return () => clearTimeout(id)
-    }, [subState, pauseAware])
+    }, [staticMode, pauseAware])
 
-    const goToIntake = () => setSubState('intake')
-
-    const handleProceed = () => {
-        setSubmitted(true)
-        setTimeout(pauseAware(() => onNavigate?.()), 400)
-    }
-
-    // ── INTAKE sub-state ────────────────────────────────────────────────────────
-    if (subState === 'intake') {
-        return (
-            <div className="space-y-4">
-                <ReceivingProcessBar stepId="d1.1" />
-
-                <div className="bg-ai/5 border border-ai/20 rounded-xl px-3 py-3 flex items-start gap-2.5">
-                    <ClipboardList className="h-4 w-4 text-ai shrink-0 mt-0.5" />
-                    <div className="text-xs flex-1">
-                        <div className="font-bold text-foreground">PMO Intake · DOE-2847 · City of NY</div>
-                        <div className="text-muted-foreground mt-0.5">
-                            Strata pre-filled the intake form from CORE — PMO number, expected carton count, and WIG location are pulled automatically. Lauren reviews and proceeds.
-                        </div>
-                    </div>
-                </div>
-
-                <div className="border border-border rounded-xl overflow-hidden bg-card">
-                    <div className="px-3.5 py-2 border-b border-border bg-muted/40">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">PMO Form · Pre-filled from CORE</span>
-                    </div>
-                    <div className="divide-y divide-border">
-                        {PMO_FIELDS.map(f => (
-                            <div key={f.label} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-                                <span className="text-[11px] text-muted-foreground">{f.label}</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-foreground tabular-nums">{f.value}</span>
-                                    <span className="text-[9px] text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">
-                                        {f.tag}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        <span className="font-medium text-foreground">Before Strata:</span> Lauren opened CORE, looked up the PMO manually, copied each field into a separate spreadsheet, and emailed WIG to confirm. Intake alone took 15–20 minutes per shipment.
-                    </p>
-                </div>
-
-                <button
-                    onClick={handleProceed}
-                    disabled={submitted}
-                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
-                >
-                    Proceed to WIG Bingo Check
-                    <ChevronRight className="h-4 w-4" />
-                </button>
-
-                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
-            </div>
-        )
-    }
-
-    // ── OVERVIEW sub-state ──────────────────────────────────────────────────────
     return (
         <div className="space-y-5">
-            {/* PMO notification slide-in */}
+            {/* Notification slide-in (interactive mode only) */}
             {showNotif && (
                 <button
-                    onClick={goToIntake}
+                    onClick={() => onNavigate?.()}
                     className="w-full animate-in slide-in-from-top duration-500 flex items-start gap-2.5 bg-card border border-ai/40 rounded-xl px-3 py-3 text-left shadow-md group"
                 >
                     <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">New PMO received</p>
-                        <p className="text-xs font-semibold text-foreground leading-snug">PMO-2026-0412 · 35 cartons · WIG New Jersey</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">City of NY · DOE-2847 · ready for intake</p>
-                        <p className="text-[11px] font-semibold text-ai mt-1.5 group-hover:underline">Start receiving →</p>
+                        <p className="text-[10px] font-bold text-ai uppercase tracking-wide mb-0.5">{notif.title}</p>
+                        <p className="text-xs font-semibold text-foreground leading-snug">{notif.desc}</p>
+                        <p className="text-[11px] font-semibold text-ai mt-1.5 group-hover:underline">{notif.cta}</p>
                     </div>
                 </button>
             )}
@@ -215,9 +156,10 @@ export default function BFIDashboardScene({ onNavigate }: BFIDashboardSceneProps
                                     <div className="text-[11px] text-muted-foreground mt-0.5">{a.desc}</div>
                                 </div>
                             </div>
-                            {a.primary ? (
+                            {/* Primary CTA: navigates in interactive mode, static in staticMode */}
+                            {a.primary && !staticMode ? (
                                 <button
-                                    onClick={goToIntake}
+                                    onClick={() => onNavigate?.()}
                                     className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-destructive hover:underline whitespace-nowrap"
                                 >
                                     {a.cta} <ChevronRight className="h-3 w-3" />

@@ -1,10 +1,11 @@
 /**
  * COMPONENT: BFIPage
- * PURPOSE: Container for BFI demo — 3 flows, 11 steps, stepId-based routing.
+ * PURPOSE: Container for BFI demo — 2 flows, 9 steps, stepId-based routing.
  *
- *   FLOW 0 — Dashboard (d1.1)
- *   FLOW 1 — Product Receiving (r1.1–r1.6)  · r1.6 = Walter (mobile dark bg)
+ *   FLOW 1 — Product Receiving (r1.2–r1.6)  · r1.6 = Walter (mobile dark bg)
  *   FLOW 2 — Agency Fee (a1.1–a1.4)
+ *
+ * BFIDashboardPage: standalone export for the persistent Dashboard navbar tab.
  */
 
 import { Building2, Package, LayoutDashboard } from 'lucide-react'
@@ -24,7 +25,6 @@ import CPRScene from './CPRScene'
 import AgencyFeeVerifyScene from './AgencyFeeVerifyScene'
 
 const STEP_TITLES: Record<string, string> = {
-    'd1.1': 'Operations Dashboard',
     'r1.2': 'Product Receiving',
     'r1.3': 'Product Receiving',
     'r1.4': 'Product Receiving',
@@ -37,7 +37,7 @@ const STEP_TITLES: Record<string, string> = {
 
 export default function BFIPage() {
     const { currentStep, nextStep } = useDemo()
-    const stepId = currentStep?.id ?? 'd1.1'
+    const stepId = currentStep?.id ?? 'r1.2'
 
     // Walter (r1.6) — CoNY client PM on phone, breaks out of the MBIPageShell
     if (stepId === 'r1.6') {
@@ -67,7 +67,6 @@ export default function BFIPage() {
             icon={icon}
         >
             <div key={stepId} className="space-y-4 animate-in fade-in duration-500">
-                {stepId === 'd1.1' && <BFIDashboardScene onNavigate={nextStep} />}
                 {stepId === 'r1.2' && <WIGBingoCheckScene onAnalyze={nextStep} />}
                 {stepId === 'r1.3' && <AIAnalysisScene onComplete={nextStep} />}
                 {stepId === 'r1.4' && <AlertClaimScene onProceed={nextStep} />}
@@ -77,6 +76,20 @@ export default function BFIPage() {
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
             </div>
+        </MBIPageShell>
+    )
+}
+
+/** Standalone dashboard page — rendered when user clicks the "Dashboard" navbar tab. */
+export function BFIDashboardPage() {
+    return (
+        <MBIPageShell
+            title="Operations Dashboard"
+            tenantLabel="BFI"
+            productLabel="Strata for BFI"
+            icon={<LayoutDashboard className="h-5 w-5" />}
+        >
+            <BFIDashboardScene staticMode />
         </MBIPageShell>
     )
 }

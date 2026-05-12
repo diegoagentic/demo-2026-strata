@@ -1,12 +1,13 @@
 /**
  * COMPONENT: WIGBingoCheckScene  (r1.2)
- * PURPOSE: Product Receiving step 2 — WIG Receiving Report received.
- *          Strata captures the Word doc and bingo sheet digitally.
- *          CTA triggers AI analysis in the next step.
+ * PURPOSE: Product Receiving step 1 — starts with Operations Dashboard overview.
+ *          After 2s a "WIG document received" notification slides in.
+ *          Click → 'checking' phase: WIG Receiving Report + CTA to trigger AI analysis.
  */
 
 import { useState } from 'react'
 import { FileText, Mail, Sparkles } from 'lucide-react'
+import BFIDashboardScene from './BFIDashboardScene'
 import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -15,6 +16,7 @@ interface WIGBingoCheckSceneProps {
 }
 
 export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProps) {
+    const [phase, setPhase] = useState<'dashboard' | 'checking'>('dashboard')
     const [clicked, setClicked] = useState(false)
 
     const handleAnalyze = () => {
@@ -22,8 +24,21 @@ export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProp
         setTimeout(() => onAnalyze?.(), 300)
     }
 
+    if (phase === 'dashboard') {
+        return (
+            <BFIDashboardScene
+                notificationConfig={{
+                    title: 'WIG document received',
+                    desc: 'PMO-2026-0412 · Bingo Sheet · 35 cartons · ready for AI analysis',
+                    cta: 'Review bingo sheet →',
+                }}
+                onNavigate={() => setPhase('checking')}
+            />
+        )
+    }
+
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in fade-in duration-300">
             <ReceivingProcessBar stepId="r1.2" />
 
             {/* AS-IS contrast */}

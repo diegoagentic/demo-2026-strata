@@ -6,10 +6,10 @@
 
 import { CheckCircle2 } from 'lucide-react'
 
-const STEPS = ['PMO Intake', 'WIG Bingo Check', 'AI Analysis', 'Alert & Claim', 'Core Entry', 'Notify Walter']
+const STEPS = ['WIG Bingo Check', 'AI Analysis', 'Alert & Claim', 'Core Entry', 'Notify Walter']
 
 const STEP_INDEX: Record<string, number> = {
-    'd1.1': 0, 'r1.1': 0, 'r1.2': 1, 'r1.3': 2, 'r1.4': 3, 'r1.5': 4, 'r1.6': 5,
+    'r1.2': 0, 'r1.3': 1, 'r1.4': 2, 'r1.5': 3, 'r1.6': 4,
 }
 
 interface ReceivingProcessBarProps {
