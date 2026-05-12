@@ -1,14 +1,15 @@
 /**
  * COMPONENT: AlertClaimScene  (r1.4)
- * PURPOSE: Product Receiving step 4 — missing carton alert + two actions:
- *          (1) Notify Andy at Herman Miller  (2) Open Omni service claim.
- *          CTA to "Core Entry" unlocks when both actions complete.
+ * PURPOSE: Product Receiving step 4 — missing carton detected.
+ *          Lauren sends POD request to Andy (Herman Miller).
+ *          Depending on Andy's response: Workplace investigation OR Omni claim.
  *
- * States: 'alert' — both modals can be triggered independently.
+ * States: 'alert' → 'awaiting' → 'resolution'
  */
 
-import { useState } from 'react'
-import { AlertTriangle, Mail, FileWarning, CheckCircle2, ChevronRight, X } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { AlertTriangle, Mail, FileWarning, CheckCircle2, ChevronRight, X, GitBranch, Clock } from 'lucide-react'
+import { useDemo } from '../../context/DemoContext'
 import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -16,7 +17,9 @@ interface AlertClaimSceneProps {
     onProceed?: () => void
 }
 
-const NOTIFY_DRAFT = `Hi Andy,
+type AlertPhase = 'alert' | 'awaiting' | 'resolution'
+
+const POD_DRAFT = `Hi Andy,
 
 We're reviewing PMO-2026-0412 and Carton #34 did not arrive at the WIG dock.
 
@@ -46,125 +49,201 @@ const CLAIM_FIELDS = [
 ]
 
 export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
-    const [showNotify, setShowNotify]   = useState(false)
+    const { isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+
+    const [phase, setPhase] = useState<AlertPhase>('alert')
+    const [showPOD, setShowPOD]         = useState(false)
     const [showClaim, setShowClaim]     = useState(false)
-    const [notified, setNotified]       = useState(false)
+    const [podSending, setPodSending]   = useState(false)
     const [claimed, setClaimed]         = useState(false)
-    const [sending, setSending]         = useState(false)
     const [submitting, setSubmitting]   = useState(false)
     const [claimReason, setClaimReason] = useState(CLAIM_REASONS[0])
     const [claimNotes, setClaimNotes]   = useState('')
 
-    const handleSendNotify = () => {
-        setSending(true)
-        setTimeout(() => {
-            setNotified(true)
-            setSending(false)
-            setShowNotify(false)
-        }, 600)
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
+    const handleSendPOD = () => {
+        setPodSending(true)
+        setTimeout(pauseAware(() => {
+            setPodSending(false)
+            setShowPOD(false)
+            setPhase('awaiting')
+            setTimeout(pauseAware(() => setPhase('resolution')), 1500)
+        }), 600)
     }
 
     const handleSubmitClaim = () => {
         setSubmitting(true)
-        setTimeout(() => {
+        setTimeout(pauseAware(() => {
             setClaimed(true)
             setSubmitting(false)
             setShowClaim(false)
-        }, 600)
+        }), 600)
     }
-
-    const bothDone = notified && claimed
 
     return (
         <div className="space-y-4">
             <ReceivingProcessBar stepId="r1.4" />
 
-            {/* Missing carton alert */}
-            <div className="bg-destructive/5 border border-destructive/40 rounded-xl p-3.5 space-y-3">
-                <div className="flex items-start gap-2.5">
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                    <div className="text-xs flex-1">
-                        <div className="font-bold text-destructive text-sm">Missing: Carton #34</div>
-                        <div className="text-foreground mt-0.5">Line 24 · Chair Frame Assembly ×1 · short-shipped at origin</div>
-                        <div className="text-muted-foreground mt-1 text-[11px]">
-                            PMO-2026-0412 · WIG New Jersey · detected by AI analysis
-                        </div>
-                    </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                        onClick={() => !notified && setShowNotify(true)}
-                        className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                            notified
-                                ? 'bg-success/10 border border-success/30 text-success'
-                                : 'bg-card border border-border text-foreground hover:bg-muted/30'
-                        }`}
-                    >
-                        {notified
-                            ? <><CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> Notified Andy ✓</>
-                            : <><Mail className="h-3.5 w-3.5 shrink-0" /> Notify Andy (HM)</>
-                        }
-                    </button>
-                    <button
-                        onClick={() => !claimed && setShowClaim(true)}
-                        className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                            claimed
-                                ? 'bg-success/10 border border-success/30 text-success'
-                                : 'bg-card border border-border text-foreground hover:bg-muted/30'
-                        }`}
-                    >
-                        {claimed
-                            ? <><CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> Claim filed ✓</>
-                            : <><FileWarning className="h-3.5 w-3.5 shrink-0" /> Open Omni Claim</>
-                        }
-                    </button>
+            {/* Alert banner — always visible */}
+            <div className="bg-destructive/5 border border-destructive/40 rounded-xl px-3.5 py-3 flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <div className="text-xs flex-1">
+                    <div className="font-bold text-destructive text-sm">Missing: Carton #34</div>
+                    <div className="text-foreground mt-0.5">Line 24 · Chair Frame Assembly ×1 · short-shipped at origin</div>
+                    <div className="text-muted-foreground mt-1 text-[11px]">PMO-2026-0412 · WIG New Jersey · detected by AI analysis</div>
                 </div>
             </div>
 
-            {/* AS-IS contrast */}
-            <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Before Strata:</span> Lauren manually drafted the email to Andy, separately filed the Omni claim by copying PMO and item details by hand. Both steps took 20–30 minutes combined and were error-prone.
-                </p>
-            </div>
-
-            {/* Proceed CTA */}
-            {bothDone && (
-                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300">
-                    <div className="bg-success/5 border border-success/30 rounded-xl px-3 py-2.5 flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                        <div className="text-xs">
-                            <div className="font-bold text-foreground">Both actions complete</div>
-                            <div className="text-muted-foreground">Andy notified · Omni claim #OM-2026-0412 filed · 34/35 cartons can proceed to CORE</div>
+            {/* Phase: alert — two-path context + POD CTA */}
+            {phase === 'alert' && (
+                <>
+                    {/* Two-path context */}
+                    <div className="bg-muted/40 border border-border rounded-xl px-3.5 py-3 space-y-2">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            <GitBranch className="h-3 w-3" />
+                            Two possible paths depending on Andy's response
+                        </div>
+                        <div className="space-y-1.5 text-[11px] text-muted-foreground">
+                            <div className="flex items-start gap-2">
+                                <span className="text-warning font-bold shrink-0 mt-0.5">A</span>
+                                <span><span className="text-foreground font-medium">Andy confirms shipped</span> → Workplace investigation — at what point was the carton lost in transit?</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <span className="text-destructive font-bold shrink-0 mt-0.5">B</span>
+                                <span><span className="text-foreground font-medium">Andy confirms not shipped</span> → Omni carrier claim — short-ship at origin, filed against Herman Miller.</span>
+                            </div>
                         </div>
                     </div>
+
                     <button
-                        onClick={() => onProceed?.()}
+                        onClick={() => setShowPOD(true)}
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
                     >
-                        Proceed to Core Entry
-                        <ChevronRight className="h-4 w-4" />
+                        <Mail className="h-4 w-4" />
+                        Send POD request to Andy
                     </button>
+                </>
+            )}
+
+            {/* Phase: awaiting */}
+            {phase === 'awaiting' && (
+                <div className="bg-ai/5 border border-ai/20 rounded-xl px-3.5 py-3 flex items-center gap-2.5 animate-in fade-in duration-300">
+                    <Clock className="h-4 w-4 text-ai shrink-0 animate-pulse" />
+                    <div className="text-xs">
+                        <div className="font-bold text-foreground">POD request sent to Andy (Herman Miller)</div>
+                        <div className="text-muted-foreground mt-0.5">andy@hermanmiller.com · May 11 · 8:06 AM · waiting for response…</div>
+                    </div>
                 </div>
             )}
 
-            {!bothDone && (
-                <p className="text-[11px] text-muted-foreground text-center">
-                    Complete both actions above to proceed to Core Entry
-                </p>
+            {/* Phase: resolution — Andy's response + two-path cards */}
+            {phase === 'resolution' && (
+                <div className="space-y-3 animate-in fade-in duration-300">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide px-0.5">
+                        Andy O'Brien (Herman Miller) responded · 2 minutes ago
+                    </div>
+
+                    {/* Card A — Shipment confirmed (out of scope path) */}
+                    <div className="bg-warning/5 border border-warning/30 rounded-xl p-3.5 space-y-2.5">
+                        <div className="flex items-start gap-2.5">
+                            <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                                <div className="text-xs font-bold text-foreground">Path A — "I have the BOL showing 35 cartons picked up."</div>
+                                <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed italic">
+                                    "Carton #34 was loaded. POD attached."
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-muted/50 border border-border/60 rounded-lg px-3 py-2">
+                            <div className="text-[10px] text-muted-foreground leading-relaxed">
+                                <span className="font-medium text-foreground">→ Workplace investigation:</span> At what point was the carton lost in transit? Out of scope for this demo — investigation flow.
+                            </div>
+                        </div>
+                        <button disabled className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg border border-border text-muted-foreground opacity-50 cursor-not-allowed">
+                            Investigate with Workplace
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+
+                    {/* Card B — Not shipped (demo path → Omni claim) */}
+                    <div className="bg-destructive/5 border border-destructive/30 rounded-xl p-3.5 space-y-2.5">
+                        <div className="flex items-start gap-2.5">
+                            <FileWarning className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                                <div className="text-xs font-bold text-foreground">Path B — "Carton #34 was not included in this shipment."</div>
+                                <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed italic">
+                                    "It was not packed. This is on us."
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-muted/50 border border-border/60 rounded-lg px-3 py-2">
+                            <div className="text-[10px] text-muted-foreground">
+                                <span className="font-medium text-foreground">→ Omni carrier claim:</span> Short-ship at origin — claim against Herman Miller.
+                            </div>
+                        </div>
+
+                        {!claimed ? (
+                            <button
+                                onClick={() => setShowClaim(true)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all"
+                            >
+                                <FileWarning className="h-3.5 w-3.5" />
+                                Open Omni Claim
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2 text-xs text-success font-semibold">
+                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                                Claim #OM-2026-0412 filed
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Proceed CTA — unlocks after claim filed */}
+                    {claimed && (
+                        <div className="space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300">
+                            <div className="bg-success/5 border border-success/30 rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+                                <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                                <div className="text-xs">
+                                    <div className="font-bold text-foreground">Both actions complete</div>
+                                    <div className="text-muted-foreground">Andy notified · Omni claim #OM-2026-0412 filed · 34/35 cartons can proceed to CORE</div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => onProceed?.()}
+                                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                            >
+                                Proceed to Core Entry
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    )}
+                </div>
             )}
+
+            {/* Before Strata */}
+            <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Before Strata:</span> Lauren manually drafted the email to Andy and separately filed the Omni claim by copying PMO and item details by hand. Both steps took 20–30 minutes combined and were error-prone.
+                </p>
+            </div>
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
 
-            {/* Modal — Notify Andy */}
-            {showNotify && (
+            {/* Modal — POD Request to Andy */}
+            {showPOD && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6 pl-[calc(320px+1.5rem)]">
                     <div className="w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
-                            <div className="text-sm font-bold text-foreground">Notify Andy · Herman Miller</div>
-                            <button onClick={() => setShowNotify(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                            <div className="text-sm font-bold text-foreground">POD Request · Andy O'Brien · Herman Miller</div>
+                            <button onClick={() => setShowPOD(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
@@ -182,23 +261,23 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                             </div>
                             <textarea
                                 readOnly
-                                defaultValue={NOTIFY_DRAFT}
+                                defaultValue={POD_DRAFT}
                                 className="w-full h-52 text-xs text-muted-foreground bg-muted/30 border border-border rounded-xl px-4 py-3 resize-none font-mono leading-relaxed"
                             />
                             <div className="flex gap-3">
                                 <button
-                                    onClick={() => setShowNotify(false)}
+                                    onClick={() => setShowPOD(false)}
                                     className="flex-1 text-sm font-semibold text-muted-foreground py-3 rounded-xl border border-border hover:bg-muted/30 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={handleSendNotify}
-                                    disabled={sending}
+                                    onClick={handleSendPOD}
+                                    disabled={podSending}
                                     className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-sm font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
                                 >
                                     <Mail className="h-4 w-4" />
-                                    {sending ? 'Sending…' : 'Send'}
+                                    {podSending ? 'Sending…' : 'Send POD Request'}
                                 </button>
                             </div>
                         </div>
@@ -210,16 +289,13 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
             {showClaim && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6 pl-[calc(320px+1.5rem)]">
                     <div className="w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                        {/* Header */}
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
                             <div className="text-sm font-bold text-foreground">Omni Service Claim · Pre-filled</div>
                             <button onClick={() => setShowClaim(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
-
                         <div className="p-5 space-y-4 overflow-y-auto max-h-[70vh]">
-                            {/* Incident banner */}
                             <div className="flex items-start gap-3 bg-destructive/5 border border-destructive/30 rounded-xl px-4 py-3">
                                 <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                                 <div>
@@ -230,8 +306,6 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Claim fields */}
                             <div className="border border-border rounded-xl overflow-hidden">
                                 {CLAIM_FIELDS.map((f, i) => (
                                     <div key={f.label} className={`flex items-center justify-between gap-3 px-4 py-2.5 ${i < CLAIM_FIELDS.length - 1 ? 'border-b border-border' : ''}`}>
@@ -240,8 +314,6 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                                     </div>
                                 ))}
                             </div>
-
-                            {/* Reason dropdown */}
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Claim Reason</label>
                                 <select
@@ -254,8 +326,6 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                                     ))}
                                 </select>
                             </div>
-
-                            {/* Notes */}
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Notes <span className="normal-case font-normal">(optional)</span></label>
                                 <textarea
@@ -266,8 +336,6 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                                     className="w-full text-xs bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
                                 />
                             </div>
-
-                            {/* Actions */}
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowClaim(false)}

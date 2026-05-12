@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, ArrowRight, DollarSign, Flag } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, ArrowRight, DollarSign, Flag, ChevronRight } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -75,8 +75,22 @@ export default function AgencyFeeVerifyScene({ onRoleChange }: AgencyFeeVerifySc
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">Agency Fee Verification · DOE-2847 · NYC Dept. of Education</div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Strata calculated the expected fee from CoNY contract T-codes and compared it against the MK Invoice Processor report from Nancy Bos.
+                        Patricia is verifying the expected agency fee from CoNY contract T-codes against the MK Invoice Processor report from Nancy Bos. T-codes vary by product type — OVNIQ auto-applied the correct rate for each line.
                     </div>
+                </div>
+            </div>
+
+            {/* Connection bar — 3 data sources */}
+            <div className="border border-border rounded-xl bg-card px-3.5 py-3">
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Data sources</div>
+                <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                    <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">CoNY Contract · T-codes</span>
+                    <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">OVNIQ · auto-apply</span>
+                    <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">Expected fee</span>
+                    <span className="text-muted-foreground px-1">↕ compare</span>
+                    <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">Nancy Bos · MK Invoice</span>
                 </div>
             </div>
 
@@ -237,8 +251,17 @@ export default function AgencyFeeVerifyScene({ onRoleChange }: AgencyFeeVerifySc
                 </div>
             )}
 
+            {/* Before Strata */}
+            {!confirmed && !flagged && (
+                <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        <span className="font-medium text-foreground">Before Strata:</span> No system compared expected fee vs what Nancy Bos reported. BFI was paid whatever Miller Knoll said — verification was impossible. "Lauren said there are never discrepancies" — because she could never check.
+                    </p>
+                </div>
+            )}
+
             <DataSourcesBar groups={[
-                { sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR] },
+                { sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR, SOURCES.OVNIQ] },
             ]} />
         </div>
     )

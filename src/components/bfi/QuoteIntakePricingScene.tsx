@@ -9,7 +9,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, ChevronRight, FileText, Mail, Building2, X } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, ChevronRight, FileText, Mail, Building2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -20,10 +20,9 @@ interface QuoteIntakePricingSceneProps {
 type Phase = 'email' | 'validating' | 'discount'
 
 const VALIDATION_LINES = [
-    { product: 'Workstations ×24',       sif: '$144,000', contract: '$144,000', status: 'ok'         as const },
-    { product: 'Lounge Seating ×12',     sif: '$84,000',  contract: '$84,000',  status: 'ok'         as const },
-    { product: 'Filing Units ×6',        sif: '$8,100',   contract: '$7,560',   status: 'corrected'  as const },
-    { product: 'Panel System (custom)',   sif: '$4,200',   contract: '—',        status: 'restricted' as const },
+    { product: 'Workstations ×24',   sif: '$144,000', contract: '$144,000', status: 'ok'        as const, conf: '98%' },
+    { product: 'Lounge Seating ×12', sif: '$84,000',  contract: '$84,000',  status: 'ok'        as const, conf: '96%' },
+    { product: 'Filing Units ×6',    sif: '$8,100',   contract: '$7,560',   status: 'corrected' as const, conf: '71%' },
 ]
 
 const DISCOUNT_LINES = [
@@ -32,13 +31,6 @@ const DISCOUNT_LINES = [
     { product: 'Filing Units ×6',    list: '$12,600',  sale: '$7,560',   pct: '−40.0%' },
 ]
 
-const PANEL_DRAFT = `Hi Robert,
-
-The Panel System (custom config, $4,200) is not included in the CoNY contract catalog and cannot be quoted on this order.
-
-Please provide a substitute item from the approved product list for DOE-2847.
-
-— Lauren DeMarco, CoNY Account Lead · BFI Furniture`
 
 export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingSceneProps) {
     const { nextStep, isPaused } = useDemo()
@@ -47,8 +39,6 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
 
     const [phase, setPhase]                 = useState<Phase>('email')
     const [revealedCount, setRevealedCount] = useState(0)
-    const [noticeSent, setNoticeSent]       = useState(false)
-    const [showNoticeModal, setShowNoticeModal] = useState(false)
     const [contractType, setContractType]   = useState<'city' | 'state'>('city')
     const [applied, setApplied]             = useState(false)
     const [ocr, setOcr]                     = useState(false)
@@ -83,8 +73,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
         }), 400)
     }
 
-    const allRevealed      = revealedCount >= VALIDATION_LINES.length
-    const canContinue      = allRevealed && noticeSent
+    const allRevealed = revealedCount >= VALIDATION_LINES.length
 
     // ── Phase: email ──────────────────────────────────────────────────────────
     if (phase === 'email') {
@@ -184,90 +173,84 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                     <div className="text-xs flex-1">
                         <div className="font-bold text-foreground">OVNIQ Validation · DOE-2847 · Q-2026-0089</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Strata is validating the SIF against the CoNY contract via OVNIQ — comparing list prices, applying T-code rates, flagging restrictions.
+                            Strata validated the SIF against the CoNY contract via OVNIQ — corrected pricing and returned a corrected SIF. What used to take 65 minutes takes seconds.
                         </div>
+                    </div>
+                </div>
+
+                {/* Connection bar */}
+                <div className="border border-border rounded-xl bg-card px-3.5 py-3">
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Data flow</div>
+                    <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                        <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">📄 SIF · email adjunto</span>
+                        <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="text-[9px] text-muted-foreground">OCR</span>
+                        <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">OVNIQ · Herman Miller</span>
+                        <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="text-[9px] text-muted-foreground">valida</span>
+                        <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">CORE · CoNY contract</span>
                     </div>
                 </div>
 
                 {/* Validation table */}
                 <div className="border border-border rounded-xl overflow-hidden">
-                    <div className="grid grid-cols-4 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <div className="grid grid-cols-5 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         <span className="col-span-2">Product</span>
                         <span>SIF</span>
-                        <span className="text-right">Contract</span>
+                        <span>OVNIQ</span>
+                        <span className="text-right">Conf.</span>
                     </div>
                     {VALIDATION_LINES.slice(0, revealedCount).map((line) => (
                         <div
                             key={line.product}
                             className="border-t border-border animate-in fade-in slide-in-from-left-1 duration-300"
                         >
-                            <div className="grid grid-cols-4 gap-0 px-3.5 py-2.5 text-xs items-center">
+                            <div className="grid grid-cols-5 gap-0 px-3.5 py-2.5 text-xs items-center">
                                 <span className="col-span-2 font-medium text-foreground">{line.product}</span>
-                                <span className={`tabular-nums ${line.status === 'restricted' ? 'text-destructive line-through' : 'text-muted-foreground'}`}>
+                                <span className={`tabular-nums ${line.status === 'corrected' ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>
                                     {line.sif}
                                 </span>
-                                <span className={`text-right font-bold tabular-nums ${
-                                    line.status === 'ok'         ? 'text-success'
-                                    : line.status === 'corrected' ? 'text-warning'
-                                    : 'text-destructive'
+                                <span className={`font-bold tabular-nums ${
+                                    line.status === 'ok' ? 'text-success' : 'text-warning'
                                 }`}>
-                                    {line.status === 'ok'         && <span className="flex items-center justify-end gap-1"><CheckCircle2 className="h-3 w-3" /> {line.contract}</span>}
-                                    {line.status === 'corrected'  && <span className="flex items-center justify-end gap-1"><AlertTriangle className="h-3 w-3" /> {line.contract}</span>}
-                                    {line.status === 'restricted' && <span className="flex items-center justify-end gap-1"><X className="h-3 w-3" /> Restricted</span>}
+                                    {line.status === 'ok'
+                                        ? <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {line.contract}</span>
+                                        : <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> {line.contract}</span>
+                                    }
+                                </span>
+                                <span className={`text-right text-[10px] font-bold tabular-nums ${
+                                    line.status === 'ok' ? 'text-success' : 'text-warning'
+                                }`}>
+                                    {line.conf}
                                 </span>
                             </div>
 
                             {line.status === 'corrected' && (
-                                <div className="px-3.5 pb-2 text-[10px] text-warning">
-                                    Corrected $8,100 → $7,560 · CoNY contract price applied by OVNIQ
-                                </div>
-                            )}
-
-                            {line.status === 'restricted' && (
-                                <div className="mx-3.5 mb-3 border border-destructive/30 bg-destructive/5 rounded-xl overflow-hidden animate-in fade-in duration-300">
-                                    <div className="px-3 py-2 border-b border-destructive/20">
-                                        <span className="text-[10px] font-bold text-destructive uppercase tracking-wide">Not in CoNY catalog — notice pre-drafted</span>
-                                    </div>
-                                    <div className="p-3 space-y-2.5">
-                                        <pre className="font-mono text-[10px] text-muted-foreground whitespace-pre-wrap leading-relaxed">{PANEL_DRAFT}</pre>
-                                        {!noticeSent ? (
-                                            <button
-                                                onClick={() => setShowNoticeModal(true)}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all"
-                                            >
-                                                <Mail className="h-3 w-3" />
-                                                Send notice to designer
-                                            </button>
-                                        ) : (
-                                            <div className="flex items-center gap-1.5 text-[11px] text-success font-medium">
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                Notice sent · Panel System removed pending designer response
-                                            </div>
-                                        )}
-                                    </div>
+                                <div className="mx-3.5 mb-3 bg-warning/5 border border-warning/20 rounded-lg px-3 py-2 space-y-1 animate-in fade-in duration-200">
+                                    <div className="text-[10px] font-bold text-warning">SIF price $8,100 does not match contract rate</div>
+                                    <div className="text-[10px] text-muted-foreground">$7,560 · T-code 18% · list $42,000 · OVNIQ corrected automatically</div>
                                 </div>
                             )}
                         </div>
                     ))}
                 </div>
 
-                {/* Summary — appears when all revealed + notice sent */}
-                {canContinue && (
+                {/* Summary — corrected SIF ready */}
+                {allRevealed && (
                     <div className="bg-success/5 border border-success/30 rounded-xl p-3 space-y-1.5 animate-in fade-in duration-300">
                         <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                            <span className="text-xs font-bold text-foreground">3 lines validated · 1 corrected ($8,100→$7,560) · 1 restricted removed</span>
+                            <span className="text-xs font-bold text-foreground">OVNIQ returned corrected SIF · 1 price adjusted · ready for discount calculation</span>
                         </div>
                         <div className="text-[11px] text-muted-foreground pl-6">
-                            T-code 18% applied by OVNIQ — Expected fee: <span className="font-bold text-foreground">$41,040</span> (calculated automatically)
-                        </div>
-                        <div className="text-[11px] text-muted-foreground pl-6">
-                            Corrected SIF uploaded to CORE · order DOE-2847 updated
+                            Filing Units ×6: $8,100 → $7,560 · T-code 18% applied · corrected SIF uploaded to CORE
                         </div>
                     </div>
                 )}
 
-                {canContinue && (
+                {allRevealed && (
                     <button
                         onClick={() => setPhase('discount')}
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300"
@@ -277,45 +260,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                     </button>
                 )}
 
-                {!canContinue && allRevealed && !noticeSent && (
-                    <p className="text-[11px] text-muted-foreground text-center">
-                        Send the restricted item notice to continue
-                    </p>
-                )}
-
-                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
-
-                {/* Confirm send notice modal */}
-                {showNoticeModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6 pl-[calc(320px+1.5rem)]">
-                        <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
-                                <div className="text-sm font-bold text-foreground">Send notice · Robert Chen · Miller Knoll</div>
-                                <button onClick={() => setShowNoticeModal(false)} className="text-muted-foreground hover:text-foreground">
-                                    <X className="h-4 w-4" />
-                                </button>
-                            </div>
-                            <div className="p-5 space-y-3">
-                                <pre className="font-mono text-[10px] text-muted-foreground whitespace-pre-wrap leading-relaxed bg-muted/30 border border-border rounded-xl p-3">{PANEL_DRAFT}</pre>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowNoticeModal(false)}
-                                        className="flex-1 text-sm font-semibold text-muted-foreground py-2.5 rounded-xl border border-border hover:bg-muted/30 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => { setNoticeSent(true); setShowNoticeModal(false) }}
-                                        className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-sm font-bold py-2.5 rounded-xl hover:opacity-90 transition-all"
-                                    >
-                                        <Mail className="h-4 w-4" />
-                                        Send
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO, SOURCES.OVNIQ] }]} />
             </div>
         )
     }
@@ -433,7 +378,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                 <ChevronRight className="h-4 w-4" />
             </button>
 
-            <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+            <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO, SOURCES.OVNIQ] }]} />
         </div>
     )
 }

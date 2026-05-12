@@ -3,11 +3,11 @@
  * PURPOSE: Product Receiving step 5 — Lauren confirms 34/35 cartons in CORE.
  *          Line 24 excluded pending Omni claim resolution.
  *
- * States: 'confirming' | 'confirmed'
+ * States: 'review' → 'confirming' → 'confirmed'
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { CheckCircle2, Package, AlertTriangle, ChevronRight } from 'lucide-react'
+import { CheckCircle2, Package, AlertTriangle, ChevronRight, ArrowDown } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -16,12 +16,13 @@ interface CoreEntrySceneProps {
     onConfirm?: () => void
 }
 
-const SUMMARY_ROWS = [
-    { label: 'PMO Number',     value: 'PMO-2026-0412' },
-    { label: 'Cartons received', value: '34/35' },
-    { label: 'Short-shipped',  value: 'Carton #34 · Line 24' },
-    { label: 'CORE status',    value: 'Line 24 excluded' },
-    { label: 'Claim',          value: 'Omni #OM-2026-0412 filed' },
+type CoreState = 'review' | 'confirming' | 'confirmed'
+
+const SYNC_LINES = [
+    'PMO-2026-0412 · 34/35 cartons',
+    'Line 24 flagged EXCLUDED',
+    'Claim #OM-2026-0412 attached',
+    'Entry timestamped · Lauren D. · May 11 · 2:30 PM',
 ]
 
 export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
@@ -29,7 +30,8 @@ export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
-    const [confirmed, setConfirmed] = useState(false)
+    const [coreState, setCoreState] = useState<CoreState>('review')
+    const [syncLines, setSyncLines] = useState(0)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -39,31 +41,76 @@ export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
     }, [])
 
     const handleConfirm = () => {
-        setConfirmed(true)
-        setTimeout(pauseAware(() => onConfirm?.()), 800)
+        setCoreState('confirming')
+        SYNC_LINES.forEach((_, i) => {
+            setTimeout(pauseAware(() => setSyncLines(i + 1)), 300 + i * 400)
+        })
+        setTimeout(pauseAware(() => setCoreState('confirmed')), 300 + SYNC_LINES.length * 400 + 300)
     }
 
     return (
         <div className="space-y-4">
             <ReceivingProcessBar stepId="r1.5" />
 
-            {/* Summary card */}
-            <div className="border border-border rounded-xl overflow-hidden bg-card">
-                <div className="px-3.5 py-2 border-b border-border bg-muted/40 flex items-center gap-2">
-                    <Package className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">CORE Entry Summary</span>
-                </div>
-                <div className="divide-y divide-border">
-                    {SUMMARY_ROWS.map(r => (
-                        <div key={r.label} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-                            <span className="text-[11px] text-muted-foreground">{r.label}</span>
-                            <span className="text-xs font-semibold text-foreground">{r.value}</span>
+            {/* Contrast card: Lena's entry vs Strata's entry */}
+            <div className="space-y-2">
+                {/* Lena's entry (before) */}
+                <div className="bg-muted/60 border border-border rounded-xl overflow-hidden">
+                    <div className="px-3.5 py-2 border-b border-border flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Lena's CORE entry</span>
                         </div>
-                    ))}
+                        <span className="text-[9px] bg-muted border border-border rounded px-1.5 py-0.5 text-muted-foreground font-medium">No partial flag</span>
+                    </div>
+                    <div className="divide-y divide-border/60">
+                        {[
+                            { label: 'PMO Number', value: 'PMO-2026-0412' },
+                            { label: 'Cartons', value: '35 · Status: RECEIVED ✓' },
+                            { label: 'Exclusion', value: '—' },
+                            { label: 'Claim', value: '—' },
+                        ].map(r => (
+                            <div key={r.label} className="flex items-center justify-between gap-3 px-3.5 py-2">
+                                <span className="text-[10px] text-muted-foreground">{r.label}</span>
+                                <span className="text-[10px] font-medium text-muted-foreground">{r.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="px-3.5 py-2 border-t border-border/60">
+                        <p className="text-[9px] text-muted-foreground italic">CORE shows 35 cartons received — no way to tell the order is incomplete from the system alone.</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+                    <ArrowDown className="h-3 w-3" />
+                    Strata changes this
+                </div>
+
+                {/* Strata's pre-filled entry */}
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                    <div className="px-3.5 py-2 border-b border-border bg-success/5 flex items-center gap-2">
+                        <Package className="h-3.5 w-3.5 text-success" />
+                        <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">CORE entry — ready to confirm</span>
+                    </div>
+                    <div className="divide-y divide-border">
+                        {[
+                            { label: 'PMO Number', value: 'PMO-2026-0412' },
+                            { label: 'Cartons received', value: '34/35' },
+                            { label: 'Short-shipped', value: 'Carton #34 · Line 24' },
+                            { label: 'Line 24 status', value: 'EXCLUDED' },
+                            { label: 'Reason', value: 'Short-ship · Carton #34' },
+                            { label: 'Claim', value: 'Omni #OM-2026-0412' },
+                        ].map(r => (
+                            <div key={r.label} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                                <span className="text-[11px] text-muted-foreground">{r.label}</span>
+                                <span className="text-xs font-semibold text-foreground">{r.value}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Short-ship note */}
+            {/* Short-ship warning */}
             <div className="bg-warning/5 border border-warning/30 rounded-xl px-3.5 py-3 flex items-start gap-2.5">
                 <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
@@ -75,15 +122,34 @@ export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
                 </div>
             </div>
 
-            {!confirmed ? (
+            {/* CORE sync animation while confirming */}
+            {coreState === 'confirming' && (
+                <div className="bg-ai/5 border border-ai/20 rounded-xl px-3.5 py-3 space-y-1.5 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2 text-xs">
+                        <div className="h-3.5 w-3.5 border-2 border-ai border-t-transparent rounded-full animate-spin shrink-0" />
+                        <span className="font-bold text-foreground">Submitting to CORE…</span>
+                    </div>
+                    {Array.from({ length: syncLines }, (_, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground animate-in fade-in duration-300">
+                            <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                            <span>{SYNC_LINES[i]}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* CTA / confirmed state */}
+            {coreState === 'review' && (
                 <button
                     onClick={handleConfirm}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
                 >
                     <CheckCircle2 className="h-4 w-4" />
-                    Confirm Receiving in Core
+                    Confirm Receiving in CORE
                 </button>
-            ) : (
+            )}
+
+            {coreState === 'confirmed' && (
                 <div className="space-y-3 animate-in fade-in duration-300">
                     <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2.5">
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
@@ -95,19 +161,20 @@ export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
                         </div>
                     </div>
                     <button
-                        onClick={() => {}}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl border border-border text-muted-foreground hover:bg-muted/30 transition-colors"
+                        onClick={() => onConfirm?.()}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
                     >
                         Notify Walter
                         <ChevronRight className="h-3.5 w-3.5" />
                     </button>
+                    <p className="text-[10px] text-muted-foreground text-center">Walter (CoNY Project Manager) will receive a Strata notification instead of a printed copy.</p>
                 </div>
             )}
 
-            {/* AS-IS contrast */}
+            {/* Before Strata */}
             <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Before Strata:</span> Lena (receiving team) loaded orders in CORE without flagging partial receipts — Lauren couldn't tell if an order was complete or not. Excluding a short-shipped item meant a separate email to accounting. Walter only found out when Lauren brought him a printed copy in person — always after the fact.
+                    <span className="font-medium text-foreground">Before Strata:</span> Lena's CORE entry showed 35 cartons with no partial flag, no exclusion, no claim reference. Lauren couldn't tell from CORE alone that an item was missing — she had to find out by printing documents and checking manually.
                 </p>
             </div>
 

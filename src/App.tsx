@@ -473,11 +473,13 @@ function App() {
       <DemoStepBanner />
 
       {/* FIXED NAVBAR (Unified) — hidden for email simulation, WRG Estimator routes & workspace/detail */}
+      {/* isBFIMobile: hide navbar for BFI mobile-frame steps (r1.6, a1.2b) so the phone renders full-screen */}
       {(isDemoActive
         ? currentStep.app !== 'email-marketplace'
           && currentStep.app !== 'wrg-estimator'
           && currentStep.app !== 'workspaces-submit'
           && !bfiLoginActive
+          && !(isBFI && ['r1.6', 'a1.2b'].includes(currentStep.id))
           && !['1.6', '2.1', '4.4'].includes(currentStep.id)
           && !(currentStep.id === '1.8' && currentStep.app !== 'crm')
           && !(currentStep.id === '3.5' && !isContinua)
@@ -498,7 +500,7 @@ function App() {
       )}
 
       {/* MAIN CONTENT VIEWPORT */}
-      <main className={`transition-all duration-300 ${(isDemoActive ? currentStep.app !== 'email-marketplace' && currentStep.app !== 'wrg-estimator' && currentStep.app !== 'workspaces-submit' && !bfiLoginActive : currentPage !== 'detail' && currentPage !== 'workspace') ? 'pt-16' : ''} ${isDemoActive ? (isSidebarCollapsed ? 'pl-0' : 'pl-80') + ' animate-in fade-in duration-500' : ''} min-h-screen bg-background`}>
+      <main className={`transition-all duration-300 ${(isDemoActive ? currentStep.app !== 'email-marketplace' && currentStep.app !== 'wrg-estimator' && currentStep.app !== 'workspaces-submit' && !bfiLoginActive && !(isBFI && ['r1.6', 'a1.2b'].includes(currentStep.id)) : currentPage !== 'detail' && currentPage !== 'workspace') ? 'pt-16' : ''} ${isDemoActive ? (isSidebarCollapsed ? 'pl-0' : 'pl-80') + ' animate-in fade-in duration-500' : ''} min-h-screen bg-background`}>
         {isDemoActive && <DemoAIIndicator />}
         {isDemoActive ? renderSimulation() : renderCurrentPage()}
       </main>

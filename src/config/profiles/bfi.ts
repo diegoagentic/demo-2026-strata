@@ -48,7 +48,25 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Quote + Pricing + Discount',
-        description: 'Email arrives from Robert Chen (Miller Knoll Rep) with PDF specs and SIF file. Strata parses the SIF via OCR, validates it against the CoNY contract through OVNIQ — correcting one price and flagging a restricted item — then calculates the discount automatically. What used to take 65 minutes takes seconds.',
+        description: 'Email arrives from Robert Chen (Miller Knoll Rep) with PDF specs and SIF file. Strata parses the SIF via OCR, validates it against the CoNY contract through OVNIQ — correcting one price on Filing Units ($8,100 → $7,560) — then calculates the discount automatically. What used to take 65 minutes takes seconds.',
+        app: 'bfi-agency-fee',
+        role: 'Account Manager',
+    },
+    {
+        id: 'a1.2b',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
+        title: 'Order Confirmation',
+        description: 'Robert Chen (Miller Knoll designer) receives a Strata notification confirming order Q-2026-0089 for DOE-2847. Before Strata, he waited 1–2 business days for Lauren\'s manual email — with no system visibility. Now the loop closes in seconds.',
+        app: 'bfi-agency-fee',
+        role: 'Designer',
+    },
+    {
+        id: 'a1.2c',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
+        title: 'PO & Labor · CORE Entry',
+        description: 'The Purchase Order from NYC Dept. of Education arrives — Strata captures it digitally instead of a manual R-drive save. The Workplace labor quote arrives in the same place. Lauren reviews both, confirms the 30-day delivery window, enters in CORE and EDI transmits to OVNIQ automatically.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -126,11 +144,13 @@ export const BFI_STEPS: DemoStep[] = [
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'r1.2': { mode: 'interactive', userAction: 'Dashboard overview · WIG document notification slides in → click → review Receiving Report + Bingo Sheet · click Run AI Analysis' },
     'r1.3': { mode: 'interactive', userAction: 'Watch the AI cross-reference 35 cartons — progress bar runs → bingo grid reveals → carton #34 flags red' },
-    'r1.4': { mode: 'interactive', userAction: 'Open Andy (HM) notification — POD request pre-drafted · send · then open Omni claim — pre-filled · select reason · submit · both done to continue' },
-    'r1.5': { mode: 'interactive', userAction: 'Confirm 34/35 cartons received in CORE — Line 24 flagged short-shipped · click Confirm Receiving in Core' },
+    'r1.4': { mode: 'interactive', userAction: 'Send POD request to Andy · wait for response · Andy confirms not shipped → open Omni claim · submit claim · proceed to CORE entry' },
+    'r1.5': { mode: 'interactive', userAction: 'Review Strata pre-filled CORE entry (34/35, Line 24 excluded, claim linked) · confirm → watch CORE sync animation · Notify Walter to advance' },
     'r1.6': { mode: 'interactive', userAction: 'See Walter\'s phone — notification arrives before paper · Walter sees items · delivery window · claim status · confirms' },
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · CPR flag on DOE-2847 · click to investigate' },
-    'a1.2': { mode: 'interactive', userAction: 'Review email from Robert Chen · click Run SIF validation → watch OVNIQ validate 4 lines → send restricted item notice → toggle City/State contract → apply discount & continue' },
+    'a1.2': { mode: 'interactive', userAction: 'Review email from Robert Chen · click Run SIF validation → watch OVNIQ validate 3 lines (1 price corrected) → accept correction → toggle City/State contract → apply discount & continue' },
+    'a1.2b': { mode: 'interactive', userAction: 'See Robert Chen\'s phone — order confirmation arrives · DOE-2847 · Q-2026-0089 created · tap to open · Robert acknowledges · loop closed' },
+    'a1.2c': { mode: 'interactive', userAction: 'Review PO from NYC DoE + labor quote from Workplace · confirm 30-day delivery window · confirm in CORE · watch EDI transmit to OVNIQ' },
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line-by-line · approve · see the pre-drafted message to Michael → send without leaving the screen' },
     'a1.4': { mode: 'interactive', userAction: 'Patricia verifies the agency fee — toggle match/gap scenario · confirm or flag the $1,250 discrepancy' },
 };
@@ -177,10 +197,22 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Orders ranked by urgency · DOE-2847 flagged · CPR discrepancy detected',
     ],
     'a1.2': [
-        'Reading SIF from Miller Knoll designer',
-        'Comparing line items against CoNY contract pricing',
+        'Reading SIF from Miller Knoll designer via OCR',
+        'Validating SIF against CoNY contract through OVNIQ',
+        'Filing Units ×6 corrected — $8,100 → $7,560 (T-code 18%)',
         'Calculating discount: (Sale ÷ List) − 1 = −37.50%',
-        'SIF validated · discount ready · OmniQuote cycle tracked',
+    ],
+    'a1.2b': [
+        'Order Q-2026-0089 created in CORE for DOE-2847',
+        'Confirmation sent to Robert Chen (Miller Knoll)',
+        'Robert Chen received Strata notification',
+        'Order acknowledged · loop closed · BFI can proceed to CPR reconciliation',
+    ],
+    'a1.2c': [
+        'Purchase Order received from NYC Dept. of Education',
+        'Workplace labor quote received — Michael\'s figures compiled',
+        'Both documents captured — ready for review and CORE entry',
+        'CORE entry confirmed · EDI transmission to OVNIQ initiated',
     ],
     'a1.3': [
         'Loading CPR document for DOE-2847',
@@ -200,5 +232,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const BFI_SELF_INDICATED: string[] = [
     'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
-    'a1.1', 'a1.2', 'a1.3', 'a1.4',
+    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.3', 'a1.4',
 ];

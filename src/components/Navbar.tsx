@@ -99,6 +99,11 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Finance / AR',
         photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
     },
+    'BFI Designer': {
+        name: 'Robert Chen',
+        role: 'Miller Knoll Rep · Designer',
+        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
@@ -119,6 +124,7 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
     if (app?.startsWith('bfi-')) {
         if (role === 'Project Manager') return 'BFI Project Manager';
         if (role === 'Finance / AR')    return 'BFI Finance';
+        if (role === 'Designer')        return 'BFI Designer';
         return 'BFI Account Manager';
     }
     if (role === 'System') {

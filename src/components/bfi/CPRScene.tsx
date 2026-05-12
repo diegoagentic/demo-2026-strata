@@ -9,7 +9,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, Building2, Edit3, Send } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, Building2, Edit3, Send, FileText, Mail, ChevronRight, Eye, Download } from 'lucide-react'
 import { ReasonDialog } from '../shared'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -18,7 +18,7 @@ interface CPRSceneProps {
     onSend?: () => void
 }
 
-type Phase = 'reconciling' | 'messaging'
+type Phase = 'documents' | 'reconciling' | 'messaging'
 type LineState = 'pending' | 'approved' | 'edited'
 
 const CPR_LINES = [
@@ -42,7 +42,7 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
-    const [phase, setPhase]           = useState<Phase>('reconciling')
+    const [phase, setPhase]           = useState<Phase>('documents')
     const [lineStates, setLineStates] = useState<Record<string, LineState>>({
         carpenters: 'pending',
         'ot-carpenters': 'pending',
@@ -89,6 +89,98 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
     const totalImpact = discrepancyLines
         .map(l => l.impact ?? '$0')
         .reduce((sum, v) => sum + parseInt(v.replace(/[^0-9-]/g, '')), 0)
+
+    // ── Phase: documents ──────────────────────────────────────────────────────
+    if (phase === 'documents') {
+        return (
+            <div className="space-y-4">
+                {/* Stakes banner */}
+                <div className="bg-warning/5 border border-warning/30 rounded-xl p-3.5 flex items-start gap-2.5">
+                    <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                    <div className="text-xs flex-1">
+                        <div className="font-bold text-foreground">Payment-critical · City of New York</div>
+                        <div className="text-muted-foreground mt-0.5 leading-relaxed">
+                            Union labor (Teamsters · Carpenters) — payments must match to the cent.
+                            This is an extra charge billed to the city for installation labor.{' '}
+                            <span className="font-bold text-foreground">City of NY does not pay if CPR hours don't match.</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* AI banner */}
+                <div className="bg-ai/5 border border-ai/20 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5">
+                    <Sparkles className="h-4 w-4 text-ai shrink-0" />
+                    <div className="text-xs">
+                        <span className="font-bold text-foreground">CPR documentation received</span>
+                        <span className="text-muted-foreground"> · Vendor Order #17706 · 4 documents · Strata extracted hours for review</span>
+                    </div>
+                </div>
+
+                {/* Doc cards */}
+                {[
+                    {
+                        icon: <Mail className="h-4 w-4 text-blue-500 shrink-0" />,
+                        title: 'Email · Michael Boyle · Director of Strategic Accounts',
+                        subtitle: 'Vendor Order #17706 · CC: Lauren DeMarco, Kate (President), Patricia (Finance)',
+                        badge: null,
+                    },
+                    {
+                        icon: <FileText className="h-4 w-4 text-violet-500 shrink-0" />,
+                        title: 'Workplace Invoice · Vendor Order #17706',
+                        subtitle: 'Inside Delivery · Installation · OT Differential · Truck Charge',
+                        badge: null,
+                    },
+                    {
+                        icon: <FileText className="h-4 w-4 text-amber-500 shrink-0" />,
+                        title: 'Timesheet · Carpenter · Manual signature',
+                        subtitle: 'Hours: 1:00 AM – 3:30 AM · Vendor Order #17706',
+                        badge: null,
+                    },
+                    {
+                        icon: <FileText className="h-4 w-4 text-success shrink-0" />,
+                        title: 'Certified Pay Stub · Required by City of New York',
+                        subtitle: 'Union payroll documentation · passed to NYC for payment verification',
+                        badge: (
+                            <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0">
+                                City required
+                            </span>
+                        ),
+                    },
+                ].map(doc => (
+                    <div key={doc.title} className="border border-border rounded-xl bg-card overflow-hidden">
+                        <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-border bg-muted/40">
+                            {doc.icon}
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[11px] font-bold text-foreground leading-tight">{doc.title}</div>
+                                <div className="text-[10px] text-muted-foreground">{doc.subtitle}</div>
+                            </div>
+                            {doc.badge}
+                        </div>
+                        <div className="px-3.5 py-2.5 flex gap-2">
+                            <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-[10px] font-semibold text-muted-foreground hover:bg-muted/30 transition-colors">
+                                <Eye className="h-3 w-3" />
+                                Preview
+                            </button>
+                            <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-[10px] font-semibold text-muted-foreground hover:bg-muted/30 transition-colors">
+                                <Download className="h-3 w-3" />
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                ))}
+
+                <button
+                    onClick={() => setPhase('reconciling')}
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                >
+                    Run CPR reconciliation
+                    <ChevronRight className="h-4 w-4" />
+                </button>
+
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+            </div>
+        )
+    }
 
     // ── Phase: reconciling ────────────────────────────────────────────────────
     if (phase === 'reconciling') {

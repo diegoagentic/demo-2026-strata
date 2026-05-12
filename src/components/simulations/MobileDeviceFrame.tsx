@@ -7,12 +7,14 @@ interface MobileDeviceFrameProps {
     children: React.ReactNode;
     className?: string;
     overlay?: React.ReactNode;
+    size?: 'md' | 'lg';
 }
 
-export default function MobileDeviceFrame({ children, className, overlay }: MobileDeviceFrameProps) {
+export default function MobileDeviceFrame({ children, className, overlay, size = 'md' }: MobileDeviceFrameProps) {
+    const width = size === 'lg' ? 'w-[430px]' : 'w-[375px]'
     return (
         <div className={clsx('flex justify-center', className)}>
-            <div className="relative w-[375px] bg-background rounded-[3rem] border-[6px] border-zinc-800 dark:border-zinc-600 shadow-2xl shadow-black/30 dark:shadow-black/60 overflow-hidden">
+            <div className={`relative ${width} bg-background rounded-[3rem] border-[6px] border-zinc-800 dark:border-zinc-600 shadow-2xl shadow-black/30 dark:shadow-black/60 overflow-hidden`}>
                 {/* Dynamic Island */}
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30">
                     <div className="w-[120px] h-[34px] bg-black rounded-full flex items-center justify-center">

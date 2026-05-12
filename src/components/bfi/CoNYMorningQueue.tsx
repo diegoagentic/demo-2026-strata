@@ -163,6 +163,13 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                 4 active orders · {sceneState === 'notified' ? '1 requires immediate action' : 'monitoring…'}
             </p>
 
+            {/* Before Strata */}
+            <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Before Strata:</span> Lauren managed all CoNY orders through individual emails — no priority view, no system tracking. CPR discrepancies weren't flagged until she manually compared documents line by line.
+                </p>
+            </div>
+
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>
     )

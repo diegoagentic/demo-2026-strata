@@ -23,6 +23,8 @@ import CoNYMorningQueue from './CoNYMorningQueue'
 import QuoteIntakePricingScene from './QuoteIntakePricingScene'
 import CPRScene from './CPRScene'
 import AgencyFeeVerifyScene from './AgencyFeeVerifyScene'
+import DesignerResponseScene from './DesignerResponseScene'
+import POLaborScene from './POLaborScene'
 
 const STEP_TITLES: Record<string, string> = {
     'r1.2': 'Product Receiving',
@@ -31,6 +33,8 @@ const STEP_TITLES: Record<string, string> = {
     'r1.5': 'Product Receiving',
     'a1.1': 'Agency Fee',
     'a1.2': 'Agency Fee',
+    'a1.2b': 'Agency Fee',
+    'a1.2c': 'Agency Fee',
     'a1.3': 'Agency Fee',
     'a1.4': 'Agency Fee',
 }
@@ -42,9 +46,20 @@ export default function BFIPage() {
     // Walter (r1.6) — CoNY client PM on phone, breaks out of the MBIPageShell
     if (stepId === 'r1.6') {
         return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center py-8 animate-in fade-in duration-500">
-                <MobileDeviceFrame>
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center py-6 animate-in fade-in duration-500">
+                <MobileDeviceFrame size="lg">
                     <WalterNotifScene key="r1.6" onConfirm={nextStep} />
+                </MobileDeviceFrame>
+            </div>
+        )
+    }
+
+    // Robert Chen (a1.2b) — Miller Knoll designer phone, order confirmation
+    if (stepId === 'a1.2b') {
+        return (
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center py-6 animate-in fade-in duration-500">
+                <MobileDeviceFrame size="lg">
+                    <DesignerResponseScene key="a1.2b" onAcknowledge={nextStep} />
                 </MobileDeviceFrame>
             </div>
         )
@@ -73,6 +88,7 @@ export default function BFIPage() {
                 {stepId === 'r1.5' && <CoreEntryScene onConfirm={nextStep} />}
                 {stepId === 'a1.1' && <CoNYMorningQueue onSelectOrder={nextStep} />}
                 {stepId === 'a1.2' && <QuoteIntakePricingScene onApply={nextStep} />}
+                {stepId === 'a1.2c' && <POLaborScene onConfirm={nextStep} />}
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
             </div>

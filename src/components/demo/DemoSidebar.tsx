@@ -93,6 +93,19 @@ const DATA_THREADS_BY_PROFILE: Record<string, Record<string, string>> = {
         'w2.4': 'Proposal approved and released to client — 92% time saved',
     },
     workspaces: WORKSPACES_DATA_THREADS,
+    bfi: {
+        'a1.1':  'DOE-2847 flagged · CPR discrepancy detected',
+        'a1.2':  'SIF corrected · 1 price adjusted · discount calculated',
+        'a1.2b': 'Order Q-2026-0089 confirmed · Robert Chen acknowledged',
+        'a1.2c': 'PO + labor captured · CORE entry confirmed · EDI transmitted',
+        'a1.3':  'CPR approved · −$2,340 applied · relayed to Nancy Bos',
+        'a1.4':  'Agency fee verified · $41,040 match confirmed',
+        'r1.2':  'WIG report received · bingo sheet ready for AI',
+        'r1.3':  'Carton #34 missing · 1 discrepancy in 10 seconds',
+        'r1.4':  'Andy notified · Omni claim #OM-2026-0412 filed',
+        'r1.5':  '34/35 confirmed in CORE · Line 24 excluded',
+        'r1.6':  'Walter notified · crew scheduling initiated',
+    },
     leland: {
         'l0.1': 'Inbox set · the manual baseline',
         'l1.1': 'PO captured · ready for the next check',
@@ -122,7 +135,8 @@ export default function DemoSidebar() {
     const isWRG = activeProfile.id === 'wrg';
     const isLeland = activeProfile.id === 'leland';
     const isWorkspaces = activeProfile.id === 'workspaces';
-    const hasDataThreads = isContinua || isDupler || isWRG || isLeland || isWorkspaces;
+    const isBFI = activeProfile.id === 'bfi';
+    const hasDataThreads = isContinua || isDupler || isWRG || isLeland || isWorkspaces || isBFI;
 
     // Invert: when app is dark → sidebar is light, when app is light → sidebar is dark
     const isDarkSidebar = theme === 'light';

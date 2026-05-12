@@ -166,6 +166,9 @@ export default function AIAnalysisScene({ onComplete }: AIAnalysisSceneProps) {
                 <div className="text-xs flex-1">
                     <div className="font-bold text-destructive">Carton #34 missing</div>
                     <div className="text-muted-foreground mt-0.5">Line 24 · Chair Frame Assembly ×1 · short-shipped at origin</div>
+                    <div className="text-muted-foreground mt-1 text-[10px] italic">
+                        The bingo sheet has no "missing" checkbox — Workplace wrote manually. Strata detects what the paper form can't flag.
+                    </div>
                 </div>
             </div>
 

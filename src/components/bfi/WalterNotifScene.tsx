@@ -11,7 +11,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { CheckCircle2, AlertTriangle, Calendar, Package, ChevronDown, ChevronUp, Bell } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, Calendar, Package, ChevronDown, ChevronUp, Bell, Zap } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 
 interface WalterNotifSceneProps {
@@ -118,6 +118,25 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                     </div>
                 </div>
 
+                {/* Key moments strip */}
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-muted/40 border border-border rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
+                        <Zap className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <div className="text-[10px] font-bold text-foreground">Instant</div>
+                        <div className="text-[9px] text-muted-foreground leading-tight">vs printed copy, days later</div>
+                    </div>
+                    <div className="bg-muted/40 border border-border rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
+                        <Calendar className="h-3.5 w-3.5 text-foreground shrink-0" />
+                        <div className="text-[10px] font-bold text-foreground">May 14–21</div>
+                        <div className="text-[9px] text-muted-foreground leading-tight">delivery window · 8 days</div>
+                    </div>
+                    <div className="bg-muted/40 border border-border rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                        <div className="text-[10px] font-bold text-foreground">Claim filed</div>
+                        <div className="text-[9px] text-muted-foreground leading-tight">#OM-2026-0412</div>
+                    </div>
+                </div>
+
                 {/* Order summary */}
                 <div className="border border-border rounded-xl p-3 space-y-2.5 bg-card">
                     <div className="flex items-center gap-2">
@@ -145,10 +164,17 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                         <Calendar className="h-3 w-3 shrink-0" />
                         Delivery window: May 14 – May 21, 2026
                     </div>
+                </div>
 
-                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                        <AlertTriangle className="h-3 w-3 shrink-0" />
-                        8 storage days remaining — coordinate crew before May 14
+                {/* Storage urgency card */}
+                <div className="bg-warning/5 border border-warning/30 rounded-xl px-3 py-2.5 flex items-start gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="text-[11px] font-bold text-foreground">8 days remaining in WIG storage</div>
+                            <span className="text-[9px] font-bold bg-warning/20 text-warning px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0">Urgent</span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Coordinate installation crew before May 14 to avoid storage surcharges.</div>
                     </div>
                 </div>
 
@@ -180,8 +206,8 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                 </div>
 
                 {/* Before Strata */}
-                <div className="bg-muted/40 border border-border rounded-xl px-3 py-2 text-[10px] text-muted-foreground">
-                    Before Strata: Walter only found out when Lauren brought him a printed copy in person — always after the fact.
+                <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5 text-[10px] text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Before Strata:</span> Lauren and Kate both reported that Walter was completely out of the loop until Lauren brought him a printed copy in person — always after the fact. BFI never spoke directly with Walter during the project.
                 </div>
             </div>
 
