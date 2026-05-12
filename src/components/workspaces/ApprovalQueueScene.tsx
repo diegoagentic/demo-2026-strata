@@ -20,7 +20,7 @@ import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 type SceneState   = 'list' | 'notified'
-type StatusFilter = 'all' | 'pending' | 'approved' | 'sla'
+type StatusFilter = 'all' | 'pending' | 'approved'
 type CatFilter    = 'all' | 'fuel' | 'meals' | 'travel' | 'parking' | 'office'
 
 // ── All expenses visible in the list view ────────────────────────────────────
@@ -37,7 +37,6 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
     { key: 'all',      label: 'All' },
     { key: 'pending',  label: 'Pending' },
     { key: 'approved', label: 'Approved' },
-    { key: 'sla',      label: '⚠️ SLA' },
 ]
 
 const CAT_FILTERS: { key: CatFilter; label: string }[] = [
@@ -112,12 +111,11 @@ export default function ApprovalQueueScene({ onReview }: { onReview?: () => void
             </div>
 
             {/* ── KPI row ── */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3">
                 {[
-                    { label: 'Pending',      value: '3',    sub: 'approvals',   color: 'text-warning',          bg: 'bg-warning/5'      },
-                    { label: '⚠️ SLA',       value: '1',    sub: 'overdue',     color: 'text-destructive',      bg: 'bg-destructive/5'  },
-                    { label: 'Approved',     value: '14',   sub: 'this month',  color: 'text-success',          bg: 'bg-success/5'      },
-                    { label: 'Avg response', value: '1.2d', sub: 'your SLA',    color: 'text-muted-foreground', bg: ''                  },
+                    { label: 'Pending',      value: '3',    sub: 'approvals',  color: 'text-warning',          bg: 'bg-warning/5' },
+                    { label: 'Approved',     value: '14',   sub: 'this month', color: 'text-success',          bg: 'bg-success/5' },
+                    { label: 'Avg response', value: '1.2d', sub: 'this month', color: 'text-muted-foreground', bg: ''             },
                 ].map(s => (
                     <div key={s.label} className={`${s.bg} border border-border rounded-xl px-3 py-2.5 space-y-0.5`}>
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</p>
