@@ -8,18 +8,18 @@
 //
 //   Dashboard — navbar tab permanente (no es un paso del demo)
 //
-//   FLOW 1 — Product Receiving (5 steps)
+//   FLOW 1 — Agency Fee (4 steps)
+//     a1.1: CoNY Order Queue   — morning triage · DOE-2847 CPR flag
+//     a1.2: Quote + Pricing    — form + discount calc + SIF timeline + order tracker
+//     a1.3: CPR Reconciliation — per-line approval + relay to Michael/Nancy inline
+//     a1.4: Agency Fee Verify  — Patricia verifies fee vs Nancy's report · closes
+//
+//   FLOW 2 — Product Receiving (5 steps)
 //     r1.2: WIG Bingo Check    — comienza con dashboard overview + notif WIG · ready for AI analysis
 //     r1.3: AI Analysis        — progress bar → bingo grid · #34 missing
 //     r1.4: Alert & Claim      — notify Andy (HM) · open Omni claim
 //     r1.5: Core Entry         — 34/35 confirmed · confirm in CORE
 //     r1.6: Notify Walter      — CoNY PM sees status before paper arrives (mobile)
-//
-//   FLOW 2 — Agency Fee (4 steps)
-//     a1.1: CoNY Order Queue   — morning triage · DOE-2847 CPR flag
-//     a1.2: Quote + Pricing    — form + discount calc + SIF timeline + order tracker
-//     a1.3: CPR Reconciliation — per-line approval + relay to Michael/Nancy inline
-//     a1.4: Agency Fee Verify  — Patricia verifies fee vs Nancy's report · closes
 //
 // PRESENTATION DATE: May 14, 2026
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -32,61 +32,12 @@ import type { StepBehavior } from '../../components/demo/DemoStepBanner';
 export const BFI_STEPS: DemoStep[] = [
 
     // ═══════════════════════════════════════════
-    // FLOW 1: Product Receiving (5 steps)
-    // ═══════════════════════════════════════════
-    {
-        id: 'r1.2',
-        groupId: 1,
-        groupTitle: 'Flow 1: Product Receiving',
-        title: 'WIG Bingo Check',
-        description: 'WIG sends the Receiving Report and Bingo Sheet as a Word document. Strata captures it digitally and prepares the AI analysis — eliminating the manual cross-reference that used to take Lena up to a week.',
-        app: 'bfi-receiving',
-        role: 'Account Lead',
-    },
-    {
-        id: 'r1.3',
-        groupId: 1,
-        groupTitle: 'Flow 1: Product Receiving',
-        title: 'AI Analysis',
-        description: 'Strata cross-references the packing list against the bingo sheet across 3 pages — carton by carton — and flags any discrepancy in under 10 seconds. Carton #34 is missing and pulsing red.',
-        app: 'bfi-receiving',
-        role: 'Account Lead',
-    },
-    {
-        id: 'r1.4',
-        groupId: 1,
-        groupTitle: 'Flow 1: Product Receiving',
-        title: 'Alert & Claim',
-        description: 'Strata auto-drafts the notification to Andy at Herman Miller and the Omni service claim — both pre-filled with the PMO, bingo number, line item, and item description. Lauren sends both with one click each.',
-        app: 'bfi-receiving',
-        role: 'Account Lead',
-    },
-    {
-        id: 'r1.5',
-        groupId: 1,
-        groupTitle: 'Flow 1: Product Receiving',
-        title: 'Core Entry',
-        description: 'With 34/35 cartons confirmed and carton #34 flagged as short-shipped, Lauren confirms receiving in CORE. Line 24 is excluded from the entry until the claim resolves.',
-        app: 'bfi-receiving',
-        role: 'Account Lead',
-    },
-    {
-        id: 'r1.6',
-        groupId: 1,
-        groupTitle: 'Flow 1: Product Receiving',
-        title: 'Notify Walter',
-        description: 'Strata notifies Walter (CoNY Project Manager) digitally — before the paper work order arrives. He sees which items are ready, the delivery window, and the missing carton claim status.',
-        app: 'bfi-receiving',
-        role: 'Project Manager',
-    },
-
-    // ═══════════════════════════════════════════
-    // FLOW 2: Agency Fee (4 steps · consolidated)
+    // FLOW 1: Agency Fee (4 steps · consolidated)
     // ═══════════════════════════════════════════
     {
         id: 'a1.1',
-        groupId: 2,
-        groupTitle: 'Flow 2: Agency Fee',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
         title: 'CoNY Order Queue',
         description: 'Lauren\'s morning starts with a prioritized view of active CoNY orders — CPR discrepancies, pricing flags, and receiving gaps surfaced by Strata. DOE-2847 has a critical CPR issue requiring immediate attention.',
         app: 'bfi-agency-fee',
@@ -94,8 +45,8 @@ export const BFI_STEPS: DemoStep[] = [
     },
     {
         id: 'a1.2',
-        groupId: 2,
-        groupTitle: 'Flow 2: Agency Fee',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
         title: 'Quote + Pricing + Discount',
         description: 'Strata validates the SIF against the CoNY contract, calculates the discount automatically ((Sale ÷ List) − 1), and tracks the OmniQuote SIF cycle in real time. What used to take 65 minutes in OmniQuote takes seconds.',
         app: 'bfi-agency-fee',
@@ -103,8 +54,8 @@ export const BFI_STEPS: DemoStep[] = [
     },
     {
         id: 'a1.3',
-        groupId: 2,
-        groupTitle: 'Flow 2: Agency Fee',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
         title: 'CPR Reconciliation',
         description: 'Payment-critical — City of NY does not pay if CPR hours don\'t match. Strata detects the discrepancy (Carpenters −5h, OT −2h) and pre-drafts the revision message to Michael and Nancy. Lauren approves and sends without leaving the screen.',
         app: 'bfi-agency-fee',
@@ -112,12 +63,61 @@ export const BFI_STEPS: DemoStep[] = [
     },
     {
         id: 'a1.4',
-        groupId: 2,
-        groupTitle: 'Flow 2: Agency Fee',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
         title: 'Agency Fee Verify',
         description: 'Patricia verifies the expected agency fee from CoNY contract T-codes against the MK Invoice Processor report. Strata auto-detects a $1,250 discrepancy — the first time BFI has ever caught this automatically.',
         app: 'bfi-agency-fee',
         role: 'Finance / AR',
+    },
+
+    // ═══════════════════════════════════════════
+    // FLOW 2: Product Receiving (5 steps)
+    // ═══════════════════════════════════════════
+    {
+        id: 'r1.2',
+        groupId: 2,
+        groupTitle: 'Flow 2: Product Receiving',
+        title: 'WIG Bingo Check',
+        description: 'WIG sends the Receiving Report and Bingo Sheet as a Word document. Strata captures it digitally and prepares the AI analysis — eliminating the manual cross-reference that used to take Lena up to a week.',
+        app: 'bfi-receiving',
+        role: 'Account Lead',
+    },
+    {
+        id: 'r1.3',
+        groupId: 2,
+        groupTitle: 'Flow 2: Product Receiving',
+        title: 'AI Analysis',
+        description: 'Strata cross-references the packing list against the bingo sheet across 3 pages — carton by carton — and flags any discrepancy in under 10 seconds. Carton #34 is missing and pulsing red.',
+        app: 'bfi-receiving',
+        role: 'Account Lead',
+    },
+    {
+        id: 'r1.4',
+        groupId: 2,
+        groupTitle: 'Flow 2: Product Receiving',
+        title: 'Alert & Claim',
+        description: 'Strata auto-drafts the notification to Andy at Herman Miller and the Omni service claim — both pre-filled with the PMO, bingo number, line item, and item description. Lauren sends both with one click each.',
+        app: 'bfi-receiving',
+        role: 'Account Lead',
+    },
+    {
+        id: 'r1.5',
+        groupId: 2,
+        groupTitle: 'Flow 2: Product Receiving',
+        title: 'Core Entry',
+        description: 'With 34/35 cartons confirmed and carton #34 flagged as short-shipped, Lauren confirms receiving in CORE. Line 24 is excluded from the entry until the claim resolves.',
+        app: 'bfi-receiving',
+        role: 'Account Lead',
+    },
+    {
+        id: 'r1.6',
+        groupId: 2,
+        groupTitle: 'Flow 2: Product Receiving',
+        title: 'Notify Walter',
+        description: 'Strata notifies Walter (CoNY Project Manager) digitally — before the paper work order arrives. He sees which items are ready, the delivery window, and the missing carton claim status.',
+        app: 'bfi-receiving',
+        role: 'Project Manager',
     },
 ];
 
