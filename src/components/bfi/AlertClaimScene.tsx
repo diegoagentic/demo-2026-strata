@@ -26,7 +26,7 @@ Line 24 — Chair Frame Assembly ×1 is missing.
 Could you confirm the shipping status and provide tracking for the missing carton?
 
 Thank you,
-Lauren G. — BFI Furniture Industries`
+Lauren D. — BFI Furniture Industries`
 
 const CLAIM_FIELDS = [
     { label: 'PMO Number',   value: 'PMO-2026-0412' },
@@ -150,22 +150,22 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
 
             {/* Modal — Notify Andy */}
             {showNotify && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
-                            <div className="text-xs font-bold text-foreground">Notify Andy · Herman Miller</div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
+                    <div className="w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
+                            <div className="text-sm font-bold text-foreground">Notify Andy · Herman Miller</div>
                             <button onClick={() => setShowNotify(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
-                        <div className="p-4 space-y-3">
-                            <div className="space-y-1.5">
+                        <div className="p-5 space-y-4">
+                            <div className="space-y-2">
                                 {[
                                     { label: 'To', value: 'andy@hermanmiller.com' },
                                     { label: 'Subject', value: 'Missing carton alert — PMO-2026-0412 · Bingo #34' },
                                 ].map(f => (
-                                    <div key={f.label} className="flex items-start gap-2 text-[11px] border-b border-border/50 pb-1.5">
-                                        <span className="text-muted-foreground w-14 shrink-0 pt-0.5">{f.label}:</span>
+                                    <div key={f.label} className="flex items-start gap-3 text-xs border-b border-border/50 pb-2">
+                                        <span className="text-muted-foreground w-16 shrink-0 pt-0.5">{f.label}:</span>
                                         <span className="text-foreground font-medium">{f.value}</span>
                                     </div>
                                 ))}
@@ -173,21 +173,21 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                             <textarea
                                 readOnly
                                 defaultValue={NOTIFY_DRAFT}
-                                className="w-full h-40 text-[11px] text-muted-foreground bg-muted/30 border border-border rounded-xl px-3 py-2.5 resize-none font-mono leading-relaxed"
+                                className="w-full h-52 text-xs text-muted-foreground bg-muted/30 border border-border rounded-xl px-4 py-3 resize-none font-mono leading-relaxed"
                             />
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowNotify(false)}
-                                    className="flex-1 text-xs font-semibold text-muted-foreground py-2.5 rounded-xl border border-border hover:bg-muted/30 transition-colors"
+                                    className="flex-1 text-sm font-semibold text-muted-foreground py-3 rounded-xl border border-border hover:bg-muted/30 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSendNotify}
                                     disabled={sending}
-                                    className="flex-1 flex items-center justify-center gap-1.5 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-xs font-bold py-2.5 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
+                                    className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-sm font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
                                 >
-                                    <Mail className="h-3.5 w-3.5" />
+                                    <Mail className="h-4 w-4" />
                                     {sending ? 'Sending…' : 'Send'}
                                 </button>
                             </div>
@@ -198,36 +198,36 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
 
             {/* Modal — Omni Claim */}
             {showClaim && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
-                            <div className="text-xs font-bold text-foreground">Omni Service Claim · Pre-filled</div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
+                    <div className="w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
+                            <div className="text-sm font-bold text-foreground">Omni Service Claim · Pre-filled</div>
                             <button onClick={() => setShowClaim(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
-                        <div className="p-4 space-y-3">
+                        <div className="p-5 space-y-4">
                             <div className="border border-border rounded-xl overflow-hidden">
                                 {CLAIM_FIELDS.map((f, i) => (
-                                    <div key={f.label} className={`flex items-center justify-between gap-3 px-3.5 py-2.5 ${i < CLAIM_FIELDS.length - 1 ? 'border-b border-border' : ''}`}>
-                                        <span className="text-[11px] text-muted-foreground">{f.label}</span>
-                                        <span className="text-xs font-semibold text-foreground">{f.value}</span>
+                                    <div key={f.label} className={`flex items-center justify-between gap-3 px-4 py-3 ${i < CLAIM_FIELDS.length - 1 ? 'border-b border-border' : ''}`}>
+                                        <span className="text-xs text-muted-foreground">{f.label}</span>
+                                        <span className="text-sm font-semibold text-foreground">{f.value}</span>
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowClaim(false)}
-                                    className="flex-1 text-xs font-semibold text-muted-foreground py-2.5 rounded-xl border border-border hover:bg-muted/30 transition-colors"
+                                    className="flex-1 text-sm font-semibold text-muted-foreground py-3 rounded-xl border border-border hover:bg-muted/30 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSubmitClaim}
                                     disabled={submitting}
-                                    className="flex-1 flex items-center justify-center gap-1.5 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-xs font-bold py-2.5 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
+                                    className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-sm font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
                                 >
-                                    <FileWarning className="h-3.5 w-3.5" />
+                                    <FileWarning className="h-4 w-4" />
                                     {submitting ? 'Filing…' : 'Submit Claim'}
                                 </button>
                             </div>
