@@ -107,7 +107,7 @@ export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
             {/* AS-IS contrast */}
             <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Before Strata:</span> CORE entry required manual line-by-line input. Excluding a short-shipped item meant a separate email to accounting and a manual note. Walter only found out when Lauren brought him a printed copy in person — always after the fact.
+                    <span className="font-medium text-foreground">Before Strata:</span> Lena (receiving team) loaded orders in CORE without flagging partial receipts — Lauren couldn't tell if an order was complete or not. Excluding a short-shipped item meant a separate email to accounting. Walter only found out when Lauren brought him a printed copy in person — always after the fact.
                 </p>
             </div>
 

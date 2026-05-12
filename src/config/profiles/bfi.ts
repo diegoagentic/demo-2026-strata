@@ -48,7 +48,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Quote + Pricing + Discount',
-        description: 'Strata validates the SIF against the CoNY contract, calculates the discount automatically ((Sale ÷ List) − 1), and tracks the OmniQuote SIF cycle in real time. What used to take 65 minutes in OmniQuote takes seconds.',
+        description: 'Email arrives from Robert Chen (Miller Knoll Rep) with PDF specs and SIF file. Strata parses the SIF via OCR, validates it against the CoNY contract through OVNIQ — correcting one price and flagging a restricted item — then calculates the discount automatically. What used to take 65 minutes takes seconds.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -126,11 +126,11 @@ export const BFI_STEPS: DemoStep[] = [
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'r1.2': { mode: 'interactive', userAction: 'Dashboard overview · WIG document notification slides in → click → review Receiving Report + Bingo Sheet · click Run AI Analysis' },
     'r1.3': { mode: 'interactive', userAction: 'Watch the AI cross-reference 35 cartons — progress bar runs → bingo grid reveals → carton #34 flags red' },
-    'r1.4': { mode: 'interactive', userAction: 'Send the auto-drafted notification to Andy (HM) and file the Omni claim — both pre-filled · one click each' },
+    'r1.4': { mode: 'interactive', userAction: 'Open Andy (HM) notification — POD request pre-drafted · send · then open Omni claim — pre-filled · select reason · submit · both done to continue' },
     'r1.5': { mode: 'interactive', userAction: 'Confirm 34/35 cartons received in CORE — Line 24 flagged short-shipped · click Confirm Receiving in Core' },
     'r1.6': { mode: 'interactive', userAction: 'See Walter\'s phone — notification arrives before paper · Walter sees items · delivery window · claim status · confirms' },
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · CPR flag on DOE-2847 · click to investigate' },
-    'a1.2': { mode: 'interactive', userAction: 'Review the auto-calculated discount (-37.50%) · see the SIF cycle status · apply and continue' },
+    'a1.2': { mode: 'interactive', userAction: 'Review email from Robert Chen · click Run SIF validation → watch OVNIQ validate 4 lines → send restricted item notice → toggle City/State contract → apply discount & continue' },
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line-by-line · approve · see the pre-drafted message to Michael → send without leaving the screen' },
     'a1.4': { mode: 'interactive', userAction: 'Patricia verifies the agency fee — toggle match/gap scenario · confirm or flag the $1,250 discrepancy' },
 };

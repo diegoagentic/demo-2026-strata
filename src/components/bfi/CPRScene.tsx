@@ -267,7 +267,7 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
             <div className="bg-ai/5 border border-ai/20 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">Pre-drafted relay to Michael · Nancy Bos · Miller Knoll Invoice Processor</div>
+                    <div className="font-bold text-foreground">Pre-drafted relay · Michael Boyle → Nancy Bos</div>
                     <div className="text-muted-foreground mt-0.5">
                         Before Strata: this email took 1–3 days via manual follow-up. Review, edit if needed, send inline.
                     </div>
@@ -298,7 +298,7 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
                 <div className="flex items-center justify-between px-3.5 py-2 border-b border-border bg-muted/40">
                     <div>
                         <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">To: Michael Boyle (via Strata)</div>
-                        <div className="text-[10px] text-muted-foreground">Relayed to: Nancy Bos · MK Invoice Processor</div>
+                        <div className="text-[10px] text-muted-foreground">Relayed to: Nancy Bos · Miller Knoll Invoice Processor</div>
                     </div>
                     {!sent && (
                         <button onClick={() => setEditing(v => !v)} className="text-[11px] font-semibold text-ai hover:text-ai/80 transition-colors">

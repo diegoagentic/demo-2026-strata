@@ -218,7 +218,7 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                             </button>
                         </div>
 
-                        <div className="p-5 space-y-4">
+                        <div className="p-5 space-y-4 overflow-y-auto max-h-[70vh]">
                             {/* Incident banner */}
                             <div className="flex items-start gap-3 bg-destructive/5 border border-destructive/30 rounded-xl px-4 py-3">
                                 <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />

@@ -27,9 +27,9 @@ const VALIDATION_LINES = [
 ]
 
 const DISCOUNT_LINES = [
-    { product: 'Workstations ×24',   list: '$240,000', sale: '$144,000', formula: '(144,000 ÷ 240,000) − 1', pct: '−40.0%' },
-    { product: 'Lounge Seating ×12', list: '$140,000', sale: '$84,000',  formula: '(84,000 ÷ 140,000) − 1',  pct: '−40.0%' },
-    { product: 'Filing Units ×6',    list: '$12,600',  sale: '$7,560',   formula: '(7,560 ÷ 12,600) − 1',    pct: '−40.0%' },
+    { product: 'Workstations ×24',   list: '$240,000', sale: '$144,000', pct: '−40.0%' },
+    { product: 'Lounge Seating ×12', list: '$140,000', sale: '$84,000',  pct: '−40.0%' },
+    { product: 'Filing Units ×6',    list: '$12,600',  sale: '$7,560',   pct: '−40.0%' },
 ]
 
 const PANEL_DRAFT = `Hi Robert,
@@ -163,8 +163,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
 
                 <button
                     onClick={() => setPhase('validating')}
-                    disabled={!ocr}
-                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 disabled:opacity-50 transition-all shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
                 >
                     <Sparkles className="h-4 w-4" />
                     Run SIF validation →
@@ -376,22 +375,36 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                     <span className="text-right">Sale</span>
                     <span className="text-right">Discount</span>
                 </div>
-                {DISCOUNT_LINES.map((line) => (
-                    <div key={line.product} className="grid grid-cols-4 gap-0 px-3.5 py-2.5 text-xs border-t border-border items-start">
-                        <span className="font-medium text-foreground text-[11px]">{line.product}</span>
-                        <span className="text-right text-muted-foreground tabular-nums text-[11px]">{line.list}</span>
-                        <span className="text-right text-muted-foreground tabular-nums text-[11px]">{line.sale}</span>
-                        <span className="text-right font-bold text-destructive tabular-nums text-[11px]">{line.pct}</span>
+                {contractType === 'city' ? (
+                    <>
+                        {DISCOUNT_LINES.map((line) => (
+                            <div key={line.product} className="grid grid-cols-4 gap-0 px-3.5 py-2.5 text-xs border-t border-border items-start">
+                                <span className="font-medium text-foreground text-[11px]">{line.product}</span>
+                                <span className="text-right text-muted-foreground tabular-nums text-[11px]">{line.list}</span>
+                                <span className="text-right text-muted-foreground tabular-nums text-[11px]">{line.sale}</span>
+                                <span className="text-right font-bold text-destructive tabular-nums text-[11px]">{line.pct}</span>
+                            </div>
+                        ))}
+                        <div className="px-3.5 py-2 border-t border-border bg-muted/20">
+                            <p className="text-[10px] text-muted-foreground font-mono text-center">
+                                Formula: (Sale ÷ List) − 1 = −40.0% · $0 gross profit · City of New York requirement
+                            </p>
+                        </div>
+                    </>
+                ) : (
+                    <div className="px-3.5 py-6 text-center space-y-1.5 border-t border-border">
+                        <p className="text-xs font-semibold text-foreground">State of New York — different pricing structure</p>
+                        <p className="text-[11px] text-muted-foreground">
+                            State NY contracts use list-based pricing with agency-specific rates.<br />
+                            Strata identifies the applicable rate from the contract number in the PO header.
+                        </p>
+                        <p className="text-[10px] text-ai mt-2">← Select City of New York to see this order's calculation</p>
                     </div>
-                ))}
-                <div className="px-3.5 py-2 border-t border-border bg-muted/20">
-                    <p className="text-[10px] text-muted-foreground font-mono text-center">
-                        Formula: (Sale ÷ List) − 1 = −40.0% · $0 gross profit · City of New York requirement
-                    </p>
-                </div>
+                )}
             </div>
 
             {/* Agency fee summary */}
+            {contractType === 'city' && (
             <div className="flex items-start gap-2.5 bg-success/5 border border-success/30 rounded-xl px-3 py-2.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -400,6 +413,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                     across 2 product lines · Order entered as third-party invoice · Herman Miller as vendor
                 </p>
             </div>
+            )}
 
             {/* Labor coordination panel */}
             <div className="border border-border rounded-xl bg-muted/30 p-3 space-y-1.5">
