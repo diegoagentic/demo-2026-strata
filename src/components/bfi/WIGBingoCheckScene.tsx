@@ -6,8 +6,9 @@
  *                        Lauren notification → nextStep()
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import { FileText, Mail, Sparkles, AlertTriangle, Upload, CheckCircle2, Send, Loader2, Package } from 'lucide-react'
+import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
 import BFIDashboardScene from './BFIDashboardScene'
 import ReceivingProcessBar from './ReceivingProcessBar'
@@ -163,81 +164,112 @@ function BingoSheetCard() {
     )
 }
 
-// ─── Lauren Notification ──────────────────────────────────────────────────────
+// ─── Lauren Notification Dialog ───────────────────────────────────────────────
 
-function LaurenNotification({ notes, onSent }: { notes: string; onSent: () => void }) {
+function LaurenNotificationDialog({ isOpen, notes, onSent }: { isOpen: boolean; notes: string; onSent: () => void }) {
     const [sent, setSent] = useState(false)
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
 
     return (
-        <div className="border border-border rounded-xl bg-card overflow-hidden animate-in fade-in duration-400">
-            <div className="flex items-center gap-2 px-3.5 py-2.5 bg-muted/30 border-b border-border">
-                <div className="h-6 w-6 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                    <Send className="h-3 w-3 text-primary" />
-                </div>
-                <div>
-                    <div className="text-[10px] font-bold text-foreground">Notify Lauren · DOE-2847</div>
-                    <div className="text-[9px] text-muted-foreground">Strata pre-drafted · receiving complete</div>
-                </div>
-            </div>
+        <Transition show={isOpen} as={Fragment}>
+            <Dialog as="div" className="relative z-[400]" onClose={() => {}}>
+                <TransitionChild
+                    as={Fragment}
+                    enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                    leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+                >
+                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                </TransitionChild>
 
-            <div className="px-3.5 py-3 space-y-2.5">
-                {/* Recipient */}
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/40 border border-border">
-                    <div className="h-7 w-7 rounded-full bg-info/20 flex items-center justify-center shrink-0">
-                        <span className="text-[9px] font-black text-info">LD</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-bold text-foreground">Lauren DeMarco</div>
-                        <div className="text-[9px] text-muted-foreground">lauren.demarco@bfifurniture.com · CoNY Account Manager</div>
-                    </div>
-                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                </div>
+                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                    <TransitionChild
+                        as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
+                        leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                    >
+                        <DialogPanel className="w-full max-w-lg transform rounded-2xl bg-card border border-border shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
 
-                {/* Message */}
-                <div className="space-y-1">
-                    {[
-                        { label: 'From', value: 'lena.c@bfifurniture.com · Receiving Coordinator' },
-                        { label: 'Re',   value: 'DOE-2847 · Receiving Complete · Carton #34 missing' },
-                    ].map(r => (
-                        <div key={r.label} className="flex gap-2 text-[10px]">
-                            <span className="text-muted-foreground w-8 shrink-0">{r.label}:</span>
-                            <span className="text-foreground font-medium">{r.value}</span>
-                        </div>
-                    ))}
-                </div>
+                            {/* Header */}
+                            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30 shrink-0">
+                                <div className="h-8 w-8 rounded-full bg-info/20 flex items-center justify-center shrink-0">
+                                    <span className="text-[10px] font-black text-info">LD</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-[12px] font-bold text-foreground">Lauren DeMarco</div>
+                                    <div className="text-[10px] text-muted-foreground">lauren.demarco@bfifurniture.com · CoNY Account Manager</div>
+                                </div>
+                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </div>
 
-                <div className="rounded-xl border border-border bg-background px-3 py-2.5 text-[11px] text-foreground leading-relaxed whitespace-pre-line">
-                    {notes}
-                </div>
+                            {/* Scrollable body */}
+                            <div className="flex-1 overflow-y-auto">
+                                {/* Metadata */}
+                                <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
+                                    <div className="text-[13px] font-bold text-foreground leading-snug">
+                                        DOE-2847 · Receiving Complete · Carton #34 missing
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        {[
+                                            { label: 'From', value: 'lena.c@bfifurniture.com' },
+                                            { label: 'To',   value: 'lauren.demarco@bfifurniture.com' },
+                                            { label: 'Date', value: 'May 11, 2026 · 8:42 AM' },
+                                        ].map(r => (
+                                            <div key={r.label} className="flex items-center gap-2 text-[10px]">
+                                                <span className="text-muted-foreground w-7 shrink-0">{r.label}:</span>
+                                                <span className="text-foreground font-medium truncate">{r.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
-                {/* Attachments */}
-                <div className="space-y-1">
-                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Attachments</div>
-                    {[
-                        'BD-2026-0412_BingoSheet.pdf',
-                        'DOE-2847-PO.pdf',
-                    ].map(f => (
-                        <div key={f} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                            <FileText className="h-3 w-3 shrink-0" /> {f}
-                        </div>
-                    ))}
-                </div>
+                                {/* Body */}
+                                <div className="px-5 py-4 space-y-3">
+                                    <div className="text-[12px] text-foreground leading-relaxed whitespace-pre-line">
+                                        {notes}
+                                    </div>
 
-                {sent ? (
-                    <div className="flex items-center gap-2 p-2.5 bg-success/5 border border-success/20 rounded-xl animate-in fade-in duration-300">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                        <div className="text-[11px] font-bold text-success">Sent to Lauren · May 11 · 8:42 AM</div>
-                    </div>
-                ) : (
-                    <button onClick={handleSend}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 text-[12px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all">
-                        <Send className="h-3.5 w-3.5" />
-                        Send to Lauren →
-                    </button>
-                )}
-            </div>
-        </div>
+                                    {/* Attachments */}
+                                    <div className="space-y-1.5">
+                                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Attachments</div>
+                                        {['BD-2026-0412_BingoSheet.pdf', 'DOE-2847-PO.pdf'].map(f => (
+                                            <div key={f} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium w-fit">
+                                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                {f}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {sent && (
+                                        <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
+                                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                                            <div className="text-xs">
+                                                <div className="font-bold text-foreground">Sent to Lauren · May 11 · 8:42 AM</div>
+                                                <div className="text-muted-foreground mt-0.5">Carton #34 flagged · CORE updated · awaiting claim</div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="px-5 pb-4">
+                                    <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_RPA] }]} />
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            {!sent && (
+                                <div className="px-5 py-3.5 border-t border-border bg-card shrink-0">
+                                    <button onClick={handleSend}
+                                        className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
+                                        <Send className="h-3.5 w-3.5" />
+                                        Send to Lauren →
+                                    </button>
+                                </div>
+                            )}
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </Transition>
     )
 }
 
@@ -255,6 +287,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
     const [notes,         setNotes]         = useState(DEFAULT_NOTES)
     const [coreUpdated,   setCoreUpdated]   = useState(false)
     const [coreUpdating,  setCoreUpdating]  = useState(false)
+    const [showNotify,    setShowNotify]    = useState(false)
     // Standard mode state
     const [clicked, setClicked] = useState(false)
 
@@ -274,7 +307,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
 
     const handleUpdateCore = () => {
         setCoreUpdating(true)
-        setTimeout(pauseAware(() => { setCoreUpdating(false); setCoreUpdated(true) }), 1400)
+        setTimeout(pauseAware(() => { setCoreUpdating(false); setCoreUpdated(true); setShowNotify(true) }), 1400)
     }
 
     if (phase === 'dashboard') {
@@ -377,10 +410,11 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                         </div>
                     )}
 
-                    {/* Lauren notification */}
-                    {coreUpdated && (
-                        <LaurenNotification notes={notes} onSent={() => onAnalyze?.()} />
-                    )}
+                    <LaurenNotificationDialog
+                        isOpen={showNotify}
+                        notes={notes}
+                        onSent={() => { setShowNotify(false); onAnalyze?.() }}
+                    />
                 </>
             )}
 
