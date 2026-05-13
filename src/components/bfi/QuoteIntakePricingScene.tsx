@@ -26,6 +26,14 @@ const PDF_SPECS_DEFAULT: SpecLine[] = [
     { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  dims: 'W: 36" H: 28" D: 20"', finish: 'Platinum'    },
 ]
 
+type SifRow = { code: string; desc: string; qty: string; list: string }
+const SIF_ROWS_DEFAULT: SifRow[] = [
+    { code: 'HMI-WS-2400', desc: 'Locale Workstation',       qty: '24', list: '$10,000' },
+    { code: 'HMI-LS-500',  desc: 'Brody WorkLounge',         qty: '12', list: '$7,000'  },
+    { code: 'HMI-FU-300',  desc: 'Lateral Filing 3-Drawer',  qty: '6',  list: '$2,100'  },
+    { code: 'INSTALL-NYC', desc: 'Installation / Labor',     qty: '1',  list: '—'       },
+]
+
 const VALIDATION_LINES = [
     { product: 'Workstations ×24',   sif: '$144,000', contract: '$144,000', status: 'ok'        as const, conf: '98%' },
     { product: 'Lounge Seating ×12', sif: '$84,000',  contract: '$84,000',  status: 'ok'        as const, conf: '96%' },
@@ -57,6 +65,9 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
     const [pdfSpecs, setPdfSpecs]                 = useState<SpecLine[]>(PDF_SPECS_DEFAULT)
     const [editingPdf, setEditingPdf]             = useState(false)
     const [pdfSaved, setPdfSaved]                 = useState(false)
+    const [sifRows, setSifRows]                   = useState<SifRow[]>(SIF_ROWS_DEFAULT)
+    const [editingSif, setEditingSif]             = useState(false)
+    const [sifSaved, setSifSaved]                 = useState(false)
 
     const handleDownload = (type: 'pdf' | 'sif') => {
         if (downloading) return
@@ -72,6 +83,12 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
         setEditingPdf(false)
         setPdfSaved(true)
         setTimeout(() => setPdfSaved(false), 2000)
+    }
+
+    const handleSaveSif = () => {
+        setEditingSif(false)
+        setSifSaved(true)
+        setTimeout(() => setSifSaved(false), 2000)
     }
 
     const pauseAware = useCallback((fn: () => void) => () => {
@@ -213,17 +230,38 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border/60">
-                                                {[
-                                                    { code: 'HMI-WS-2400', desc: 'Locale Workstation',        qty: 24, list: '$10,000' },
-                                                    { code: 'HMI-LS-500',  desc: 'Brody WorkLounge',          qty: 12, list: '$7,000'  },
-                                                    { code: 'HMI-FU-300',  desc: 'Lateral Filing 3-Drawer',   qty: 6,  list: '$2,100'  },
-                                                    { code: 'INSTALL-NYC', desc: 'Installation / Labor',      qty: 1,  list: '—'       },
-                                                ].map(r => (
-                                                    <tr key={r.code} className="hover:bg-muted/20">
+                                                {sifRows.map((r, idx) => (
+                                                    <tr key={r.code} className={`hover:bg-muted/20 ${sifSaved ? 'transition-colors' : ''}`}>
                                                         <td className="px-3 py-2 font-mono text-[9px] text-muted-foreground">{r.code}</td>
-                                                        <td className="px-3 py-2 text-foreground font-medium">{r.desc}</td>
-                                                        <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.qty}</td>
-                                                        <td className="px-3 py-2 text-right tabular-nums font-bold text-foreground">{r.list}</td>
+                                                        <td className="px-3 py-2 text-foreground font-medium">
+                                                            {editingSif ? (
+                                                                <input
+                                                                    value={r.desc}
+                                                                    onChange={e => setSifRows(prev => prev.map((s, i) => i === idx ? { ...s, desc: e.target.value } : s))}
+                                                                    className="bg-transparent border-b border-border text-foreground text-[10px] outline-none w-full"
+                                                                />
+                                                            ) : r.desc}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                                                            {editingSif ? (
+                                                                <input
+                                                                    value={r.qty}
+                                                                    onChange={e => setSifRows(prev => prev.map((s, i) => i === idx ? { ...s, qty: e.target.value } : s))}
+                                                                    className="bg-transparent border-b border-border text-muted-foreground text-[10px] outline-none w-8 text-right tabular-nums"
+                                                                />
+                                                            ) : r.qty}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-right tabular-nums font-bold text-foreground">
+                                                            {editingSif ? (
+                                                                <input
+                                                                    value={r.list}
+                                                                    onChange={e => setSifRows(prev => prev.map((s, i) => i === idx ? { ...s, list: e.target.value } : s))}
+                                                                    className="bg-transparent border-b border-border text-foreground font-bold text-[10px] outline-none w-16 text-right tabular-nums"
+                                                                />
+                                                            ) : (
+                                                                <span className={sifSaved ? 'text-success' : ''}>{r.list}</span>
+                                                            )}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -237,29 +275,36 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                         {activeAttachment === 'pdf' ? '12 pages · 4.2 MB' : '4 line items · XLSX · 18 KB'}
                                     </span>
                                     <div className="flex items-center gap-1.5">
-                                        {/* Edit / Save — PDF only */}
+                                        {/* Edit / Save — PDF */}
                                         {activeAttachment === 'pdf' && (
                                             editingPdf ? (
-                                                <button
-                                                    onClick={handleSavePdf}
-                                                    className="flex items-center gap-1 px-2.5 py-1 rounded border border-ai/40 bg-ai/10 text-[10px] font-medium text-ai hover:bg-ai/20 transition-colors"
-                                                >
+                                                <button onClick={handleSavePdf} className="flex items-center gap-1 px-2.5 py-1 rounded border border-ai/40 bg-ai/10 text-[10px] font-medium text-ai hover:bg-ai/20 transition-colors">
                                                     <CheckCircle2 className="h-3 w-3 shrink-0" /> Save changes
                                                 </button>
                                             ) : (
-                                                <button
-                                                    onClick={() => setEditingPdf(true)}
-                                                    className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
-                                                >
+                                                <button onClick={() => setEditingPdf(true)} className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 transition-colors">
                                                     <Edit2 className="h-3 w-3 shrink-0" />
                                                     {pdfSaved ? <span className="text-success">Saved ✓</span> : 'Edit fields'}
+                                                </button>
+                                            )
+                                        )}
+                                        {/* Edit / Save — SIF */}
+                                        {activeAttachment === 'sif' && (
+                                            editingSif ? (
+                                                <button onClick={handleSaveSif} className="flex items-center gap-1 px-2.5 py-1 rounded border border-ai/40 bg-ai/10 text-[10px] font-medium text-ai hover:bg-ai/20 transition-colors">
+                                                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Save changes
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => setEditingSif(true)} className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 transition-colors">
+                                                    <Edit2 className="h-3 w-3 shrink-0" />
+                                                    {sifSaved ? <span className="text-success">Saved ✓</span> : 'Edit fields'}
                                                 </button>
                                             )
                                         )}
                                         {/* Download */}
                                         <button
                                             onClick={() => handleDownload(activeAttachment)}
-                                            disabled={downloading !== null || editingPdf}
+                                            disabled={downloading !== null || editingPdf || editingSif}
                                             className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 disabled:opacity-60 transition-colors"
                                         >
                                             {downloading === activeAttachment ? (
