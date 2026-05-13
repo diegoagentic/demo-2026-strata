@@ -2,11 +2,11 @@
  * COMPONENT: DesignerResponseScene  (a1.2b)
  * PURPOSE: Agency Fee step 2b — Robert Chen (Miller Knoll Rep) views order
  *          confirmation Q-2026-0089 in Strata desktop platform.
- *          Desktop view: spec confirmation + next steps + acknowledge CTA.
+ *          Desktop view: spec confirmation + document viewer (PDF + SIF) + acknowledge CTA.
  */
 
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { Sparkles, CheckCircle2, Package, ArrowRight, ClipboardList, Truck, Wrench, User } from 'lucide-react'
+import { Sparkles, CheckCircle2, Package, ArrowRight, ClipboardList, Truck, Wrench, User, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -14,16 +14,22 @@ interface DesignerResponseSceneProps {
     onAcknowledge?: () => void
 }
 
-const SPEC_ITEMS = [
-    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', finish: 'White/Silver', validated: true },
-    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', finish: 'Fog fabric',   validated: true },
-    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  finish: 'Platinum',     validated: true },
-]
-
 const NEXT_STEPS = [
     { icon: ClipboardList, label: 'PO issuance',   desc: 'City of New York issues PO · BFI confirms ship date once received' },
     { icon: Truck,         label: 'Delivery',       desc: 'WIG warehouse · May 14–21 delivery window · 8 days free storage' },
     { icon: Wrench,        label: 'Installation',   desc: 'Walter Carey (CoNY PM) coordinating installation crew · May 14–16' },
+]
+
+const PDF_SPECS = [
+    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', finish: 'White/Silver', unitPrice: '$2,840.00', listPrice: '$4,200.00' },
+    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', finish: 'Fog fabric',   unitPrice: '$1,960.00', listPrice: '$2,900.00' },
+    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  finish: 'Platinum',     unitPrice: '$740.00',   listPrice: '$1,100.00' },
+]
+
+const SIF_ROWS = [
+    { code: 'HMI-WS-2400', desc: 'Locale Workstation 24W',  qty: 24, list: '$4,200.00', net: '$2,840.00', af: '4.0%' },
+    { code: 'HMI-LS-500',  desc: 'Brody WorkLounge Fog',    qty: 12, list: '$2,900.00', net: '$1,960.00', af: '3.9%' },
+    { code: 'HMI-FU-300',  desc: 'Lateral Filing 3-Drawer', qty: 6,  list: '$1,100.00', net: '$740.00',   af: '2.9%' },
 ]
 
 export default function DesignerResponseScene({ onAcknowledge }: DesignerResponseSceneProps) {
@@ -32,6 +38,8 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
     const [acknowledged, setAcknowledged] = useState(false)
+    const [docsExpanded, setDocsExpanded] = useState(false)
+    const [activeDocTab, setActiveDocTab] = useState<'pdf' | 'sif'>('pdf')
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -98,25 +106,165 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                 </div>
             </div>
 
-            {/* Spec confirmation — items with validation status */}
+            {/* Document viewer — collapsible */}
             <div className="border border-border rounded-xl overflow-hidden">
-                <div className="px-3.5 py-2 bg-muted/40 border-b border-border">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Spec Confirmation · SIF Validated</div>
-                </div>
-                <div className="divide-y divide-border/60">
-                    {SPEC_ITEMS.map(item => (
-                        <div key={item.code} className="flex items-center gap-3 px-3.5 py-2.5">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                            <div className="flex-1 min-w-0">
-                                <div className="text-[11px] font-medium text-foreground">{item.code} · {item.name} {item.qty}</div>
-                                <div className="text-[10px] text-muted-foreground">Finish: {item.finish}</div>
-                            </div>
-                            <span className="text-[9px] bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5 font-medium shrink-0">
-                                Validated
-                            </span>
+                <button
+                    onClick={() => setDocsExpanded(v => !v)}
+                    className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
+                >
+                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide flex-1">
+                        Attached Documents · specs.pdf + sif.csv
+                    </span>
+                    <span className="text-[9px] text-muted-foreground mr-1">View only</span>
+                    {docsExpanded
+                        ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    }
+                </button>
+
+                {docsExpanded && (
+                    <div className="border-t border-border">
+                        {/* Tab bar */}
+                        <div className="flex border-b border-border bg-muted/20">
+                            {(['pdf', 'sif'] as const).map(tab => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveDocTab(tab)}
+                                    className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
+                                        activeDocTab === tab
+                                            ? 'text-foreground border-foreground'
+                                            : 'text-muted-foreground border-transparent hover:text-foreground'
+                                    }`}
+                                >
+                                    {tab === 'pdf' ? 'specs.pdf' : 'sif.csv'}
+                                </button>
+                            ))}
                         </div>
-                    ))}
-                </div>
+
+                        {/* PDF tab */}
+                        {activeDocTab === 'pdf' && (
+                            <div className="p-3 bg-zinc-100 dark:bg-zinc-900">
+                                {/* PDF paper */}
+                                <div className="bg-white dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700 p-3 space-y-2 text-[10px] font-mono">
+                                    <div className="text-[8px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                                        Miller Knoll · Quote Specification Sheet
+                                    </div>
+                                    <div className="font-bold text-zinc-800 dark:text-zinc-100 text-[11px]">
+                                        DOE-2847 · NYC Dept. of Education · 52 Chambers St
+                                    </div>
+                                    <div className="text-zinc-500 dark:text-zinc-400 text-[9px]">
+                                        Prepared by: Robert Chen · May 1, 2026 · Q-2026-0089
+                                    </div>
+
+                                    {/* Specs table */}
+                                    <div className="pt-1.5 border-t border-zinc-200 dark:border-zinc-700">
+                                        <div className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
+                                            Product Specifications
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            {PDF_SPECS.map(item => (
+                                                <div key={item.code} className="flex gap-2 items-start">
+                                                    <div className="flex-1">
+                                                        <div className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100">
+                                                            {item.code} · {item.name} {item.qty}
+                                                        </div>
+                                                        <div className="text-[9px] text-zinc-500 dark:text-zinc-400">
+                                                            Finish: {item.finish}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <div className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100">{item.unitPrice}</div>
+                                                        <div className="text-[8px] text-zinc-400 dark:text-zinc-500">List {item.listPrice}</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Floor plan */}
+                                    <div className="pt-2 border-t border-zinc-200 dark:border-zinc-700 mt-1">
+                                        <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
+                                            Architectural Layout · 52 Chambers St · Floor 12
+                                        </div>
+                                        <div
+                                            className="relative border border-zinc-300 dark:border-zinc-600 rounded bg-zinc-50 dark:bg-zinc-800"
+                                            style={{ height: '90px' }}
+                                        >
+                                            {/* Zone A — Workstations */}
+                                            <div
+                                                className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-200/60 dark:bg-zinc-700/60 flex flex-col items-center justify-center gap-0.5"
+                                                style={{ left: '2px', top: '2px', width: '52%', height: '85px' }}
+                                            >
+                                                <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone A</div>
+                                                <div className="text-[6px] text-zinc-500 dark:text-zinc-400">Workstations ×24</div>
+                                                <div className="grid grid-cols-6 gap-0.5 mt-0.5">
+                                                    {Array.from({ length: 12 }).map((_, i) => (
+                                                        <div key={i} className="h-1.5 w-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-sm" />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {/* Zone B — Lounge */}
+                                            <div
+                                                className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
+                                                style={{ right: '2px', top: '2px', width: '45%', height: '40px' }}
+                                            >
+                                                <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone B · Lounge ×12</div>
+                                            </div>
+                                            {/* Zone C — Filing */}
+                                            <div
+                                                className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
+                                                style={{ right: '2px', bottom: '2px', width: '45%', height: '40px' }}
+                                            >
+                                                <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone C · Filing ×6</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-[7px] text-zinc-400 dark:text-zinc-500 mt-1">
+                                            NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-[9px] text-muted-foreground mt-2 text-center">Read-only · Submitted by Robert Chen · Miller Knoll</div>
+                            </div>
+                        )}
+
+                        {/* SIF tab */}
+                        {activeDocTab === 'sif' && (
+                            <div className="p-3 bg-zinc-100 dark:bg-zinc-900">
+                                <div className="bg-white dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                                    <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+                                        <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
+                                            SIF · Standard Industry Format · DOE-2847
+                                        </div>
+                                        <div className="text-[8px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+                                            Validated by OVNIQ · May 3, 2026
+                                        </div>
+                                    </div>
+                                    {/* Header row */}
+                                    <div className="grid grid-cols-6 gap-1 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+                                        {['Code', 'Description', 'Qty', 'List', 'Net', 'AF%'].map(h => (
+                                            <div key={h} className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">{h}</div>
+                                        ))}
+                                    </div>
+                                    {/* Data rows */}
+                                    <div className="divide-y divide-zinc-100 dark:divide-zinc-700/50">
+                                        {SIF_ROWS.map(row => (
+                                            <div key={row.code} className="grid grid-cols-6 gap-1 px-3 py-2">
+                                                <div className="text-[9px] font-mono text-zinc-700 dark:text-zinc-300 col-span-1">{row.code}</div>
+                                                <div className="text-[9px] text-zinc-600 dark:text-zinc-400 col-span-1">{row.desc}</div>
+                                                <div className="text-[9px] text-zinc-700 dark:text-zinc-300">{row.qty}</div>
+                                                <div className="text-[9px] text-zinc-500 dark:text-zinc-400">{row.list}</div>
+                                                <div className="text-[9px] font-semibold text-zinc-700 dark:text-zinc-300">{row.net}</div>
+                                                <div className="text-[9px] text-zinc-500 dark:text-zinc-400">{row.af}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="text-[9px] text-muted-foreground mt-2 text-center">Read-only · Validated by OVNIQ</div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Next steps */}
