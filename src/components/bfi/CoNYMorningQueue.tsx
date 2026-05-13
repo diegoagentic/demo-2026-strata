@@ -14,7 +14,7 @@
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import {
     Sparkles, CheckCircle2, AlertTriangle,
-    FileText, Mail, Send, User,
+    FileText, Mail, Send, User, Eye,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
