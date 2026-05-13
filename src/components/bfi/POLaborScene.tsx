@@ -13,9 +13,6 @@ import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIDocumentReviewModal from './BFIDocumentReviewModal'
 import BFIProcessKanban from './BFIProcessKanban'
 
-interface POLaborSceneProps {
-    onConfirm?: () => void
-}
 
 const ACTIVE_COL = 2  // PO & Labor
 
@@ -150,14 +147,13 @@ function ProposalEmailView({ onSent }: { onSent: () => void }) {
 
 // ─── Main Scene ───────────────────────────────────────────────────────────────
 
-export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
+export default function POLaborScene() {
     const { nextStep } = useDemo()
     const [isModalOpen,    setIsModalOpen]    = useState(false)
     const [showProposal,   setShowProposal]   = useState(false)
 
     const handleValidate = () => {
         setIsModalOpen(false)
-        onConfirm?.()
         setShowProposal(true)
     }
 

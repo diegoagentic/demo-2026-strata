@@ -89,7 +89,7 @@ export default function BFIPage() {
                 {stepId === 'r1.5' && <CoreEntryScene onConfirm={nextStep} />}
                 {stepId === 'a1.1' && <CoNYMorningQueue onSelectOrder={nextStep} />}
                 {stepId === 'a1.2b' && <QuoteIntakePricingScene onApply={nextStep} />}
-                {stepId === 'a1.2c' && <POLaborScene onConfirm={nextStep} />}
+                {stepId === 'a1.2c' && <POLaborScene />}
                 {stepId === 'a1.2d' && <WIGBingoCheckScene onAnalyze={nextStep} />}
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
