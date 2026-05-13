@@ -35,9 +35,12 @@ const SIF_ROWS_DEFAULT: SifRow[] = [
 ]
 
 const VALIDATION_LINES = [
-    { product: 'Workstations ×24',   sif: '$144,000', contract: '$144,000', status: 'ok'        as const, conf: '98%' },
-    { product: 'Lounge Seating ×12', sif: '$84,000',  contract: '$84,000',  status: 'ok'        as const, conf: '96%' },
-    { product: 'Filing Units ×6',    sif: '$8,100',   contract: '$7,560',   status: 'corrected' as const, conf: '71%' },
+    { product: 'Puestos de trabajo ×24',  sif: '$144,000', contract: '$144,000', status: 'ok'        as const, conf: '98%', errorMsg: null, errorDetail: null },
+    { product: 'Sillones lounge ×12',     sif: '$84,000',  contract: '$84,000',  status: 'ok'        as const, conf: '96%', errorMsg: null, errorDetail: null },
+    { product: 'Sillas de trabajo ×30',   sif: '$45,000',  contract: '$45,000',  status: 'ok'        as const, conf: '94%', errorMsg: null, errorDetail: null },
+    { product: 'Gabinetes de almacén ×8', sif: '$28,800',  contract: '$28,800',  status: 'ok'        as const, conf: '97%', errorMsg: null, errorDetail: null },
+    { product: 'Archiveros ×6',           sif: '$8,100',   contract: '$7,560',   status: 'corrected' as const, conf: '71%', errorMsg: 'Precio SIF $8,100 no coincide con la tarifa del contrato', errorDetail: '$7,560 · T-code 18% · lista $42,000 · OVNIQ corrigió automáticamente' },
+    { product: 'Instalación / Labor',     sif: '$12,500',  contract: '$11,800',  status: 'corrected' as const, conf: '63%', errorMsg: 'Precio SIF $12,500 no coincide con la tarifa laboral CoNY', errorDetail: '$11,800 · tarifa sindical aplicada · OVNIQ corrigió automáticamente' },
 ]
 
 const DISCOUNT_LINES = [
@@ -68,6 +71,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
     const [sifRows, setSifRows]                   = useState<SifRow[]>(SIF_ROWS_DEFAULT)
     const [editingSif, setEditingSif]             = useState(false)
     const [sifSaved, setSifSaved]                 = useState(false)
+    const [validatingTab, setValidatingTab]       = useState<'pdf' | 'sif'>('sif')
 
     const handleDownload = (type: 'pdf' | 'sif') => {
         if (downloading) return
@@ -354,20 +358,20 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
     if (phase === 'validating') {
         return (
             <div className="space-y-4">
-                {/* Context banner */}
+                {/* Banner de contexto */}
                 <div className="bg-ai/5 border border-ai/20 rounded-xl p-3 flex items-start gap-2.5">
                     <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                     <div className="text-xs flex-1">
-                        <div className="font-bold text-foreground">OVNIQ Validation · DOE-2847 · Q-2026-0089</div>
+                        <div className="font-bold text-foreground">Validación OVNIQ · DOE-2847 · Q-2026-0089</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Strata validated the SIF against the CoNY contract via OVNIQ — corrected pricing and returned a corrected SIF. What used to take 65 minutes takes seconds.
+                            Strata validó el SIF contra el contrato CoNY vía OVNIQ — corrigió precios y devolvió un SIF corregido. Lo que antes tomaba 65 minutos ahora tarda segundos.
                         </div>
                     </div>
                 </div>
 
-                {/* Connection bar */}
+                {/* Flujo de datos */}
                 <div className="border border-border rounded-xl bg-card px-3.5 py-3">
-                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Data flow</div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Flujo de datos</div>
                     <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
                         <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">📄 SIF · email adjunto</span>
                         <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -375,54 +379,92 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                         <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
                         <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">OVNIQ · Herman Miller</span>
                         <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                        <span className="text-[9px] text-muted-foreground">valida</span>
+                        <span className="text-[9px] text-muted-foreground">valida contra</span>
                         <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                        <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">CORE · CoNY contract</span>
+                        <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">CORE · contrato CoNY</span>
                     </div>
                 </div>
 
-                {/* SIF document preview — collapsible */}
+                {/* Documentos fuente — tabbed PDF + SIF (trazabilidad) */}
                 <div className="border border-border rounded-xl bg-card overflow-hidden">
-                    <button
-                        onClick={() => setSifExpanded(v => !v)}
-                        className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-muted/40 transition-colors"
-                    >
-                        <div className="flex items-center gap-2">
-                            <FileText className="h-3.5 w-3.5 text-ai shrink-0" />
-                            <div className="text-left">
-                                <div className="text-[10px] font-bold text-foreground">Q-2026-0089 · SIF · Herman Miller</div>
-                                <div className="text-[9px] text-muted-foreground">3 line items · 1 issue detected</div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">OCR ✓</span>
-                            {sifExpanded ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
-                        </div>
-                    </button>
-                    {sifExpanded && (
-                        <div className="border-t border-border px-3.5 py-3 space-y-1.5 animate-in fade-in duration-200">
-                            <div className="flex gap-3 pb-2 border-b border-border/60">
-                                <span className="text-[10px] text-success font-medium">Valid 2</span>
-                                <span className="text-[10px] text-warning font-medium">Issues 1</span>
-                                <span className="text-[10px] text-muted-foreground">Total 3</span>
-                            </div>
-                            {VALIDATION_LINES.map(line => (
-                                <div key={line.product} className="flex items-center gap-2 text-[10px]">
-                                    <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${line.status === 'ok' ? 'bg-success' : 'bg-warning'}`} />
-                                    <span className="text-foreground flex-1">{line.product}</span>
-                                    <span className={`tabular-nums ${line.status === 'corrected' ? 'text-warning line-through' : 'text-muted-foreground'}`}>{line.sif}</span>
+                    <div className="flex border-b border-border bg-muted/40">
+                        <button
+                            onClick={() => setValidatingTab('pdf')}
+                            className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold transition-colors border-r border-border flex-1 justify-center ${
+                                validatingTab === 'pdf' ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                            specs.pdf
+                        </button>
+                        <button
+                            onClick={() => setValidatingTab('sif')}
+                            className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold transition-colors flex-1 justify-center ${
+                                validatingTab === 'sif' ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <FileText className="h-3 w-3 text-ai shrink-0" />
+                            SIF_v1.xlsx
+                            <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1 py-0.5 rounded-full font-medium">OCR ✓</span>
+                        </button>
+                    </div>
+
+                    {validatingTab === 'pdf' && (
+                        <div className="p-2.5 bg-zinc-100/60 dark:bg-zinc-900/40 max-h-40 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
+                            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 space-y-2">
+                                <div className="text-center text-[9px] font-bold text-zinc-700 dark:text-zinc-300 pb-1.5 border-b border-zinc-200 dark:border-zinc-700 uppercase tracking-wide">
+                                    Especificación de Producto · DOE-2847
                                 </div>
-                            ))}
+                                <div className="text-[9px] text-zinc-500">NYC Dept. of Education · BFI Furniture · Q-2026-0089</div>
+                                {pdfSpecs.map(p => (
+                                    <div key={p.code} className="border-l-2 border-zinc-300 dark:border-zinc-600 pl-2 text-[9px] leading-relaxed">
+                                        <div className="font-bold text-zinc-800 dark:text-zinc-200">{p.code} · {p.name} {p.qty}</div>
+                                        <div className="text-zinc-500">{p.dims} · {p.finish}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
+
+                    {validatingTab === 'sif' && (
+                        <div className="max-h-40 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
+                            <div className="flex gap-3 px-3.5 py-2 border-b border-border/60 bg-muted/20 text-[10px]">
+                                <span className="text-success font-medium">Válido 4</span>
+                                <span className="text-warning font-medium">Correcciones 2</span>
+                                <span className="text-muted-foreground">Total 6</span>
+                            </div>
+                            <table className="w-full text-[10px]">
+                                <tbody className="divide-y divide-border/60">
+                                    {sifRows.map((r, idx) => {
+                                        const isCorrected = VALIDATION_LINES[idx]?.status === 'corrected'
+                                        return (
+                                            <tr key={r.code} className="hover:bg-muted/20">
+                                                <td className="px-3 py-2 font-mono text-[9px] text-muted-foreground">{r.code}</td>
+                                                <td className="px-3 py-2 text-foreground font-medium">{r.desc}</td>
+                                                <td className="px-3 py-2 text-right tabular-nums">
+                                                    <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1 ${isCorrected ? 'bg-warning' : 'bg-success'}`} />
+                                                    <span className={isCorrected ? 'text-warning line-through' : 'text-muted-foreground'}>{r.list}</span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/20">
+                        <span className="text-[9px] text-muted-foreground">Documentos fuente · referencia de validación</span>
+                        <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">OCR ✓</span>
+                    </div>
                 </div>
 
-                {/* Validation table */}
+                {/* Tabla de validación */}
                 <div className="border border-border rounded-xl overflow-hidden">
                     <div className="grid grid-cols-5 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <span className="col-span-2">Product</span>
-                        <span>SIF</span>
-                        <span>OVNIQ</span>
+                        <span className="col-span-2">Producto</span>
+                        <span>SIF original</span>
+                        <span>OVNIQ corregido</span>
                         <span className="text-right">Conf.</span>
                     </div>
                     {VALIDATION_LINES.slice(0, revealedCount).map((line) => (
@@ -450,25 +492,25 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                 </span>
                             </div>
 
-                            {line.status === 'corrected' && (
+                            {line.status === 'corrected' && line.errorMsg && (
                                 <div className="mx-3.5 mb-3 bg-warning/5 border border-warning/20 rounded-lg px-3 py-2 space-y-1 animate-in fade-in duration-200">
-                                    <div className="text-[10px] font-bold text-warning">SIF price $8,100 does not match contract rate</div>
-                                    <div className="text-[10px] text-muted-foreground">$7,560 · T-code 18% · list $42,000 · OVNIQ corrected automatically</div>
+                                    <div className="text-[10px] font-bold text-warning">{line.errorMsg}</div>
+                                    <div className="text-[10px] text-muted-foreground">{line.errorDetail}</div>
                                 </div>
                             )}
                         </div>
                     ))}
                 </div>
 
-                {/* Summary — corrected SIF ready */}
+                {/* Resumen — SIF corregido listo */}
                 {allRevealed && (
                     <div className="bg-success/5 border border-success/30 rounded-xl p-3 space-y-1.5 animate-in fade-in duration-300">
                         <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                            <span className="text-xs font-bold text-foreground">OVNIQ returned corrected SIF · 1 price adjusted · ready for discount calculation</span>
+                            <span className="text-xs font-bold text-foreground">OVNIQ devolvió SIF corregido · 2 precios ajustados · listo para cálculo de descuento</span>
                         </div>
                         <div className="text-[11px] text-muted-foreground pl-6">
-                            Filing Units ×6: $8,100 → $7,560 · T-code 18% applied · corrected SIF uploaded to CORE
+                            Archiveros ×6: $8,100 → $7,560 · Instalación: $12,500 → $11,800 · SIF corregido cargado a CORE
                         </div>
                     </div>
                 )}
@@ -478,7 +520,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                         onClick={() => setPhase('discount')}
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300"
                     >
-                        Calculate discount & continue →
+                        Calcular descuento y continuar
                         <ChevronRight className="h-4 w-4" />
                     </button>
                 )}
