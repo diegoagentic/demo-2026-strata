@@ -23,13 +23,14 @@ interface AgencyFeeVerifySceneProps {
 }
 
 const FEE_LINES = [
-    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '18%', fee: '$25,920' },
-    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '18%', fee: '$15,120' },
+    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '4.0%', fee: '$5,760' },
+    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '3.9%', fee: '$3,276' },
+    { product: 'Filing Units (×6)',    sale: '$7,560',   tcode: '2.9%', fee: '$219'   },
 ]
 
-const EXPECTED_FEE = '$41,040'
-const NANCY_MATCH   = '$41,040'
-const NANCY_GAP     = '$39,790'   // simulated discrepancy: -$1,250
+const EXPECTED_FEE = '$9,255'
+const NANCY_MATCH   = '$9,255'
+const NANCY_GAP     = '$8,940'   // simulated discrepancy: -$315
 
 export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifySceneProps) {
     const { nextStep, isPaused } = useDemo()
@@ -113,7 +114,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 ))}
                 {allRevealed && (
                     <div className="px-3.5 py-2.5 border-t border-border bg-muted/20 flex items-center justify-between text-xs animate-in fade-in duration-300">
-                        <span className="font-bold text-foreground">Total expected · BFI contract @ 18%</span>
+                        <span className="font-bold text-foreground">Total expected · variable T-codes per product</span>
                         <span className="font-bold text-foreground tabular-nums">{EXPECTED_FEE}</span>
                     </div>
                 )}
@@ -179,7 +180,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                                 isGap ? 'text-amber-600 dark:text-amber-400' : 'text-success'
                             }`}>
                                 {isGap
-                                    ? <><AlertTriangle className="h-3 w-3" /> −$1,250</>
+                                    ? <><AlertTriangle className="h-3 w-3" /> −$315</>
                                     : <><CheckCircle2 className="h-3 w-3" /> $0</>
                                 }
                             </div>
@@ -193,7 +194,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                             : 'border-success/20 text-success font-medium'
                     }`}>
                         {isGap
-                            ? 'MK invoice is $1,250 below contract entitlement — previously undetectable without Strata'
+                            ? 'MK invoice is $315 below contract entitlement — previously undetectable without Strata'
                             : 'Fee confirmed · contract entitlement matches MK Invoice Processor report'
                         }
                     </div>
@@ -232,7 +233,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                     <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <div className="text-xs">
-                        <div className="font-bold text-foreground">DOE-2847 closed · Agency fee $41,040 verified</div>
+                        <div className="font-bold text-foreground">DOE-2847 closed · Agency fee $9,255 verified</div>
                         <div className="text-muted-foreground mt-0.5">Patricia notified to apply fee and close CORE · order invoiceable</div>
                     </div>
                 </div>
@@ -245,7 +246,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                     <div className="text-xs">
                         <div className="font-bold text-foreground">Gap flagged · DOE-2847 on hold</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Patricia and Michael notified · −$1,250 variance escalated to MK Invoice Processor · pending resolution before close
+                            Patricia and Michael notified · −$315 variance escalated to MK Invoice Processor · pending resolution before close
                         </div>
                     </div>
                 </div>
