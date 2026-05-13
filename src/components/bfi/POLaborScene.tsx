@@ -6,12 +6,14 @@
  *
  * Transcript: "Lauren saves PO to R drive, labor quote arrives by email to Michael,
  *              EDI transmits from CORE to OVNIQ automatically."
+ *
+ * Editing: PO and Labor Quote are read-only (external docs). Only delivery date
+ *          is interactive — Lauren confirms it before CORE entry.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { FileText, Download, Eye, CheckCircle2, AlertTriangle, Sparkles, ChevronRight, ArrowRight } from 'lucide-react'
+import { FileText, Download, CheckCircle2, AlertTriangle, Sparkles, ChevronRight, ArrowRight } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
-import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 interface POLaborSceneProps {
@@ -21,80 +23,29 @@ interface POLaborSceneProps {
 type ScenePhase = 'review' | 'confirmed'
 
 const PO_ITEMS = [
-    { label: 'Workstations', qty: '×24', price: '$144,000' },
+    { label: 'Workstations',  qty: '×24', price: '$144,000' },
     { label: 'Lounge Seating', qty: '×12', price: '$84,000' },
-    { label: 'Filing Units', qty: '×6', price: '$7,560' },
+    { label: 'Filing Units',  qty: '×6',  price: '$7,560' },
 ]
 
 const LABOR_ITEMS = [
-    'Inside Delivery',
-    'Installation',
-    'OT Differential',
-    'Truck Charge',
+    { label: 'Inside Delivery', amount: '$2,400' },
+    { label: 'Installation',    amount: '$7,200' },
+    { label: 'OT Differential', amount: '$1,080' },
+    { label: 'Truck Charge',    amount: '$1,120' },
 ]
 
-function DocCard({
-    icon,
-    title,
-    subtitle,
-    meta,
-    children,
-    badge,
-}: {
-    icon: React.ReactNode
-    title: string
-    subtitle: string
-    meta: string
-    children?: React.ReactNode
-    badge?: React.ReactNode
-}) {
-    const [previewOpen, setPreviewOpen] = useState(false)
-    return (
-        <div className="border border-border rounded-xl bg-card overflow-hidden">
-            <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-border bg-muted/40">
-                {icon}
-                <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-bold text-foreground">{title}</div>
-                    <div className="text-[10px] text-muted-foreground">{subtitle}</div>
-                </div>
-                {badge}
-            </div>
-            <div className="p-3 space-y-2">
-                <div className="text-[10px] text-muted-foreground">{meta}</div>
-                {children}
-                <div className="flex gap-2 pt-1">
-                    <button
-                        onClick={() => setPreviewOpen(v => !v)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-[10px] font-semibold text-muted-foreground hover:bg-muted/30 transition-colors"
-                    >
-                        <Eye className="h-3 w-3" />
-                        {previewOpen ? 'Close' : 'Preview'}
-                    </button>
-                    <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-[10px] font-semibold text-muted-foreground hover:bg-muted/30 transition-colors">
-                        <Download className="h-3 w-3" />
-                        Download
-                    </button>
-                </div>
-                {previewOpen && (
-                    <div className="mt-2 bg-muted/30 border border-border/60 rounded-lg px-3 py-2 animate-in fade-in duration-200">
-                        <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-1">Document preview</div>
-                        {children && <div className="text-[10px] text-muted-foreground space-y-0.5">{children}</div>}
-                    </div>
-                )}
-            </div>
-        </div>
-    )
-}
+const EDI_LINES = ['CORE ──EDI──▶ OVNIQ', '✓ Order Q-2026-0089 entered', '✓ Customer acceptance form created in OVNIQ']
 
 export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
-    const [phase, setPhase] = useState<ScenePhase>('review')
+    const [phase, setPhase]           = useState<ScenePhase>('review')
     const [dateConfirmed, setDateConfirmed] = useState(false)
     const [submitting, setSubmitting] = useState(false)
-    const [ediLines, setEdiLines] = useState(0)
+    const [ediLines, setEdiLines]     = useState(0)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -105,16 +56,14 @@ export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
 
     const handleConfirm = () => {
         setSubmitting(true)
-        // Animate EDI lines progressively
-        const lines = ['CORE ──EDI──▶ OVNIQ', '✓ Order Q-2026-0089 entered', '✓ Customer acceptance form created in OVNIQ']
-        lines.forEach((_, i) => {
+        EDI_LINES.forEach((_, i) => {
             setTimeout(pauseAware(() => setEdiLines(i + 1)), 400 + i * 500)
         })
         setTimeout(pauseAware(() => {
             setSubmitting(false)
             setPhase('confirmed')
             setTimeout(pauseAware(() => onConfirm?.()), 1000)
-        }), 400 + lines.length * 500 + 400)
+        }), 400 + EDI_LINES.length * 500 + 400)
     }
 
     if (phase === 'confirmed') {
@@ -143,36 +92,72 @@ export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
                 </div>
             </div>
 
-            {/* PO Card */}
-            <DocCard
-                icon={<FileText className="h-4 w-4 text-blue-500 shrink-0" />}
-                title="Purchase Order · NYC Dept. of Education"
-                subtitle="PO-2026-DOE-0089 · May 6, 2026 · $235,560"
-                meta="Strata captured digitally — no R-drive save required"
-            >
-                <div className="divide-y divide-border/50 text-[10px]">
-                    {PO_ITEMS.map(item => (
-                        <div key={item.label} className="flex justify-between py-1">
-                            <span className="text-foreground">{item.label} {item.qty}</span>
-                            <span className="font-semibold text-foreground">{item.price}</span>
-                        </div>
-                    ))}
-                </div>
-            </DocCard>
+            {/* Side-by-side documents */}
+            <div className="grid grid-cols-2 gap-3">
 
-            {/* Labor Quote Card */}
-            <DocCard
-                icon={<FileText className="h-4 w-4 text-violet-500 shrink-0" />}
-                title="Labor Quote · Workplace / WIG"
-                subtitle="Vendor Order #17706 · Compiled by Michael Boyle"
-                meta="Received digitally — no manual email compile needed"
-            >
-                <div className="flex flex-wrap gap-1 text-[10px]">
-                    {LABOR_ITEMS.map(item => (
-                        <span key={item} className="bg-muted/60 border border-border rounded px-1.5 py-0.5 text-muted-foreground">{item}</span>
-                    ))}
+                {/* PO — left */}
+                <div className="border border-border rounded-xl bg-card overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
+                        <FileText className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-bold text-foreground leading-tight">Purchase Order</div>
+                            <div className="text-[9px] text-muted-foreground">NYC Dept. of Education</div>
+                        </div>
+                    </div>
+                    <div className="px-3 py-2 space-y-1.5">
+                        <div className="text-[9px] text-muted-foreground">PO-2026-DOE-0089 · May 6, 2026</div>
+                        <div className="text-[9px] text-muted-foreground italic">Captured digitally — no R-drive save</div>
+                        <div className="divide-y divide-border/50">
+                            {PO_ITEMS.map(item => (
+                                <div key={item.label} className="flex justify-between py-1">
+                                    <span className="text-[10px] text-foreground">{item.label} {item.qty}</span>
+                                    <span className="text-[10px] font-semibold text-foreground">{item.price}</span>
+                                </div>
+                            ))}
+                            <div className="flex justify-between py-1">
+                                <span className="text-[10px] font-bold text-foreground">Total</span>
+                                <span className="text-[10px] font-bold text-foreground">$235,560</span>
+                            </div>
+                        </div>
+                        <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[9px] text-muted-foreground hover:bg-muted/30 transition-colors">
+                            <Download className="h-2.5 w-2.5" />
+                            Download
+                        </button>
+                    </div>
                 </div>
-            </DocCard>
+
+                {/* Labor Quote — right */}
+                <div className="border border-border rounded-xl bg-card overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
+                        <FileText className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-bold text-foreground leading-tight">Labor Quote</div>
+                            <div className="text-[9px] text-muted-foreground">Workplace / WIG</div>
+                        </div>
+                    </div>
+                    <div className="px-3 py-2 space-y-1.5">
+                        <div className="text-[9px] text-muted-foreground">Vendor Order #17706 · Michael Boyle</div>
+                        <div className="text-[9px] text-muted-foreground italic">No manual email compile needed</div>
+                        <div className="divide-y divide-border/50">
+                            {LABOR_ITEMS.map(item => (
+                                <div key={item.label} className="flex justify-between py-1">
+                                    <span className="text-[10px] text-foreground">{item.label}</span>
+                                    <span className="text-[10px] font-semibold text-foreground">{item.amount}</span>
+                                </div>
+                            ))}
+                            <div className="flex justify-between py-1">
+                                <span className="text-[10px] font-bold text-foreground">Total</span>
+                                <span className="text-[10px] font-bold text-foreground">$11,800</span>
+                            </div>
+                        </div>
+                        <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[9px] text-muted-foreground hover:bg-muted/30 transition-colors">
+                            <Download className="h-2.5 w-2.5" />
+                            Download
+                        </button>
+                    </div>
+                </div>
+
+            </div>
 
             {/* 30-day delivery window */}
             <div className="bg-warning/5 border border-warning/30 rounded-xl px-3.5 py-3 space-y-2.5">
@@ -226,8 +211,8 @@ export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
                     {Array.from({ length: ediLines }, (_, i) => (
                         <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground animate-in fade-in duration-300">
                             {i === 0
-                                ? <><ArrowRight className="h-3 w-3 text-ai shrink-0" /><span className="font-mono text-ai">{['CORE ──EDI──▶ OVNIQ'][i] ?? ''}</span></>
-                                : <><CheckCircle2 className="h-3 w-3 text-success shrink-0" /><span>{['✓ Order Q-2026-0089 entered', '✓ Customer acceptance form created in OVNIQ'][i - 1]}</span></>
+                                ? <><ArrowRight className="h-3 w-3 text-ai shrink-0" /><span className="font-mono text-ai">{EDI_LINES[0]}</span></>
+                                : <><CheckCircle2 className="h-3 w-3 text-success shrink-0" /><span>{EDI_LINES[i]}</span></>
                             }
                         </div>
                     ))}
