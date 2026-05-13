@@ -4,7 +4,8 @@
  *          + missing item, attaches proof of shipment, and sends a claim to Herman Miller.
  *
  * FLOW:
- *   notification → review order card + missing item → attach proof → compose claim → send → nextStep()
+ *   dashboard → notification from Lena slides in → click → review order + missing item
+ *   → attach proof → compose claim dialog → send → nextStep()
  */
 
 import { useState, Fragment } from 'react'
@@ -16,6 +17,13 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIDocViewer, { BFI_DOCS } from './BFIDocViewer'
+import BFIDashboardScene from './BFIDashboardScene'
+
+const LAUREN_NOTIFICATION = {
+    title: 'DOE-2847 · Carton #34 missing · Receiving complete',
+    desc: 'Lena C. · 34/35 cartons confirmed · Monitor Arm Dual Adjustable not received at dock · CORE updated',
+    cta: 'Review report & file claim →',
+}
 
 // ─── Claim message template ───────────────────────────────────────────────────
 
@@ -308,11 +316,21 @@ function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
 
 export default function LaurenClaimScene() {
     const { nextStep } = useDemo()
+    const [phase,         setPhase]         = useState<'dashboard' | 'detail'>('dashboard')
     const [orderExpanded, setOrderExpanded] = useState(false)
     const [proofAttached,  setProofAttached]  = useState(false)
     const [showClaim,      setShowClaim]      = useState(false)
 
     const canSendClaim = proofAttached
+
+    if (phase === 'dashboard') {
+        return (
+            <BFIDashboardScene
+                notificationConfig={LAUREN_NOTIFICATION}
+                onNavigate={() => setPhase('detail')}
+            />
+        )
+    }
 
     return (
         <div className="space-y-3">
