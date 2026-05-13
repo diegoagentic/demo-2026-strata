@@ -171,7 +171,7 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
 
                 <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        <span className="font-medium text-foreground">Before Strata:</span> Lauren comparaba los documentos CPR manualmente contra las entradas de CORE — 45–60 minutos por orden. Los archivos llegaban por email y se cruzaban línea por línea sin sistema.
+                        <span className="font-medium text-foreground">Before Strata:</span> Lauren compared CPR documents manually against CORE entries — 45–60 minutes per order. Files arrived by email and were cross-referenced line by line with no system support.
                     </p>
                 </div>
 
