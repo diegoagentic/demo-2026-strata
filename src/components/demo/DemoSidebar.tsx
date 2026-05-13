@@ -100,6 +100,7 @@ const DATA_THREADS_BY_PROFILE: Record<string, Record<string, string>> = {
         'a1.2c': 'PO + labor captured · CORE entry confirmed · EDI transmitted',
         'a1.2d': 'Proposal sent to DOE · WIG report received · bingo sheet ready for AI',
         'a1.2e': 'Lena notified Lauren · carton #34 (M-ARM) missing · claim filed with Herman Miller',
+        'a1.2f': 'Claim resolved · HM confirmed replacement · Walter notified · work order cleared',
         'a1.3':  'CPR approved · −$2,340 applied · relayed to Nancy Bos',
         'a1.4':  'Agency fee verified · $41,040 match confirmed',
         'r1.2':  'WIG report received · bingo sheet ready for AI',
