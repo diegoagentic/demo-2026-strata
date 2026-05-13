@@ -45,12 +45,12 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
         setAcknowledged(true)
         setTimeout(pauseAware(() => {
             onAcknowledge?.()
-            nextStep()
         }), 800)
     }
 
     return (
-        <div className="space-y-4">
+        <div className="h-full overflow-y-auto bg-background">
+        <div className="p-3 space-y-3">
             {/* Context banner */}
             <div className="bg-ai/5 dark:bg-ai/10 border border-ai/30 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
@@ -227,6 +227,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
             )}
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+        </div>
         </div>
     )
 }

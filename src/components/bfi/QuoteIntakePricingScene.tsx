@@ -116,8 +116,10 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
     const [editingSif, setEditingSif]             = useState(false)
     const [sifSaved, setSifSaved]                 = useState(false)
     const [validatingTab, setValidatingTab]       = useState<'pdf' | 'sif'>('sif')
-    const [valPage, setValPage]                   = useState(0)
+    const [valPage, setValPage]                   = useState(1)   // start on page 2 where discrepancies are
     const [lineApprovals, setLineApprovals]       = useState<Record<string, 'pending' | 'approved'>>({})
+    const [editingLine, setEditingLine]           = useState<string | null>(null)
+    const [lineEdits, setLineEdits]               = useState<Record<string, string>>({})
 
     const VAL_PER_PAGE = 3
     const valTotalPages = Math.ceil(VALIDATION_LINES.length / VAL_PER_PAGE)
@@ -179,7 +181,6 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
         setApplied(true)
         setTimeout(pauseAware(() => {
             onApply?.()
-            nextStep()
         }), 400)
     }
 
@@ -617,12 +618,61 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                             <div className="text-[10px] font-bold text-warning">{line.errorMsg}</div>
                                             <div className="text-[10px] text-muted-foreground mt-0.5">{line.errorDetail}</div>
                                         </div>
-                                        <button
-                                            onClick={() => approveCorrection(line.product)}
-                                            className="flex items-center gap-1 px-2.5 py-1 rounded border border-success/30 bg-success/5 text-[10px] font-semibold text-success hover:bg-success/10 transition-colors"
-                                        >
-                                            <CheckCircle2 className="h-3 w-3 shrink-0" /> Accept OVNIQ correction
-                                        </button>
+                                        {editingLine === line.product ? (
+                                            <div className="space-y-2">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className="text-[9px] text-muted-foreground">Suggestions:</span>
+                                                    <button
+                                                        onClick={() => setLineEdits(prev => ({ ...prev, [line.product]: line.contract }))}
+                                                        className="px-2 py-0.5 text-[9px] rounded-full border border-success/30 bg-success/5 text-success hover:bg-success/10 transition-colors"
+                                                    >
+                                                        {line.contract} · OVNIQ
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setLineEdits(prev => ({ ...prev, [line.product]: line.sif }))}
+                                                        className="px-2 py-0.5 text-[9px] rounded-full border border-border text-muted-foreground hover:border-warning/30 transition-colors"
+                                                    >
+                                                        {line.sif} · SIF original
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={lineEdits[line.product] ?? line.contract}
+                                                        onChange={e => setLineEdits(prev => ({ ...prev, [line.product]: e.target.value }))}
+                                                        className="flex-1 text-[11px] bg-card border border-border rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                                                        placeholder="Enter corrected price…"
+                                                    />
+                                                    <button
+                                                        onClick={() => { approveCorrection(line.product); setEditingLine(null) }}
+                                                        className="flex items-center gap-1 px-2.5 py-1 rounded border border-success/30 bg-success/5 text-[10px] font-semibold text-success hover:bg-success/10 transition-colors"
+                                                    >
+                                                        <CheckCircle2 className="h-3 w-3 shrink-0" /> Save
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setEditingLine(null)}
+                                                        className="px-2.5 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <button
+                                                    onClick={() => approveCorrection(line.product)}
+                                                    className="flex items-center gap-1 px-2.5 py-1 rounded border border-success/30 bg-success/5 text-[10px] font-semibold text-success hover:bg-success/10 transition-colors"
+                                                >
+                                                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Accept OVNIQ correction
+                                                </button>
+                                                <button
+                                                    onClick={() => { setEditingLine(line.product); setLineEdits(prev => ({ ...prev, [line.product]: prev[line.product] ?? line.contract })) }}
+                                                    className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+                                                >
+                                                    <Edit2 className="h-3 w-3 shrink-0" /> Edit manually
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

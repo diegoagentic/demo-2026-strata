@@ -54,6 +54,17 @@ export default function BFIPage() {
         )
     }
 
+    // Robert Chen (a1.2b) — Miller Knoll designer phone view, breaks out of the MBIPageShell
+    if (stepId === 'a1.2b') {
+        return (
+            <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center py-6 animate-in fade-in duration-500">
+                <MobileDeviceFrame size="lg">
+                    <DesignerResponseScene key="a1.2b" onAcknowledge={nextStep} />
+                </MobileDeviceFrame>
+            </div>
+        )
+    }
+
     const isReceiving = stepId.startsWith('r')
     const isAgencyFee = stepId.startsWith('a')
 
@@ -77,7 +88,6 @@ export default function BFIPage() {
                 {stepId === 'r1.5' && <CoreEntryScene onConfirm={nextStep} />}
                 {stepId === 'a1.1' && <CoNYMorningQueue onSelectOrder={nextStep} />}
                 {stepId === 'a1.2' && <QuoteIntakePricingScene onApply={nextStep} />}
-                {stepId === 'a1.2b' && <DesignerResponseScene onAcknowledge={nextStep} />}
                 {stepId === 'a1.2c' && <POLaborScene onConfirm={nextStep} />}
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
