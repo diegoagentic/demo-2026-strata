@@ -323,6 +323,8 @@ export interface BFIProcessKanbanProps {
     reviewLabel?: string
     /** Show the "+ New Fee" button. Default: true */
     showNewFee?: boolean
+    /** When set, only context cards in these column indices are visible. DOE card is unaffected. */
+    filterColIdxs?: number[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -336,6 +338,7 @@ export default function BFIProcessKanban({
     animateDoe = false,
     reviewLabel = 'Review',
     showNewFee  = true,
+    filterColIdxs,
 }: BFIProcessKanbanProps) {
     const badge    = DOE_BADGE[activeCol]
     const subtitle = doeSubtitle ?? DOE_SUBTITLE[activeCol]
@@ -366,7 +369,10 @@ export default function BFIProcessKanban({
             <div className="grid grid-cols-5 gap-2">
                 {PROCESS_COLUMNS.map((c, colIdx) => {
                     const isDoeCol     = colIdx === activeCol
-                    const colCards     = contextCards.filter(card => card.colIdx === colIdx)
+                    const colCards     = contextCards.filter(card =>
+                        card.colIdx === colIdx &&
+                        (filterColIdxs === undefined || filterColIdxs.includes(colIdx))
+                    )
                     const doeVisible   = showDoe && isDoeCol
                     const count        = (doeVisible ? 1 : 0) + colCards.length
 

@@ -40,6 +40,21 @@ const FLOW2_NOTIFICATIONS: Notification[] = [
     },
 ];
 
+// BFI Step a1.1 — Miller Knoll quote request notification
+const BFI_A11_NOTIFICATIONS: Notification[] = [
+    {
+        id: 'bfi-a11-miller-knoll',
+        type: 'quote_update',
+        priority: 'high',
+        title: 'New quote request · Miller Knoll',
+        message: 'Robert Chen sent SIF + PDF specs for DOE-2847 · NYC Dept. of Education · Q-2026-0089',
+        meta: 'robert.chen@millerknoll.com · May 6 · 8:14 AM',
+        timestamp: 'May 6 · 8:14 AM',
+        unread: true,
+        actions: [{ label: 'Ingest with Strata', primary: true }],
+    },
+];
+
 // Flow 1 notification for Step 1.10 — single focused notification
 const FLOW1_NOTIFICATIONS: Notification[] = [
     {
@@ -56,6 +71,12 @@ export default function ActionCenter() {
     const sidebarExpanded = isDemoActive && !isSidebarCollapsed;
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    // BFI Step a1.1: Auto-open with Miller Knoll quote request
+    const isStepA11 = isDemoActive && currentStep?.id === 'a1.1';
+    const [a11PanelClosed, setA11PanelClosed] = useState(false);
+    // Reset panel when step changes
+    useEffect(() => { setA11PanelClosed(false); }, [currentStep?.id]);
 
     // Step 1.10: Auto-open with single notification
     const isStep19 = isDemoActive && currentStep?.id === '1.10';
@@ -139,7 +160,7 @@ export default function ActionCenter() {
         { id: 'system', label: 'System', count: FLOW2_NOTIFICATIONS.filter(n => n.type === 'system').length, icon: SparklesIcon, colorTheme: { activeBg: 'bg-emerald-500/15', activeText: 'text-emerald-500', activeBorder: 'border-emerald-500/20', badgeBg: 'bg-emerald-500/20', badgeText: 'text-emerald-500' }, filter: (n) => n.type === 'system' },
     ];
 
-    const isStepAutoOpen = isStep19 || isStep27;
+    const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed);
 
     return (
         <>
@@ -268,6 +289,57 @@ export default function ActionCenter() {
                         <p className="text-xs font-bold text-green-500 flex items-center gap-1.5">
                             <CheckCircleIcon className="w-3.5 h-3.5" />
                             PO generated
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* BFI Step a1.1: Always-visible Action Center — Miller Knoll quote request */}
+        {isStepA11 && !a11PanelClosed && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-3 shrink-0">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary-foreground font-bold animate-pulse">1 new</span>
+                            </div>
+                            <button
+                                onClick={() => setA11PanelClosed(true)}
+                                className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+                            >
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Highlighted notification */}
+                    <div className="px-5 pb-5">
+                        <div className="relative rounded-2xl ring-2 ring-primary shadow-lg shadow-primary/20 animate-in fade-in duration-500">
+                            {/* "Incoming" badge */}
+                            <span className="absolute -top-2 right-4 text-[9px] font-black text-primary-foreground bg-primary px-2 py-0.5 rounded-full shadow-sm z-10">
+                                INCOMING
+                            </span>
+                            <NotificationItem
+                                notification={BFI_A11_NOTIFICATIONS[0]}
+                                onActionClick={(action) => {
+                                    if (action === 'Ingest with Strata') {
+                                        setA11PanelClosed(true)
+                                        window.dispatchEvent(new CustomEvent('bfi:ingest'))
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                        <p className="text-xs font-bold text-primary flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                            Awaiting ingest
                         </p>
                     </div>
                 </div>

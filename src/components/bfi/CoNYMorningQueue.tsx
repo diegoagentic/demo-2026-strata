@@ -11,16 +11,16 @@
  *   sendDialog  → "Notify designer?" → send flow → nextStep()
  */
 
-import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
-    Sparkles, CheckCircle2, AlertTriangle, ChevronRight,
-    FileText, Mail, Eye, Send, User,
+    Sparkles, CheckCircle2, AlertTriangle,
+    FileText, Mail, Send, User,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIDocumentReviewModal from './BFIDocumentReviewModal'
-import BFIProcessKanban, { BFI_PROCESS_FUNNEL } from './BFIProcessKanban'
+import BFIProcessKanban from './BFIProcessKanban'
 
 interface CoNYMorningQueueProps {
     onSelectOrder?: () => void
@@ -72,6 +72,13 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
         return cleanup
     }, [queueState, pauseAware])
 
+    // Listen for Action Center "Ingest with Strata" trigger
+    useEffect(() => {
+        const handler = () => setQueueState('ingesting')
+        window.addEventListener('bfi:ingest', handler)
+        return () => window.removeEventListener('bfi:ingest', handler)
+    }, [])
+
     useEffect(() => {
         if (queueState !== 'ingesting') return
         if (ingestCount >= INGEST_LINES.length) {
@@ -106,43 +113,20 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
         nextStep()
     }
 
-    const showDoe    = queueState === 'ready'
-    const funnelActive = 0
+    const showDoe = queueState === 'ready'
+
+    // Map active tab index to visible kanban column indices
+    // 0=All, 1=Needs Attention (col 0), 2=In Progress (cols 1,2), 3=Done (col 4)
+    const TAB_FILTER: Record<number, number[] | undefined> = {
+        0: undefined,
+        1: [0],
+        2: [1, 2],
+        3: [4],
+    }
+    const filterColIdxs = TAB_FILTER[activeTab]
 
     return (
         <div className="space-y-4">
-
-            {/* ── Funnel stepper — Intake active ── */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
-                {BFI_PROCESS_FUNNEL.map((step, i) => {
-                    const active = i === funnelActive
-                    const past   = i < funnelActive
-                    return (
-                        <Fragment key={step.id}>
-                            <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all shrink-0 ${
-                                active ? 'bg-primary text-primary-foreground shadow-sm'
-                                : past  ? 'bg-muted/60 text-foreground/70'
-                                :         'bg-muted/30 text-muted-foreground'
-                            }`}>
-                                <span className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${
-                                    active ? 'bg-primary-foreground/20'
-                                    : past  ? 'bg-success/20'
-                                    :         'bg-muted/60 text-muted-foreground'
-                                }`}>
-                                    {past
-                                        ? <CheckCircle2 className="h-2.5 w-2.5 text-success" />
-                                        : <span className="text-[9px] font-bold">{i + 1}</span>
-                                    }
-                                </span>
-                                {step.label}
-                            </div>
-                            {i < BFI_PROCESS_FUNNEL.length - 1 && (
-                                <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                            )}
-                        </Fragment>
-                    )
-                })}
-            </div>
 
             {/* ── Tab filters ── */}
             <div className="flex items-center gap-1 flex-wrap">
@@ -240,6 +224,7 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                 showDoe={showDoe}
                 animateDoe={true}
                 onReviewDoe={queueState === 'ready' ? handleReviewOrder : undefined}
+                filterColIdxs={filterColIdxs}
             />
 
             <p className="text-[11px] text-muted-foreground text-center">
