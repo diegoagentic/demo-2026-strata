@@ -93,6 +93,7 @@ export default function BFIPage() {
                 {stepId === 'a1.2d' && (
                     <WIGBingoCheckScene
                         onAnalyze={nextStep}
+                        uploadMode
                         notificationConfig={{
                             title: 'Purchase Order confirmed · NYC Dept. of Education',
                             desc: 'DOE-2847 · Q-2026-0089 · Delivery May 14–21 · 35 cartons · warehouse receiving',
