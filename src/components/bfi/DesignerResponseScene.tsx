@@ -6,7 +6,7 @@
  */
 
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { Sparkles, CheckCircle2, Package, ArrowRight, ClipboardList, Truck, Wrench, User, FileText, ChevronDown, ChevronUp } from 'lucide-react'
+import { Sparkles, CheckCircle2, Package, ArrowRight, ClipboardList, Truck, Wrench, User, FileText } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -38,7 +38,6 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
     const [acknowledged, setAcknowledged] = useState(false)
-    const [docsExpanded, setDocsExpanded] = useState(false)
     const [activeDocTab, setActiveDocTab] = useState<'pdf' | 'sif'>('pdf')
 
     const pauseAware = useCallback((fn: () => void) => () => {
@@ -106,25 +105,17 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                 </div>
             </div>
 
-            {/* Document viewer — collapsible */}
+            {/* Document viewer — always expanded */}
             <div className="border border-border rounded-xl overflow-hidden">
-                <button
-                    onClick={() => setDocsExpanded(v => !v)}
-                    className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
-                >
+                <div className="flex items-center gap-2 px-3.5 py-2.5 bg-muted/40">
                     <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide flex-1">
                         Attached Documents · specs.pdf + sif.csv
                     </span>
-                    <span className="text-[9px] text-muted-foreground mr-1">View only</span>
-                    {docsExpanded
-                        ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    }
-                </button>
+                    <span className="text-[9px] text-muted-foreground">View only</span>
+                </div>
 
-                {docsExpanded && (
-                    <div className="border-t border-border">
+                <div className="border-t border-border">
                         {/* Tab bar */}
                         <div className="flex border-b border-border bg-muted/20">
                             {(['pdf', 'sif'] as const).map(tab => (
@@ -264,7 +255,6 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                             </div>
                         )}
                     </div>
-                )}
             </div>
 
             {/* Next steps */}
