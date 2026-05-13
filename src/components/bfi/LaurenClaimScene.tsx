@@ -163,24 +163,37 @@ function ProofCard({ attached, onAttach }: { attached: boolean; onAttach: () => 
                                 <div className="text-[10px] font-bold text-foreground truncate">carton-34-evidence.jpg</div>
                                 <div className="text-[9px] text-muted-foreground">Photo evidence · carton #34 · dock receipt</div>
                             </div>
-                            <button onClick={() => setPreviewOpen(v => !v)}
+                            <button onClick={() => setPreviewOpen(true)}
                                 className="text-[9px] text-primary font-bold hover:opacity-70 transition-opacity shrink-0">
-                                {previewOpen ? 'Hide' : 'Preview'}
+                                Preview
                             </button>
                         </div>
 
+                        {/* Lightbox */}
                         {previewOpen && (
-                            <div className="rounded-xl overflow-hidden border border-border animate-in fade-in duration-200">
-                                <div className="px-2.5 py-1.5 bg-muted/40 border-b border-border flex items-center gap-1.5">
-                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Photo evidence · Dock · May 11, 2026</span>
-                                    <span className="ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">Carton #34</span>
+                            <div
+                                className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-200"
+                                onClick={() => setPreviewOpen(false)}
+                            >
+                                <div
+                                    className="relative max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl"
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-900">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wide">Photo evidence · Dock · May 11, 2026</span>
+                                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning border border-warning/30">Carton #34</span>
+                                        </div>
+                                        <button onClick={() => setPreviewOpen(false)}
+                                            className="text-zinc-400 hover:text-white text-lg leading-none transition-colors">×</button>
+                                    </div>
+                                    <img
+                                        src="/docs/bfi/receiving/carton-34-evidence.jpg"
+                                        alt="Carton #34 evidence photo"
+                                        className="w-full object-contain bg-black"
+                                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                    />
                                 </div>
-                                <img
-                                    src="/docs/bfi/receiving/carton-34-evidence.jpg"
-                                    alt="Carton #34 evidence photo"
-                                    className="w-full object-cover max-h-64"
-                                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                                />
                             </div>
                         )}
                     </>
