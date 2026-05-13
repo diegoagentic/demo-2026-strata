@@ -114,7 +114,7 @@ function ProofCard({ attached, onAttach }: { attached: boolean; onAttach: () => 
 
     const handleAttach = () => {
         setAttaching(true)
-        setTimeout(() => { setAttaching(false); onAttach() }, 1400)
+        setTimeout(() => { setAttaching(false); onAttach(); setPreviewOpen(true) }, 1400)
     }
 
     return (
@@ -357,10 +357,13 @@ export default function LaurenClaimScene() {
                         <p className="text-muted-foreground text-[10px]">CORE updated — partial shipment flag set. Line 7 excluded from entry pending claim resolution.</p>
                         <p className="text-muted-foreground text-[10px]">— Lena C. · Receiving Coordinator</p>
                     </div>
-                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border text-[10px] text-foreground w-fit">
-                        <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
-                        BD-2026-0412_BingoSheet.pdf
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border text-[10px] text-foreground">
+                            <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                            BD-2026-0412_BingoSheet.pdf
+                        </div>
                     </div>
+                    <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={240} extractedFields={[]} />
                 </div>
             </div>
 
