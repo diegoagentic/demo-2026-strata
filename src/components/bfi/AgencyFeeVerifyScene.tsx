@@ -19,7 +19,7 @@ import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 interface AgencyFeeVerifySceneProps {
-    onRoleChange?: (role: string) => void
+    onComplete?: () => void
 }
 
 const FEE_LINES = [
@@ -31,7 +31,7 @@ const EXPECTED_FEE = '$41,040'
 const NANCY_MATCH   = '$41,040'
 const NANCY_GAP     = '$39,790'   // simulated discrepancy: -$1,250
 
-export default function AgencyFeeVerifyScene({ onRoleChange }: AgencyFeeVerifySceneProps) {
+export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifySceneProps) {
     const { nextStep, isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])

@@ -169,6 +169,12 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
                     </div>
                 ))}
 
+                <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        <span className="font-medium text-foreground">Before Strata:</span> Lauren comparaba los documentos CPR manualmente contra las entradas de CORE — 45–60 minutos por orden. Los archivos llegaban por email y se cruzaban línea por línea sin sistema.
+                    </p>
+                </div>
+
                 <button
                     onClick={() => setPhase('reconciling')}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"

@@ -13,15 +13,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { CheckCircle2, AlertTriangle, Calendar, Package, ChevronDown, ChevronUp, Bell, Zap } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
+import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 interface WalterNotifSceneProps {
     onConfirm?: () => void
-    onRoleChange?: (role: string) => void
 }
 
 type WalterState = 'locked' | 'app'
 
-export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNotifSceneProps) {
+export default function WalterNotifScene({ onConfirm }: WalterNotifSceneProps) {
     const { nextStep, isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
@@ -209,6 +209,8 @@ export default function WalterNotifScene({ onConfirm, onRoleChange }: WalterNoti
                 <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5 text-[10px] text-muted-foreground leading-relaxed">
                     <span className="font-medium text-foreground">Before Strata:</span> Lauren and Kate both reported that Walter was completely out of the loop until Lauren brought him a printed copy in person — always after the fact. BFI never spoke directly with Walter during the project.
                 </div>
+
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
             </div>
 
             {/* Fixed bottom action */}

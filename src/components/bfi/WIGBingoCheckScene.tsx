@@ -5,8 +5,9 @@
  *          Click → 'checking' phase: 3 moments (email, CORE state, bingo sheet) + AI CTA.
  */
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { FileText, Mail, Sparkles, Package, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
+import { useDemo } from '../../context/DemoContext'
 import BFIDashboardScene from './BFIDashboardScene'
 import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -19,14 +20,25 @@ interface WIGBingoCheckSceneProps {
 const CARTONS = Array.from({ length: 35 }, (_, i) => i + 1)
 
 export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProps) {
+    const { isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+
     const [phase, setPhase] = useState<'dashboard' | 'checking'>('dashboard')
     const [clicked, setClicked] = useState(false)
     const [coreExpanded, setCoreExpanded] = useState(false)
     const [bingoExpanded, setBingoExpanded] = useState(false)
 
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const handleAnalyze = () => {
         setClicked(true)
-        setTimeout(() => onAnalyze?.(), 300)
+        setTimeout(pauseAware(() => onAnalyze?.()), 300)
     }
 
     if (phase === 'dashboard') {

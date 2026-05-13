@@ -302,9 +302,11 @@ export default function DemoSidebar() {
                     const isCompleted = index < currentStepIndex;
                     const showGroupHeader = index === 0 || steps[index - 1].groupId !== step.groupId;
                     // Compute sequential display number from group position
+                    const groupIds = [...new Set(steps.map(s => s.groupId))];
                     const groupSteps = steps.filter(s => s.groupId === step.groupId);
                     const posInGroup = groupSteps.findIndex(s => s.id === step.id);
-                    const displayNumber = `${step.groupId + 1}.${posInGroup + 1}`;
+                    const groupDisplayNum = groupIds.indexOf(step.groupId) + 1;
+                    const displayNumber = `${groupDisplayNum}.${posInGroup + 1}`;
 
                     return (
                         <React.Fragment key={step.id}>

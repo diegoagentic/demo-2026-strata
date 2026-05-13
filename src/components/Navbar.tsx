@@ -110,6 +110,12 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
 const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quote-detail'];
 
 function resolveProfileKey(role: string | undefined, app: string | undefined): string {
+    if (app?.startsWith('bfi-')) {
+        if (role === 'Project Manager') return 'BFI Project Manager';
+        if (role === 'Finance / AR')    return 'BFI Finance';
+        if (role === 'Designer')        return 'BFI Designer';
+        return 'BFI Account Manager';
+    }
     if (role === 'Expert') return 'Expert';
     if (role === 'Estimator') return 'Estimator';
     if (role === 'End User') return 'End User';
@@ -121,12 +127,6 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
     if (role === 'AP Coordinator') return 'AP Coordinator';
     if (role === 'Accountant') return 'AP Coordinator';
     if (role === 'CFO') return 'CFO';
-    if (app?.startsWith('bfi-')) {
-        if (role === 'Project Manager') return 'BFI Project Manager';
-        if (role === 'Finance / AR')    return 'BFI Finance';
-        if (role === 'Designer')        return 'BFI Designer';
-        return 'BFI Account Manager';
-    }
     if (role === 'System') {
         // System steps inherit the human profile of their parent app
         if (app === 'crm') return 'Sales Rep';

@@ -9,7 +9,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, ChevronRight, FileText, Mail, Building2 } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, ChevronRight, ChevronDown, ChevronUp, FileText, Mail, Building2, Eye, Download } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -42,6 +42,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
     const [contractType, setContractType]   = useState<'city' | 'state'>('city')
     const [applied, setApplied]             = useState(false)
     const [ocr, setOcr]                     = useState(false)
+    const [sifExpanded, setSifExpanded]     = useState(false)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -112,24 +113,44 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                         {/* Attachments */}
                         <div className="space-y-2 pt-1">
                             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1">Attachments</div>
-                            <div className="flex items-center gap-2 bg-muted/30 border border-border rounded-lg px-2.5 py-2">
-                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-[11px] font-medium text-foreground">DOE-2847_specs.pdf</div>
-                                    <div className="text-[10px] text-muted-foreground">Product specs · architectural drawings · 12 pages</div>
+                            <div className="bg-muted/30 border border-border rounded-lg px-2.5 py-2 space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-medium text-foreground">DOE-2847_specs.pdf</div>
+                                        <div className="text-[10px] text-muted-foreground">Product specs · architectural drawings · 12 pages</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 pt-0.5">
+                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
+                                        <Eye className="h-3 w-3" /> Preview
+                                    </button>
+                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
+                                        <Download className="h-3 w-3" /> Download
+                                    </button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 bg-muted/30 border border-border rounded-lg px-2.5 py-2">
-                                <FileText className="h-3.5 w-3.5 text-ai shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-[11px] font-medium text-foreground">DOE-2847_SIF_v1.xlsx</div>
-                                    <div className="text-[10px] text-muted-foreground">Product codes · list prices · 4 line items</div>
+                            <div className="bg-muted/30 border border-border rounded-lg px-2.5 py-2 space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="h-3.5 w-3.5 text-ai shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-medium text-foreground">DOE-2847_SIF_v1.xlsx</div>
+                                        <div className="text-[10px] text-muted-foreground">Product codes · list prices · 4 line items</div>
+                                    </div>
+                                    {ocr && (
+                                        <span className="text-[9px] text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded-full font-medium animate-in fade-in duration-300 shrink-0">
+                                            OCR ✓
+                                        </span>
+                                    )}
                                 </div>
-                                {ocr && (
-                                    <span className="text-[9px] text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded-full font-medium animate-in fade-in duration-300">
-                                        OCR ✓
-                                    </span>
-                                )}
+                                <div className="flex gap-2 pt-0.5">
+                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
+                                        <Eye className="h-3 w-3" /> Preview
+                                    </button>
+                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
+                                        <Download className="h-3 w-3" /> Download
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -192,6 +213,42 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                         <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
                         <span className="bg-muted/60 border border-border rounded px-2 py-1 font-medium text-foreground">CORE · CoNY contract</span>
                     </div>
+                </div>
+
+                {/* SIF document preview — collapsible */}
+                <div className="border border-border rounded-xl bg-card overflow-hidden">
+                    <button
+                        onClick={() => setSifExpanded(v => !v)}
+                        className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-muted/40 transition-colors"
+                    >
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-3.5 w-3.5 text-ai shrink-0" />
+                            <div className="text-left">
+                                <div className="text-[10px] font-bold text-foreground">Q-2026-0089 · SIF · Herman Miller</div>
+                                <div className="text-[9px] text-muted-foreground">3 line items · 1 issue detected</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">OCR ✓</span>
+                            {sifExpanded ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
+                        </div>
+                    </button>
+                    {sifExpanded && (
+                        <div className="border-t border-border px-3.5 py-3 space-y-1.5 animate-in fade-in duration-200">
+                            <div className="flex gap-3 pb-2 border-b border-border/60">
+                                <span className="text-[10px] text-success font-medium">Valid 2</span>
+                                <span className="text-[10px] text-warning font-medium">Issues 1</span>
+                                <span className="text-[10px] text-muted-foreground">Total 3</span>
+                            </div>
+                            {VALIDATION_LINES.map(line => (
+                                <div key={line.product} className="flex items-center gap-2 text-[10px]">
+                                    <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${line.status === 'ok' ? 'bg-success' : 'bg-warning'}`} />
+                                    <span className="text-foreground flex-1">{line.product}</span>
+                                    <span className={`tabular-nums ${line.status === 'corrected' ? 'text-warning line-through' : 'text-muted-foreground'}`}>{line.sif}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Validation table */}

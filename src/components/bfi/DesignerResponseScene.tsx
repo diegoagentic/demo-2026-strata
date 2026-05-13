@@ -10,6 +10,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Bell, CheckCircle2, Package } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
+import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 interface DesignerResponseSceneProps {
     onAcknowledge?: () => void
@@ -157,6 +158,8 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                 <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5 text-[10px] text-muted-foreground leading-relaxed">
                     <span className="font-medium text-foreground">Before Strata:</span> Robert waited 1–2 business days for Lauren's confirmation email — no order number, no system visibility. Lauren had to remember to send the follow-up manually.
                 </div>
+
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
             </div>
 
             {/* Fixed bottom CTA */}
