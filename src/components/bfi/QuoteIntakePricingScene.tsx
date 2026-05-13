@@ -9,7 +9,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, ChevronRight, ChevronDown, ChevronUp, FileText, Mail, Building2, Eye, Download } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, ChevronRight, ChevronDown, ChevronUp, FileText, Mail, Building2, Download, Edit2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -18,6 +18,13 @@ interface QuoteIntakePricingSceneProps {
 }
 
 type Phase = 'email' | 'validating' | 'discount'
+
+type SpecLine = { code: string; name: string; qty: string; dims: string; finish: string }
+const PDF_SPECS_DEFAULT: SpecLine[] = [
+    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', dims: 'W: 72" H: 29" D: 30"', finish: 'White/Silver' },
+    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',            qty: '×12', dims: 'W: 32" H: 45" D: 28"', finish: 'Fog fabric'   },
+    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  dims: 'W: 36" H: 28" D: 20"', finish: 'Platinum'    },
+]
 
 const VALIDATION_LINES = [
     { product: 'Workstations ×24',   sif: '$144,000', contract: '$144,000', status: 'ok'        as const, conf: '98%' },
@@ -47,6 +54,9 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
     const [downloading, setDownloading]           = useState<'pdf' | 'sif' | null>(null)
     const [downloadedPdf, setDownloadedPdf]       = useState(false)
     const [downloadedSif, setDownloadedSif]       = useState(false)
+    const [pdfSpecs, setPdfSpecs]                 = useState<SpecLine[]>(PDF_SPECS_DEFAULT)
+    const [editingPdf, setEditingPdf]             = useState(false)
+    const [pdfSaved, setPdfSaved]                 = useState(false)
 
     const handleDownload = (type: 'pdf' | 'sif') => {
         if (downloading) return
@@ -56,6 +66,12 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
             if (type === 'pdf') setDownloadedPdf(true)
             else setDownloadedSif(true)
         }, 1200)
+    }
+
+    const handleSavePdf = () => {
+        setEditingPdf(false)
+        setPdfSaved(true)
+        setTimeout(() => setPdfSaved(false), 2000)
     }
 
     const pauseAware = useCallback((fn: () => void) => () => {
@@ -163,14 +179,21 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                                 Product Specification · DOE-2847
                                             </div>
                                             <div className="text-[9px] text-zinc-500">NYC Dept. of Education · BFI Furniture · Q-2026-0089</div>
-                                            {[
-                                                { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', dims: 'W: 72" H: 29" D: 30"', finish: 'White/Silver' },
-                                                { code: 'HMI-LS-500',  name: 'Brody WorkLounge',            qty: '×12', dims: 'W: 32" H: 45" D: 28"', finish: 'Fog fabric'   },
-                                                { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  dims: 'W: 36" H: 28" D: 20"', finish: 'Platinum'    },
-                                            ].map(p => (
+                                            {pdfSpecs.map((p, idx) => (
                                                 <div key={p.code} className="border-l-2 border-zinc-300 dark:border-zinc-600 pl-2 text-[9px] leading-relaxed">
                                                     <div className="font-bold text-zinc-800 dark:text-zinc-200">{p.code} · {p.name} {p.qty}</div>
-                                                    <div className="text-zinc-500">{p.dims} · {p.finish}</div>
+                                                    <div className="flex items-center gap-1 text-zinc-500">
+                                                        <span>{p.dims} ·</span>
+                                                        {editingPdf ? (
+                                                            <input
+                                                                value={p.finish}
+                                                                onChange={e => setPdfSpecs(prev => prev.map((s, i) => i === idx ? { ...s, finish: e.target.value } : s))}
+                                                                className="bg-transparent border-b border-zinc-400 dark:border-zinc-500 text-zinc-700 dark:text-zinc-300 text-[9px] outline-none w-24 font-medium"
+                                                            />
+                                                        ) : (
+                                                            <span className={pdfSaved ? 'text-success font-medium' : ''}>{p.finish}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -208,24 +231,46 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                     </div>
                                 )}
 
-                                {/* Footer: meta + download */}
+                                {/* Footer: meta + actions */}
                                 <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/20">
                                     <span className="text-[9px] text-muted-foreground">
                                         {activeAttachment === 'pdf' ? '12 pages · 4.2 MB' : '4 line items · XLSX · 18 KB'}
                                     </span>
-                                    <button
-                                        onClick={() => handleDownload(activeAttachment)}
-                                        disabled={downloading !== null}
-                                        className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 disabled:opacity-60 transition-colors"
-                                    >
-                                        {downloading === activeAttachment ? (
-                                            <><div className="h-3 w-3 border border-muted-foreground border-t-transparent rounded-full animate-spin shrink-0" /> Downloading…</>
-                                        ) : (activeAttachment === 'pdf' ? downloadedPdf : downloadedSif) ? (
-                                            <><CheckCircle2 className="h-3 w-3 text-success shrink-0" /> Downloaded</>
-                                        ) : (
-                                            <><Download className="h-3 w-3 shrink-0" /> Download</>
+                                    <div className="flex items-center gap-1.5">
+                                        {/* Edit / Save — PDF only */}
+                                        {activeAttachment === 'pdf' && (
+                                            editingPdf ? (
+                                                <button
+                                                    onClick={handleSavePdf}
+                                                    className="flex items-center gap-1 px-2.5 py-1 rounded border border-ai/40 bg-ai/10 text-[10px] font-medium text-ai hover:bg-ai/20 transition-colors"
+                                                >
+                                                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Save changes
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setEditingPdf(true)}
+                                                    className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+                                                >
+                                                    <Edit2 className="h-3 w-3 shrink-0" />
+                                                    {pdfSaved ? <span className="text-success">Saved ✓</span> : 'Edit fields'}
+                                                </button>
+                                            )
                                         )}
-                                    </button>
+                                        {/* Download */}
+                                        <button
+                                            onClick={() => handleDownload(activeAttachment)}
+                                            disabled={downloading !== null || editingPdf}
+                                            className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 disabled:opacity-60 transition-colors"
+                                        >
+                                            {downloading === activeAttachment ? (
+                                                <><div className="h-3 w-3 border border-muted-foreground border-t-transparent rounded-full animate-spin shrink-0" /> Downloading…</>
+                                            ) : (activeAttachment === 'pdf' ? downloadedPdf : downloadedSif) ? (
+                                                <><CheckCircle2 className="h-3 w-3 text-success shrink-0" /> Downloaded</>
+                                            ) : (
+                                                <><Download className="h-3 w-3 shrink-0" /> Download</>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
