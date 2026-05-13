@@ -160,8 +160,8 @@ function ProofCard({ attached, onAttach }: { attached: boolean; onAttach: () => 
                         <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-success/20 bg-success/5">
                             <FileText className="h-3.5 w-3.5 text-success shrink-0" />
                             <div className="flex-1 min-w-0">
-                                <div className="text-[10px] font-bold text-foreground truncate">RR-37577_BingoSheet_May11.pdf</div>
-                                <div className="text-[9px] text-muted-foreground">WIG Receiving Report · carton #34 annotated</div>
+                                <div className="text-[10px] font-bold text-foreground truncate">carton-34-evidence.jpg</div>
+                                <div className="text-[9px] text-muted-foreground">Photo evidence · carton #34 · dock receipt</div>
                             </div>
                             <button onClick={() => setPreviewOpen(v => !v)}
                                 className="text-[9px] text-primary font-bold hover:opacity-70 transition-opacity shrink-0">
@@ -170,8 +170,17 @@ function ProofCard({ attached, onAttach }: { attached: boolean; onAttach: () => 
                         </div>
 
                         {previewOpen && (
-                            <div className="animate-in fade-in duration-200">
-                                <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={220} extractedFields={[]} />
+                            <div className="rounded-xl overflow-hidden border border-border animate-in fade-in duration-200">
+                                <div className="px-2.5 py-1.5 bg-muted/40 border-b border-border flex items-center gap-1.5">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Photo evidence · Dock · May 11, 2026</span>
+                                    <span className="ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">Carton #34</span>
+                                </div>
+                                <img
+                                    src="/docs/bfi/receiving/carton-34-evidence.jpg"
+                                    alt="Carton #34 evidence photo"
+                                    className="w-full object-cover max-h-64"
+                                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                />
                             </div>
                         )}
                     </>
