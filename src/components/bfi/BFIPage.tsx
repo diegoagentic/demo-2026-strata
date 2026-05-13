@@ -90,7 +90,16 @@ export default function BFIPage() {
                 {stepId === 'a1.1' && <CoNYMorningQueue onSelectOrder={nextStep} />}
                 {stepId === 'a1.2b' && <QuoteIntakePricingScene onApply={nextStep} />}
                 {stepId === 'a1.2c' && <POLaborScene />}
-                {stepId === 'a1.2d' && <WIGBingoCheckScene onAnalyze={nextStep} />}
+                {stepId === 'a1.2d' && (
+                    <WIGBingoCheckScene
+                        onAnalyze={nextStep}
+                        notificationConfig={{
+                            title: 'Purchase Order confirmed · NYC Dept. of Education',
+                            desc: 'DOE-2847 · Q-2026-0089 · Delivery May 14–21 · 35 cartons · warehouse receiving',
+                            cta: 'Review receiving documents →',
+                        }}
+                    />
+                )}
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
             </div>

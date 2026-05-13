@@ -13,14 +13,27 @@ import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIDocViewer, { BFI_DOCS } from './BFIDocViewer'
 
+interface NotificationConfig {
+    title: string
+    desc: string
+    cta: string
+}
+
 interface WIGBingoCheckSceneProps {
     onAnalyze?: () => void
+    notificationConfig?: NotificationConfig
 }
 
 // Generate bingo grid: 1-35, carton 34 is missing
 const CARTONS = Array.from({ length: 35 }, (_, i) => i + 1)
 
-export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProps) {
+const DEFAULT_NOTIFICATION: NotificationConfig = {
+    title: 'WIG document received',
+    desc: 'PMO-2026-0412 · Bingo Sheet · 35 cartons · ready for AI analysis',
+    cta: 'Review bingo sheet →',
+}
+
+export default function WIGBingoCheckScene({ onAnalyze, notificationConfig }: WIGBingoCheckSceneProps) {
     const { isPaused } = useDemo()
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
@@ -48,11 +61,7 @@ export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProp
     if (phase === 'dashboard') {
         return (
             <BFIDashboardScene
-                notificationConfig={{
-                    title: 'WIG document received',
-                    desc: 'PMO-2026-0412 · Bingo Sheet · 35 cartons · ready for AI analysis',
-                    cta: 'Review bingo sheet →',
-                }}
+                notificationConfig={notificationConfig ?? DEFAULT_NOTIFICATION}
                 onNavigate={() => setPhase('checking')}
             />
         )
