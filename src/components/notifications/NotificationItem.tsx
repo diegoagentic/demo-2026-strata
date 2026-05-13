@@ -1,4 +1,4 @@
-import { ArrowRightIcon, ExclamationTriangleIcon, ExclamationCircleIcon, InformationCircleIcon, CheckCircleIcon, DocumentTextIcon, CreditCardIcon, ClipboardDocumentCheckIcon, MegaphoneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, ExclamationTriangleIcon, ExclamationCircleIcon, InformationCircleIcon, CheckCircleIcon, DocumentTextIcon, CreditCardIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import type { Notification } from './types';
 import { clsx } from 'clsx';
@@ -8,8 +8,6 @@ const PriorityIcon = ({ priority, type }: { priority: Notification['priority'], 
     if (type === 'payment') return <CreditCardIcon className="w-4 h-4" />;
     if (type === 'invoice') return <DocumentTextIcon className="w-4 h-4" />;
     if (type === 'approval') return <ClipboardDocumentCheckIcon className="w-4 h-4" />;
-    if (type === 'announcement') return <MegaphoneIcon className="w-4 h-4" />;
-    if (type === 'live_chat') return <ChatBubbleLeftRightIcon className="w-4 h-4" />;
 
     return <InformationCircleIcon className="w-4 h-4" />;
 };

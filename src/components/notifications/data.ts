@@ -2,6 +2,17 @@ import type { Notification } from './types';
 
 export const mockNotifications: Notification[] = [
     {
+        id: 'doe-2847-cpr',
+        type: 'discrepancy',
+        priority: 'high',
+        title: 'DOE-2847 — CPR discrepancy detected',
+        message: 'Carpenters: 50h → 45h · Overtime: 8h → 6h · Impact: −$2,340',
+        meta: 'DOE-2847 · NYC Dept. of Education',
+        timestamp: 'May 6 · 9:02 AM',
+        unread: true,
+        actions: [{ label: 'Review order', primary: true }],
+    },
+    {
         id: '1',
         type: 'system',
         priority: 'high',
@@ -145,32 +156,6 @@ export const mockNotifications: Notification[] = [
             { label: 'Sign', primary: true }
         ]
     },
-    {
-        id: '11',
-        type: 'announcement',
-        priority: 'medium',
-        title: 'New Feature: IMS Integration',
-        message: 'The new Inventory Management System is now live.',
-        meta: 'System Update',
-        timestamp: '10 min ago',
-        unread: true,
-        actions: [
-            { label: 'Learn More', primary: true }
-        ]
-    },
-    {
-        id: '12',
-        type: 'live_chat',
-        priority: 'high',
-        title: 'Support Message',
-        message: 'Hi John, regarding your ticket #442...',
-        meta: 'Sarah from Support',
-        timestamp: 'Just now',
-        unread: true,
-        actions: [
-            { label: 'Reply', primary: true }
-        ]
-    },
     // Flow 1: Email Intake notifications
     {
         id: '13',
@@ -257,30 +242,6 @@ export const mockNotifications: Notification[] = [
         unread: true,
         actions: [{ label: 'View Timeline', primary: true }],
         persona: 'dealer'
-    },
-    {
-        id: '20',
-        type: 'warranty',
-        priority: 'high',
-        title: 'Warranty Claim Ready',
-        message: 'Claim #W-442 assembled. Carrier liability: 78%.',
-        meta: 'WarrantyAgent',
-        timestamp: '20 min ago',
-        unread: true,
-        actions: [{ label: 'Review Claim', primary: true }],
-        persona: 'both'
-    },
-    {
-        id: '21',
-        type: 'mac',
-        priority: 'medium',
-        title: 'Service Request Validated',
-        message: 'Service plan created: 3 movements, $2,400 impact.',
-        meta: 'MACOrchestrator',
-        timestamp: '25 min ago',
-        unread: true,
-        actions: [{ label: 'Approve Plan', primary: true }],
-        persona: 'expert'
     },
     {
         id: '22',

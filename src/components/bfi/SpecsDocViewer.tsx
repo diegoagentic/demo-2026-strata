@@ -166,7 +166,7 @@ export default function SpecsDocViewer({ confirmed = false }: SpecsDocViewerProp
                                     SIF · Standard Industry Format · DOE-2847
                                 </div>
                                 <div className="text-[8px] text-zinc-400 dark:text-zinc-500 mt-0.5">
-                                    Validated by OVNIQ · May 3, 2026
+                                    Validated by OmniQuote · May 3, 2026
                                 </div>
                             </div>
                             <div className="grid grid-cols-6 gap-1 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
@@ -187,7 +187,7 @@ export default function SpecsDocViewer({ confirmed = false }: SpecsDocViewerProp
                                 ))}
                             </div>
                         </div>
-                        <div className="text-[9px] text-muted-foreground mt-2 text-center">Read-only · Validated by OVNIQ</div>
+                        <div className="text-[9px] text-muted-foreground mt-2 text-center">Read-only · Validated by OmniQuote</div>
                     </div>
                 )}
             </div>
