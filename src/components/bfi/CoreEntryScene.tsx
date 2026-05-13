@@ -142,7 +142,7 @@ export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
             {coreState === 'review' && (
                 <button
                     onClick={handleConfirm}
-                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                 >
                     <CheckCircle2 className="h-4 w-4" />
                     Confirm Receiving in CORE
@@ -162,7 +162,7 @@ export default function CoreEntryScene({ onConfirm }: CoreEntrySceneProps) {
                     </div>
                     <button
                         onClick={() => onConfirm?.()}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         Notify Walter
                         <ChevronRight className="h-3.5 w-3.5" />

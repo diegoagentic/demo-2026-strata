@@ -92,7 +92,7 @@ export default function WorkOrderDispatchScene() {
                     </button>
                     <button
                         onClick={handleConfirm}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Confirm dispatch

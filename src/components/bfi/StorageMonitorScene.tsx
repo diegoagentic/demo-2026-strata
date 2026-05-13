@@ -151,7 +151,7 @@ export default function StorageMonitorScene({ onConfirm }: StorageMonitorScenePr
                                     {!alertSet ? (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setAlertSet(true) }}
-                                            className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold rounded-lg bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all"
+                                            className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-all"
                                         >
                                             Set priority alert for DOE-2847 →
                                         </button>
@@ -178,7 +178,7 @@ export default function StorageMonitorScene({ onConfirm }: StorageMonitorScenePr
                 <div className="flex justify-end">
                     <button
                         onClick={handleConfirm}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Set alerts · confirm monitor active

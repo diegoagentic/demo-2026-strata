@@ -19,6 +19,50 @@ interface QuoteIntakePricingSceneProps {
 
 type Phase = 'email' | 'validating' | 'discount'
 
+function FloorPlanSVG() {
+    return (
+        <svg viewBox="0 0 300 145" width="100%" className="block rounded border border-zinc-300 bg-white">
+            <rect x="0.5" y="0.5" width="299" height="144" fill="#f9f9f9" stroke="#52525b" strokeWidth="1.5"/>
+            <line x1="188" y1="0.5" x2="188" y2="144.5" stroke="#52525b" strokeWidth="1.5"/>
+            <line x1="188" y1="73" x2="299.5" y2="73" stroke="#52525b" strokeWidth="1.5"/>
+            <line x1="8" y1="65" x2="185" y2="65" stroke="#a1a1aa" strokeWidth="0.4" strokeDasharray="4,3"/>
+            <line x1="93" y1="14" x2="93" y2="140" stroke="#a1a1aa" strokeWidth="0.4" strokeDasharray="4,3"/>
+            <text x="6" y="11" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">ZONE A · WORKSTATIONS ×24</text>
+            {([[8,18],[100,18],[8,78],[100,78]] as [number,number][]).map(([px,py],pi) => (
+                <g key={pi}>
+                    {[0,1,2].map(i => (
+                        <g key={i}>
+                            <rect x={px+i*27} y={py} width={24} height={10} fill="#e4e4e7" stroke="#71717a" strokeWidth="0.8" rx="0.5"/>
+                            <rect x={px+i*27+8} y={py+11} width={8} height={4} fill="#d4d4d8" stroke="#71717a" strokeWidth="0.4" rx="0.5"/>
+                            <rect x={px+i*27+8} y={py+19} width={8} height={4} fill="#d4d4d8" stroke="#71717a" strokeWidth="0.4" rx="0.5"/>
+                            <rect x={px+i*27} y={py+24} width={24} height={10} fill="#e4e4e7" stroke="#71717a" strokeWidth="0.8" rx="0.5"/>
+                        </g>
+                    ))}
+                </g>
+            ))}
+            <text x="193" y="11" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">ZONE B · LOUNGE ×12</text>
+            <rect x="192" y="17" width="50" height="20" rx="3" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.8"/>
+            <rect x="192" y="17" width="7" height="20" rx="2" fill="#d4d4d8" stroke="#71717a" strokeWidth="0.5"/>
+            <rect x="235" y="17" width="7" height="20" rx="2" fill="#d4d4d8" stroke="#71717a" strokeWidth="0.5"/>
+            <line x1="199" y1="30" x2="235" y2="30" stroke="#71717a" strokeWidth="0.4" strokeDasharray="2,2"/>
+            <ellipse cx="217" cy="48" rx="13" ry="6" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
+            <rect x="192" y="42" width="10" height="13" rx="2" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
+            <rect x="242" y="42" width="10" height="13" rx="2" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
+            <rect x="204" y="58" width="11" height="8" rx="2" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
+            <rect x="219" y="58" width="11" height="8" rx="2" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
+            <text x="193" y="82" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">ZONE C · FILING ×6</text>
+            {[0,1,2,3,4,5].map(i => (
+                <g key={i}>
+                    <rect x={193+i*18} y={89} width={15} height={22} fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7" rx="0.5"/>
+                    <line x1={193+i*18} y1={100} x2={208+i*18} y2={100} stroke="#71717a" strokeWidth="0.4"/>
+                    <circle cx={200.5+i*18} cy={95} r="1.2" fill="#71717a"/>
+                    <circle cx={200.5+i*18} cy={106} r="1.2" fill="#71717a"/>
+                </g>
+            ))}
+        </svg>
+    )
+}
+
 type SpecLine = { code: string; name: string; qty: string; dims: string; finish: string }
 const PDF_SPECS_DEFAULT: SpecLine[] = [
     { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', dims: 'W: 72" H: 29" D: 30"', finish: 'White/Silver' },
@@ -208,12 +252,24 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
 
                                 {/* PDF preview */}
                                 {activeAttachment === 'pdf' && (
-                                    <div className="p-2.5 bg-zinc-100/60 dark:bg-zinc-900/40 max-h-44 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
-                                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 space-y-2">
-                                            <div className="text-center text-[9px] font-bold text-zinc-700 dark:text-zinc-300 pb-1.5 border-b border-zinc-200 dark:border-zinc-700 uppercase tracking-wide">
-                                                Product Specification · DOE-2847
+                                    <div className="p-2 bg-zinc-50 dark:bg-zinc-950 max-h-44 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
+                                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded overflow-hidden">
+                                            {/* Document header */}
+                                            <div className="px-2.5 pt-2 pb-1.5 border-b border-zinc-200 dark:border-zinc-700 flex items-start justify-between gap-2">
+                                                <div>
+                                                    <div className="text-[7px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Product Specification</div>
+                                                    <div className="text-[7px] text-zinc-400 dark:text-zinc-500 font-mono">Q-2026-0089 · DOE-2847</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-[9px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100">MILLER KNOLL</div>
+                                                    <div className="text-[7px] text-zinc-400 dark:text-zinc-500 font-mono">Robert Chen · Rep</div>
+                                                </div>
                                             </div>
-                                            <div className="text-[9px] text-zinc-500">NYC Dept. of Education · BFI Furniture · Q-2026-0089</div>
+                                            {/* Specs band header */}
+                                            <div className="bg-zinc-800 dark:bg-zinc-700 px-2.5 py-1">
+                                                <span className="text-[7px] font-bold uppercase text-zinc-200">PRODUCT SPECIFICATIONS</span>
+                                            </div>
+                                            <div className="p-2.5 space-y-2">
                                             {pdfSpecs.map((p, idx) => (
                                                 <div key={p.code} className="border-l-2 border-zinc-300 dark:border-zinc-600 pl-2 text-[9px] leading-relaxed">
                                                     <div className="font-bold text-zinc-800 dark:text-zinc-200">{p.code} · {p.name} {p.qty}</div>
@@ -236,30 +292,12 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                                 <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
                                                     Architectural Layout · 52 Chambers St · Floor 12
                                                 </div>
-                                                <div className="relative border border-zinc-300 dark:border-zinc-600 rounded bg-zinc-50 dark:bg-zinc-800" style={{ height: '72px' }}>
-                                                    <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-200/60 dark:bg-zinc-700/60 flex flex-col items-center justify-center gap-0.5"
-                                                         style={{ left: '2px', top: '2px', width: '52%', height: '67px' }}>
-                                                        <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone A</div>
-                                                        <div className="text-[6px] text-zinc-500 dark:text-zinc-400">Workstations ×24</div>
-                                                        <div className="grid grid-cols-6 gap-0.5 mt-0.5">
-                                                            {Array.from({ length: 12 }).map((_, i) => (
-                                                                <div key={i} className="h-1 w-1 bg-zinc-400 dark:bg-zinc-500 rounded-sm" />
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
-                                                         style={{ right: '2px', top: '2px', width: '45%', height: '32px' }}>
-                                                        <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone B · Lounge ×12</div>
-                                                    </div>
-                                                    <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
-                                                         style={{ right: '2px', bottom: '2px', width: '45%', height: '30px' }}>
-                                                        <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone C · Filing ×6</div>
-                                                    </div>
-                                                </div>
+                                                <FloorPlanSVG />
                                                 <div className="text-[7px] text-zinc-400 dark:text-zinc-500 mt-1">
                                                     NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
                                                 </div>
                                             </div>
+                                        </div>
                                         </div>
                                     </div>
                                 )}
@@ -386,7 +424,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
 
                 <button
                     onClick={() => setPhase('validating')}
-                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                 >
                     <Sparkles className="h-4 w-4" />
                     Run SIF validation →
@@ -453,12 +491,22 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                     </div>
 
                     {validatingTab === 'pdf' && (
-                        <div className="p-2.5 bg-zinc-100/60 dark:bg-zinc-900/40 max-h-40 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
-                            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 space-y-2">
-                                <div className="text-center text-[9px] font-bold text-zinc-700 dark:text-zinc-300 pb-1.5 border-b border-zinc-200 dark:border-zinc-700 uppercase tracking-wide">
-                                    Product Specification · DOE-2847
+                        <div className="p-2 bg-zinc-50 dark:bg-zinc-950 max-h-40 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
+                            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded overflow-hidden">
+                                <div className="px-2.5 pt-2 pb-1.5 border-b border-zinc-200 dark:border-zinc-700 flex items-start justify-between gap-2">
+                                    <div>
+                                        <div className="text-[7px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Product Specification</div>
+                                        <div className="text-[7px] text-zinc-400 dark:text-zinc-500 font-mono">Q-2026-0089 · DOE-2847</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-[9px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100">MILLER KNOLL</div>
+                                        <div className="text-[7px] text-zinc-400 dark:text-zinc-500 font-mono">Robert Chen · Rep</div>
+                                    </div>
                                 </div>
-                                <div className="text-[9px] text-zinc-500">NYC Dept. of Education · BFI Furniture · Q-2026-0089</div>
+                                <div className="bg-zinc-800 dark:bg-zinc-700 px-2.5 py-1">
+                                    <span className="text-[7px] font-bold uppercase text-zinc-200">PRODUCT SPECIFICATIONS</span>
+                                </div>
+                                <div className="p-2.5 space-y-2">
                                 {pdfSpecs.map(p => (
                                     <div key={p.code} className="border-l-2 border-zinc-300 dark:border-zinc-600 pl-2 text-[9px] leading-relaxed">
                                         <div className="font-bold text-zinc-800 dark:text-zinc-200">{p.code} · {p.name} {p.qty}</div>
@@ -470,29 +518,11 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                     <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
                                         Architectural Layout · 52 Chambers St · Floor 12
                                     </div>
-                                    <div className="relative border border-zinc-300 dark:border-zinc-600 rounded bg-zinc-50 dark:bg-zinc-800" style={{ height: '72px' }}>
-                                        <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-200/60 dark:bg-zinc-700/60 flex flex-col items-center justify-center gap-0.5"
-                                             style={{ left: '2px', top: '2px', width: '52%', height: '67px' }}>
-                                            <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone A</div>
-                                            <div className="text-[6px] text-zinc-500 dark:text-zinc-400">Workstations ×24</div>
-                                            <div className="grid grid-cols-6 gap-0.5 mt-0.5">
-                                                {Array.from({ length: 12 }).map((_, i) => (
-                                                    <div key={i} className="h-1 w-1 bg-zinc-400 dark:bg-zinc-500 rounded-sm" />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
-                                             style={{ right: '2px', top: '2px', width: '45%', height: '32px' }}>
-                                            <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone B · Lounge ×12</div>
-                                        </div>
-                                        <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
-                                             style={{ right: '2px', bottom: '2px', width: '45%', height: '30px' }}>
-                                            <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone C · Filing ×6</div>
-                                        </div>
-                                    </div>
+                                    <FloorPlanSVG />
                                     <div className="text-[7px] text-zinc-400 dark:text-zinc-500 mt-1">
                                         NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
                                     </div>
+                                </div>
                                 </div>
                             </div>
                         </div>
@@ -635,7 +665,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                 {allRevealed && allCorrectedApproved && (
                     <button
                         onClick={() => setPhase('discount')}
-                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300"
+                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300"
                     >
                         Calculate discount & continue
                         <ChevronRight className="h-4 w-4" />
@@ -754,7 +784,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
             <button
                 onClick={handleApply}
                 disabled={applied}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
             >
                 Apply discount &amp; continue
                 <ChevronRight className="h-4 w-4" />

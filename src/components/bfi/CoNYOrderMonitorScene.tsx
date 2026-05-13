@@ -220,7 +220,7 @@ function OrderMonitorCard({ order, fedexExpanded, onToggleFedex, onDispatch, dis
                                 ) : (
                                     <button
                                         onClick={onDispatch}
-                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                                     >
                                         <Package className="h-3.5 w-3.5" />
                                         Dispatch work order

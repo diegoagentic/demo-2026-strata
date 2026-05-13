@@ -74,7 +74,7 @@ export default function PMOIntakeScene({ onSubmit }: PMOIntakeSceneProps) {
             <button
                 onClick={handleSubmit}
                 disabled={submitted}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
             >
                 Proceed to WIG Bingo Check
                 <ChevronRight className="h-4 w-4" />

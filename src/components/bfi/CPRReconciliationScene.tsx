@@ -181,7 +181,7 @@ export default function CPRReconciliationScene() {
                                     </button>
                                     <button
                                         onClick={() => approveLine(line.id)}
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-zinc-900 dark:bg-primary dark:text-zinc-900 rounded-lg hover:opacity-90 transition-all"
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all"
                                     >
                                         <CheckCircle2 className="h-3 w-3" />
                                         Accept CPR
@@ -245,7 +245,7 @@ export default function CPRReconciliationScene() {
                     </p>
                     <button
                         onClick={handleApproveAll}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm shrink-0"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm shrink-0"
                     >
                         <Building2 className="h-3.5 w-3.5" />
                         Approve CPR review

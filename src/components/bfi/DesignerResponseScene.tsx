@@ -6,9 +6,10 @@
  */
 
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { Sparkles, CheckCircle2, Package, ArrowRight, ClipboardList, Truck, Wrench, User, FileText } from 'lucide-react'
+import { Sparkles, CheckCircle2, Package, ArrowRight, ClipboardList, Truck, Wrench, User, XCircle, AlertTriangle } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import SpecsDocViewer from './SpecsDocViewer'
 
 interface DesignerResponseSceneProps {
     onAcknowledge?: () => void
@@ -20,17 +21,8 @@ const NEXT_STEPS = [
     { icon: Wrench,        label: 'Installation',   desc: 'Walter Carey (CoNY PM) coordinating installation crew · May 14–16' },
 ]
 
-const PDF_SPECS = [
-    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', finish: 'White/Silver', unitPrice: '$2,840.00', listPrice: '$4,200.00' },
-    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', finish: 'Fog fabric',   unitPrice: '$1,960.00', listPrice: '$2,900.00' },
-    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  finish: 'Platinum',     unitPrice: '$740.00',   listPrice: '$1,100.00' },
-]
+const QUICK_REASONS = ['Wrong finish', 'Qty mismatch', 'Pricing error', 'Delivery date conflict']
 
-const SIF_ROWS = [
-    { code: 'HMI-WS-2400', desc: 'Locale Workstation 24W',  qty: 24, list: '$4,200.00', net: '$2,840.00', af: '4.0%' },
-    { code: 'HMI-LS-500',  desc: 'Brody WorkLounge Fog',    qty: 12, list: '$2,900.00', net: '$1,960.00', af: '3.9%' },
-    { code: 'HMI-FU-300',  desc: 'Lateral Filing 3-Drawer', qty: 6,  list: '$1,100.00', net: '$740.00',   af: '2.9%' },
-]
 
 export default function DesignerResponseScene({ onAcknowledge }: DesignerResponseSceneProps) {
     const { nextStep, isPaused } = useDemo()
@@ -38,7 +30,9 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
     const [acknowledged, setAcknowledged] = useState(false)
-    const [activeDocTab, setActiveDocTab] = useState<'pdf' | 'sif'>('pdf')
+    const [action, setAction] = useState<'idle' | 'rejecting' | 'revisionSent'>('idle')
+    const [selectedReasons, setSelectedReasons] = useState<string[]>([])
+    const [revisionNote, setRevisionNote] = useState("Spec discrepancy on Zone A workstations — finishes don't match the DOE spec sheet. Please confirm.")
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -105,157 +99,8 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                 </div>
             </div>
 
-            {/* Document viewer — always expanded */}
-            <div className="border border-border rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-3.5 py-2.5 bg-muted/40">
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide flex-1">
-                        Attached Documents · specs.pdf + sif.csv
-                    </span>
-                    <span className="text-[9px] text-muted-foreground">View only</span>
-                </div>
-
-                <div className="border-t border-border">
-                        {/* Tab bar */}
-                        <div className="flex border-b border-border bg-muted/20">
-                            {(['pdf', 'sif'] as const).map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveDocTab(tab)}
-                                    className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
-                                        activeDocTab === tab
-                                            ? 'text-foreground border-foreground'
-                                            : 'text-muted-foreground border-transparent hover:text-foreground'
-                                    }`}
-                                >
-                                    {tab === 'pdf' ? 'specs.pdf' : 'sif.csv'}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* PDF tab */}
-                        {activeDocTab === 'pdf' && (
-                            <div className="p-3 bg-zinc-100 dark:bg-zinc-900">
-                                {/* PDF paper */}
-                                <div className="bg-white dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700 p-3 space-y-2 text-[10px] font-mono">
-                                    <div className="text-[8px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                                        Miller Knoll · Quote Specification Sheet
-                                    </div>
-                                    <div className="font-bold text-zinc-800 dark:text-zinc-100 text-[11px]">
-                                        DOE-2847 · NYC Dept. of Education · 52 Chambers St
-                                    </div>
-                                    <div className="text-zinc-500 dark:text-zinc-400 text-[9px]">
-                                        Prepared by: Robert Chen · May 1, 2026 · Q-2026-0089
-                                    </div>
-
-                                    {/* Specs table */}
-                                    <div className="pt-1.5 border-t border-zinc-200 dark:border-zinc-700">
-                                        <div className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
-                                            Product Specifications
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            {PDF_SPECS.map(item => (
-                                                <div key={item.code} className="flex gap-2 items-start">
-                                                    <div className="flex-1">
-                                                        <div className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100">
-                                                            {item.code} · {item.name} {item.qty}
-                                                        </div>
-                                                        <div className="text-[9px] text-zinc-500 dark:text-zinc-400">
-                                                            Finish: {item.finish}
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right shrink-0">
-                                                        <div className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100">{item.unitPrice}</div>
-                                                        <div className="text-[8px] text-zinc-400 dark:text-zinc-500">List {item.listPrice}</div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Floor plan */}
-                                    <div className="pt-2 border-t border-zinc-200 dark:border-zinc-700 mt-1">
-                                        <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
-                                            Architectural Layout · 52 Chambers St · Floor 12
-                                        </div>
-                                        <div
-                                            className="relative border border-zinc-300 dark:border-zinc-600 rounded bg-zinc-50 dark:bg-zinc-800"
-                                            style={{ height: '90px' }}
-                                        >
-                                            {/* Zone A — Workstations */}
-                                            <div
-                                                className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-200/60 dark:bg-zinc-700/60 flex flex-col items-center justify-center gap-0.5"
-                                                style={{ left: '2px', top: '2px', width: '52%', height: '85px' }}
-                                            >
-                                                <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone A</div>
-                                                <div className="text-[6px] text-zinc-500 dark:text-zinc-400">Workstations ×24</div>
-                                                <div className="grid grid-cols-6 gap-0.5 mt-0.5">
-                                                    {Array.from({ length: 12 }).map((_, i) => (
-                                                        <div key={i} className="h-1.5 w-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-sm" />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            {/* Zone B — Lounge */}
-                                            <div
-                                                className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
-                                                style={{ right: '2px', top: '2px', width: '45%', height: '40px' }}
-                                            >
-                                                <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone B · Lounge ×12</div>
-                                            </div>
-                                            {/* Zone C — Filing */}
-                                            <div
-                                                className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
-                                                style={{ right: '2px', bottom: '2px', width: '45%', height: '40px' }}
-                                            >
-                                                <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone C · Filing ×6</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-[7px] text-zinc-400 dark:text-zinc-500 mt-1">
-                                            NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-[9px] text-muted-foreground mt-2 text-center">Read-only · Submitted by Robert Chen · Miller Knoll</div>
-                            </div>
-                        )}
-
-                        {/* SIF tab */}
-                        {activeDocTab === 'sif' && (
-                            <div className="p-3 bg-zinc-100 dark:bg-zinc-900">
-                                <div className="bg-white dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                                    <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
-                                        <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
-                                            SIF · Standard Industry Format · DOE-2847
-                                        </div>
-                                        <div className="text-[8px] text-zinc-400 dark:text-zinc-500 mt-0.5">
-                                            Validated by OVNIQ · May 3, 2026
-                                        </div>
-                                    </div>
-                                    {/* Header row */}
-                                    <div className="grid grid-cols-6 gap-1 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
-                                        {['Code', 'Description', 'Qty', 'List', 'Net', 'AF%'].map(h => (
-                                            <div key={h} className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">{h}</div>
-                                        ))}
-                                    </div>
-                                    {/* Data rows */}
-                                    <div className="divide-y divide-zinc-100 dark:divide-zinc-700/50">
-                                        {SIF_ROWS.map(row => (
-                                            <div key={row.code} className="grid grid-cols-6 gap-1 px-3 py-2">
-                                                <div className="text-[9px] font-mono text-zinc-700 dark:text-zinc-300 col-span-1">{row.code}</div>
-                                                <div className="text-[9px] text-zinc-600 dark:text-zinc-400 col-span-1">{row.desc}</div>
-                                                <div className="text-[9px] text-zinc-700 dark:text-zinc-300">{row.qty}</div>
-                                                <div className="text-[9px] text-zinc-500 dark:text-zinc-400">{row.list}</div>
-                                                <div className="text-[9px] font-semibold text-zinc-700 dark:text-zinc-300">{row.net}</div>
-                                                <div className="text-[9px] text-zinc-500 dark:text-zinc-400">{row.af}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="text-[9px] text-muted-foreground mt-2 text-center">Read-only · Validated by OVNIQ</div>
-                            </div>
-                        )}
-                    </div>
-            </div>
+            {/* Document viewer — shared component */}
+            <SpecsDocViewer />
 
             {/* Next steps */}
             <div className="border border-border rounded-xl overflow-hidden">
@@ -276,7 +121,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
             </div>
 
             {/* Before Strata */}
-            {!acknowledged && (
+            {!acknowledged && action === 'idle' && (
                 <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
                         <span className="font-medium text-foreground">Before Strata:</span> Robert received a PDF by email with no confirmation system — he had no way to know if the order was approved or had spec discrepancies. Lauren had to remember to send the follow-up manually.
@@ -284,19 +129,94 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                 </div>
             )}
 
-            {/* CTA */}
-            {!acknowledged ? (
-                <div className="flex items-center justify-end">
+            {/* CTA — three states: idle / rejecting / revisionSent / acknowledged */}
+            {!acknowledged && action === 'idle' && (
+                <div className="flex items-center justify-end gap-3">
+                    <button
+                        onClick={() => setAction('rejecting')}
+                        className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-bold border border-warning/50 text-warning hover:bg-warning/5 transition-all"
+                    >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Request changes
+                    </button>
                     <button
                         onClick={handleAcknowledge}
-                        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Acknowledge receipt · Q-2026-0089
                         <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                 </div>
-            ) : (
+            )}
+
+            {!acknowledged && action === 'rejecting' && (
+                <div className="border border-warning/30 bg-warning/5 rounded-xl p-3.5 space-y-3 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2">
+                        <XCircle className="h-3.5 w-3.5 text-warning shrink-0" />
+                        <span className="text-xs font-bold text-foreground">Request changes · Q-2026-0089</span>
+                    </div>
+                    {/* Quick reason chips */}
+                    <div className="flex flex-wrap gap-1.5">
+                        {QUICK_REASONS.map(r => {
+                            const active = selectedReasons.includes(r)
+                            return (
+                                <button
+                                    key={r}
+                                    onClick={() => {
+                                        setSelectedReasons(prev => {
+                                            const next = active ? prev.filter(x => x !== r) : [...prev, r]
+                                            if (!active) setRevisionNote(prev2 => prev2 ? `${prev2} [${r}]` : `[${r}]`)
+                                            return next
+                                        })
+                                    }}
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                                        active
+                                            ? 'bg-warning/20 border-warning/50 text-warning'
+                                            : 'border-border text-muted-foreground hover:border-warning/40 hover:text-warning'
+                                    }`}
+                                >
+                                    {r}
+                                </button>
+                            )
+                        })}
+                    </div>
+                    {/* Textarea */}
+                    <textarea
+                        rows={3}
+                        value={revisionNote}
+                        onChange={e => setRevisionNote(e.target.value)}
+                        className="w-full text-[11px] bg-card border border-border rounded-lg px-3 py-2 text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-warning/40"
+                    />
+                    <div className="flex items-center justify-between gap-3">
+                        <button
+                            onClick={() => setAction('idle')}
+                            className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => setAction('revisionSent')}
+                            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-bold bg-warning text-zinc-900 hover:opacity-90 transition-all"
+                        >
+                            Send to BFI
+                            <ArrowRight className="h-3 w-3" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {!acknowledged && action === 'revisionSent' && (
+                <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
+                    <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                        <div className="font-bold text-foreground">Revision requested · Q-2026-0089 · May 6 · 9:25 AM</div>
+                        <div className="text-muted-foreground mt-0.5">Message sent to BFI · Lauren DeMarco · Pending response</div>
+                    </div>
+                </div>
+            )}
+
+            {acknowledged && (
                 <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                     <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <div className="text-xs">

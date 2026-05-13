@@ -125,7 +125,7 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
 
                     <button
                         onClick={() => setShowPOD(true)}
-                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         <Mail className="h-4 w-4" />
                         Send POD request to Andy
@@ -193,7 +193,7 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                         {!claimed ? (
                             <button
                                 onClick={() => setShowClaim(true)}
-                                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all"
+                                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-all"
                             >
                                 <FileWarning className="h-3.5 w-3.5" />
                                 Open Omni Claim
@@ -218,7 +218,7 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                             </div>
                             <button
                                 onClick={() => onProceed?.()}
-                                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                             >
                                 Proceed to Core Entry
                                 <ChevronRight className="h-4 w-4" />
@@ -274,7 +274,7 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                                 <button
                                     onClick={handleSendPOD}
                                     disabled={podSending}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-sm font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
+                                    className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground text-sm font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
                                 >
                                     <Mail className="h-4 w-4" />
                                     {podSending ? 'Sending…' : 'Send POD Request'}
@@ -346,7 +346,7 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                                 <button
                                     onClick={handleSubmitClaim}
                                     disabled={submitting}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 text-sm font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
+                                    className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground text-sm font-bold py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-all"
                                 >
                                     <FileWarning className="h-4 w-4" />
                                     {submitting ? 'Filing…' : 'Submit Claim'}

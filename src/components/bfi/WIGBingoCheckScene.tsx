@@ -11,6 +11,7 @@ import { useDemo } from '../../context/DemoContext'
 import BFIDashboardScene from './BFIDashboardScene'
 import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import BFIDocViewer, { BFI_DOCS } from './BFIDocViewer'
 
 interface WIGBingoCheckSceneProps {
     onAnalyze?: () => void
@@ -27,7 +28,7 @@ export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProp
     const [phase, setPhase] = useState<'dashboard' | 'checking'>('dashboard')
     const [clicked, setClicked] = useState(false)
     const [coreExpanded, setCoreExpanded] = useState(false)
-    const [bingoExpanded, setBingoExpanded] = useState(false)
+    const [bingoExpanded, setBingoExpanded] = useState(true)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -148,6 +149,9 @@ Note: carton 34 not received at dock`}</pre>
                 </button>
                 {bingoExpanded && (
                     <div className="border-t border-border px-3.5 py-3 space-y-2.5 animate-in fade-in duration-200">
+                        {/* Actual WIG receiving report PDF — includes bingo sheet page 2 */}
+                        <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={380} />
+
                         {/* Mini bingo grid — 7 columns */}
                         <div className="grid grid-cols-7 gap-1">
                             {CARTONS.map(n => {
@@ -188,7 +192,7 @@ Note: carton 34 not received at dock`}</pre>
             <button
                 onClick={handleAnalyze}
                 disabled={clicked}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
             >
                 <Sparkles className="h-4 w-4" />
                 Run AI Analysis

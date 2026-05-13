@@ -123,7 +123,7 @@ export default function CPRRelayScene({ onSend, onRoleChange }: CPRRelayScenePro
                     <button
                         onClick={handleSend}
                         disabled={editing}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm disabled:opacity-40"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm disabled:opacity-40"
                     >
                         <Send className="h-3.5 w-3.5" />
                         Send to Nancy

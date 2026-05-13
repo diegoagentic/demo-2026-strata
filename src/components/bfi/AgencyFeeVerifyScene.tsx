@@ -208,7 +208,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 <div className="flex items-center justify-end animate-in fade-in slide-in-from-bottom-1 duration-300">
                     <button
                         onClick={handleConfirm}
-                        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         <DollarSign className="h-3.5 w-3.5" />
                         Confirm &amp; send to Finance / AR
@@ -222,7 +222,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 <div className="flex items-center justify-end animate-in fade-in slide-in-from-bottom-1 duration-300">
                     <button
                         onClick={handleFlag}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         <Flag className="h-3.5 w-3.5" />
                         Flag gap · hold for Finance review
