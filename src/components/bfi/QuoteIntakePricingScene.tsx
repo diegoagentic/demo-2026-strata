@@ -242,7 +242,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                         }`}
                                     >
                                         <FileText className="h-3 w-3 text-ai shrink-0" />
-                                        SIF_v1.xlsx
+                                        DOE-2847.sif
                                         {ocr && (
                                             <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1 py-0.5 rounded-full font-medium animate-in fade-in duration-300">
                                                 OCR ✓
@@ -486,7 +486,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                             }`}
                         >
                             <FileText className="h-3 w-3 text-ai shrink-0" />
-                            SIF_v1.xlsx
+                            DOE-2847.sif
                             <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1 py-0.5 rounded-full font-medium">OCR ✓</span>
                         </button>
                     </div>

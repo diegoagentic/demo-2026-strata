@@ -11,7 +11,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, AlertTriangle, CheckCircle2, Package, ChevronRight, Bell, Loader2 } from 'lucide-react'
+import { Sparkles, AlertTriangle, CheckCircle2, Package, ChevronRight, Bell, Loader2, Mail, FileText } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -19,7 +19,13 @@ interface CoNYMorningQueueProps {
     onSelectOrder?: () => void
 }
 
-type SceneState = 'monitoring' | 'notified'
+type SceneState = 'email' | 'monitoring' | 'notified'
+
+const INGEST_LINES = [
+    { icon: FileText, text: 'DOE-2847.sif · parsed via OCR · 6 line items extracted' },
+    { icon: FileText, text: 'NYC-DOE-2847-specs.pdf · product specs + floor plan parsed' },
+    { icon: CheckCircle2, text: 'Quote Q-2026-0089 created · DOE-2847 added to queue' },
+]
 
 const ORDERS = [
     { id: 'DOE-2847',  agency: 'NYC Dept. of Education', value: '$48,200',  detail: 'Carpenters: 50h → 45h · OT: 8h → 6h · Impact: −$2,340' },
@@ -29,10 +35,10 @@ const ORDERS = [
 ]
 
 const ORDER_STATUS: Record<string, Record<SceneState, { label: string; priority: 'high' | 'medium' | 'done' | 'processing' }>> = {
-    'DOE-2847':  { monitoring: { label: 'Pricing · SIF validated · CPR pending',               priority: 'processing' }, notified: { label: 'CPR · 2 discrepancies detected',               priority: 'high'   } },
-    'NYPD-0394': { monitoring: { label: 'Pricing · validation in progress',                     priority: 'medium'     }, notified: { label: 'Pricing · validation in progress',              priority: 'medium' } },
-    'DCAS-1182': { monitoring: { label: 'Receiving · 18 days in WIG · 12 days remaining',      priority: 'medium'     }, notified: { label: 'Receiving · 18 days in WIG · 12 days remaining', priority: 'medium' } },
-    'DOH-0671':  { monitoring: { label: 'Fee verified · ready to invoice',                      priority: 'done'       }, notified: { label: 'Fee verified · ready to invoice',               priority: 'done'   } },
+    'DOE-2847':  { email: { label: 'Incoming · SIF received',                                  priority: 'processing' }, monitoring: { label: 'Pricing · SIF validated · CPR pending',               priority: 'processing' }, notified: { label: 'CPR · 2 discrepancies detected',               priority: 'high'   } },
+    'NYPD-0394': { email: { label: 'Pricing · validation in progress',                         priority: 'medium'     }, monitoring: { label: 'Pricing · validation in progress',                     priority: 'medium'     }, notified: { label: 'Pricing · validation in progress',              priority: 'medium' } },
+    'DCAS-1182': { email: { label: 'Receiving · 18 days in WIG · 12 days remaining',           priority: 'medium'     }, monitoring: { label: 'Receiving · 18 days in WIG · 12 days remaining',      priority: 'medium'     }, notified: { label: 'Receiving · 18 days in WIG · 12 days remaining', priority: 'medium' } },
+    'DOH-0671':  { email: { label: 'Fee verified · ready to invoice',                          priority: 'done'       }, monitoring: { label: 'Fee verified · ready to invoice',                      priority: 'done'       }, notified: { label: 'Fee verified · ready to invoice',               priority: 'done'   } },
 }
 
 export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProps) {
@@ -40,8 +46,9 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
-    const [sceneState, setSceneState] = useState<SceneState>('monitoring')
+    const [sceneState, setSceneState] = useState<SceneState>('email')
     const [expandedId, setExpandedId] = useState<string | null>(null)
+    const [ingestCount, setIngestCount] = useState(0)
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -52,11 +59,20 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
         return () => clearInterval(poll)
     }, [])
 
-    // Auto-advance to notified after 2.5s
+    // Progressive ingest lines in email phase
     useEffect(() => {
+        if (sceneState !== 'email') return
+        if (ingestCount >= INGEST_LINES.length) return
+        const cleanup = pauseAware(() => setIngestCount(c => c + 1), 600 + ingestCount * 700)
+        return cleanup
+    }, [sceneState, ingestCount, pauseAware])
+
+    // Auto-advance to notified after 2.5s (only once in monitoring)
+    useEffect(() => {
+        if (sceneState !== 'monitoring') return
         const cleanup = pauseAware(() => setSceneState('notified'), 2500)
         return cleanup
-    }, [pauseAware])
+    }, [sceneState, pauseAware])
 
     const handleOrderClick = (orderId: string) => {
         if (orderId !== 'DOE-2847' || sceneState !== 'notified') return
@@ -66,6 +82,70 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
 
     return (
         <div className="space-y-3">
+            {/* Email phase — incoming SIF + AI ingestion */}
+            {sceneState === 'email' && (
+                <div className="space-y-3 animate-in fade-in duration-300">
+                    {/* Incoming email card */}
+                    <div className="border border-border rounded-xl bg-card overflow-hidden">
+                        <div className="flex items-center gap-2 px-3.5 py-2 bg-muted/40 border-b border-border">
+                            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Incoming · Miller Knoll</span>
+                            <span className="ml-auto text-[10px] text-muted-foreground">May 6 · 8:14 AM</span>
+                        </div>
+                        <div className="p-3.5 space-y-2">
+                            {[
+                                { label: 'From',    value: 'Robert Chen · Miller Knoll Rep' },
+                                { label: 'To',      value: 'Lauren DeMarco · BFI Furniture' },
+                                { label: 'Subject', value: 'Quote request · DOE-2847 · NYC Dept. of Education' },
+                            ].map(f => (
+                                <div key={f.label} className="flex items-start gap-3 text-xs border-b border-border/50 pb-2 last:border-0 last:pb-0">
+                                    <span className="text-muted-foreground w-14 shrink-0 pt-0.5">{f.label}:</span>
+                                    <span className="text-foreground font-medium">{f.value}</span>
+                                </div>
+                            ))}
+                            {/* Attachments */}
+                            <div className="pt-1 space-y-1.5">
+                                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Attachments</div>
+                                {[
+                                    { name: 'NYC-DOE-2847-specs.pdf', color: 'text-muted-foreground' },
+                                    { name: 'DOE-2847.sif', color: 'text-ai' },
+                                ].map(a => (
+                                    <div key={a.name} className="flex items-center gap-2 bg-muted/40 border border-border rounded-lg px-3 py-2">
+                                        <FileText className={`h-3.5 w-3.5 shrink-0 ${a.color}`} />
+                                        <span className={`text-[11px] font-medium ${a.color}`}>{a.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Strata AI ingestion */}
+                    <div className="bg-ai/5 border border-ai/20 rounded-xl px-3.5 py-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <div className="h-3.5 w-3.5 border-2 border-ai border-t-transparent rounded-full animate-spin shrink-0" />
+                            <span className="text-[11px] font-bold text-foreground">Strata AI · parsing attachments…</span>
+                        </div>
+                        {INGEST_LINES.slice(0, ingestCount).map((line, i) => (
+                            <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground animate-in fade-in duration-300">
+                                <line.icon className="h-3 w-3 text-success shrink-0" />
+                                <span>{line.text}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* CTA — appears after all lines ingested */}
+                    {ingestCount >= INGEST_LINES.length && (
+                        <button
+                            onClick={() => setSceneState('monitoring')}
+                            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm animate-in fade-in duration-300"
+                        >
+                            <Sparkles className="h-4 w-4" />
+                            Review in queue →
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* Strata notification — slides in when notified */}
             {sceneState === 'notified' && (
                 <button
