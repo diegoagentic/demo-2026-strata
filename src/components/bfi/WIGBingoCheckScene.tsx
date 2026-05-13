@@ -6,7 +6,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { FileText, Mail, Sparkles, Package, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
+import { FileText, Mail, Sparkles, Package, ChevronDown, ChevronUp, AlertTriangle, MessageSquare, Send, X, CheckCircle2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import BFIDashboardScene from './BFIDashboardScene'
 import ReceivingProcessBar from './ReceivingProcessBar'
@@ -29,6 +29,9 @@ export default function WIGBingoCheckScene({ onAnalyze }: WIGBingoCheckSceneProp
     const [clicked, setClicked] = useState(false)
     const [coreExpanded, setCoreExpanded] = useState(false)
     const [bingoExpanded, setBingoExpanded] = useState(true)
+    const [contactOpen, setContactOpen] = useState(false)
+    const [contactSent, setContactSent] = useState(false)
+    const [contactNote, setContactNote] = useState('')
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -189,14 +192,54 @@ Note: carton 34 not received at dock`}</pre>
                 )}
             </div>
 
-            <button
-                onClick={handleAnalyze}
-                disabled={clicked}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
-            >
-                <Sparkles className="h-4 w-4" />
-                Run AI Analysis
-            </button>
+            {/* Contact panel */}
+            {contactOpen && !contactSent && (
+                <div className="border border-ai/20 rounded-xl bg-ai/5 overflow-hidden animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-ai/10 bg-ai/5">
+                        <MessageSquare className="h-3 w-3 text-ai shrink-0" />
+                        <span className="text-[10px] font-bold text-ai">Contact — Lauren → Michael Boyle (BFI Receiving)</span>
+                        <button onClick={() => setContactOpen(false)} className="ml-auto text-muted-foreground hover:text-foreground"><X className="h-3 w-3" /></button>
+                    </div>
+                    <div className="px-3 py-2 space-y-1 border-b border-ai/10 text-[10px]">
+                        <div className="flex gap-2"><span className="text-muted-foreground w-8 shrink-0">To:</span><span className="font-medium text-foreground">Michael Boyle · mboyle@bfifurniture.com</span></div>
+                        <div className="flex gap-2"><span className="text-muted-foreground w-8 shrink-0">Re:</span><span className="font-medium text-foreground">PMO-2026-0412 · Carton #34 — inquiry</span></div>
+                    </div>
+                    <div className="px-3 py-2">
+                        <textarea rows={3} value={contactNote} onChange={e => setContactNote(e.target.value)}
+                            placeholder="Hi Michael, can you confirm whether Carton #34 was short-shipped or held at origin?..."
+                            className="w-full text-[10px] bg-transparent text-foreground placeholder:text-muted-foreground outline-none resize-none" />
+                    </div>
+                    <div className="flex items-center justify-end gap-2 px-3 pb-3">
+                        <button onClick={() => setContactOpen(false)} className="px-2.5 py-1 text-[10px] text-muted-foreground border border-border rounded hover:bg-muted/30">Cancel</button>
+                        <button onClick={() => { setContactSent(true); setContactOpen(false) }}
+                            className="flex items-center gap-1 px-3 py-1 text-[10px] font-bold rounded bg-primary text-primary-foreground hover:opacity-90">
+                            <Send className="h-3 w-3" /> Send →
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {contactSent && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-success/5 border border-success/20 rounded-xl text-[10px] text-success animate-in fade-in duration-300">
+                    <CheckCircle2 className="h-3 w-3 shrink-0" />
+                    Message sent to Michael Boyle · awaiting response on Carton #34
+                </div>
+            )}
+
+            {/* Action row */}
+            <div className="flex items-center gap-2">
+                {!contactSent && (
+                    <button onClick={() => setContactOpen(v => !v)}
+                        className="flex items-center gap-1.5 px-3 py-3 text-sm font-bold rounded-xl border border-border text-muted-foreground hover:bg-muted/30 transition-all">
+                        <MessageSquare className="h-4 w-4" /> Contact →
+                    </button>
+                )}
+                <button onClick={handleAnalyze} disabled={clicked}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-all shadow-sm">
+                    <Sparkles className="h-4 w-4" />
+                    {clicked ? 'Analyzing…' : 'Run AI Analysis'}
+                </button>
+            </div>
 
             {/* Before Strata */}
             <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">

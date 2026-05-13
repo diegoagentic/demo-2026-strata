@@ -47,7 +47,7 @@ export default function BFIPage() {
     if (stepId === 'r1.6') {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center py-6 animate-in fade-in duration-500">
-                <MobileDeviceFrame size="lg">
+                <MobileDeviceFrame size="lg" darkScreen>
                     <WalterNotifScene key="r1.6" onConfirm={nextStep} />
                 </MobileDeviceFrame>
             </div>

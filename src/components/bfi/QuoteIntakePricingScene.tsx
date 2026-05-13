@@ -557,7 +557,22 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
 
                     <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/20">
                         <span className="text-[9px] text-muted-foreground">Source documents · validation reference</span>
-                        <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">OCR ✓</span>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1.5 py-0.5 rounded-full font-medium">OCR ✓</span>
+                            <button
+                                onClick={() => handleDownload(validatingTab === 'pdf' ? 'pdf' : 'sif')}
+                                disabled={downloading !== null}
+                                className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 disabled:opacity-60 transition-colors"
+                            >
+                                {downloading ? (
+                                    <><div className="h-3 w-3 border border-muted-foreground border-t-transparent rounded-full animate-spin shrink-0" /> Downloading…</>
+                                ) : (validatingTab === 'pdf' ? downloadedPdf : downloadedSif) ? (
+                                    <><CheckCircle2 className="h-3 w-3 text-success shrink-0" /> Downloaded</>
+                                ) : (
+                                    <><Download className="h-3 w-3 shrink-0" /> Download</>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
 

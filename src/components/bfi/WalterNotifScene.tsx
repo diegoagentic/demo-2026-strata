@@ -11,7 +11,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { CheckCircle2, AlertTriangle, Calendar, Package, ChevronDown, ChevronUp, Bell, Zap } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, Calendar, Package, ChevronDown, ChevronUp, Bell, Zap, FileText, Expand, Download } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -29,6 +29,7 @@ export default function WalterNotifScene({ onConfirm }: WalterNotifSceneProps) {
     const [walterState, setWalterState] = useState<WalterState>('locked')
     const [confirmed, setConfirmed]     = useState(false)
     const [claimExpanded, setClaimExpanded] = useState(false)
+    const [reportExpanded, setReportExpanded] = useState(false)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -121,17 +122,17 @@ export default function WalterNotifScene({ onConfirm }: WalterNotifSceneProps) {
                 {/* Key moments strip */}
                 <div className="grid grid-cols-3 gap-2">
                     <div className="bg-muted/40 border border-border rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
-                        <Zap className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <Zap className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
                         <div className="text-[10px] font-bold text-foreground">Instant</div>
                         <div className="text-[9px] text-muted-foreground leading-tight">vs printed copy, days later</div>
                     </div>
                     <div className="bg-muted/40 border border-border rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
-                        <Calendar className="h-3.5 w-3.5 text-foreground shrink-0" />
+                        <Calendar className="h-3.5 w-3.5 text-foreground shrink-0" aria-hidden="true" />
                         <div className="text-[10px] font-bold text-foreground">May 14–21</div>
                         <div className="text-[9px] text-muted-foreground leading-tight">delivery window · 8 days</div>
                     </div>
                     <div className="bg-muted/40 border border-border rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" aria-hidden="true" />
                         <div className="text-[10px] font-bold text-foreground">Claim filed</div>
                         <div className="text-[9px] text-muted-foreground leading-tight">#OM-2026-0412</div>
                     </div>
@@ -140,7 +141,7 @@ export default function WalterNotifScene({ onConfirm }: WalterNotifSceneProps) {
                 {/* Order summary */}
                 <div className="border border-border rounded-xl p-3 space-y-2.5 bg-card">
                     <div className="flex items-center gap-2">
-                        <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
                         <div>
                             <div className="text-[11px] font-bold text-foreground">NYC Dept. of Education</div>
                             <div className="text-[10px] text-muted-foreground">52 Chambers St, New York, NY 10007</div>
@@ -161,7 +162,7 @@ export default function WalterNotifScene({ onConfirm }: WalterNotifSceneProps) {
                     </div>
 
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground border-t border-border pt-2">
-                        <Calendar className="h-3 w-3 shrink-0" />
+                        <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
                         Delivery window: May 14 – May 21, 2026
                     </div>
                 </div>
@@ -182,25 +183,68 @@ export default function WalterNotifScene({ onConfirm }: WalterNotifSceneProps) {
                 <div className="border border-border rounded-xl overflow-hidden bg-card">
                     <button
                         onClick={() => setClaimExpanded(v => !v)}
+                        aria-expanded={claimExpanded}
+                        aria-label="Short-ship claim details"
                         className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/40 transition-colors"
                     >
                         <div className="flex items-center gap-2">
-                            <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+                            <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" aria-hidden="true" />
                             <span className="text-[10px] font-bold text-foreground">Carton #34 · Short-ship claim filed</span>
                         </div>
                         {claimExpanded
-                            ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
-                            : <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                            ? <ChevronUp className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                            : <ChevronDown className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                         }
                     </button>
                     {claimExpanded && (
-                        <div className="px-3 pb-3 space-y-1.5 border-t border-border animate-in fade-in duration-200">
+                        <div id="claim-detail" className="px-3 pb-3 space-y-1.5 border-t border-border animate-in fade-in duration-200">
                             <div className="pt-2 text-[10px] text-muted-foreground space-y-1">
                                 <div>Item: Line 24 · Chair Frame Assembly ×1</div>
                                 <div>Claim: Omni #OM-2026-0412 · filed May 11</div>
                                 <div>POD request sent to Andy (Herman Miller) · May 11 · 8:06 AM</div>
                                 <div className="text-amber-600 dark:text-amber-400 font-medium">Status: awaiting response · excluded from this delivery</div>
                             </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Receiving report card */}
+                <div className="border border-border rounded-xl bg-card overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border bg-muted/20">
+                        <FileText className="h-3 w-3 text-muted-foreground shrink-0" aria-hidden="true" />
+                        <span className="text-[10px] font-bold text-foreground">Receiving Report · PMO-2026-0412</span>
+                        <span className="text-[9px] text-muted-foreground ml-auto">RR-37577 · May 11</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2.5">
+                        <span className="text-[10px] text-muted-foreground flex-1">34/35 cartons · Carton #34 missing</span>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={() => setReportExpanded(v => !v)}
+                                aria-label={reportExpanded ? 'Close PDF preview' : 'Preview receiving report PDF'}
+                                className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[9px] text-muted-foreground hover:bg-muted/40 transition-colors"
+                            >
+                                <Expand className="h-2.5 w-2.5" aria-hidden="true" />
+                                {reportExpanded ? 'Close' : 'Preview'}
+                            </button>
+                            <a
+                                href="/docs/bfi/receiving/RR-37577-missing.pdf"
+                                download="RR-37577-PMO-2026-0412.pdf"
+                                aria-label="Download receiving report PDF"
+                                className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[9px] text-muted-foreground hover:bg-muted/40 transition-colors"
+                            >
+                                <Download className="h-2.5 w-2.5" aria-hidden="true" />
+                                PDF
+                            </a>
+                        </div>
+                    </div>
+                    {reportExpanded && (
+                        <div className="border-t border-border animate-in fade-in duration-200">
+                            <iframe
+                                src="/docs/bfi/receiving/RR-37577-missing.pdf"
+                                className="w-full border-0"
+                                style={{ height: 240 }}
+                                title="Receiving Report PMO-2026-0412"
+                            />
                         </div>
                     )}
                 </div>
