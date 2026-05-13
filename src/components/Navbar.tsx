@@ -104,6 +104,11 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Miller Knoll Rep · Designer',
         photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
     },
+    'BFI Receiving': {
+        name: 'Lena C.',
+        role: 'Receiving Coordinator',
+        photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
@@ -111,9 +116,10 @@ const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quo
 
 function resolveProfileKey(role: string | undefined, app: string | undefined): string {
     if (app?.startsWith('bfi-')) {
-        if (role === 'Project Manager') return 'BFI Project Manager';
-        if (role === 'Finance / AR')    return 'BFI Finance';
-        if (role === 'Designer')        return 'BFI Designer';
+        if (role === 'Project Manager')      return 'BFI Project Manager';
+        if (role === 'Finance / AR')         return 'BFI Finance';
+        if (role === 'Designer')             return 'BFI Designer';
+        if (role === 'Receiving Coordinator') return 'BFI Receiving';
         return 'BFI Account Manager';
     }
     if (role === 'Expert') return 'Expert';

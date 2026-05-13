@@ -99,7 +99,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'WIG Bingo Check',
         description: 'WIG sends the Receiving Report and Bingo Sheet as a Word document. Strata captures it digitally and prepares the AI analysis — eliminating the manual cross-reference that used to take Lena up to a week.',
         app: 'bfi-receiving',
-        role: 'Account Manager',
+        role: 'Receiving Coordinator',
     },
     {
         id: 'r1.3',
