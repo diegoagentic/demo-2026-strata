@@ -231,6 +231,35 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                                     </div>
                                                 </div>
                                             ))}
+                                            {/* Architectural floor plan */}
+                                            <div className="pt-2 border-t border-zinc-200 dark:border-zinc-700 mt-1">
+                                                <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
+                                                    Architectural Layout · 52 Chambers St · Floor 12
+                                                </div>
+                                                <div className="relative border border-zinc-300 dark:border-zinc-600 rounded bg-zinc-50 dark:bg-zinc-800" style={{ height: '72px' }}>
+                                                    <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-200/60 dark:bg-zinc-700/60 flex flex-col items-center justify-center gap-0.5"
+                                                         style={{ left: '2px', top: '2px', width: '52%', height: '67px' }}>
+                                                        <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone A</div>
+                                                        <div className="text-[6px] text-zinc-500 dark:text-zinc-400">Workstations ×24</div>
+                                                        <div className="grid grid-cols-6 gap-0.5 mt-0.5">
+                                                            {Array.from({ length: 12 }).map((_, i) => (
+                                                                <div key={i} className="h-1 w-1 bg-zinc-400 dark:bg-zinc-500 rounded-sm" />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
+                                                         style={{ right: '2px', top: '2px', width: '45%', height: '32px' }}>
+                                                        <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone B · Lounge ×12</div>
+                                                    </div>
+                                                    <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
+                                                         style={{ right: '2px', bottom: '2px', width: '45%', height: '30px' }}>
+                                                        <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone C · Filing ×6</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-[7px] text-zinc-400 dark:text-zinc-500 mt-1">
+                                                    NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -436,6 +465,35 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                         <div className="text-zinc-500">{p.dims} · {p.finish}</div>
                                     </div>
                                 ))}
+                                {/* Architectural floor plan */}
+                                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-700 mt-1">
+                                    <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
+                                        Architectural Layout · 52 Chambers St · Floor 12
+                                    </div>
+                                    <div className="relative border border-zinc-300 dark:border-zinc-600 rounded bg-zinc-50 dark:bg-zinc-800" style={{ height: '72px' }}>
+                                        <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-200/60 dark:bg-zinc-700/60 flex flex-col items-center justify-center gap-0.5"
+                                             style={{ left: '2px', top: '2px', width: '52%', height: '67px' }}>
+                                            <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone A</div>
+                                            <div className="text-[6px] text-zinc-500 dark:text-zinc-400">Workstations ×24</div>
+                                            <div className="grid grid-cols-6 gap-0.5 mt-0.5">
+                                                {Array.from({ length: 12 }).map((_, i) => (
+                                                    <div key={i} className="h-1 w-1 bg-zinc-400 dark:bg-zinc-500 rounded-sm" />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
+                                             style={{ right: '2px', top: '2px', width: '45%', height: '32px' }}>
+                                            <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone B · Lounge ×12</div>
+                                        </div>
+                                        <div className="absolute border border-zinc-400 dark:border-zinc-500 rounded-sm bg-zinc-100/60 dark:bg-zinc-700/40 flex items-center justify-center"
+                                             style={{ right: '2px', bottom: '2px', width: '45%', height: '30px' }}>
+                                            <div className="text-[7px] font-bold text-zinc-600 dark:text-zinc-300">Zone C · Filing ×6</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-[7px] text-zinc-400 dark:text-zinc-500 mt-1">
+                                        NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
