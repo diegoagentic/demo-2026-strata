@@ -80,6 +80,15 @@ export const BFI_STEPS: DemoStep[] = [
         role: 'Receiving Coordinator',
     },
     {
+        id: 'a1.2e',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
+        title: 'Shortage Claim',
+        description: 'Lauren receives Lena\'s missing-carton report, reviews the order, attaches the WIG receiving report as proof of shipment, and files a formal shortage claim with Herman Miller directly from Strata.',
+        app: 'bfi-receiving',
+        role: 'Account Manager',
+    },
+    {
         id: 'a1.3',
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
@@ -161,6 +170,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.2b': { mode: 'interactive', userAction: 'Review SIF validation via OmniQuote → accept Filing Units correction → toggle City/State contract → apply discount & continue' },
     'a1.2c': { mode: 'interactive', userAction: 'Review PO from NYC DoE + labor quote from Workplace · confirm 30-day delivery window · confirm in CORE · watch EDI transmit to OVNIQ' },
     'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
+    'a1.2e': { mode: 'interactive', userAction: 'Review Lena\'s missing-carton notification · expand order · attach proof of shipment · send shortage claim to Herman Miller' },
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line-by-line · approve · see the pre-drafted message to Michael → send without leaving the screen' },
     'a1.4': { mode: 'interactive', userAction: 'Patricia verifies the agency fee — toggle match/gap scenario · confirm or flag the $1,250 discrepancy' },
 };
@@ -242,5 +252,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const BFI_SELF_INDICATED: string[] = [
     'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
-    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.3', 'a1.4',
+    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.3', 'a1.4',
 ];

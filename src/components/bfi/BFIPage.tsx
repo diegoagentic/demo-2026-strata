@@ -25,6 +25,7 @@ import CPRScene from './CPRScene'
 import AgencyFeeVerifyScene from './AgencyFeeVerifyScene'
 import DesignerResponseScene from './DesignerResponseScene'
 import POLaborScene from './POLaborScene'
+import LaurenClaimScene from './LaurenClaimScene'
 
 const STEP_TITLES: Record<string, string> = {
     'r1.2': 'Product Receiving',
@@ -36,6 +37,7 @@ const STEP_TITLES: Record<string, string> = {
     'a1.2b': 'Agency Fee',
     'a1.2c': 'Agency Fee',
     'a1.2d': 'Product Receiving',
+    'a1.2e': 'Product Receiving',
     'a1.3': 'Agency Fee',
     'a1.4': 'Agency Fee',
 }
@@ -101,6 +103,7 @@ export default function BFIPage() {
                         }}
                     />
                 )}
+                {stepId === 'a1.2e' && <LaurenClaimScene />}
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
             </div>
