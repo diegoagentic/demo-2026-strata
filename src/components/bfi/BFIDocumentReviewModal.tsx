@@ -43,7 +43,7 @@ interface ReviewField {
 
 // ─── Floor Plan SVG ──────────────────────────────────────────────────────────
 
-function FloorPlanSVG() {
+export function FloorPlanSVG() {
     return (
         <svg viewBox="0 0 300 145" width="100%" className="block rounded border border-zinc-300 bg-white">
             <rect x="0.5" y="0.5" width="299" height="144" fill="#f9f9f9" stroke="#52525b" strokeWidth="1.5"/>

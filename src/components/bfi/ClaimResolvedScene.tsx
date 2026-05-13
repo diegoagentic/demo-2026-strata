@@ -17,8 +17,8 @@ import {
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
-import BFIDocViewer from './BFIDocViewer'
 import BFIDashboardScene from './BFIDashboardScene'
+import { FloorPlanSVG } from './BFIDocumentReviewModal'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -348,13 +348,26 @@ export default function ClaimResolvedScene() {
                     </div>
                     <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">Confirmed</span>
                 </div>
-                <div className="px-3.5 py-3">
-                    <BFIDocViewer
-                        src="/docs/bfi/signin/signin-NYPL-17706.pdf"
-                        label="DOE-2847 · Zone A·B·C Installation Layout"
-                        height={260}
-                        extractedFields={[]}
-                    />
+                <div className="px-3.5 py-3 space-y-2">
+                    <div className="rounded-lg border border-border overflow-hidden bg-white dark:bg-zinc-950 p-2">
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Architectural Layout · 52 Chambers St · Floor 12</span>
+                            <span className="ml-auto text-[9px] text-success font-medium">OCR ✓</span>
+                        </div>
+                        <FloorPlanSVG />
+                        <div className="flex gap-4 mt-2 px-1">
+                            {[
+                                { color: 'bg-[#e4e4e7]', label: 'Zone A — Workstations ×24' },
+                                { color: 'bg-[#e4e4e7]', label: 'Zone B — Lounge ×12' },
+                                { color: 'bg-[#e4e4e7]', label: 'Zone C — Filing ×6' },
+                            ].map(l => (
+                                <div key={l.label} className="flex items-center gap-1 text-[8px] text-muted-foreground">
+                                    <div className={`h-2 w-2 rounded-sm ${l.color} border border-zinc-400`} />
+                                    {l.label}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                     <DownloadPrintBar filename="DOE-2847-ZoneLayout.pdf" />
                 </div>
             </div>
