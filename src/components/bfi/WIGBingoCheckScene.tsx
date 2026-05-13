@@ -467,7 +467,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                     {/* Bingo Sheet uploaded card */}
                     {bingoUploaded && (
                         <UploadedFileCard label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf">
-                            <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} />
+                            <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
                             <BingoGrid />
                         </UploadedFileCard>
                     )}
