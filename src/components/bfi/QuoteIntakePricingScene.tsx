@@ -713,7 +713,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                     <div className="bg-success/5 border border-success/30 rounded-xl p-3 space-y-1.5 animate-in fade-in duration-300">
                         <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                            <span className="text-xs font-bold text-foreground">OVNIQ returned corrected SIF · 2 prices adjusted · ready for discount calculation</span>
+                            <span className="text-xs font-bold text-foreground">OVNIQ returned corrected SIF · 2 prices adjusted · ready to apply contract rates</span>
                         </div>
                         <div className="text-[11px] text-muted-foreground pl-6">
                             Filing Units ×6: $8,100 → $7,560 · Installation: $12,500 → $11,800 · corrected SIF uploaded to CORE
@@ -732,7 +732,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                         onClick={() => setPhase('discount')}
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300"
                     >
-                        Calculate discount & continue
+                        Apply contract prices & continue
                         <ChevronRight className="h-4 w-4" />
                     </button>
                 )}
@@ -749,9 +749,9 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
             <div className="bg-ai/5 border border-ai/20 rounded-xl p-3 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                 <div className="text-xs flex-1">
-                    <div className="font-bold text-foreground">Discount Calculation · DOE-2847</div>
+                    <div className="font-bold text-foreground">Contract Price Verification · DOE-2847</div>
                     <div className="text-muted-foreground mt-0.5">
-                        City of NY requires Cost = Sale (no gross profit). Formula: (Sale ÷ List) − 1.
+                        City of NY contract · OVNIQ-verified prices applied · T-code 18% rate confirmed.
                     </div>
                 </div>
             </div>
@@ -784,18 +784,18 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                 <p className="text-[10px] text-muted-foreground">
                     Identified from contract number in PO header ·{' '}
                     {contractType === 'city'
-                        ? 'CoNY: Cost = Sale (no gross profit)'
+                        ? 'CoNY: established contract rates apply · T-code 18%'
                         : 'State NY: different pricing structure applies'}
                 </p>
             </div>
 
-            {/* Discount table */}
+            {/* Contract price table */}
             <div className="border border-border rounded-xl overflow-hidden">
                 <div className="grid grid-cols-4 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <span className="col-span-1">Product</span>
                     <span className="text-right">List</span>
-                    <span className="text-right">Sale</span>
-                    <span className="text-right">Discount</span>
+                    <span className="text-right">Contract</span>
+                    <span className="text-right">T-Code</span>
                 </div>
                 {contractType === 'city' ? (
                     <>
@@ -804,12 +804,12 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                                 <span className="font-medium text-foreground text-[11px]">{line.product}</span>
                                 <span className="text-right text-muted-foreground tabular-nums text-[11px]">{line.list}</span>
                                 <span className="text-right text-muted-foreground tabular-nums text-[11px]">{line.sale}</span>
-                                <span className="text-right font-bold text-destructive tabular-nums text-[11px]">{line.pct}</span>
+                                <span className="text-right font-bold text-muted-foreground tabular-nums text-[11px]">18%</span>
                             </div>
                         ))}
                         <div className="px-3.5 py-2 border-t border-border bg-muted/20">
                             <p className="text-[10px] text-muted-foreground font-mono text-center">
-                                Formula: (Sale ÷ List) − 1 = −40.0% · $0 gross profit · City of New York requirement
+                                T-code 18% · CoNY established rate · OVNIQ-verified · $0 gross profit per contract
                             </p>
                         </div>
                     </>
@@ -851,7 +851,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                 disabled={applied}
                 className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
             >
-                Apply discount &amp; continue
+                Apply established prices &amp; continue
                 <ChevronRight className="h-4 w-4" />
             </button>
 
