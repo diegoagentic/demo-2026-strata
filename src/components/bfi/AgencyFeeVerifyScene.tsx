@@ -97,17 +97,19 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
 
             {/* Fee calculation table */}
             <div className="border border-border rounded-xl overflow-hidden">
-                <div className="grid grid-cols-4 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <div className="grid grid-cols-5 gap-0 bg-muted/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <span className="col-span-2">Product</span>
+                    <span>Net sale</span>
                     <span>T-code</span>
                     <span className="text-right">Expected fee</span>
                 </div>
                 {FEE_LINES.slice(0, revealedCount).map((line) => (
                     <div
                         key={line.product}
-                        className="grid grid-cols-4 gap-0 px-3.5 py-2.5 text-xs border-t border-border animate-in fade-in slide-in-from-left-1 duration-300"
+                        className="grid grid-cols-5 gap-0 px-3.5 py-2.5 text-xs border-t border-border animate-in fade-in slide-in-from-left-1 duration-300"
                     >
                         <span className="col-span-2 font-medium text-foreground">{line.product}</span>
+                        <span className="text-muted-foreground tabular-nums">{line.sale}</span>
                         <span className="text-muted-foreground tabular-nums">{line.tcode}</span>
                         <span className="text-right font-bold text-foreground tabular-nums">{line.fee}</span>
                     </div>
