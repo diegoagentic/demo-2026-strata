@@ -37,12 +37,26 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
     const isPausedRef = useRef(isPaused)
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
-    const [phase, setPhase]                 = useState<Phase>('email')
-    const [revealedCount, setRevealedCount] = useState(0)
-    const [contractType, setContractType]   = useState<'city' | 'state'>('city')
-    const [applied, setApplied]             = useState(false)
-    const [ocr, setOcr]                     = useState(false)
-    const [sifExpanded, setSifExpanded]     = useState(false)
+    const [phase, setPhase]                       = useState<Phase>('email')
+    const [revealedCount, setRevealedCount]       = useState(0)
+    const [contractType, setContractType]         = useState<'city' | 'state'>('city')
+    const [applied, setApplied]                   = useState(false)
+    const [ocr, setOcr]                           = useState(false)
+    const [sifExpanded, setSifExpanded]           = useState(false)
+    const [activeAttachment, setActiveAttachment] = useState<'pdf' | 'sif'>('pdf')
+    const [downloading, setDownloading]           = useState<'pdf' | 'sif' | null>(null)
+    const [downloadedPdf, setDownloadedPdf]       = useState(false)
+    const [downloadedSif, setDownloadedSif]       = useState(false)
+
+    const handleDownload = (type: 'pdf' | 'sif') => {
+        if (downloading) return
+        setDownloading(type)
+        setTimeout(() => {
+            setDownloading(null)
+            if (type === 'pdf') setDownloadedPdf(true)
+            else setDownloadedSif(true)
+        }, 1200)
+    }
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -110,45 +124,107 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
                             </div>
                         ))}
 
-                        {/* Attachments */}
-                        <div className="space-y-2 pt-1">
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1">Attachments</div>
-                            <div className="bg-muted/30 border border-border rounded-lg px-2.5 py-2 space-y-1.5">
-                                <div className="flex items-center gap-2">
-                                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[11px] font-medium text-foreground">DOE-2847_specs.pdf</div>
-                                        <div className="text-[10px] text-muted-foreground">Product specs · architectural drawings · 12 pages</div>
+                        {/* Attachments — tabbed inline preview */}
+                        <div className="pt-1">
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Attachments</div>
+                            <div className="border border-border rounded-xl overflow-hidden">
+                                {/* Tab bar */}
+                                <div className="flex border-b border-border bg-muted/40">
+                                    <button
+                                        onClick={() => setActiveAttachment('pdf')}
+                                        className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold transition-colors border-r border-border flex-1 justify-center ${
+                                            activeAttachment === 'pdf' ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                                        specs.pdf
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveAttachment('sif')}
+                                        className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold transition-colors flex-1 justify-center ${
+                                            activeAttachment === 'sif' ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        <FileText className="h-3 w-3 text-ai shrink-0" />
+                                        SIF_v1.xlsx
+                                        {ocr && (
+                                            <span className="text-[9px] bg-ai/10 text-ai border border-ai/20 px-1 py-0.5 rounded-full font-medium animate-in fade-in duration-300">
+                                                OCR ✓
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {/* PDF preview */}
+                                {activeAttachment === 'pdf' && (
+                                    <div className="p-2.5 bg-zinc-100/60 dark:bg-zinc-900/40 max-h-44 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
+                                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 space-y-2">
+                                            <div className="text-center text-[9px] font-bold text-zinc-700 dark:text-zinc-300 pb-1.5 border-b border-zinc-200 dark:border-zinc-700 uppercase tracking-wide">
+                                                Product Specification · DOE-2847
+                                            </div>
+                                            <div className="text-[9px] text-zinc-500">NYC Dept. of Education · BFI Furniture · Q-2026-0089</div>
+                                            {[
+                                                { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', dims: 'W: 72" H: 29" D: 30"', finish: 'White/Silver' },
+                                                { code: 'HMI-LS-500',  name: 'Brody WorkLounge',            qty: '×12', dims: 'W: 32" H: 45" D: 28"', finish: 'Fog fabric'   },
+                                                { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  dims: 'W: 36" H: 28" D: 20"', finish: 'Platinum'    },
+                                            ].map(p => (
+                                                <div key={p.code} className="border-l-2 border-zinc-300 dark:border-zinc-600 pl-2 text-[9px] leading-relaxed">
+                                                    <div className="font-bold text-zinc-800 dark:text-zinc-200">{p.code} · {p.name} {p.qty}</div>
+                                                    <div className="text-zinc-500">{p.dims} · {p.finish}</div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex gap-2 pt-0.5">
-                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
-                                        <Eye className="h-3 w-3" /> Preview
-                                    </button>
-                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
-                                        <Download className="h-3 w-3" /> Download
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="bg-muted/30 border border-border rounded-lg px-2.5 py-2 space-y-1.5">
-                                <div className="flex items-center gap-2">
-                                    <FileText className="h-3.5 w-3.5 text-ai shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[11px] font-medium text-foreground">DOE-2847_SIF_v1.xlsx</div>
-                                        <div className="text-[10px] text-muted-foreground">Product codes · list prices · 4 line items</div>
+                                )}
+
+                                {/* SIF preview */}
+                                {activeAttachment === 'sif' && (
+                                    <div className="max-h-44 overflow-y-auto scrollbar-micro animate-in fade-in duration-200">
+                                        <table className="w-full text-[10px]">
+                                            <thead className="bg-muted/60 border-b border-border sticky top-0">
+                                                <tr>
+                                                    <th className="text-left px-3 py-1.5 text-muted-foreground font-bold">Code</th>
+                                                    <th className="text-left px-3 py-1.5 text-muted-foreground font-bold">Description</th>
+                                                    <th className="text-right px-3 py-1.5 text-muted-foreground font-bold">Qty</th>
+                                                    <th className="text-right px-3 py-1.5 text-muted-foreground font-bold">List</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border/60">
+                                                {[
+                                                    { code: 'HMI-WS-2400', desc: 'Locale Workstation',        qty: 24, list: '$10,000' },
+                                                    { code: 'HMI-LS-500',  desc: 'Brody WorkLounge',          qty: 12, list: '$7,000'  },
+                                                    { code: 'HMI-FU-300',  desc: 'Lateral Filing 3-Drawer',   qty: 6,  list: '$2,100'  },
+                                                    { code: 'INSTALL-NYC', desc: 'Installation / Labor',      qty: 1,  list: '—'       },
+                                                ].map(r => (
+                                                    <tr key={r.code} className="hover:bg-muted/20">
+                                                        <td className="px-3 py-2 font-mono text-[9px] text-muted-foreground">{r.code}</td>
+                                                        <td className="px-3 py-2 text-foreground font-medium">{r.desc}</td>
+                                                        <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.qty}</td>
+                                                        <td className="px-3 py-2 text-right tabular-nums font-bold text-foreground">{r.list}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    {ocr && (
-                                        <span className="text-[9px] text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded-full font-medium animate-in fade-in duration-300 shrink-0">
-                                            OCR ✓
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex gap-2 pt-0.5">
-                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
-                                        <Eye className="h-3 w-3" /> Preview
-                                    </button>
-                                    <button className="flex items-center gap-1 px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted/30 transition-colors">
-                                        <Download className="h-3 w-3" /> Download
+                                )}
+
+                                {/* Footer: meta + download */}
+                                <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/20">
+                                    <span className="text-[9px] text-muted-foreground">
+                                        {activeAttachment === 'pdf' ? '12 pages · 4.2 MB' : '4 line items · XLSX · 18 KB'}
+                                    </span>
+                                    <button
+                                        onClick={() => handleDownload(activeAttachment)}
+                                        disabled={downloading !== null}
+                                        className="flex items-center gap-1 px-2.5 py-1 rounded border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted/30 disabled:opacity-60 transition-colors"
+                                    >
+                                        {downloading === activeAttachment ? (
+                                            <><div className="h-3 w-3 border border-muted-foreground border-t-transparent rounded-full animate-spin shrink-0" /> Downloading…</>
+                                        ) : (activeAttachment === 'pdf' ? downloadedPdf : downloadedSif) ? (
+                                            <><CheckCircle2 className="h-3 w-3 text-success shrink-0" /> Downloaded</>
+                                        ) : (
+                                            <><Download className="h-3 w-3 shrink-0" /> Download</>
+                                        )}
                                     </button>
                                 </div>
                             </div>
