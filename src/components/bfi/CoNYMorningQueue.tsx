@@ -11,7 +11,7 @@
  *   sendDialog  → "Notify designer?" → send flow → nextStep()
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import {
     Sparkles, CheckCircle2, AlertTriangle,
     FileText, Mail, Send, User,
