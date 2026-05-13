@@ -346,80 +346,86 @@ function getFields(step: BFIReviewStep, scenario?: 'match' | 'gap'): ReviewField
 // ─── Attachments Panel ───────────────────────────────────────────────────────
 
 const BFI_ATTACHMENTS = [
-    {
-        category: 'CPR',
-        files: [
-            { name: 'CPR-DOT-25271.pdf',   path: '/docs/bfi/cpr/CPR-DOT-25271.pdf'   },
-            { name: 'CPR-NYPL-17706.pdf',  path: '/docs/bfi/cpr/CPR-NYPL-17706.pdf'  },
-        ],
-    },
-    {
-        category: 'Invoices',
-        files: [
-            { name: 'invoice-030923-NYPL.pdf',       path: '/docs/bfi/invoices/invoice-030923-NYPL.pdf'       },
-            { name: 'invoice-email-17706.pdf',        path: '/docs/bfi/invoices/invoice-email-17706.pdf'        },
-            { name: 'lauren-email-assessment.pdf',    path: '/docs/bfi/invoices/lauren-email-assessment.pdf'    },
-        ],
-    },
-    {
-        category: 'Receiving',
-        files: [
-            { name: 'RR-37577-missing.pdf', path: '/docs/bfi/receiving/RR-37577-missing.pdf' },
-            { name: 'RR-37578-normal.pdf',  path: '/docs/bfi/receiving/RR-37578-normal.pdf'  },
-        ],
-    },
-    {
-        category: 'Sign-In',
-        files: [
-            { name: 'signin-NYPL-17706.pdf', path: '/docs/bfi/signin/signin-NYPL-17706.pdf' },
-        ],
-    },
+    { name: 'CPR-NYPL-17706.pdf',      path: '/docs/bfi/cpr/CPR-NYPL-17706.pdf',              category: 'CPR',     rotate: true  },
+    { name: 'invoice-030923-NYPL.pdf', path: '/docs/bfi/invoices/invoice-030923-NYPL.pdf',     category: 'Invoice', rotate: false },
+    { name: 'signin-NYPL-17706.pdf',   path: '/docs/bfi/signin/signin-NYPL-17706.pdf',         category: 'Sign-In', rotate: true  },
 ]
 
+const CATEGORY_COLORS: Record<string, string> = {
+    CPR:     'bg-info/10 text-info border-info/20',
+    Invoice: 'bg-muted text-muted-foreground border-border',
+    'Sign-In': 'bg-success/10 text-success border-success/20',
+}
+
 function AttachmentsPanel() {
-    const [expanded, setExpanded] = useState<string | null>(null)
+    const [lightbox, setLightbox] = useState<{ path: string; name: string; rotate: boolean } | null>(null)
 
     return (
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-            {BFI_ATTACHMENTS.map(group => (
-                <div key={group.category}>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{group.category}</p>
-                    <div className="space-y-1.5">
-                        {group.files.map(file => {
-                            const isOpen = expanded === file.path
-                            return (
-                                <div key={file.path} className={`rounded-xl border transition-all ${isOpen ? 'border-primary/30 bg-primary/5' : 'border-border'}`}>
-                                    <div className="flex items-center gap-2.5 px-3 py-2">
-                                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                        <span className="text-[11px] font-medium text-foreground flex-1 min-w-0 truncate">{file.name}</span>
-                                        <button
-                                            onClick={() => setExpanded(isOpen ? null : file.path)}
-                                            className={`text-[9px] font-bold px-2 py-0.5 rounded-md transition-colors shrink-0 ${
-                                                isOpen
-                                                    ? 'bg-primary/20 text-primary'
-                                                    : 'bg-muted text-muted-foreground hover:text-foreground'
-                                            }`}
-                                        >
-                                            {isOpen ? 'Close' : 'Preview'}
-                                        </button>
-                                    </div>
-                                    {isOpen && (
-                                        <div className="px-3 pb-3 animate-in fade-in duration-200">
-                                            <iframe
-                                                src={file.path}
-                                                className="w-full rounded-lg border border-border"
-                                                style={{ height: 220 }}
-                                                title={file.name}
-                                            />
-                                        </div>
-                                    )}
+        <>
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+                {BFI_ATTACHMENTS.map(file => (
+                    <div key={file.path} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border bg-card hover:border-border/80 transition-colors">
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-[11px] font-medium text-foreground flex-1 min-w-0 truncate">{file.name}</span>
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${CATEGORY_COLORS[file.category]}`}>
+                            {file.category}
+                        </span>
+                        <button
+                            onClick={() => setLightbox(file)}
+                            className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors shrink-0"
+                        >
+                            Preview
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            {/* Lightbox */}
+            {lightbox && (
+                <div
+                    className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-200"
+                    onClick={() => setLightbox(null)}
+                >
+                    <div
+                        className="relative bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+                        style={{ width: lightbox.rotate ? 640 : 560, maxHeight: '90vh' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-800 shrink-0">
+                            <span className="text-[10px] font-bold text-zinc-300 truncate">{lightbox.name}</span>
+                            <button onClick={() => setLightbox(null)} className="text-zinc-400 hover:text-white text-lg leading-none ml-4 transition-colors">×</button>
+                        </div>
+
+                        {/* PDF — rotated files get a wrapper that corrects orientation */}
+                        <div className="flex-1 overflow-hidden flex items-center justify-center bg-zinc-950" style={{ minHeight: lightbox.rotate ? 480 : 560 }}>
+                            {lightbox.rotate ? (
+                                <div style={{ width: 480, height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                    <iframe
+                                        src={lightbox.path}
+                                        title={lightbox.name}
+                                        style={{
+                                            width: 600,
+                                            height: 480,
+                                            transform: 'rotate(90deg)',
+                                            transformOrigin: 'center',
+                                            border: 'none',
+                                            flexShrink: 0,
+                                        }}
+                                    />
                                 </div>
-                            )
-                        })}
+                            ) : (
+                                <iframe
+                                    src={lightbox.path}
+                                    title={lightbox.name}
+                                    style={{ width: '100%', height: 560, border: 'none' }}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
-            ))}
-        </div>
+            )}
+        </>
     )
 }
 
