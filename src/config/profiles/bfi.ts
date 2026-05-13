@@ -71,6 +71,15 @@ export const BFI_STEPS: DemoStep[] = [
         role: 'Account Manager',
     },
     {
+        id: 'a1.2d',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
+        title: 'WIG Bingo Check',
+        description: 'With the PO confirmed and proposal sent, the WIG Receiving Report arrives. Strata captures it digitally — ready for AI cross-reference against the bingo sheet.',
+        app: 'bfi-receiving',
+        role: 'Receiving Coordinator',
+    },
+    {
         id: 'a1.3',
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
@@ -151,6 +160,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges the update · loop closed' },
     'a1.2b': { mode: 'interactive', userAction: 'Review SIF validation via OmniQuote → accept Filing Units correction → toggle City/State contract → apply discount & continue' },
     'a1.2c': { mode: 'interactive', userAction: 'Review PO from NYC DoE + labor quote from Workplace · confirm 30-day delivery window · confirm in CORE · watch EDI transmit to OVNIQ' },
+    'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line-by-line · approve · see the pre-drafted message to Michael → send without leaving the screen' },
     'a1.4': { mode: 'interactive', userAction: 'Patricia verifies the agency fee — toggle match/gap scenario · confirm or flag the $1,250 discrepancy' },
 };
@@ -232,5 +242,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const BFI_SELF_INDICATED: string[] = [
     'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
-    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.3', 'a1.4',
+    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.3', 'a1.4',
 ];

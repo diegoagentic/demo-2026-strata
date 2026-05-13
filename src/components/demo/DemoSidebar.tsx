@@ -98,6 +98,7 @@ const DATA_THREADS_BY_PROFILE: Record<string, Record<string, string>> = {
         'a1.2':  'SIF corrected · 1 price adjusted · discount calculated',
         'a1.2b': 'Order Q-2026-0089 confirmed · Robert Chen acknowledged',
         'a1.2c': 'PO + labor captured · CORE entry confirmed · EDI transmitted',
+        'a1.2d': 'Proposal sent to DOE · WIG report received · bingo sheet ready for AI',
         'a1.3':  'CPR approved · −$2,340 applied · relayed to Nancy Bos',
         'a1.4':  'Agency fee verified · $41,040 match confirmed',
         'r1.2':  'WIG report received · bingo sheet ready for AI',

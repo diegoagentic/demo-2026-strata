@@ -35,6 +35,7 @@ const STEP_TITLES: Record<string, string> = {
     'a1.2': 'Agency Fee',
     'a1.2b': 'Agency Fee',
     'a1.2c': 'Agency Fee',
+    'a1.2d': 'Product Receiving',
     'a1.3': 'Agency Fee',
     'a1.4': 'Agency Fee',
 }
@@ -89,6 +90,7 @@ export default function BFIPage() {
                 {stepId === 'a1.1' && <CoNYMorningQueue onSelectOrder={nextStep} />}
                 {stepId === 'a1.2b' && <QuoteIntakePricingScene onApply={nextStep} />}
                 {stepId === 'a1.2c' && <POLaborScene onConfirm={nextStep} />}
+                {stepId === 'a1.2d' && <WIGBingoCheckScene onAnalyze={nextStep} />}
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
             </div>
