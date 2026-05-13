@@ -291,7 +291,8 @@ function UploadedFileCard({ filename, label, children }: {
 // ─── Lauren Notification Dialog ───────────────────────────────────────────────
 
 function LaurenNotificationDialog({ isOpen, notes, onSent }: { isOpen: boolean; notes: string; onSent: () => void }) {
-    const [sent, setSent] = useState(false)
+    const [sent,      setSent]      = useState(false)
+    const [fromEmail, setFromEmail] = useState('lena.c@bfifurniture.com')
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
 
     return (
@@ -328,14 +329,19 @@ function LaurenNotificationDialog({ isOpen, notes, onSent }: { isOpen: boolean; 
                                         DOE-2847 · Receiving Complete · Carton #34 missing
                                     </div>
                                     <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">From:</span>
+                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent}
+                                                className="flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0" />
+                                        </div>
                                         {[
-                                            { label: 'From', value: 'lena.c@bfifurniture.com' },
                                             { label: 'To',   value: 'lauren.demarco@bfifurniture.com' },
+                                            { label: 'CC',   value: 'walter@conyny.gov · CoNY PM' },
                                             { label: 'Date', value: 'May 11, 2026 · 8:42 AM' },
                                         ].map(r => (
                                             <div key={r.label} className="flex items-center gap-2 text-[10px]">
                                                 <span className="text-muted-foreground w-7 shrink-0">{r.label}:</span>
-                                                <span className="text-foreground font-medium truncate">{r.value}</span>
+                                                <span className={`font-medium truncate ${r.label === 'CC' ? 'text-muted-foreground italic' : 'text-foreground'}`}>{r.value}</span>
                                             </div>
                                         ))}
                                     </div>

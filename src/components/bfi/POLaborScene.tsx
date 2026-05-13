@@ -19,7 +19,8 @@ const ACTIVE_COL = 2  // PO & Labor
 // ─── Proposal Email Dialog ────────────────────────────────────────────────────
 
 function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }) {
-    const [sent, setSent] = useState(false)
+    const [sent,      setSent]      = useState(false)
+    const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
 
     const handleSend = () => {
         setSent(true)
@@ -66,8 +67,12 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                         Proposal · DOE-2847 · Q-2026-0089 · Delivery Date Request
                                     </div>
                                     <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">From:</span>
+                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent}
+                                                className="flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0" />
+                                        </div>
                                         {[
-                                            { label: 'From', value: 'lauren.demarco@bfifurniture.com' },
                                             { label: 'To',   value: 'nycdoe-procurement@schools.nyc.gov' },
                                             { label: 'Date', value: 'May 6, 2026 · 10:45 AM' },
                                         ].map(r => (
