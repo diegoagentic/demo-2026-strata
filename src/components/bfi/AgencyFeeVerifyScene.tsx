@@ -3,18 +3,13 @@
  * PURPOSE: Flow 1 · Scene 8 — Expected agency fee (from CoNY T-codes) vs
  *          MK Invoice Processor (Nancy Bos). Patricia closes in CORE.
  *
- * Micro-interaction: Gap scenario toggle
- *   Match: Expected $41,040 = Nancy $41,040 → ✅ confirm & close
- *   Gap:   Expected $41,040 ≠ Nancy $39,790 → ⚠️ flag & hold
- *
- * Kate's pain point #2: "Lauren said 'there are never discrepancies' —
- * because she could never verify. Strata checks automatically."
- *
- * DS TOKENS: bg-card · bg-success/5 · bg-amber-50 · border-border
+ * UX: Match scenario → Confirm & close (+ Request changes ghost).
+ *     Gap scenario   → Flag & hold (+ Request changes ghost).
+ *     Request changes → inline panel with chips + note → "Send revision request".
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, ArrowRight, DollarSign, Flag, ChevronRight } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, ArrowRight, DollarSign, Flag, ChevronRight, RotateCcw, Send, XCircle } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -30,7 +25,9 @@ const FEE_LINES = [
 
 const EXPECTED_FEE = '$9,255'
 const NANCY_MATCH   = '$9,255'
-const NANCY_GAP     = '$8,940'   // simulated discrepancy: -$315
+const NANCY_GAP     = '$8,940'
+
+const CHANGE_CHIPS = ['Invoice amount incorrect', 'T-code mismatch', 'Missing line item', 'Other']
 
 export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifySceneProps) {
     const { nextStep, isPaused } = useDemo()
@@ -41,6 +38,12 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
     const [scenario, setScenario]           = useState<'match' | 'gap'>('match')
     const [confirmed, setConfirmed]         = useState(false)
     const [flagged, setFlagged]             = useState(false)
+
+    // Request changes flow
+    const [requesting, setRequesting]       = useState(false)
+    const [revisionSent, setRevisionSent]   = useState(false)
+    const [selectedChips, setSelectedChips] = useState<string[]>([])
+    const [revisionNote, setRevisionNote]   = useState('')
 
     const allRevealed = revealedCount >= FEE_LINES.length
     const isGap = scenario === 'gap'
@@ -68,6 +71,8 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
         setTimeout(pauseAware(() => nextStep()), 900)
     }
 
+    const actionDone = confirmed || flagged || revisionSent
+
     return (
         <div className="space-y-4">
             {/* Context banner */}
@@ -81,7 +86,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 </div>
             </div>
 
-            {/* Connection bar — 3 data sources */}
+            {/* Connection bar */}
             <div className="border border-border rounded-xl bg-card px-3.5 py-3">
                 <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Data sources</div>
                 <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
@@ -122,43 +127,37 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 )}
             </div>
 
-            {/* Comparison vs Nancy Bos — appears after all revealed */}
+            {/* Comparison vs Nancy Bos */}
             {allRevealed && (
-                <div className={`border rounded-xl overflow-hidden animate-in fade-in duration-300 transition-colors ${
-                    isGap
-                        ? 'border-amber-200 dark:border-amber-500/30'
-                        : 'border-success/30'
+                <div className={`border rounded-xl overflow-hidden animate-in fade-in duration-300 ${
+                    isGap ? 'border-amber-200 dark:border-amber-500/30' : 'border-success/30'
                 }`}>
-                    {/* Scenario toggle — demo affordance */}
-                    {!confirmed && !flagged && (
-                        <div className="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-border bg-muted/40">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
-                                MK Invoice Processor · Nancy Bos report
-                            </span>
+                    {/* Header with demo toggle */}
+                    <div className="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-border bg-muted/40">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            MK Invoice Processor · Nancy Bos report
+                        </span>
+                        {!actionDone && (
                             <div className="flex gap-1 bg-background border border-border rounded-lg p-0.5">
                                 <button
-                                    onClick={() => setScenario('match')}
+                                    onClick={() => { setScenario('match'); setRequesting(false) }}
                                     className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
-                                        !isGap
-                                            ? 'bg-card text-foreground shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground'
+                                        !isGap ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
                                     ✓ Match
                                 </button>
                                 <button
-                                    onClick={() => setScenario('gap')}
+                                    onClick={() => { setScenario('gap'); setRequesting(false) }}
                                     className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
-                                        isGap
-                                            ? 'bg-card text-foreground shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground'
+                                        isGap ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
                                     ⚠ Gap
                                 </button>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* Comparison grid */}
                     <div className={`grid grid-cols-3 gap-0 px-3.5 py-3 text-xs ${
@@ -170,15 +169,13 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                         </div>
                         <div className="text-center">
                             <div className="text-[10px] text-muted-foreground mb-1">Nancy Bos (MK)</div>
-                            <div className={`font-bold tabular-nums transition-colors ${
-                                isGap ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'
-                            }`}>
+                            <div className={`font-bold tabular-nums ${isGap ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
                                 {isGap ? NANCY_GAP : NANCY_MATCH}
                             </div>
                         </div>
                         <div className="text-center">
                             <div className="text-[10px] text-muted-foreground mb-1">Variance</div>
-                            <div className={`font-bold tabular-nums flex items-center justify-center gap-1 transition-colors ${
+                            <div className={`font-bold tabular-nums flex items-center justify-center gap-1 ${
                                 isGap ? 'text-amber-600 dark:text-amber-400' : 'text-success'
                             }`}>
                                 {isGap
@@ -189,7 +186,6 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                         </div>
                     </div>
 
-                    {/* Match / Gap context line */}
                     <div className={`px-3.5 py-2 text-[11px] border-t ${
                         isGap
                             ? 'border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium'
@@ -203,45 +199,108 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 </div>
             )}
 
-            {/* CTAs — match scenario */}
-            {allRevealed && !isGap && !confirmed && !flagged && (
-                <div className="flex items-center justify-end animate-in fade-in slide-in-from-bottom-1 duration-300">
+            {/* CTAs — primary actions */}
+            {allRevealed && !actionDone && !requesting && (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
                     <button
-                        onClick={handleConfirm}
-                        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
+                        onClick={() => setRequesting(true)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
                     >
-                        <DollarSign className="h-3.5 w-3.5" />
-                        Confirm &amp; send to Finance / AR
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Request changes
                     </button>
+
+                    {!isGap ? (
+                        <button
+                            onClick={handleConfirm}
+                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
+                        >
+                            <DollarSign className="h-3.5 w-3.5" />
+                            Confirm &amp; close DOE-2847
+                            <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleFlag}
+                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-warning text-zinc-900 hover:opacity-90 transition-all shadow-sm"
+                        >
+                            <Flag className="h-3.5 w-3.5" />
+                            Flag &amp; hold for Finance review
+                            <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                    )}
                 </div>
             )}
 
-            {/* CTAs — gap scenario */}
-            {allRevealed && isGap && !confirmed && !flagged && (
-                <div className="flex items-center justify-end animate-in fade-in slide-in-from-bottom-1 duration-300">
-                    <button
-                        onClick={handleFlag}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
-                    >
-                        <Flag className="h-3.5 w-3.5" />
-                        Flag gap · hold for Finance review
-                    </button>
+            {/* Request changes panel */}
+            {allRevealed && requesting && !revisionSent && (
+                <div className="border border-warning/30 bg-warning/5 rounded-xl p-3.5 space-y-3 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2">
+                        <RotateCcw className="h-3.5 w-3.5 text-warning shrink-0" />
+                        <span className="text-xs font-bold text-foreground">Request changes · DOE-2847</span>
+                        <button
+                            onClick={() => setRequesting(false)}
+                            className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <XCircle className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                        {CHANGE_CHIPS.map(chip => {
+                            const active = selectedChips.includes(chip)
+                            return (
+                                <button
+                                    key={chip}
+                                    onClick={() => setSelectedChips(prev =>
+                                        active ? prev.filter(c => c !== chip) : [...prev, chip]
+                                    )}
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                                        active
+                                            ? 'bg-warning/20 border-warning/50 text-warning'
+                                            : 'border-border text-muted-foreground hover:border-warning/40 hover:text-warning'
+                                    }`}
+                                >
+                                    {chip}
+                                </button>
+                            )
+                        })}
+                    </div>
+                    <textarea
+                        rows={2}
+                        value={revisionNote}
+                        onChange={e => setRevisionNote(e.target.value)}
+                        placeholder="Note to Nancy Bos / Lauren (optional)…"
+                        className="w-full text-[11px] bg-card border border-border rounded-lg px-3 py-2 text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-warning/40"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                        <button
+                            onClick={() => setRequesting(false)}
+                            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => { setRequesting(false); setRevisionSent(true) }}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-warning text-zinc-900 hover:opacity-90 transition-all"
+                        >
+                            <Send className="h-3 w-3" />
+                            Send revision request →
+                        </button>
+                    </div>
                 </div>
             )}
 
-            {/* Match confirmed */}
+            {/* Outcome states */}
             {confirmed && (
                 <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                     <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <div className="text-xs">
-                        <div className="font-bold text-foreground">DOE-2847 closed · Agency fee $9,255 verified</div>
+                        <div className="font-bold text-foreground">DOE-2847 closed · Agency fee {EXPECTED_FEE} verified</div>
                         <div className="text-muted-foreground mt-0.5">Patricia notified to apply fee and close CORE · order invoiceable</div>
                     </div>
                 </div>
             )}
 
-            {/* Gap flagged */}
             {flagged && (
                 <div className="bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                     <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
@@ -254,18 +313,26 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 </div>
             )}
 
-            {/* Before Strata */}
-            {!confirmed && !flagged && (
-                <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
+            {revisionSent && (
+                <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
+                    <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                        <div className="font-bold text-foreground">Revision requested · DOE-2847 · Nancy Bos notified</div>
+                        <div className="text-muted-foreground mt-0.5">Pending correction from Miller Knoll · fee verification on hold</div>
+                    </div>
+                </div>
+            )}
+
+            {/* Before Strata — shown post-action */}
+            {actionDone && (
+                <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5 animate-in fade-in duration-300">
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
                         <span className="font-medium text-foreground">Before Strata:</span> No system compared expected fee vs what Nancy Bos reported. BFI was paid whatever Miller Knoll said — verification was impossible. "Lauren said there are never discrepancies" — because she could never check.
                     </p>
                 </div>
             )}
 
-            <DataSourcesBar groups={[
-                { sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR, SOURCES.OVNIQ] },
-            ]} />
+            <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_AR, SOURCES.OVNIQ] }]} />
         </div>
     )
 }

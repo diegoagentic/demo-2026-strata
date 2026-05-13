@@ -9,7 +9,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, Building2, Edit3, Send, ChevronRight } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, Building2, Edit3, Send, ChevronRight, XCircle, RotateCcw } from 'lucide-react'
 import { ReasonDialog } from '../shared'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -51,10 +51,18 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
     const [editingLine, setEditingLine] = useState<string | null>(null)
     const [allApproved, setAllApproved] = useState(false)
 
-    const [draftText, setDraftText]   = useState(DRAFT_DEFAULT)
-    const [editing, setEditing]       = useState(false)
-    const [sent, setSent]             = useState(false)
-    const [nancyReply, setNancyReply] = useState(false)
+    const [draftText, setDraftText]     = useState(DRAFT_DEFAULT)
+    const [editing, setEditing]         = useState(false)
+    const [sent, setSent]               = useState(false)
+    const [nancyReply, setNancyReply]   = useState(false)
+    const [showPreview, setShowPreview] = useState(false)
+
+    // Request changes flow (reconciling phase)
+    const [requestingChanges, setRequestingChanges] = useState(false)
+    const [changeNote, setChangeNote]               = useState('')
+    const [changesSent, setChangesSent]             = useState(false)
+    const CHANGE_CHIPS = ['Hours don\'t match signed CPR', 'Missing documentation', 'Wrong union classification', 'Other']
+    const [selectedChips, setSelectedChips]         = useState<string[]>([])
 
     const discrepancyLines = CPR_LINES.filter(l => !l.ok)
     const allDiscrepanciesResolved = discrepancyLines.every(
@@ -120,8 +128,8 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
                 {/* Doc cards — real PDFs via BFIDocViewer */}
                 <BFIDocViewer {...BFI_DOCS.INVOICE_EMAIL_17706} height={220} />
                 <BFIDocViewer {...BFI_DOCS.INVOICE_030923}      height={300} />
-                <BFIDocViewer {...BFI_DOCS.SIGNIN_NYPL_17706}   height={380} badge="Signed" badgeColor="success" />
-                <BFIDocViewer {...BFI_DOCS.CPR_NYPL_17706}      height={420} />
+                <BFIDocViewer {...BFI_DOCS.SIGNIN_NYPL_17706}   height={380} badge="Signed" badgeColor="success" rotate90 />
+                <BFIDocViewer {...BFI_DOCS.CPR_NYPL_17706}      height={420} rotate90 />
 
                 <div className="bg-muted/40 border border-border rounded-xl px-3 py-2.5">
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
@@ -257,18 +265,84 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
                     </div>
                 </div>
 
-                {!allApproved && allDiscrepanciesResolved && (
-                    <div className="flex items-center gap-3 animate-in fade-in duration-300">
-                        <p className="text-[11px] text-muted-foreground flex-1">
-                            All discrepancies resolved · pre-drafted message to Michael ready.
-                        </p>
+                {!allApproved && allDiscrepanciesResolved && !requestingChanges && !changesSent && (
+                    <div className="flex items-center gap-2 animate-in fade-in duration-300">
+                        <button
+                            onClick={() => setRequestingChanges(true)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
+                        >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Request changes
+                        </button>
                         <button
                             onClick={handleApproveAll}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm shrink-0"
+                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                         >
                             <Building2 className="h-3.5 w-3.5" />
                             Approve & relay
                         </button>
+                    </div>
+                )}
+
+                {/* Request changes panel */}
+                {requestingChanges && !changesSent && (
+                    <div className="border border-warning/30 bg-warning/5 rounded-xl p-3.5 space-y-3 animate-in fade-in duration-200">
+                        <div className="flex items-center gap-2">
+                            <RotateCcw className="h-3.5 w-3.5 text-warning shrink-0" />
+                            <span className="text-xs font-bold text-foreground">Request changes · DOE-2847</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                            {CHANGE_CHIPS.map(chip => {
+                                const active = selectedChips.includes(chip)
+                                return (
+                                    <button
+                                        key={chip}
+                                        onClick={() => setSelectedChips(prev =>
+                                            active ? prev.filter(c => c !== chip) : [...prev, chip]
+                                        )}
+                                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                                            active
+                                                ? 'bg-warning/20 border-warning/50 text-warning'
+                                                : 'border-border text-muted-foreground hover:border-warning/40 hover:text-warning'
+                                        }`}
+                                    >
+                                        {chip}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <textarea
+                            rows={2}
+                            value={changeNote}
+                            onChange={e => setChangeNote(e.target.value)}
+                            placeholder="Describe the issue for Lauren / Michael…"
+                            className="w-full text-[11px] bg-card border border-border rounded-lg px-3 py-2 text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-warning/40"
+                        />
+                        <div className="flex items-center justify-between gap-2">
+                            <button
+                                onClick={() => setRequestingChanges(false)}
+                                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => { setRequestingChanges(false); setChangesSent(true) }}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-warning text-zinc-900 hover:opacity-90 transition-all"
+                            >
+                                <Send className="h-3 w-3" />
+                                Send back to Lauren
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {changesSent && (
+                    <div className="bg-warning/5 border border-warning/30 rounded-xl px-3 py-2.5 flex items-start gap-2 animate-in fade-in duration-300">
+                        <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                            <div className="font-bold text-foreground">Revision requested · DOE-2847</div>
+                            <div className="text-muted-foreground mt-0.5">Sent back to Lauren DeMarco · CPR reconciliation on hold · pending correction</div>
+                        </div>
                     </div>
                 )}
 
@@ -371,15 +445,64 @@ export default function CPRScene({ onSend }: CPRSceneProps) {
                 </div>
             </div>
 
-            {!sent ? (
+            {!sent && !showPreview && (
                 <button
-                    onClick={handleSend}
+                    onClick={() => setShowPreview(true)}
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                 >
                     <Send className="h-4 w-4" />
-                    Send to Michael — relay to Nancy
+                    Preview &amp; send →
                 </button>
-            ) : (
+            )}
+
+            {/* Email preview panel */}
+            {!sent && showPreview && (
+                <div className="border border-ai/30 bg-ai/5 rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-300">
+                    <div className="flex items-center justify-between px-3.5 py-2 border-b border-ai/20 bg-ai/10">
+                        <span className="text-[10px] font-bold text-ai uppercase tracking-wide">Email preview · confirm before sending</span>
+                        <button onClick={() => setShowPreview(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                            <XCircle className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                    <div className="px-3.5 py-2 border-b border-ai/10 space-y-1">
+                        {[
+                            { label: 'To',    value: 'Michael Boyle (via Strata)' },
+                            { label: 'Relay', value: 'Nancy Bos · Miller Knoll Invoice Processor' },
+                            { label: 'Re',    value: 'CPR Reconciliation · DOE-2847 · −$2,340' },
+                        ].map(r => (
+                            <div key={r.label} className="flex items-start gap-2 text-[10px]">
+                                <span className="text-muted-foreground w-10 shrink-0">{r.label}:</span>
+                                <span className="text-foreground">{r.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="p-3.5">
+                        <textarea
+                            value={draftText}
+                            onChange={e => setDraftText(e.target.value)}
+                            rows={6}
+                            className="w-full text-[11px] text-foreground bg-background border border-border rounded-lg px-3 py-2 resize-none font-mono leading-relaxed focus:outline-none focus:ring-1 focus:ring-ai/40"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 px-3.5 pb-3">
+                        <button
+                            onClick={() => setShowPreview(false)}
+                            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => { setShowPreview(false); handleSend() }}
+                            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all"
+                        >
+                            <Send className="h-3.5 w-3.5" />
+                            Confirm &amp; send →
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {sent && (
                 <div className="space-y-3 animate-in fade-in duration-300">
                     <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-center gap-2.5">
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0" />

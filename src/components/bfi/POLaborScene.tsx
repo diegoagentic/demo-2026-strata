@@ -53,6 +53,8 @@ export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
     const [phase, setPhase]                   = useState<ScenePhase>('incoming')
+    const [emailVisible, setEmailVisible]     = useState(false)
+    const [emailExpanded, setEmailExpanded]   = useState(false)
     const [extractedCount, setExtractedCount] = useState(0)
     const [dateConfirmed, setDateConfirmed]   = useState(false)
     const [submitting, setSubmitting]         = useState(false)
@@ -81,6 +83,13 @@ export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
             if (!isPausedRef.current) { clearInterval(poll); fn() }
         }, 200)
     }, [])
+
+    // notification arrives after 1.5s in incoming phase
+    useEffect(() => {
+        if (phase !== 'incoming') return
+        const t = setTimeout(() => setEmailVisible(true), 1500)
+        return () => clearTimeout(t)
+    }, [phase])
 
     // extracting → animate lines → review (auto after manual trigger)
     useEffect(() => {
@@ -128,35 +137,51 @@ export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
     if (phase === 'incoming') {
         return (
             <div className="space-y-3 animate-in fade-in duration-300">
-                {/* Email notification with manual trigger */}
-                <div className="border border-ai/30 bg-ai/5 rounded-xl overflow-hidden">
-                    <div className="flex items-center gap-3 px-3.5 py-3">
-                        <div className="h-9 w-9 rounded-full bg-ai/10 border border-ai/20 flex items-center justify-center shrink-0">
-                            <Mail className="h-4 w-4 text-ai" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-foreground">Labor Quote #17706 · Workplace / WIG</span>
-                                <span className="text-[9px] font-bold bg-ai/10 text-ai border border-ai/20 px-2 py-0.5 rounded-full font-mono">New</span>
+                {/* Email notification — arrives after 1.5s, collapses until expanded */}
+                {emailVisible && (
+                    <div className="border border-ai/30 bg-ai/5 rounded-xl overflow-hidden animate-in slide-in-from-top-2 fade-in duration-400">
+                        {/* Notification header — always visible */}
+                        <div className="flex items-center gap-3 px-3.5 py-2.5">
+                            <div className="h-8 w-8 rounded-full bg-ai/10 border border-ai/20 flex items-center justify-center shrink-0">
+                                <Mail className="h-3.5 w-3.5 text-ai" />
                             </div>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">From: michael.boyle@workplace-wig.com · PDF attachment detected</div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-foreground">Labor Quote #17706 · Workplace / WIG</span>
+                                    <span className="text-[9px] font-bold bg-ai/10 text-ai border border-ai/20 px-2 py-0.5 rounded-full font-mono">New</span>
+                                </div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5">From: michael.boyle@workplace-wig.com · PDF attachment detected</div>
+                            </div>
+                            {!emailExpanded && (
+                                <button
+                                    onClick={() => setEmailExpanded(true)}
+                                    className="flex items-center gap-1 text-[10px] font-bold text-ai hover:text-ai/80 transition-colors shrink-0"
+                                >
+                                    Expand <ArrowRight className="h-3 w-3" />
+                                </button>
+                            )}
                         </div>
+
+                        {/* Expandable content */}
+                        {emailExpanded && (
+                            <div className="border-t border-ai/20 animate-in fade-in duration-300">
+                                <div className="px-3.5 py-2">
+                                    <BFIDocViewer {...BFI_DOCS.INVOICE_EMAIL_17706} height={200} />
+                                </div>
+                                <div className="px-3.5 pb-3">
+                                    <button
+                                        onClick={() => setPhase('extracting')}
+                                        className="flex items-center gap-2 px-4 py-2 text-[11px] font-bold rounded-lg bg-ai text-white hover:opacity-90 transition-all"
+                                    >
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        Process with Strata AI
+                                        <ArrowRight className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    {/* Actual email PDF */}
-                    <div className="px-3.5 pb-2">
-                        <BFIDocViewer {...BFI_DOCS.INVOICE_EMAIL_17706} height={200} />
-                    </div>
-                    <div className="px-3.5 pb-3">
-                        <button
-                            onClick={() => setPhase('extracting')}
-                            className="flex items-center gap-2 px-4 py-2 text-[11px] font-bold rounded-lg bg-ai text-white hover:opacity-90 transition-all"
-                        >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            Process with Strata AI
-                            <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                    </div>
-                </div>
+                )}
 
                 {/* Background work queue */}
                 <div className="border border-border rounded-xl overflow-hidden">
@@ -609,7 +634,7 @@ export default function POLaborScene({ onConfirm }: POLaborSceneProps) {
                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-all shadow-sm"
                 >
                     <Sparkles className="h-4 w-4" />
-                    Generate orders · Confirm in CORE · EDI to OVNIQ
+                    Confirm CORE entry · EDI to OVNIQ
                     <ChevronRight className="h-4 w-4" />
                 </button>
             )}
