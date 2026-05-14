@@ -35,10 +35,10 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                     enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                <div className="fixed inset-0 flex items-center justify-center p-6">
                     <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
@@ -97,7 +97,7 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
 
                                         {/* Order summary */}
                                         <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-[11px]">
-                                            <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Quote Summary · OmniQuote Validated</p>
+                                            <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">PO Request · OmniQuote Validated</p>
                                             {[
                                                 { label: 'Contract',        value: 'CoNY · City of New York' },
                                                 { label: 'Price corrected', value: 'Filing Units $8,100 → $7,560 per T-code' },
@@ -128,7 +128,7 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                     <div className="flex flex-col gap-1.5">
                                         {[
                                             { name: 'DOE-2847-SIF-updated.pdf',  label: 'Updated SIF' },
-                                            { name: 'Q-2026-0089-OmniQuote.pdf', label: 'Quote'       },
+                                            { name: 'Q-2026-0089-OmniQuote.pdf', label: 'OmniQuote'  },
                                         ].map(a => (
                                             <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
                                                 <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
