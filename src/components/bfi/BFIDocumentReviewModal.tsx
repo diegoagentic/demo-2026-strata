@@ -546,13 +546,7 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
                 {/* ── Invoice upload zone ── */}
                 <div className="space-y-3">
                     {uploadState === 'idle' && (
-                        michaelMode ? (
-                            <div className="w-full border-2 border-dashed border-border/40 rounded-2xl p-5 flex flex-col items-center gap-2 opacity-50 cursor-not-allowed bg-muted/20">
-                                <Upload className="h-6 w-6 text-muted-foreground" />
-                                <p className="text-[12px] font-bold text-muted-foreground">OmniQuote Invoice Upload</p>
-                                <p className="text-[10px] text-muted-foreground">Pending — Lauren will upload after CPR approval</p>
-                            </div>
-                        ) : (
+                        invoiceUpload ? (
                             <button
                                 onClick={simulateUpload}
                                 className="w-full border-2 border-dashed border-ai/30 rounded-2xl p-5 flex flex-col items-center gap-2 hover:border-ai/60 hover:bg-ai/5 transition-all group"
@@ -562,6 +556,12 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
                                 <p className="text-[10px] text-muted-foreground">Attach the OmniQuote invoice PDF for Purchase Order DOE-2847</p>
                                 <p className="text-[9px] text-muted-foreground/60">Accepted: PDF · Max 10MB</p>
                             </button>
+                        ) : (
+                            <div className="w-full border-2 border-dashed border-border/40 rounded-2xl p-5 flex flex-col items-center gap-2 opacity-40 cursor-not-allowed bg-muted/10">
+                                <Upload className="h-6 w-6 text-muted-foreground" />
+                                <p className="text-[12px] font-bold text-muted-foreground">OmniQuote Invoice Upload</p>
+                                <p className="text-[10px] text-muted-foreground">Available after manager approval</p>
+                            </div>
                         )
                     )}
 
