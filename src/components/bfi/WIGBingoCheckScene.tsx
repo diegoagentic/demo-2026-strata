@@ -128,34 +128,18 @@ function BingoGrid() {
     const cartons = Array.from({ length: 35 }, (_, i) => i + 1)
     return (
         <div className="space-y-2">
-            {/* Legend */}
-            <div className="flex flex-wrap gap-2">
-                {PO_LINES.map(l => (
-                    <div key={l.id} className={`flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded ${
-                        l.id === 'L7' ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-muted/60 text-muted-foreground border border-border'
-                    }`}>
-                        <span>{l.abbr}</span>
-                        <span className="font-normal opacity-70">×{l.qty}</span>
-                    </div>
-                ))}
-            </div>
-
             {/* Grid 7×5 */}
             <div className="grid grid-cols-7 gap-0.5">
                 {cartons.map(n => {
                     const missing = n === MISSING_CARTON
-                    const abbr = CARTON_MAP[n] ?? ''
                     return (
-                        <div key={n} className={`flex flex-col items-center justify-center rounded p-1 text-center min-h-[36px] ${
+                        <div key={n} className={`flex items-center justify-center rounded p-1 text-center min-h-[30px] ${
                             missing
                                 ? 'bg-destructive/10 border border-destructive/30'
                                 : 'bg-success/5 border border-success/20'
                         }`}>
-                            <span className={`text-[8px] font-bold leading-tight ${missing ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                {missing ? '✗' : abbr}
-                            </span>
-                            <span className={`text-[7px] leading-tight mt-0.5 ${missing ? 'text-destructive font-bold' : 'text-muted-foreground/70'}`}>
-                                #{n}
+                            <span className={`text-[9px] font-bold leading-tight ${missing ? 'text-destructive' : 'text-muted-foreground/70'}`}>
+                                {missing ? '✗' : `#${n}`}
                             </span>
                         </div>
                     )
@@ -163,13 +147,9 @@ function BingoGrid() {
             </div>
 
             {/* Missing annotation */}
-            <div className="bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-2 flex items-start gap-2">
-                <AlertTriangle className="h-3 w-3 text-destructive shrink-0 mt-0.5" />
-                <div className="text-[10px]">
-                    <span className="font-bold text-foreground">Carton #34 — M-ARM missing · </span>
-                    <span className="text-muted-foreground italic">"not rcv'd at dock"</span>
-                    <span className="text-muted-foreground"> · Monitor Arm Dual Adjustable (1/2 units) · Zone C</span>
-                </div>
+            <div className="bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-2 flex items-center gap-2">
+                <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
+                <span className="text-[10px] font-bold text-foreground">Carton #34 missing · not received at dock</span>
             </div>
         </div>
     )
