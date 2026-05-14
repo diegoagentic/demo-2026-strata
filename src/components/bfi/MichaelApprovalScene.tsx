@@ -11,9 +11,9 @@
  *   Lines pre-approved → "Send Final Quote to Nancy →" → NancyDialog → nextStep()
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import {
-    CheckCircle2, Mail, Send, Bell, ChevronRight,
+    CheckCircle2, Mail, Send,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
@@ -169,24 +169,16 @@ function NancyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
 const ACTIVE_COL = 3
 
 export default function MichaelApprovalScene() {
-    const { nextStep, isPaused } = useDemo()
-    const isPausedRef = useRef(isPaused)
-    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const { nextStep } = useDemo()
 
-    const [showNotif,    setShowNotif]    = useState(false)
     const [isModalOpen,  setIsModalOpen]  = useState(false)
     const [showNancy,    setShowNancy]    = useState(false)
 
-    const pauseAware = useCallback((fn: () => void, delay: number) => {
-        let elapsed = 0
-        const interval = setInterval(() => {
-            if (!isPausedRef.current) elapsed += 100
-            if (elapsed >= delay) { clearInterval(interval); fn() }
-        }, 100)
-        return () => clearInterval(interval)
+    useEffect(() => {
+        const handler = () => setIsModalOpen(true)
+        window.addEventListener('bfi:michael-open', handler)
+        return () => window.removeEventListener('bfi:michael-open', handler)
     }, [])
-
-    useEffect(() => pauseAware(() => setShowNotif(true), 900), [pauseAware])
 
     const handleOpenModal = () => setIsModalOpen(true)
 
@@ -202,22 +194,6 @@ export default function MichaelApprovalScene() {
 
     return (
         <div className="space-y-3">
-            {/* Notification — slides in after 900ms */}
-            {showNotif && (
-                <button
-                    onClick={handleOpenModal}
-                    className="w-full text-left flex items-start gap-3 p-4 bg-ai/5 border border-ai/30 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300 hover:bg-ai/10 transition-colors group"
-                >
-                    <Bell className="h-4 w-4 text-ai shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-black text-ai uppercase tracking-wider">{NOTIF.title}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{NOTIF.desc}</p>
-                        <p className="text-[11px] font-bold text-ai mt-2 group-hover:underline">{NOTIF.cta}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-ai shrink-0 mt-0.5 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-            )}
-
             {/* CPR kanban — same as step 1.8 */}
             <BFIProcessKanban
                 activeCol={ACTIVE_COL}

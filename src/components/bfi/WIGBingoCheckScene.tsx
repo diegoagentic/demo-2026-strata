@@ -416,6 +416,13 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
     const [phase, setPhase] = useState<'dashboard' | 'checking'>('dashboard')
+
+    useEffect(() => {
+        const handler = () => setPhase('checking')
+        window.addEventListener('bfi:wig-open', handler)
+        return () => window.removeEventListener('bfi:wig-open', handler)
+    }, [])
+
     const [bingoUploaded, setBingoUploaded] = useState(false)
     const [poUploaded,    setPoUploaded]    = useState(false)
     const [notes,         setNotes]         = useState(DEFAULT_NOTES)

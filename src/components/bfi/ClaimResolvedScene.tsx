@@ -9,7 +9,7 @@
  *   → Notify Walter → Dialog (editable From, CC procurement) → send → nextStep()
  */
 
-import { useState, Fragment } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import {
     CheckCircle2, FileText, Mail, Send, Download, Printer,
     Clock, Loader2,
@@ -315,6 +315,13 @@ function WalterNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () =>
 export default function ClaimResolvedScene() {
     const { nextStep } = useDemo()
     const [phase,       setPhase]       = useState<'dashboard' | 'detail'>('dashboard')
+
+    useEffect(() => {
+        const handler = () => setPhase('detail')
+        window.addEventListener('bfi:resolved-open', handler)
+        return () => window.removeEventListener('bfi:resolved-open', handler)
+    }, [])
+
     const [showDialog,  setShowDialog]  = useState(false)
 
     if (phase === 'dashboard') {

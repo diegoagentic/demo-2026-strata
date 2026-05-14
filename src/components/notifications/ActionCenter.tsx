@@ -40,6 +40,57 @@ const FLOW2_NOTIFICATIONS: Notification[] = [
     },
 ];
 
+// BFI steps a1.2d / a1.2e / a1.2f / a1.3b — generic incoming-event notifications
+interface BfiStepNotif {
+    badge: string
+    badgeColor: 'ai' | 'warning' | 'success'
+    title: string
+    desc: string
+    sender: string
+    cta: string
+    event: string
+    footerText: string
+}
+
+const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
+    'a1.2d': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'Purchase Order confirmed · NYC Dept. of Education',
+        desc: 'DOE-2847 · Q-2026-0089 · Delivery May 14–21 · 35 cartons · warehouse receiving',
+        sender: 'NYC Dept. of Education · Procurement',
+        cta: 'Review receiving documents →',
+        event: 'bfi:wig-open',
+        footerText: 'WIG receiving ready',
+    },
+    'a1.2e': {
+        badge: '1 urgent', badgeColor: 'warning',
+        title: 'Missing Carton · DOE-2847',
+        desc: 'Carton #34 not received at WIG NJ — Monitor Arm Dual Adjustable. Receiving complete: 34/35 cartons.',
+        sender: 'Lena C. · Receiving Coordinator',
+        cta: 'Review & file claim →',
+        event: 'bfi:claim-open',
+        footerText: 'Awaiting claim',
+    },
+    'a1.2f': {
+        badge: '1 new', badgeColor: 'success',
+        title: 'Shortage claim resolved · Herman Miller',
+        desc: 'Monitor Arm Dual Adjustable · Replacement carton ETA May 18 · Cleared for work order scheduling.',
+        sender: 'Herman Miller · Customer Service',
+        cta: 'Review & notify Walter →',
+        event: 'bfi:resolved-open',
+        footerText: 'Work order ready',
+    },
+    'a1.3b': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'CPR approved · Final quote ready · DOE-2847',
+        desc: 'Lauren DeMarco completed CPR reconciliation — Carpenters −5h, OT −2h · Total −$2,340 · Pending: send final quote to Herman Miller.',
+        sender: 'Lauren DeMarco · Account Manager',
+        cta: 'Review & send quote to Nancy →',
+        event: 'bfi:michael-open',
+        footerText: 'Quote pending',
+    },
+}
+
 // BFI Step a1.1 — Miller Knoll quote request notification
 const BFI_A11_NOTIFICATIONS: Notification[] = [
     {
@@ -77,11 +128,14 @@ export default function ActionCenter() {
     const [a11PanelClosed,  setA11PanelClosed]  = useState(false);
     const [a11IngestState,  setA11IngestState]  = useState<'idle' | 'ingesting' | 'ready'>('idle');
     const [a11IngestCount,  setA11IngestCount]  = useState(0);
-    // Reset panel when step changes
+    // BFI generic step panel (a1.2d / a1.2e / a1.2f / a1.3b)
+    const [bfiPanelClosed, setBfiPanelClosed] = useState(false);
+    // Reset all BFI panels when step changes
     useEffect(() => {
         setA11PanelClosed(false);
         setA11IngestState('idle');
         setA11IngestCount(0);
+        setBfiPanelClosed(false);
     }, [currentStep?.id]);
 
     // Step 1.10: Auto-open with single notification
@@ -184,7 +238,10 @@ export default function ActionCenter() {
         }, 2300);
     };
 
-    const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed);
+    const bfiStepConfig = isDemoActive ? BFI_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
+    const isBfiStepActive = !!bfiStepConfig && !bfiPanelClosed;
+
+    const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed) || isBfiStepActive;
 
     return (
         <>
@@ -454,6 +511,69 @@ export default function ActionCenter() {
                             </p>
                         </div>
                     )}
+                </div>
+            </div>
+        )}
+
+        {/* BFI Steps a1.2d / a1.2e / a1.2f / a1.3b: Generic incoming-event notification panel */}
+        {isBfiStepActive && bfiStepConfig && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] lg:w-[520px] z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden">
+
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                bfiStepConfig.badgeColor === 'warning' ? 'bg-warning/15 text-warning' :
+                                bfiStepConfig.badgeColor === 'success' ? 'bg-success/15 text-success' :
+                                'bg-foreground/10 text-foreground'
+                            }`}>{bfiStepConfig.badge}</span>
+                        </div>
+                        <button onClick={() => setBfiPanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Body */}
+                    <div className="px-5 pb-5">
+                        <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden">
+                            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                                <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
+                                <span className="text-sm font-semibold text-foreground flex-1">{bfiStepConfig.title}</span>
+                            </div>
+                            <div className="px-4 py-3 border-b border-border space-y-1">
+                                <div className="flex gap-2 text-[11px]">
+                                    <span className="text-muted-foreground w-10 shrink-0">From</span>
+                                    <span className="text-foreground font-medium">{bfiStepConfig.sender}</span>
+                                </div>
+                                <div className="flex gap-2 text-[11px]">
+                                    <span className="text-muted-foreground w-10 shrink-0">Info</span>
+                                    <span className="text-foreground">{bfiStepConfig.desc}</span>
+                                </div>
+                            </div>
+                            <div className="px-4 py-4">
+                                <button
+                                    onClick={() => {
+                                        setBfiPanelClosed(true);
+                                        window.dispatchEvent(new CustomEvent(bfiStepConfig.event));
+                                    }}
+                                    className="w-full py-2.5 text-[12px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                >
+                                    {bfiStepConfig.cta}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                        <p className="text-xs font-bold text-ai flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
+                            {bfiStepConfig.footerText}
+                        </p>
+                    </div>
                 </div>
             </div>
         )}

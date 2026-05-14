@@ -8,7 +8,7 @@
  *   → attach proof → compose claim dialog → send → nextStep()
  */
 
-import { useState, Fragment } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import {
     AlertTriangle, CheckCircle2, FileText, Mail, Send,
     Package, Paperclip, Loader2, ChevronDown, ChevronUp,
@@ -345,6 +345,13 @@ function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
 export default function LaurenClaimScene() {
     const { nextStep } = useDemo()
     const [phase,         setPhase]         = useState<'dashboard' | 'detail'>('dashboard')
+
+    useEffect(() => {
+        const handler = () => setPhase('detail')
+        window.addEventListener('bfi:claim-open', handler)
+        return () => window.removeEventListener('bfi:claim-open', handler)
+    }, [])
+
     const [orderExpanded, setOrderExpanded] = useState(false)
     const [proofAttached,  setProofAttached]  = useState(false)
     const [showClaim,      setShowClaim]      = useState(false)
