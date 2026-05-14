@@ -14,7 +14,7 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import {
     X, FileText, Truck, Package,
     ChevronDown, ChevronUp, CheckCircle2, Sparkles,
-    Edit, Zap, Info, MapPin, Send, AlertCircle,
+    Edit, Edit2, Zap, Info, MapPin, Send, AlertCircle,
     Download, Mail, Upload, Loader2, Paperclip
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -1518,6 +1518,7 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
     invoiceUpload?: boolean
     onResolveChange?: (ids: Set<string>) => void
 }) {
+    if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} />
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
@@ -1580,6 +1581,164 @@ function FunnelStepper({ step }: { step: BFIReviewStep }) {
     )
 }
 
+// ─── Extract Review Panel (tabs: SIF · Quote · Zones) ────────────────────────
+
+interface ExtractQuoteLine { code: string; name: string; qty: string; sif: string; net: string; corrected: boolean }
+
+const EXTRACT_QUOTE_LINES: ExtractQuoteLine[] = [
+    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  sif: '$8,100',   net: '$7,560',   corrected: true  },
+    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', sif: '$144,000', net: '$144,000', corrected: false },
+    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', sif: '$84,000',  net: '$84,000',  corrected: false },
+]
+
+const EXTRACT_ZONES = [
+    { id: 'A', label: 'Zone A · Workstations ×24', qty: '24 units', chip: 'bg-info/10 text-info border-info/20',             dot: 'bg-info'    },
+    { id: 'B', label: 'Zone B · Lounge ×12',        qty: '12 units', chip: 'bg-ai/10 text-ai border-ai/20',                   dot: 'bg-ai'      },
+    { id: 'C', label: 'Zone C · Filing ×6',         qty: '6 units',  chip: 'bg-success/10 text-success border-success/20',    dot: 'bg-success' },
+]
+
+function ExtractReviewPanel({ onValidate, onResolveChange }: { onValidate?: () => void; onResolveChange?: (ids: Set<string>) => void }) {
+    const [tab, setTab] = useState<'sif' | 'quote' | 'zones'>('sif')
+    const [quoteLines, setQuoteLines] = useState<ExtractQuoteLine[]>(EXTRACT_QUOTE_LINES)
+    const [editingIdx, setEditingIdx] = useState<number | null>(null)
+
+    const updateLine = (idx: number, val: string) => {
+        setQuoteLines(prev => prev.map((l, i) => i === idx ? { ...l, net: val } : l))
+    }
+
+    const TABS = [
+        { id: 'sif'   as const, label: 'SIF Fields'   },
+        { id: 'quote' as const, label: 'Quote'         },
+        { id: 'zones' as const, label: 'Zones'         },
+    ]
+
+    return (
+        <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
+            {/* Tab bar */}
+            <div className="flex gap-1 px-4 py-2.5 border-b border-border bg-background shrink-0">
+                {TABS.map(t => (
+                    <button key={t.id} onClick={() => setTab(t.id)}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${
+                            tab === t.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                        }`}
+                    >
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
+            {tab === 'sif' && (
+                <BFIFieldReview step="extract" onValidate={onValidate} onResolveChange={onResolveChange} />
+            )}
+
+            {tab === 'quote' && (
+                <div className="flex flex-col h-full min-h-0">
+                    <div className="bg-background px-5 py-3 border-b border-border shrink-0">
+                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">QUOTE REVIEW</h4>
+                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">Q-2026-0089 · OmniQuote validated</p>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                        {/* Column headers */}
+                        <div className="grid grid-cols-4 gap-2 px-1">
+                            {['Product', 'Qty', 'SIF', 'Net (OmniQ)'].map(h => (
+                                <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide">{h}</span>
+                            ))}
+                        </div>
+                        {/* Editable line items */}
+                        {quoteLines.map((line, idx) => {
+                            const isEditing = editingIdx === idx
+                            return (
+                                <div key={line.code} className={`rounded-xl border p-3 transition-all ${
+                                    isEditing ? 'border-primary/40 bg-primary/5' :
+                                    line.corrected ? 'border-warning/30 bg-warning/5' : 'border-border bg-card'
+                                }`}>
+                                    <div className="grid grid-cols-4 gap-2 items-center">
+                                        <div className="min-w-0">
+                                            <p className="text-[9px] font-mono text-muted-foreground truncate">{line.code}</p>
+                                            <p className="text-[10px] font-semibold text-foreground leading-tight truncate">{line.name}</p>
+                                        </div>
+                                        <span className="text-[10px] font-mono text-muted-foreground">{line.qty}</span>
+                                        <span className={`text-[10px] font-mono ${line.corrected ? 'text-warning line-through' : 'text-muted-foreground'}`}>{line.sif}</span>
+                                        <div className="flex items-center gap-1">
+                                            {isEditing ? (
+                                                <input type="text" value={line.net} onChange={e => updateLine(idx, e.target.value)}
+                                                    className="w-full text-[10px] font-mono font-semibold text-foreground bg-transparent border-b border-primary focus:outline-none"
+                                                    autoFocus
+                                                />
+                                            ) : (
+                                                <span className={`text-[10px] font-mono font-semibold ${line.corrected ? 'text-success' : 'text-foreground'}`}>{line.net}</span>
+                                            )}
+                                            <button onClick={() => setEditingIdx(isEditing ? null : idx)}
+                                                className="text-muted-foreground hover:text-foreground transition-colors shrink-0" aria-label="Edit">
+                                                {isEditing ? <CheckCircle2 className="h-3 w-3 text-success" /> : <Edit2 className="h-3 w-3" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {line.corrected && (
+                                        <p className="text-[9px] text-success mt-1.5">↓ Corrected from {line.sif} per CoNY T-code 18%</p>
+                                    )}
+                                </div>
+                            )
+                        })}
+                        {/* Totals */}
+                        <div className="rounded-xl border border-border overflow-hidden">
+                            {[
+                                { label: 'SIF Total',         value: '$236,100', muted: true  },
+                                { label: 'Adjusted Total',    value: '$235,560', bold: true   },
+                                { label: 'Discount (−37.5%)', value: '−$88,335', accent: true },
+                            ].map(row => (
+                                <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-border/50 last:border-0 text-[11px] ${row.bold ? 'bg-muted/20' : ''}`}>
+                                    <span className="text-muted-foreground">{row.label}</span>
+                                    <span className={`font-mono font-semibold ${row.accent ? 'text-success' : row.muted ? 'text-muted-foreground' : 'text-foreground'}`}>{row.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OVNIQ] }]} />
+                    </div>
+                </div>
+            )}
+
+            {tab === 'zones' && (
+                <div className="flex flex-col h-full min-h-0">
+                    <div className="bg-background px-5 py-3 border-b border-border shrink-0">
+                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">FLOOR PLAN ZONES</h4>
+                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">30 Court St · Brooklyn · Floor 12</p>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                        <FloorPlanSVG />
+                        <div className="space-y-2">
+                            {EXTRACT_ZONES.map(zone => (
+                                <div key={zone.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${zone.chip}`}>
+                                    <span className={`h-2 w-2 rounded-full shrink-0 ${zone.dot}`} />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[11px] font-semibold">{zone.label}</p>
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold">{zone.qty}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-1.5">
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Install Details</p>
+                            {[
+                                { label: 'Window',    value: 'May 14–21, 2026'       },
+                                { label: 'Crew',      value: '3 technicians'         },
+                                { label: 'Carpenters', value: '45h (reconciled)'     },
+                                { label: 'Location',  value: '30 Court St, Brooklyn' },
+                            ].map(r => (
+                                <div key={r.label} className="flex gap-2 text-[10px]">
+                                    <span className="text-muted-foreground w-20 shrink-0">{r.label}</span>
+                                    <span className="font-semibold text-foreground">{r.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
 // ─── Field Review Panel ──────────────────────────────────────────────────────
 
 const CATEGORY_STYLE: Record<string, { label: string; chip: string }> = {
@@ -1603,6 +1762,7 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange }: {
         return first?.id ?? null
     })
     const [editValues, setEditValues] = useState<Record<string, string>>({})
+    const [manualEditId, setManualEditId] = useState<string | null>(null)
 
     const issueFields    = fields.filter(f => f.status !== 'valid')
     const totalIssues    = issueFields.length
@@ -1837,16 +1997,40 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange }: {
                                 {isExpanded && isIssue && !isResolved && (
                                     <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                                         <div className="space-y-1.5">
-                                            <p className="text-[12px] font-semibold text-foreground">Extracted Value (SIF)</p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[12px] font-semibold text-foreground">Extracted Value (SIF)</p>
+                                                <button
+                                                    onClick={() => setManualEditId(prev => prev === field.id ? null : field.id)}
+                                                    className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                                                        manualEditId === field.id
+                                                            ? 'bg-primary text-primary-foreground border-primary'
+                                                            : 'text-muted-foreground border-border hover:text-foreground hover:border-foreground/30'
+                                                    }`}
+                                                >
+                                                    <Edit2 className="h-2.5 w-2.5" />
+                                                    Enter manually
+                                                </button>
+                                            </div>
                                             <input
                                                 type="text"
                                                 value={editValues[field.id] ?? field.extractedValue ?? ''}
                                                 onChange={e => setEditValues(prev => ({ ...prev, [field.id]: e.target.value }))}
-                                                className="w-full rounded-lg border border-border px-3 py-2 bg-background text-[13px] font-mono text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                                                readOnly={manualEditId !== field.id}
+                                                autoFocus={manualEditId === field.id}
+                                                className={`w-full rounded-lg border px-3 py-2 text-[13px] font-mono text-foreground focus:outline-none transition-all ${
+                                                    manualEditId === field.id
+                                                        ? 'border-primary bg-card ring-2 ring-primary/20 cursor-text'
+                                                        : 'border-border bg-background cursor-default'
+                                                }`}
                                             />
+                                            {manualEditId === field.id && (
+                                                <p className="text-[10px] text-primary font-medium animate-in fade-in duration-200">
+                                                    Type your custom value above, then click Save.
+                                                </p>
+                                            )}
                                         </div>
 
-                                        {field.ovniqSuggestion && (
+                                        {field.ovniqSuggestion && manualEditId !== field.id && (
                                             <div className="space-y-1.5">
                                                 <p className="text-[12px] font-semibold text-foreground">OmniQuote suggests</p>
                                                 <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2">
@@ -1855,27 +2039,44 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange }: {
                                             </div>
                                         )}
 
-                                        {field.reason && (
+                                        {field.reason && manualEditId !== field.id && (
                                             <div className="flex items-start gap-2 p-3 bg-ai/5 border border-ai/20 rounded-lg">
                                                 <Info className="h-4 w-4 text-ai shrink-0 mt-0.5" />
                                                 <p className="text-[11px] text-ai leading-relaxed">{field.reason}</p>
                                             </div>
                                         )}
 
-                                        <div className="flex items-center gap-2 pt-1">
-                                            <button
-                                                onClick={() => handleAcceptOVNIQ(field.id)}
-                                                className="flex-1 py-2 text-[12px] font-bold bg-success text-white rounded-lg hover:opacity-90 transition-all"
-                                            >
-                                                {actionLabel}
-                                            </button>
-                                            <button
-                                                onClick={() => setExpanded(null)}
-                                                className="flex-1 py-2 text-[12px] font-bold border border-border text-foreground bg-card rounded-lg hover:bg-muted/50 transition-all flex items-center justify-center gap-1.5"
-                                            >
-                                                <Edit className="h-3.5 w-3.5" /> {altLabel}
-                                            </button>
-                                        </div>
+                                        {manualEditId === field.id ? (
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <button
+                                                    onClick={() => { handleAcceptOVNIQ(field.id); setManualEditId(null) }}
+                                                    className="flex-1 py-2 text-[12px] font-bold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all"
+                                                >
+                                                    Save custom value
+                                                </button>
+                                                <button
+                                                    onClick={() => setManualEditId(null)}
+                                                    className="py-2 px-4 text-[12px] font-bold border border-border text-foreground bg-card rounded-lg hover:bg-muted/50 transition-all"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <button
+                                                    onClick={() => handleAcceptOVNIQ(field.id)}
+                                                    className="flex-1 py-2 text-[12px] font-bold bg-success text-white rounded-lg hover:opacity-90 transition-all"
+                                                >
+                                                    {actionLabel}
+                                                </button>
+                                                <button
+                                                    onClick={() => setExpanded(null)}
+                                                    className="flex-1 py-2 text-[12px] font-bold border border-border text-foreground bg-card rounded-lg hover:bg-muted/50 transition-all flex items-center justify-center gap-1.5"
+                                                >
+                                                    <Edit className="h-3.5 w-3.5" /> {altLabel}
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
