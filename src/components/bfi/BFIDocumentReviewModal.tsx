@@ -15,8 +15,9 @@ import {
     X, FileText, Truck, Package,
     ChevronDown, ChevronUp, CheckCircle2, Sparkles,
     Edit, Zap, Info, MapPin, Send, MessageSquare, Users, AlertCircle,
-    Download
+    Download, Mail
 } from 'lucide-react'
+import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -438,9 +439,158 @@ const CPR_LINES = [
     { id: 'inside-delivery', category: 'Inside Delivery', quoted: '4h', cpr: '4h',  diff: null,   impact: null,     ok: true  },
 ]
 
+// ─── CPR Notify Dialog ────────────────────────────────────────────────────────
+
+function CPRNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }) {
+    const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [message, setMessage]     = useState(
+`Hi Michael, Nancy,
+
+CPR reconciliation for DOE-2847 is complete. Labor hours have been adjusted and CORE has been updated accordingly.
+
+Adjustments approved:
+  · Carpenters: 50h → 45h (−$1,800)
+  · OT Carpenters: 8h → 6h (−$540)
+  · Total impact: −$2,340
+
+The SIF has been updated and the order is ready to proceed to fee verification. Please review and confirm.
+
+— Lauren DeMarco
+  BFI Furniture · CoNY Account Manager`
+    )
+    const [sending, setSending] = useState(false)
+    const [sent, setSent]       = useState(false)
+
+    const handleSend = () => {
+        setSending(true)
+        setTimeout(() => {
+            setSending(false)
+            setSent(true)
+            setTimeout(() => onSent(), 900)
+        }, 800)
+    }
+
+    const META_ROWS = [
+        { label: 'From', editable: true },
+        { label: 'To',   value: 'michael.chen@bfifurniture.com · Nancy Rodriguez' },
+        { label: 'CC',   value: 'walter@conyny.gov · lena.watts@bfi-warehouse.com', muted: true },
+        { label: 'Date', value: 'May 6, 2026 · 11:30 AM' },
+    ]
+
+    return (
+        <Transition show={isOpen} as={Fragment}>
+            <Dialog onClose={() => {}} className="relative z-[400]">
+                <TransitionChild
+                    as={Fragment}
+                    enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                    leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+                >
+                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                </TransitionChild>
+
+                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                    <TransitionChild
+                        as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0 scale-95 translate-y-2" enterTo="opacity-100 scale-100 translate-y-0"
+                        leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                    >
+                        <DialogPanel className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl flex flex-col max-h-[88vh] border border-border overflow-hidden">
+                            {/* Header */}
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
+                                <div className="h-8 w-8 rounded-full bg-ai/10 flex items-center justify-center shrink-0">
+                                    <span className="text-[11px] font-black text-ai">ST</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] font-bold text-foreground">Stakeholder Notification · DOE-2847</p>
+                                    <p className="text-[10px] text-muted-foreground">Strata AI pre-drafted · CORE updated</p>
+                                </div>
+                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </div>
+
+                            {/* Scrollable body */}
+                            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                                {/* Section A — CORE update summary */}
+                                <div className="rounded-xl border border-success/30 bg-success/5 p-3.5 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                        <span className="text-[11px] font-bold text-success">CORE Updated · WO-2026-0089 · DOE-2847</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-5 text-[10px]">
+                                        <span className="text-muted-foreground">Carpenters labor</span>
+                                        <span className="font-mono font-semibold text-foreground">50h → 45h (−5h)</span>
+                                        <span className="text-muted-foreground">OT Carpenters</span>
+                                        <span className="font-mono font-semibold text-foreground">8h → 6h (−2h)</span>
+                                        <span className="text-muted-foreground">Total impact</span>
+                                        <span className="font-mono font-bold text-warning">−$2,340</span>
+                                        <span className="text-muted-foreground">SIF</span>
+                                        <span className="font-semibold text-foreground">Updated accordingly</span>
+                                    </div>
+                                </div>
+
+                                {/* Section B — Email metadata */}
+                                <div className="rounded-xl border border-border overflow-hidden text-[11px]">
+                                    {META_ROWS.map((row, i) => (
+                                        <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
+                                            <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
+                                            {row.editable ? (
+                                                <input
+                                                    value={fromEmail}
+                                                    onChange={e => setFromEmail(e.target.value)}
+                                                    className="flex-1 bg-transparent outline-none text-foreground border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors"
+                                                />
+                                            ) : (
+                                                <span className={row.muted ? 'text-muted-foreground italic' : 'text-foreground'}>
+                                                    {row.value}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Section C — Editable message */}
+                                <textarea
+                                    value={message}
+                                    onChange={e => setMessage(e.target.value)}
+                                    rows={12}
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono"
+                                />
+
+                                {/* DataSources */}
+                                <DataSourcesBar sources={[SOURCES.STRATA_AI, SOURCES.CORE_RPA]} />
+                            </div>
+
+                            {/* Footer */}
+                            <div className="px-5 py-4 border-t border-border shrink-0">
+                                {sent ? (
+                                    <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-success/10 border border-success/20">
+                                        <CheckCircle2 className="h-4 w-4 text-success" />
+                                        <span className="text-[12px] font-bold text-success">Sent & CORE confirmed</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleSend}
+                                        disabled={sending}
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-ai text-white text-[12px] font-bold hover:opacity-90 transition-all disabled:opacity-60"
+                                    >
+                                        <Send className="h-3.5 w-3.5" />
+                                        {sending ? 'Sending…' : 'Send & Confirm →'}
+                                    </button>
+                                )}
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </Transition>
+    )
+}
+
+// ─── CPR Review Panel ─────────────────────────────────────────────────────────
+
 function CPRReviewPanel({ onValidate }: { onValidate?: () => void }) {
     const [approved, setApproved] = useState<Set<string>>(new Set())
     const [sent, setSent]         = useState(false)
+    const [showDialog, setShowDialog] = useState(false)
     const [rightTab, setRightTab] = useState<'review' | 'attachments'>('review')
 
     const diffLines    = CPR_LINES.filter(l => !l.ok)
@@ -449,8 +599,9 @@ function CPRReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
     const handleApprove = (id: string) => setApproved(prev => new Set([...prev, id]))
 
-    const handleSend = () => {
+    const handleDialogSent = () => {
         setSent(true)
+        setShowDialog(false)
         setTimeout(() => onValidate?.(), 600)
     }
 
@@ -539,47 +690,6 @@ function CPRReviewPanel({ onValidate }: { onValidate?: () => void }) {
                     </div>
                 </div>
 
-                {/* Relay message — appears when all approved */}
-                {allApproved && (
-                    <div className="mx-5 mt-4 rounded-xl border border-ai/30 bg-ai/5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-ai/20 bg-ai/10">
-                            <MessageSquare className="h-3.5 w-3.5 text-ai shrink-0" />
-                            <span className="text-[11px] font-bold text-ai">Relay to Stakeholders</span>
-                            {sent && <CheckCircle2 className="h-3.5 w-3.5 text-success ml-auto" />}
-                        </div>
-                        <div className="px-4 py-3 space-y-2">
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <Users className="h-3 w-3 shrink-0" />
-                                <span>To: <span className="font-semibold text-foreground">Michael Chen, Nancy Rodriguez</span></span>
-                            </div>
-                            <div className="text-[10px] text-muted-foreground">
-                                Subject: <span className="font-semibold text-foreground">CPR Revision — DOE-2847</span>
-                            </div>
-                            <div className="mt-2 p-3 bg-card rounded-lg border border-border text-[11px] text-foreground leading-relaxed">
-                                CPR reconciliation complete. Labor adjusted: Carpenters −5h (−$1,800), OT −2h (−$540). Total impact: −$2,340. SIF has been updated accordingly.
-                            </div>
-                        </div>
-                        <div className="flex gap-2 px-4 pb-3">
-                            <button
-                                onClick={handleSend}
-                                disabled={sent}
-                                className={`flex items-center gap-1.5 flex-1 justify-center py-2 text-[12px] font-bold rounded-lg transition-all ${
-                                    sent ? 'bg-success/10 text-success border border-success/20' : 'bg-ai text-white hover:opacity-90'
-                                }`}
-                            >
-                                <Send className="h-3.5 w-3.5" />
-                                {sent ? 'Sent' : 'Send Message'}
-                            </button>
-                            <button
-                                onClick={() => {}}
-                                className="py-2 px-4 text-[12px] font-bold border border-border text-foreground bg-card rounded-lg hover:bg-muted/50 transition-all flex items-center gap-1.5"
-                            >
-                                <Edit className="h-3.5 w-3.5" /> Edit
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 <div className="h-4" />
             </div>
             )}
@@ -591,18 +701,20 @@ function CPRReviewPanel({ onValidate }: { onValidate?: () => void }) {
                     {approved.size}/{diffLines.length} lines approved
                 </div>
                 <button
-                    onClick={allApproved ? () => {} : undefined}
+                    onClick={allApproved ? () => setShowDialog(true) : undefined}
                     disabled={!allApproved}
                     className={`w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
                         allApproved
-                            ? 'bg-muted/50 text-muted-foreground border border-border cursor-default'
+                            ? 'bg-ai text-white hover:opacity-90 cursor-pointer'
                             : 'bg-muted text-muted-foreground cursor-not-allowed opacity-40'
                     }`}
                 >
-                    {allApproved ? 'Relay message to confirm →' : 'Approve lines to continue'}
+                    {sent ? '✓ CORE Updated & Notified' : allApproved ? 'Update CORE & Notify →' : 'Approve lines to continue'}
                 </button>
             </div>
             )}
+
+            <CPRNotifyDialog isOpen={showDialog} onSent={handleDialogSent} />
         </div>
     )
 }
