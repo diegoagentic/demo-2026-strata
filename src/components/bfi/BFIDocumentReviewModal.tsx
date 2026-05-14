@@ -14,7 +14,7 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import {
     X, FileText, Truck, Package,
     ChevronDown, ChevronUp, CheckCircle2, Sparkles,
-    Edit, Zap, Info, MapPin, Send, MessageSquare, Users, AlertCircle,
+    Edit, Zap, Info, MapPin, Send, AlertCircle,
     Download, Mail
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -556,7 +556,7 @@ The SIF has been updated and the order is ready to proceed to fee verification. 
                                 />
 
                                 {/* DataSources */}
-                                <DataSourcesBar sources={[SOURCES.STRATA_AI, SOURCES.CORE_RPA]} />
+                                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_RPA] }]} />
                             </div>
 
                             {/* Footer */}
