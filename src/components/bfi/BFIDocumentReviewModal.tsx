@@ -213,7 +213,8 @@ const SIF_GROUPS: SifGroup[] = [
     },
 ]
 
-function SIFDocumentPreview({ resolvedIds = new Set<string>() }: { resolvedIds?: Set<string> }) {
+function SIFDocumentPreview({ resolvedIds = new Set<string>(), step }: { resolvedIds?: Set<string>; step?: BFIReviewStep }) {
+    const isLabor = step === 'labor'
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
@@ -224,12 +225,16 @@ function SIFDocumentPreview({ resolvedIds = new Set<string>() }: { resolvedIds?:
                     {/* Doc header */}
                     <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
                         <div>
-                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">SIF Document</span>
+                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">
+                                {isLabor ? 'Purchase Order' : 'SIF Document'}
+                            </span>
                             <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">DOE-2847</p>
                             <p className="text-xs font-mono text-zinc-400 mt-0.5">NYC Dept. of Education · Herman Miller</p>
                         </div>
                         <div className="text-right">
-                            <div className="text-xl font-extrabold text-zinc-900 dark:text-white">Q-2026-0089</div>
+                            <div className="text-xl font-extrabold text-zinc-900 dark:text-white">
+                                {isLabor ? 'DOE-2847' : 'Q-2026-0089'}
+                            </div>
                             <div className="text-xs text-zinc-400 mt-0.5">May 6, 2026</div>
                         </div>
                     </div>
@@ -257,11 +262,13 @@ function SIFDocumentPreview({ resolvedIds = new Set<string>() }: { resolvedIds?:
                                                 <span className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-300 ${
                                                     isFieldResolved || field.status === 'valid' ? 'bg-success' : 'bg-warning'
                                                 }`} />
-                                                <span className="text-muted-foreground">{field.name}</span>
+                                                <span className="text-muted-foreground">
+                                                    {isLabor && field.name === 'Quote #' ? 'PO #' : field.name}
+                                                </span>
                                             </div>
                                             <span className={`font-semibold transition-colors duration-300 ${
                                                 isInconsistent ? 'text-warning' : 'text-foreground'
-                                            }`}>{displayValue}</span>
+                                            }`}>{isLabor && field.name === 'Quote #' ? 'DOE-2847' : displayValue}</span>
                                         </div>
                                         )
                                     })}
@@ -2341,7 +2348,7 @@ export default function BFIDocumentReviewModal({
                                         {/* Tab content */}
                                         <div className="flex-1 min-h-0 overflow-hidden">
                                             {activeTab === 'sif' ? (
-                                                <SIFDocumentPreview resolvedIds={resolvedIds} />
+                                                <SIFDocumentPreview resolvedIds={resolvedIds} step={step} />
                                             ) : activeTab === 'specs' ? (
                                                 <QuoteDocumentTab ovniqLines={ovniqLines} />
                                             ) : (
