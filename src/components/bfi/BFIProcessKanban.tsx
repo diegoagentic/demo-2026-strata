@@ -617,6 +617,7 @@ export default function BFIProcessKanban({
                                     <th className="text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-3">Agency</th>
                                     <th className="text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-3">Stage</th>
                                     <th className="text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-3">Amount</th>
+                                    <th className="px-4 py-3" />
                                 </tr>
                             </thead>
                             <tbody>
@@ -626,7 +627,7 @@ export default function BFIProcessKanban({
                                         <tr key={item.orderId} className="border-b border-border hover:bg-muted/20 transition-colors last:border-0">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className={`h-8 w-8 rounded-full ${item.avatarBg} flex items-center justify-center shrink-0`}>
+                                                    <div className={`h-8 w-8 rounded-full ${item.avatarBg} flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
                                                         <span className={`text-[9px] font-bold ${item.avatarColor}`}>{item.initials}</span>
                                                     </div>
                                                     <span className="text-sm font-semibold text-foreground">{item.orderId}</span>
@@ -639,6 +640,21 @@ export default function BFIProcessKanban({
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-sm font-medium text-foreground">{item.value}</td>
+                                            <td className="px-4 py-3 text-right">
+                                                {item.isDoe && onReviewDoe && (
+                                                    <div className="relative inline-block">
+                                                        {highlightReview && (
+                                                            <span className="absolute -inset-1 rounded-xl bg-ai/20 animate-pulse pointer-events-none" />
+                                                        )}
+                                                        <button
+                                                            onClick={onReviewDoe}
+                                                            className={`py-1.5 px-3 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all${highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`}
+                                                        >
+                                                            {reviewLabel}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
                                         </tr>
                                     )
                                 })}
