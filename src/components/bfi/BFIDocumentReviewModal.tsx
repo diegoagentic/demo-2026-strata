@@ -92,15 +92,15 @@ export function FloorPlanSVG() {
     )
 }
 
-// ─── Specs PDF Tab ───────────────────────────────────────────────────────────
+// ─── Quote Document Tab ───────────────────────────────────────────────────────
 
-const SPECS_PDF_ROWS = [
-    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', finish: 'White/Silver', net: '$2,840.00', list: '$4,200.00' },
-    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', finish: 'Fog fabric',   net: '$1,960.00', list: '$2,900.00' },
-    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  finish: 'Platinum',     net: '$740.00',   list: '$1,100.00' },
+const QUOTE_LINE_ITEMS = [
+    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', tcode: '18%', sif: '$144,000', net: '$144,000' },
+    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', tcode: '18%', sif: '$84,000',  net: '$84,000'  },
+    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  tcode: '18%', sif: '$8,100',   net: '$7,560'   },
 ]
 
-function SpecsPDFTab() {
+function QuoteDocumentTab() {
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
@@ -111,41 +111,66 @@ function SpecsPDFTab() {
                     {/* Doc header */}
                     <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
                         <div>
-                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Product Specification</span>
-                            <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">DOE-2847</p>
-                            <p className="text-xs font-mono text-zinc-400 mt-0.5">NYC Dept. of Education · Q-2026-0089</p>
+                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Quote · OmniQuote</span>
+                            <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Q-2026-0089</p>
+                            <p className="text-xs font-mono text-zinc-400 mt-0.5">DOE-2847 · NYC Dept. of Education</p>
                         </div>
                         <div className="text-right">
                             <div className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">MILLER KNOLL</div>
-                            <div className="text-xs text-zinc-400 mt-0.5">Robert Chen · Rep</div>
+                            <div className="text-xs text-zinc-400 mt-0.5">Robert Chen · Rep · May 6, 2026</div>
                         </div>
                     </div>
 
                     {/* Band */}
-                    <div className="bg-zinc-800 dark:bg-zinc-700 px-6 py-1.5">
-                        <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">PRODUCT SPECIFICATIONS</span>
+                    <div className="bg-zinc-800 dark:bg-zinc-700 px-6 py-1.5 flex items-center justify-between">
+                        <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
+                        <span className="text-[8px] font-bold text-primary tracking-widest">OmniQuote VALIDATED ✓</span>
                     </div>
 
-                    {/* Spec rows */}
-                    <div className="px-6 py-4 space-y-3">
-                        <div className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2">Product Specifications</div>
-                        {SPECS_PDF_ROWS.map(item => (
-                            <div key={item.code} className="flex gap-3 items-start border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0 last:pb-0">
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-[11px] font-semibold text-zinc-800 dark:text-zinc-100">{item.code} · {item.name} {item.qty}</div>
-                                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">Finish: {item.finish}</div>
+                    {/* Column headers */}
+                    <div className="px-6 pt-3 pb-1 grid grid-cols-6 gap-2">
+                        {['Code', 'Product', 'Qty', 'T-Code', 'SIF Price', 'Net'].map(h => (
+                            <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
+                        ))}
+                    </div>
+
+                    {/* Quote rows */}
+                    <div className="px-6 pb-4 space-y-0">
+                        {QUOTE_LINE_ITEMS.map((item) => {
+                            const corrected = item.sif !== item.net
+                            return (
+                                <div key={item.code} className={`grid grid-cols-6 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                    <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{item.code}</span>
+                                    <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{item.name} {item.qty}</span>
+                                    <span className="text-[10px] font-mono text-zinc-500">{item.qty}</span>
+                                    <span className="text-[10px] font-mono text-zinc-500">{item.tcode}</span>
+                                    <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{item.sif}</span>
+                                    <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
+                                        {item.net}
+                                        {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
+                                    </span>
                                 </div>
-                                <div className="text-right shrink-0">
-                                    <div className="text-[11px] font-semibold text-zinc-800 dark:text-zinc-100">{item.net}</div>
-                                    <div className="text-[9px] text-zinc-400 dark:text-zinc-500">List {item.list}</div>
-                                </div>
+                            )
+                        })}
+                    </div>
+
+                    {/* Totals */}
+                    <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+                        {[
+                            { label: 'SIF Total',      value: '$236,100', muted: true },
+                            { label: 'Adjusted Total', value: '$235,560', bold: true  },
+                            { label: 'Discount (−37.5% CoNY)', value: '−$88,335', accent: true },
+                        ].map(row => (
+                            <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${row.bold ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''}`}>
+                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{row.label}</span>
+                                <span className={`text-[11px] font-mono font-semibold ${row.accent ? 'text-success' : row.muted ? 'text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{row.value}</span>
                             </div>
                         ))}
                     </div>
 
                     {/* Footer */}
                     <div className="text-[9px] text-zinc-400 dark:text-zinc-500 text-center py-3 border-t border-zinc-100 dark:border-zinc-800">
-                        Read-only · Submitted by Robert Chen · Miller Knoll
+                        Generated by OmniQuote · 1 correction applied · Validated against CoNY contract
                     </div>
                 </div>
             </div>
@@ -155,7 +180,7 @@ function SpecsPDFTab() {
 
 // ─── SIF Document Mock Preview ───────────────────────────────────────────────
 
-interface SifField { name: string; value: string; status: 'valid' | 'inconsistent' | 'missing' }
+interface SifField { name: string; value: string; status: 'valid' | 'inconsistent' | 'missing'; fieldId?: string; resolvedValue?: string }
 interface SifGroup { id: string; label: string; icon: typeof FileText; fields: SifField[] }
 
 const SIF_GROUPS: SifGroup[] = [
@@ -171,8 +196,8 @@ const SIF_GROUPS: SifGroup[] = [
     {
         id: 'labor', label: 'Labor (from SIF)', icon: Package,
         fields: [
-            { name: 'Carpenters labor',    value: '50h',     status: 'inconsistent' },
-            { name: 'Overtime labor',      value: '8h',      status: 'inconsistent' },
+            { name: 'Carpenters labor', value: '50h', status: 'inconsistent', fieldId: 'f1', resolvedValue: '45h' },
+            { name: 'Overtime labor',   value: '8h',  status: 'inconsistent', fieldId: 'f2', resolvedValue: '6h'  },
             { name: 'Zone A workstations', value: '24 units', status: 'valid' },
             { name: 'Zone B chairs',       value: '48 units', status: 'valid' },
         ]
@@ -187,11 +212,7 @@ const SIF_GROUPS: SifGroup[] = [
     },
 ]
 
-function SIFDocumentPreview() {
-    const allFields = SIF_GROUPS.flatMap(g => g.fields)
-    const validCount = allFields.filter(f => f.status === 'valid').length
-    const issueCount = allFields.filter(f => f.status !== 'valid').length
-
+function SIFDocumentPreview({ resolvedIds = new Set<string>() }: { resolvedIds?: Set<string> }) {
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
@@ -223,21 +244,26 @@ function SIFDocumentPreview() {
                                     <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
                                 </div>
                                 <div className="rounded-lg overflow-hidden border border-zinc-100 dark:border-zinc-800">
-                                    {group.fields.map((field, i) => (
-                                        <div key={i} className={`flex items-center justify-between py-1.5 px-3 text-[11px] ${
+                                    {group.fields.map((field, i) => {
+                                        const isFieldResolved = field.fieldId ? resolvedIds.has(field.fieldId) : false
+                                        const displayValue = isFieldResolved && field.resolvedValue ? field.resolvedValue : field.value
+                                        const isInconsistent = field.status === 'inconsistent' && !isFieldResolved
+                                        return (
+                                        <div key={i} className={`flex items-center justify-between py-1.5 px-3 text-[11px] transition-colors duration-300 ${
                                             i % 2 === 0 ? '' : 'bg-muted/30'
-                                        } ${field.status === 'inconsistent' ? '!bg-warning/10' : ''}`}>
+                                        } ${isInconsistent ? '!bg-warning/10' : ''} ${isFieldResolved ? '!bg-success/5' : ''}`}>
                                             <div className="flex items-center gap-2">
-                                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                                                    field.status === 'valid' ? 'bg-success' : 'bg-warning'
+                                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-300 ${
+                                                    isFieldResolved || field.status === 'valid' ? 'bg-success' : 'bg-warning'
                                                 }`} />
                                                 <span className="text-muted-foreground">{field.name}</span>
                                             </div>
-                                            <span className={`font-semibold ${
-                                                field.status === 'inconsistent' ? 'text-warning' : 'text-foreground'
-                                            }`}>{field.value}</span>
+                                            <span className={`font-semibold transition-colors duration-300 ${
+                                                isInconsistent ? 'text-warning' : 'text-foreground'
+                                            }`}>{displayValue}</span>
                                         </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             </div>
                         ))}
@@ -262,6 +288,10 @@ function SIFDocumentPreview() {
 // ─── Field data per step ─────────────────────────────────────────────────────
 
 const FIELDS_EXTRACT: ReviewField[] = [
+    { id: 'fh1', name: 'Quote #',    category: 'header', extractedValue: 'Q-2026-0089',            status: 'valid' },
+    { id: 'fh2', name: 'Contract',   category: 'header', extractedValue: 'CoNY · City of New York', status: 'valid' },
+    { id: 'fh3', name: 'Agency',     category: 'header', extractedValue: 'NYC Dept. of Education',  status: 'valid' },
+    { id: 'fh4', name: 'Date',       category: 'header', extractedValue: 'May 6, 2026',             status: 'valid' },
     {
         id: 'f1', name: 'Carpenters labor', category: 'labor',
         extractedValue: '50h', expectedValue: '45h', ovniqSuggestion: '45h',
@@ -1480,17 +1510,18 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
-function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload }: {
+function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
     michaelMode?: boolean
     invoiceUpload?: boolean
+    onResolveChange?: (ids: Set<string>) => void
 }) {
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
-    return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} />
+    return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} />
 }
 
 // ─── Funnel Stepper ──────────────────────────────────────────────────────────
@@ -1551,10 +1582,19 @@ function FunnelStepper({ step }: { step: BFIReviewStep }) {
 
 // ─── Field Review Panel ──────────────────────────────────────────────────────
 
-function BFIFieldReview({ step, scenario, onValidate }: {
+const CATEGORY_STYLE: Record<string, { label: string; chip: string }> = {
+    header:    { label: 'Document Header',    chip: 'bg-muted text-muted-foreground border-border'          },
+    labor:     { label: 'Labor (from SIF)',   chip: 'bg-info/10 text-info border-info/20'                   },
+    items:     { label: 'Products',           chip: 'bg-ai/10 text-ai border-ai/20'                         },
+    logistics: { label: 'Pricing & Delivery', chip: 'bg-success/10 text-success border-success/20'          },
+    fee:       { label: 'Agency Fee',         chip: 'bg-warning/10 text-warning border-warning/20'          },
+}
+
+function BFIFieldReview({ step, scenario, onValidate, onResolveChange }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
+    onResolveChange?: (ids: Set<string>) => void
 }) {
     const [fields]            = useState<ReviewField[]>(() => getFields(step, scenario))
     const [resolved, setResolved] = useState<Set<string>>(new Set())
@@ -1562,7 +1602,6 @@ function BFIFieldReview({ step, scenario, onValidate }: {
         const first = getFields(step, scenario).find(f => f.status !== 'valid')
         return first?.id ?? null
     })
-    const [editing]    = useState<Record<string, boolean>>({})
     const [editValues, setEditValues] = useState<Record<string, string>>({})
 
     const issueFields    = fields.filter(f => f.status !== 'valid')
@@ -1571,7 +1610,11 @@ function BFIFieldReview({ step, scenario, onValidate }: {
     const allResolved    = resolvedCount >= totalIssues
 
     const handleAcceptOVNIQ = (id: string) => {
-        setResolved(prev => new Set([...prev, id]))
+        setResolved(prev => {
+            const next = new Set([...prev, id])
+            onResolveChange?.(next)
+            return next
+        })
         setExpanded(null)
     }
 
@@ -1583,7 +1626,11 @@ function BFIFieldReview({ step, scenario, onValidate }: {
     const handleAutoResolve = () => {
         const remaining = issueFields.filter(f => !resolved.has(f.id))
         remaining.forEach((f, i) => {
-            setTimeout(() => setResolved(prev => new Set([...prev, f.id])), i * 150)
+            setTimeout(() => setResolved(prev => {
+                const next = new Set([...prev, f.id])
+                onResolveChange?.(next)
+                return next
+            }), i * 150)
         })
     }
 
@@ -1668,18 +1715,31 @@ function BFIFieldReview({ step, scenario, onValidate }: {
                     </div>
                 </div>
 
-                {/* Field list */}
-                <div className="px-5 py-3 space-y-3 pb-6">
-                    {fields.map(field => {
+                {/* Field list — grouped by category */}
+                <div className="px-5 py-3 pb-6 space-y-4">
+                    {(() => {
+                        const seenCategories = new Set<string>()
+                        return fields.map(field => {
+                        const showHeader = !seenCategories.has(field.category)
+                        if (showHeader) seenCategories.add(field.category)
+                        const catStyle = CATEGORY_STYLE[field.category] ?? CATEGORY_STYLE.header
+
                         const isExpanded  = expanded === field.id
                         const isResolved  = resolved.has(field.id)
                         const isIssue     = field.status !== 'valid'
-                        const isEditing   = editing[field.id]
-
                         const canEdit = field.status === 'valid' || isResolved
 
                         return (
-                            <div key={field.id} className={`border rounded-xl transition-all ${
+                            <div key={field.id}>
+                            {showHeader && (
+                                <div className="flex items-center gap-2 mb-2.5">
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest ${catStyle.chip}`}>
+                                        {catStyle.label}
+                                    </span>
+                                    <div className="flex-1 h-px bg-border/60" />
+                                </div>
+                            )}
+                            <div className={`border rounded-xl transition-all ${
                                 isExpanded && field.status === 'valid' ? 'border-primary/30 bg-primary/5 shadow-sm'
                                 : isExpanded  ? 'border-warning/40 dark:border-warning/30 bg-white dark:bg-zinc-900 shadow-sm'
                                 : isResolved  ? 'border-success/20 dark:border-success/20 bg-success/5'
@@ -1701,7 +1761,10 @@ function BFIFieldReview({ step, scenario, onValidate }: {
                                         onClick={() => isIssue && !isResolved ? setExpanded(isExpanded ? null : field.id) : undefined}
                                         className={`flex-1 min-w-0 text-left ${isIssue && !isResolved ? 'cursor-pointer' : 'cursor-default'}`}
                                     >
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${catStyle.chip}`}>
+                                                {catStyle.label}
+                                            </span>
                                             <span className="text-[12px] font-bold text-foreground truncate">{field.name}</span>
                                             {field.status === 'inconsistent' && !isResolved && (
                                                 <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-warning text-white uppercase tracking-tighter shrink-0">OmniQuote</span>
@@ -1775,11 +1838,12 @@ function BFIFieldReview({ step, scenario, onValidate }: {
                                     <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                                         <div className="space-y-1.5">
                                             <p className="text-[12px] font-semibold text-foreground">Extracted Value (SIF)</p>
-                                            <div className={`rounded-lg border px-3 py-2 ${
-                                                isEditing ? 'bg-card border-primary ring-2 ring-primary/20' : 'bg-background border-border'
-                                            }`}>
-                                                <span className="text-[13px] font-mono text-foreground">{field.extractedValue || '—'}</span>
-                                            </div>
+                                            <input
+                                                type="text"
+                                                value={editValues[field.id] ?? field.extractedValue ?? ''}
+                                                onChange={e => setEditValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                                className="w-full rounded-lg border border-border px-3 py-2 bg-background text-[13px] font-mono text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                                            />
                                         </div>
 
                                         {field.ovniqSuggestion && (
@@ -1815,8 +1879,10 @@ function BFIFieldReview({ step, scenario, onValidate }: {
                                     </div>
                                 )}
                             </div>
+                            </div>
                         )
-                    })}
+                    })
+                    })()}
                 </div>
             </div>
 
@@ -1854,8 +1920,9 @@ function BFIFieldReview({ step, scenario, onValidate }: {
 export default function BFIDocumentReviewModal({
     isOpen, onClose, step, onValidate, scenario, michaelMode, invoiceUpload
 }: BFIDocumentReviewModalProps) {
-    const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>('sif')
+    const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
+    const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set())
 
     const handleDownload = () => {
         const filename = activeTab === 'sif' ? 'DOE-2847.sif' : 'NYC-DOE-2847-specs.pdf'
@@ -1952,7 +2019,7 @@ export default function BFIDocumentReviewModal({
                                         <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2">
                                             {([
                                                 { id: 'sif' as const,      icon: FileText, label: 'SIF · DOE-2847' },
-                                                { id: 'specs' as const,    icon: FileText, label: 'NYC-DOE-2847-specs.pdf' },
+                                                { id: 'specs' as const,    icon: FileText, label: 'Q-2026-0089 · Quote' },
                                                 { id: 'floorplan' as const, icon: MapPin,   label: 'Floor Plan' },
                                             ]).map(tab => (
                                                 <button
@@ -1982,7 +2049,7 @@ export default function BFIDocumentReviewModal({
                                                             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
                                                         >
                                                             <Download className="h-3 w-3" />
-                                                            {activeTab === 'sif' ? 'Download SIF' : 'Download PDF'}
+                                                            {activeTab === 'sif' ? 'Download SIF' : 'Download Quote'}
                                                         </button>
                                                     )}
                                                 </div>
@@ -1992,9 +2059,9 @@ export default function BFIDocumentReviewModal({
                                         {/* Tab content */}
                                         <div className="flex-1 min-h-0 overflow-hidden">
                                             {activeTab === 'sif' ? (
-                                                <SIFDocumentPreview />
+                                                <SIFDocumentPreview resolvedIds={resolvedIds} />
                                             ) : activeTab === 'specs' ? (
-                                                <SpecsPDFTab />
+                                                <QuoteDocumentTab />
                                             ) : (
                                                 <div className="h-full overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950">
                                                     <div className="border border-border rounded-xl overflow-hidden bg-card">
@@ -2021,7 +2088,7 @@ export default function BFIDocumentReviewModal({
 
                                     {/* Right: Contextual panel per step (2/5) */}
                                     <div className="col-span-2 flex flex-col min-h-0">
-                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} />
+                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} />
                                     </div>
 
                                 </div>

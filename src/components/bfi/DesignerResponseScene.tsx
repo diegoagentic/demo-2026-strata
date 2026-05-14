@@ -67,26 +67,37 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                     <div className="text-[12px] text-foreground leading-relaxed space-y-3">
                         <p>Hi Robert,</p>
                         <p>
-                            SIF for <span className="font-semibold">DOE-2847</span> has been ingested and validated via OmniQuote.
-                            One price correction was applied: Filing Units adjusted from{' '}
+                            We've reviewed the SIF for <span className="font-semibold">DOE-2847</span> and validated it against the
+                            CoNY contract via OmniQuote. One price correction was required:{' '}
+                            <span className="font-semibold">Filing Units ×6</span> adjusted from{' '}
                             <span className="font-semibold text-warning line-through">$8,100</span> to{' '}
-                            <span className="font-semibold text-success">$7,560</span> per CoNY T-code.
+                            <span className="font-semibold text-success">$7,560</span> per CoNY T-code 18%.
                         </p>
                         <p>
-                            Quote <span className="font-semibold">Q-2026-0089</span> is confirmed and being processed.
-                            Attaching the updated spec sheet for your records.
+                            During CPR review we also identified a labor discrepancy —{' '}
+                            <span className="font-semibold">Carpenters: 50h → 45h</span> and{' '}
+                            <span className="font-semibold">OT: 8h → 6h</span> — which we are reconciling with Michael and Nancy.
+                            This will not delay the order.
                         </p>
-                        <p>NYC DOE client contact has been notified. We'll follow up on PO and delivery schedule shortly.</p>
+                        <p>
+                            Quote <span className="font-semibold">Q-2026-0089</span> is confirmed. Updated SIF and CPR package attached for your records.
+                        </p>
                         <p className="text-muted-foreground">— Lauren DeMarco<br />BFI Furniture · CoNY Account Manager</p>
                     </div>
 
-                    {/* PDF attachment chip */}
-                    <div className="flex items-center gap-2 mt-2">
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
-                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            NYC-DOE-2847-specs.pdf
-                            <span className="text-[9px] text-muted-foreground ml-1">· View only</span>
-                        </div>
+                    {/* PDF attachment chips */}
+                    <div className="flex flex-col gap-1.5 mt-2">
+                        {[
+                            { name: 'DOE-2847-SIF-updated.pdf',     label: 'Updated SIF'  },
+                            { name: 'Q-2026-0089-OmniQuote.pdf',    label: 'Quote'         },
+                            { name: 'DOE-2847-CPR-package.pdf',     label: 'CPR Package'  },
+                        ].map(a => (
+                            <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
+                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                {a.name}
+                                <span className="text-[9px] text-muted-foreground ml-1">· {a.label}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -113,8 +124,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                         onClick={handleAcknowledge}
                         className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        Acknowledge & Continue →
+                        Continue →
                     </button>
                 </div>
             )}
