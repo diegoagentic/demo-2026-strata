@@ -9,7 +9,7 @@
  * step prop controls which fields and funnel position are shown.
  */
 
-import { useState, Fragment } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
     X, FileText, Truck, Package,
@@ -526,6 +526,16 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
     const [uploadState,        setUploadState]        = useState<UploadState>('idle')
     const [progress,           setProgress]           = useState(0)
     const [showPatriciaDialog, setShowPatriciaDialog] = useState(false)
+    const [activation, setActivation] = useState<'detecting' | 'activated'>(
+        invoiceUpload ? 'detecting' : 'activated'
+    )
+
+    useEffect(() => {
+        if (activation === 'detecting') {
+            const t = setTimeout(() => setActivation('activated'), 1600)
+            return () => clearTimeout(t)
+        }
+    }, [activation])
 
     const simulateUpload = () => {
         if (uploadState !== 'idle') return
@@ -539,9 +549,30 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
         }, 40)
     }
 
+    if (invoiceUpload && activation === 'detecting') {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 px-5 py-10">
+                <Loader2 className="h-6 w-6 text-ai animate-spin" />
+                <p className="text-[12px] font-bold text-ai">Strata AI · Verifying manager approval…</p>
+                <p className="text-[10px] text-muted-foreground">Scanning inbox for CPR approval message</p>
+            </div>
+        )
+    }
+
     return (
         <>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+
+                {/* ── AI approval banner (invoiceUpload only) ── */}
+                {invoiceUpload && (
+                    <div className="rounded-xl border border-ai/30 bg-ai/5 p-3 flex items-start gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                        <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
+                        <div className="text-[11px]">
+                            <p className="font-bold text-ai">Strata AI · Manager approval detected</p>
+                            <p className="text-muted-foreground mt-0.5">Michael C. approved CPR reconciliation · Invoice upload unlocked for DOE-2847</p>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── Invoice upload zone ── */}
                 <div className="space-y-3">
@@ -549,7 +580,7 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
                         invoiceUpload ? (
                             <button
                                 onClick={simulateUpload}
-                                className="w-full border-2 border-dashed border-ai/30 rounded-2xl p-5 flex flex-col items-center gap-2 hover:border-ai/60 hover:bg-ai/5 transition-all group"
+                                className="w-full border-2 border-dashed border-ai/30 rounded-2xl p-5 flex flex-col items-center gap-2 hover:border-ai/60 hover:bg-ai/5 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-500"
                             >
                                 <Upload className="h-6 w-6 text-ai/60 group-hover:text-ai transition-colors" />
                                 <p className="text-[12px] font-bold text-foreground">OmniQuote Approved Invoice</p>
