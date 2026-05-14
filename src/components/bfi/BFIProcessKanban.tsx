@@ -34,9 +34,9 @@ const PROCESS_COLUMNS = [
 // ─── Context cards (other orders — static background) ─────────────────────────
 
 const BASE_CONTEXT_CARDS: ContextCard[] = [
-    { orderId: 'NYPD-0394', initials: 'NYPD', agency: 'NYPD Precinct 40',    value: '$31,750',  colIdx: 1, avatarBg: 'bg-info/15',    avatarColor: 'text-info'    },
-    { orderId: 'DCAS-1182', initials: 'DCAS', agency: 'NYC DCAS',            value: '$127,400', colIdx: 2, avatarBg: 'bg-warning/15', avatarColor: 'text-warning' },
-    { orderId: 'DOH-0671',  initials: 'DOH',  agency: 'NYC Dept. of Health', value: '$22,100',  colIdx: 4, avatarBg: 'bg-ai/15',      avatarColor: 'text-ai'      },
+    { orderId: 'NYPD-0394', initials: 'NYPD', agency: 'NYPD Precinct 40',    value: '$31,750',  colIdx: 1, avatarBg: 'bg-info/20',    avatarColor: 'text-info'    },
+    { orderId: 'DCAS-1182', initials: 'DCAS', agency: 'NYC DCAS',            value: '$127,400', colIdx: 2, avatarBg: 'bg-warning/20', avatarColor: 'text-warning' },
+    { orderId: 'DOH-0671',  initials: 'DOH',  agency: 'NYC Dept. of Health', value: '$22,100',  colIdx: 4, avatarBg: 'bg-ai/20',      avatarColor: 'text-ai'      },
 ]
 
 interface ContextCard {
@@ -53,10 +53,10 @@ interface ContextCard {
 
 function getNewCardColors(name: string): { avatarBg: string; avatarColor: string } {
     const palette = [
-        { avatarBg: 'bg-blue-100 dark:bg-blue-900/30',   avatarColor: 'text-blue-700 dark:text-blue-400'   },
-        { avatarBg: 'bg-purple-100 dark:bg-purple-900/30', avatarColor: 'text-purple-700 dark:text-purple-400' },
-        { avatarBg: 'bg-teal-100 dark:bg-teal-900/30',   avatarColor: 'text-teal-700 dark:text-teal-400'   },
-        { avatarBg: 'bg-orange-100 dark:bg-orange-900/30', avatarColor: 'text-orange-700 dark:text-orange-400' },
+        { avatarBg: 'bg-info/20',    avatarColor: 'text-info'    },
+        { avatarBg: 'bg-ai/20',      avatarColor: 'text-ai'      },
+        { avatarBg: 'bg-success/20', avatarColor: 'text-success' },
+        { avatarBg: 'bg-warning/20', avatarColor: 'text-warning' },
     ]
     return palette[name.charCodeAt(0) % palette.length]
 }
@@ -495,8 +495,8 @@ export default function BFIProcessKanban({
                                             animateDoe ? 'animate-in fade-in slide-in-from-top-2 duration-500' : ''
                                         }`}>
                                             <div className="flex items-start gap-2.5">
-                                                <div className="h-9 w-9 rounded-full bg-success/15 flex items-center justify-center shrink-0">
-                                                    <span className="text-[10px] font-bold text-success">DOE</span>
+                                                <div className="h-8 w-8 rounded-full bg-success/20 flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900">
+                                                    <span className="text-[10px] font-black text-success">DOE</span>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -561,24 +561,26 @@ export default function BFIProcessKanban({
                                             key={card.orderId}
                                             className={`rounded-2xl border bg-card p-4 space-y-3 shadow-sm ${
                                                 card.isNew
-                                                    ? 'border-primary/30 animate-in fade-in slide-in-from-top-2 duration-500'
-                                                    : 'border-border/60 opacity-50 pointer-events-none'
+                                                    ? 'border-border animate-in fade-in slide-in-from-top-2 duration-500'
+                                                    : 'border-border opacity-60 pointer-events-none'
                                             }`}
                                         >
                                             <div className="flex items-center gap-2.5">
-                                                <div className={`h-9 w-9 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0`}>
-                                                    <span className={`text-[10px] font-bold ${card.avatarColor}`}>{card.initials}</span>
+                                                <div className={`h-8 w-8 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
+                                                    <span className={`text-[10px] font-black ${card.avatarColor}`}>{card.initials}</span>
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <div className="text-sm font-bold text-foreground">{card.orderId}</div>
-                                                    <div className="text-[11px] text-muted-foreground truncate">{card.agency}</div>
+                                                    <div className="text-sm font-semibold text-foreground">{card.orderId}</div>
+                                                    <div className="text-[10px] text-muted-foreground truncate font-mono">{card.agency}</div>
                                                 </div>
                                             </div>
                                             {card.desc && (
                                                 <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>
                                             )}
-                                            <div className="pt-2 border-t border-border flex items-center justify-between">
-                                                <span className="text-xs font-medium text-foreground">{card.value}</span>
+                                            <div className="h-px bg-border" />
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] text-muted-foreground">Amount</span>
+                                                <span className="text-xs font-semibold text-foreground">{card.value}</span>
                                             </div>
                                             {card.isNew && colIdx === 0 && onReviewDoe && (
                                                 <button
