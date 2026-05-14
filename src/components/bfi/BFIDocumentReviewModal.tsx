@@ -2371,10 +2371,12 @@ export default function BFIDocumentReviewModal({
 }: BFIDocumentReviewModalProps) {
     const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
-    // For cpr: start empty so approvals on the right drive the SIF doc live
-    // For quote/fee: f1+f2 already resolved from prior steps
+    // quote/fee + cpr(michaelMode/invoiceUpload): start with f1+f2 resolved (already reconciled)
+    // cpr regular (paso 1.9): start empty so approvals drive the SIF doc live
     const [resolvedIds, setResolvedIds] = useState<Set<string>>(() =>
-        ['quote', 'fee'].includes(step) ? new Set(['f1', 'f2']) : new Set()
+        ['quote', 'fee'].includes(step) || (step === 'cpr' && (michaelMode || invoiceUpload))
+            ? new Set(['f1', 'f2'])
+            : new Set()
     )
     // OmniQuote lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
