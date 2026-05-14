@@ -69,7 +69,7 @@ function OrderDetailCard({ expanded, onToggle }: { expanded: boolean; onToggle: 
                     <Package className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 text-left">
-                    <div className="text-[11px] font-bold text-foreground">DOE-2847 · Q-2026-0089</div>
+                    <div className="text-[11px] font-bold text-foreground">DOE-2847</div>
                     <div className="text-[9px] text-muted-foreground">NYC Dept. of Education · 35 cartons · 1 item missing</div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -220,10 +220,10 @@ function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
                     enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                <div className="fixed inset-0 flex items-center justify-center p-6">
                     <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
@@ -276,7 +276,7 @@ function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
                                             <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Missing Item</span>
                                         </div>
                                         {[
-                                            { label: 'Order',    value: 'DOE-2847 · Q-2026-0089' },
+                                            { label: 'Order',    value: 'DOE-2847' },
                                             { label: 'Item',     value: 'Monitor Arm Dual Adjustable' },
                                             { label: 'PO line',  value: 'L7 · 1 of 2 units' },
                                             { label: 'Carton',   value: '#34 of 35 · Zone C' },
@@ -328,7 +328,7 @@ function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
                                     <button onClick={handleSend}
                                         className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
                                         <Send className="h-3.5 w-3.5" />
-                                        Send Claim to Herman Miller →
+                                        Send →
                                     </button>
                                 </div>
                             )}
@@ -370,7 +370,7 @@ export default function LaurenClaimScene() {
     return (
         <div className="space-y-3">
 
-            {/* ── Notification from Lena ── */}
+            {/* ── Notification header from Lena ── */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="flex items-center gap-2 px-3.5 py-2.5 bg-muted/30 border-b border-border">
                     <div className="h-6 w-6 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
@@ -382,41 +382,44 @@ export default function LaurenClaimScene() {
                     </div>
                     <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 </div>
-                <div className="px-4 py-3 space-y-2.5">
-                    <div className="text-[11px] text-foreground leading-relaxed space-y-1.5">
-                        <p>Hi Lauren,</p>
-                        <p>Received DOE-2847 at WIG — <span className="font-semibold">34 of 35 cartons confirmed.</span></p>
-                        <p className="text-destructive font-medium">
-                            Carton #34 NOT received: Monitor Arm Dual Adjustable (1 of 2 units). Bingo sheet annotated manually by Workplace.
-                        </p>
-                        <p className="text-muted-foreground text-[10px]">CORE updated — partial shipment flag set. Line 7 excluded from entry pending claim resolution.</p>
-                        <p className="text-muted-foreground text-[10px]">— Lena C. · Receiving Coordinator</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border text-[10px] text-foreground">
-                            <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
-                            BD-2026-0412_BingoSheet.pdf
-                        </div>
-                    </div>
-                    <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={240} extractedFields={[]} />
+                <div className="px-4 py-3 space-y-1.5 text-[11px] text-foreground leading-relaxed">
+                    <p>Hi Lauren,</p>
+                    <p>Received DOE-2847 at WIG — <span className="font-semibold">34 of 35 cartons confirmed.</span></p>
+                    <p className="text-destructive font-medium">
+                        Carton #34 NOT received: Monitor Arm Dual Adjustable (1 of 2 units). Bingo sheet annotated manually by Workplace.
+                    </p>
+                    <p className="text-muted-foreground text-[10px]">— Lena C. · Receiving Coordinator</p>
                 </div>
             </div>
 
-            {/* ── Order detail ── */}
-            <OrderDetailCard expanded={orderExpanded} onToggle={() => setOrderExpanded(v => !v)} />
+            {/* ── 2-column: Receiving Report | Order Detail + Proof + CTA ── */}
+            <div className="grid grid-cols-2 gap-3">
 
-            {/* ── Proof of shipment ── */}
-            <ProofCard attached={proofAttached} onAttach={() => setProofAttached(true)} />
+                {/* Left: Receiving Report document */}
+                <div className="border border-border rounded-xl bg-card overflow-hidden">
+                    <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-border bg-muted/30">
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Receiving Report · RR-37577</span>
+                    </div>
+                    <div className="p-3">
+                        <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
+                    </div>
+                </div>
 
-            {/* ── Send claim CTA ── */}
-            <button
-                onClick={() => setShowClaim(true)}
-                disabled={!canSendClaim}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-destructive text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
-            >
-                <AlertTriangle className="h-4 w-4" />
-                {canSendClaim ? 'File Claim with Manufacturer →' : 'Attach proof of shipment to continue'}
-            </button>
+                {/* Right: Order detail + Proof + CTA */}
+                <div className="space-y-3 flex flex-col">
+                    <OrderDetailCard expanded={orderExpanded} onToggle={() => setOrderExpanded(v => !v)} />
+                    <ProofCard attached={proofAttached} onAttach={() => setProofAttached(true)} />
+                    <button
+                        onClick={() => setShowClaim(true)}
+                        disabled={!canSendClaim}
+                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-destructive text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm mt-auto"
+                    >
+                        <AlertTriangle className="h-4 w-4" />
+                        {canSendClaim ? 'File Claim →' : 'Attach proof to continue'}
+                    </button>
+                </div>
+            </div>
 
             <ClaimDialog isOpen={showClaim} onSent={() => { setShowClaim(false); nextStep() }} />
 
