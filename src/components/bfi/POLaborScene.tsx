@@ -64,7 +64,7 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                 {/* Metadata */}
                                 <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
                                     <div className="text-[13px] font-bold text-foreground leading-snug">
-                                        Purchase Order Request · DOE-2847 · Q-2026-0089
+                                        Purchase Order Request · DOE-2847
                                     </div>
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2 text-[10px]">

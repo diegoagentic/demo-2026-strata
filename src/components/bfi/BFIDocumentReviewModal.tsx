@@ -2201,7 +2201,7 @@ export default function BFIDocumentReviewModal({
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
     // Labor corrections (f1, f2) were resolved in step 'extract' — show as applied in all subsequent steps
     const [resolvedIds, setResolvedIds] = useState<Set<string>>(() =>
-        ['quote', 'labor', 'cpr', 'fee'].includes(step) ? new Set(['f1', 'f2']) : new Set()
+        ['quote', 'cpr', 'fee'].includes(step) ? new Set(['f1', 'f2']) : new Set()
     )
     // OmniQuote lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
