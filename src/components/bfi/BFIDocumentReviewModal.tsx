@@ -214,7 +214,7 @@ const SIF_GROUPS: SifGroup[] = [
 ]
 
 function SIFDocumentPreview({ resolvedIds = new Set<string>(), step }: { resolvedIds?: Set<string>; step?: BFIReviewStep }) {
-    const isLabor = step === 'labor'
+    const isLabor = step === 'labor' || step === 'cpr' || step === 'fee'
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
@@ -2272,8 +2272,8 @@ export default function BFIDocumentReviewModal({
                                                 Document Review — DOE-2847
                                             </h3>
                                             <p className="text-[11px] text-muted-foreground">
-                                                {step === 'labor'
-                                                    ? 'NYC Dept. of Education · Purchase Order DOE-2847 · PO & Labor Review'
+                                                {(step === 'labor' || step === 'cpr' || step === 'fee')
+                                                    ? `NYC Dept. of Education · Purchase Order DOE-2847 · ${STEP_LABELS[step]}`
                                                     : `NYC Dept. of Education · Quote Q-2026-0089 · ${STEP_LABELS[step]}`
                                                 }
                                             </p>
@@ -2352,7 +2352,7 @@ export default function BFIDocumentReviewModal({
                                                             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
                                                         >
                                                             <Download className="h-3 w-3" />
-                                                            {activeTab === 'sif' ? 'Download SIF' : step === 'labor' ? 'Download PO' : 'Download Quote'}
+                                                            {activeTab === 'sif' ? 'Download SIF' : (step === 'labor' || step === 'cpr' || step === 'fee') ? 'Download PO' : 'Download Quote'}
                                                         </button>
                                                     )}
                                                 </div>
