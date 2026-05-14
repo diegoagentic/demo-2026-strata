@@ -142,20 +142,19 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                         <div className="text-[11px] text-foreground leading-relaxed space-y-2.5">
                             <p>Hi Robert,</p>
                             <p>
-                                We've reviewed the SIF for <span className="font-semibold">DOE-2847</span> and validated it against the
-                                CoNY contract via OmniQuote. One price correction was required:{' '}
-                                <span className="font-semibold">Filing Units ×6</span> adjusted from{' '}
-                                <span className="font-semibold text-warning line-through">$8,100</span> to{' '}
-                                <span className="font-semibold text-success">$7,560</span> per CoNY T-code 18%.
+                                We've received and ingested all documents for{' '}
+                                <span className="font-semibold">DOE-2847</span> — SIF, spec sheet, and floor plan.
+                                The quote is being validated against the CoNY contract and the order is moving forward.
                             </p>
                             <p>
-                                During CPR review we also identified a labor discrepancy —{' '}
+                                During our CPR review we identified a labor reconciliation —{' '}
                                 <span className="font-semibold">Carpenters: 50h → 45h</span> and{' '}
-                                <span className="font-semibold">OT: 8h → 6h</span> — which we are reconciling.
-                                This will not delay the order.
+                                <span className="font-semibold">OT: 8h → 6h</span> — which we are processing with the team.
+                                This will not affect the delivery window.
                             </p>
                             <p>
-                                Quote <span className="font-semibold">Q-2026-0089</span> is confirmed. Updated SIF and CPR package attached.
+                                Quote <span className="font-semibold">Q-2026-0089</span> is confirmed.
+                                Updated SIF and CPR package attached for your records.
                             </p>
                             <p className="text-muted-foreground text-[10px]">— Lauren DeMarco · BFI Furniture · CoNY Account Manager</p>
                         </div>
