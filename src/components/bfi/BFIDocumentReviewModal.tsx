@@ -2251,7 +2251,10 @@ export default function BFIDocumentReviewModal({
                                                 Document Review — DOE-2847
                                             </h3>
                                             <p className="text-[11px] text-muted-foreground">
-                                                NYC Dept. of Education · Quote Q-2026-0089 · {STEP_LABELS[step]}
+                                                {step === 'labor'
+                                                    ? 'NYC Dept. of Education · Purchase Order DOE-2847 · PO & Labor Review'
+                                                    : `NYC Dept. of Education · Quote Q-2026-0089 · ${STEP_LABELS[step]}`
+                                                }
                                             </p>
                                         </div>
                                     </div>
@@ -2283,7 +2286,7 @@ export default function BFIDocumentReviewModal({
                                                         ? <><span className="font-bold">Agency fee</span> gap detected · MK Invoice {MK_INVOICE_GAP} vs expected {EXPECTED_FEE} · {FEE_GAP}</>
                                                         : <><span className="font-bold">Agency fee</span> verified · MK Invoice matches T-code calculation</>
                                                     : step === 'labor'
-                                                        ? <><span className="font-bold">Strata AI</span> · PO &amp; Labor Quote extracted · DOE-2847 · confirm receipt</>
+                                                        ? <><span className="font-bold">Strata AI</span> · Purchase Order received · DOE-2847 · confirm receipt</>
                                                         : <><span className="font-bold">OmniQuote</span> detectó cambios en el contrato CoNY · T-codes actualizados · 2 discrepancias a resolver</>
                                         }
                                     </p>
@@ -2298,7 +2301,7 @@ export default function BFIDocumentReviewModal({
                                         <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2">
                                             {([
                                                 { id: 'sif' as const,      icon: FileText, label: 'SIF · DOE-2847' },
-                                                { id: 'specs' as const,    icon: FileText, label: 'Q-2026-0089 · Quote' },
+                                                { id: 'specs' as const,    icon: FileText, label: step === 'labor' ? 'DOE-2847 · Purchase Order' : 'Q-2026-0089 · Quote' },
                                                 { id: 'floorplan' as const, icon: MapPin,   label: 'Floor Plan' },
                                             ]).map(tab => (
                                                 <button
@@ -2328,7 +2331,7 @@ export default function BFIDocumentReviewModal({
                                                             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
                                                         >
                                                             <Download className="h-3 w-3" />
-                                                            {activeTab === 'sif' ? 'Download SIF' : 'Download Quote'}
+                                                            {activeTab === 'sif' ? 'Download SIF' : step === 'labor' ? 'Download PO' : 'Download Quote'}
                                                         </button>
                                                     )}
                                                 </div>

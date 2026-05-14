@@ -460,7 +460,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
             {/* ══ UPLOAD MODE ══════════════════════════════════════════════════ */}
             {uploadMode && (
                 <>
-                    {/* Upload zones header */}
+                    {/* Upload zones header — side by side */}
                     {!bothUploaded && (
                         <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-3">
                             <div className="flex items-center gap-2">
@@ -470,26 +470,30 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                                     <div className="text-[10px] text-muted-foreground">Attach receiving documents to continue</div>
                                 </div>
                             </div>
-                            <UploadZone label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf"
-                                uploaded={bingoUploaded} onUpload={() => setBingoUploaded(true)} />
-                            <UploadZone label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf"
-                                uploaded={poUploaded} onUpload={() => setPoUploaded(true)} />
+                            <div className="grid grid-cols-2 gap-3">
+                                <UploadZone label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf"
+                                    uploaded={bingoUploaded} onUpload={() => setBingoUploaded(true)} />
+                                <UploadZone label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf"
+                                    uploaded={poUploaded} onUpload={() => setPoUploaded(true)} />
+                            </div>
                         </div>
                     )}
 
-                    {/* Bingo Sheet uploaded card */}
-                    {bingoUploaded && (
-                        <UploadedFileCard label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf">
-                            <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
-                            <BingoGrid />
-                        </UploadedFileCard>
-                    )}
-
-                    {/* PO uploaded card */}
-                    {poUploaded && (
-                        <UploadedFileCard label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf">
-                            <PODocument />
-                        </UploadedFileCard>
+                    {/* Uploaded documents — side by side when both available */}
+                    {(bingoUploaded || poUploaded) && (
+                        <div className={bothUploaded ? 'grid grid-cols-2 gap-3' : undefined}>
+                            {bingoUploaded && (
+                                <UploadedFileCard label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf">
+                                    <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
+                                    <BingoGrid />
+                                </UploadedFileCard>
+                            )}
+                            {poUploaded && (
+                                <UploadedFileCard label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf">
+                                    <PODocument />
+                                </UploadedFileCard>
+                            )}
+                        </div>
                     )}
 
                     {/* Notes */}
