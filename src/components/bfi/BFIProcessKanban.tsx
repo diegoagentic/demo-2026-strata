@@ -24,19 +24,19 @@ export const BFI_PROCESS_FUNNEL = [
 // ─── Kanban columns ───────────────────────────────────────────────────────────
 
 const PROCESS_COLUMNS = [
-    { id: 'intake',    label: 'Intake',     color: 'text-ai',      bg: 'bg-ai/10',      border: 'border-ai/20'      },
-    { id: 'quote',     label: 'Quote',      color: 'text-info',    bg: 'bg-info/10',    border: 'border-info/20'    },
-    { id: 'po-labor',  label: 'PO & Labor', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
-    { id: 'cpr',       label: 'CPR Review', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
-    { id: 'fee-verify',label: 'Fee Verify', color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+    { id: 'intake',    label: 'Intake',     color: 'text-ai',      border: 'border-ai/30'      },
+    { id: 'quote',     label: 'Quote',      color: 'text-info',    border: 'border-info/30'    },
+    { id: 'po-labor',  label: 'PO & Labor', color: 'text-warning', border: 'border-warning/30' },
+    { id: 'cpr',       label: 'CPR Review', color: 'text-warning', border: 'border-warning/30' },
+    { id: 'fee-verify',label: 'Fee Verify', color: 'text-success', border: 'border-success/30' },
 ]
 
 // ─── Context cards (other orders — static background) ─────────────────────────
 
 const BASE_CONTEXT_CARDS: ContextCard[] = [
-    { orderId: 'NYPD-0394', initials: 'NYPD', agency: 'NYPD Precinct 40',    value: '$31,750',  colIdx: 1, avatarBg: 'bg-info/20',    avatarColor: 'text-info'    },
-    { orderId: 'DCAS-1182', initials: 'DCAS', agency: 'NYC DCAS',            value: '$127,400', colIdx: 2, avatarBg: 'bg-warning/20', avatarColor: 'text-warning' },
-    { orderId: 'DOH-0671',  initials: 'DOH',  agency: 'NYC Dept. of Health', value: '$22,100',  colIdx: 4, avatarBg: 'bg-ai/20',      avatarColor: 'text-ai'      },
+    { orderId: 'NYPD-0394', initials: 'NYPD', agency: 'NYPD Precinct 40',    value: '$31,750',  colIdx: 1, avatarBg: 'bg-info/15',    avatarColor: 'text-info'    },
+    { orderId: 'DCAS-1182', initials: 'DCAS', agency: 'NYC DCAS',            value: '$127,400', colIdx: 2, avatarBg: 'bg-warning/15', avatarColor: 'text-warning' },
+    { orderId: 'DOH-0671',  initials: 'DOH',  agency: 'NYC Dept. of Health', value: '$22,100',  colIdx: 4, avatarBg: 'bg-ai/15',      avatarColor: 'text-ai'      },
 ]
 
 interface ContextCard {
@@ -64,11 +64,11 @@ function getNewCardColors(name: string): { avatarBg: string; avatarColor: string
 // ─── DOE-2847 contextual content per column ───────────────────────────────────
 
 const DOE_BADGE: Record<number, { label: string; className: string }> = {
-    0: { label: '! CPR',       className: 'bg-warning/20 text-warning border border-warning/30' },
-    1: { label: 'OmniQuote',   className: 'bg-info/20 text-info border border-info/30'          },
-    2: { label: 'PO received', className: 'bg-warning/20 text-warning border border-warning/30' },
-    3: { label: '2 pending',   className: 'bg-warning/20 text-warning border border-warning/30' },
-    4: { label: 'Verified',    className: 'bg-success/20 text-success border border-success/30' },
+    0: { label: '! CPR',       className: 'bg-warning/10 text-warning border border-warning/20' },
+    1: { label: 'OmniQuote',   className: 'bg-info/10 text-info border border-info/20'          },
+    2: { label: 'PO received', className: 'bg-warning/10 text-warning border border-warning/20' },
+    3: { label: '2 pending',   className: 'bg-warning/10 text-warning border border-warning/20' },
+    4: { label: 'Verified',    className: 'bg-success/10 text-success border border-success/20' },
 }
 
 const DOE_SUBTITLE: Record<number, string> = {
@@ -380,48 +380,48 @@ export default function BFIProcessKanban({
                     const count        = (doeVisible ? 1 : 0) + colCards.length
 
                     return (
-                        <div key={c.id} className="space-y-2">
-                            {/* Column header */}
-                            <div className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl ${c.bg} border ${c.border}`}>
-                                <span className={`text-[9px] font-black ${c.color} uppercase tracking-wide`}>{c.label}</span>
-                                <span className="text-[9px] font-bold text-muted-foreground bg-card rounded-md px-1.5 py-0.5">
+                        <div key={c.id} className="space-y-2.5">
+                            {/* Column header — clean label + muted count badge */}
+                            <div className="flex items-center justify-between px-1 py-1">
+                                <span className={`text-[11px] font-semibold ${c.color}`}>{c.label}</span>
+                                <span className="text-[10px] font-medium text-muted-foreground bg-muted rounded-md px-1.5 py-0.5 leading-none">
                                     {count}
                                 </span>
                             </div>
 
                             {/* DOE-2847 card — highlighted */}
                             {doeVisible && (
-                                <div className={`rounded-2xl border-2 ${col.border} bg-card p-3 space-y-2 shadow-sm ${
+                                <div className={`rounded-2xl border ${col.border} bg-card p-4 space-y-3 shadow-sm ${
                                     animateDoe ? 'animate-in fade-in slide-in-from-top-2 duration-500' : ''
                                 }`}>
-                                    <div className="flex items-start gap-2">
-                                        <div className="h-8 w-8 rounded-lg bg-success/20 flex items-center justify-center shrink-0 mt-0.5">
-                                            <span className="text-[9px] font-black text-success">DOE</span>
+                                    <div className="flex items-start gap-2.5">
+                                        <div className="h-9 w-9 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                                            <span className="text-[10px] font-bold text-success">DOE</span>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between gap-1">
-                                                <span className="text-[11px] font-bold text-foreground">DOE-2847</span>
-                                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${badge.className}`}>
+                                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                                                <span className="text-xs font-semibold text-foreground">DOE-2847</span>
+                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
                                                     {badge.label}
                                                 </span>
                                             </div>
-                                            <span className="text-[9px] text-muted-foreground block">NYC Dept. of Education</span>
+                                            <span className="text-[11px] text-muted-foreground block">NYC Dept. of Education</span>
                                         </div>
                                     </div>
 
-                                    <p className="text-[9px] text-muted-foreground leading-relaxed">{subtitle}</p>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{subtitle}</p>
 
-                                    <div className="flex items-center justify-between pt-0.5">
-                                        <span className="text-[10px] font-semibold text-foreground">$48,200</span>
-                                        <span className="text-[9px] text-muted-foreground">May 6</span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-foreground">$48,200</span>
+                                        <span className="text-[11px] text-muted-foreground">May 6</span>
                                     </div>
 
                                     {(onSendDoe || onReviewDoe) && (
-                                        <div className="flex gap-1.5 mt-1.5">
+                                        <div className="flex gap-2 pt-0.5">
                                             {onSendDoe && (
                                                 <button
                                                     onClick={onSendDoe}
-                                                    className="flex-1 py-1.5 text-[9px] font-black rounded-lg bg-foreground text-background hover:opacity-80 transition-all uppercase tracking-widest"
+                                                    className="flex-1 py-2 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
                                                 >
                                                     Send →
                                                 </button>
@@ -433,10 +433,10 @@ export default function BFIProcessKanban({
                                                     )}
                                                     <button
                                                         onClick={onReviewDoe}
-                                                        className={`w-full py-1.5 text-[9px] font-bold rounded-lg transition-all uppercase tracking-widest ${
+                                                        className={`w-full py-2 text-[11px] font-semibold rounded-xl transition-all ${
                                                             onSendDoe
-                                                                ? 'px-3 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                                                                : `font-black border-transparent bg-foreground text-background hover:opacity-80${highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`
+                                                                ? 'px-3 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                                                : `font-bold bg-foreground text-background hover:opacity-80${highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`
                                                         }`}
                                                     >
                                                         {reviewLabel}
@@ -448,37 +448,37 @@ export default function BFIProcessKanban({
                                 </div>
                             )}
 
-                            {/* Context cards — dimmed (static) or interactive (newly created) */}
+                            {/* Context cards */}
                             {colCards.map(card => (
                                 <div
                                     key={card.orderId}
-                                    className={`rounded-2xl border bg-card p-3 space-y-2 ${
+                                    className={`rounded-2xl border bg-card p-4 space-y-3 shadow-sm ${
                                         card.isNew
                                             ? 'border-primary/30 animate-in fade-in slide-in-from-top-2 duration-500'
-                                            : 'border-border opacity-40 pointer-events-none'
+                                            : 'border-border/60 opacity-50 pointer-events-none'
                                     }`}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <div className={`h-8 w-8 rounded-lg ${card.avatarBg} flex items-center justify-center shrink-0`}>
-                                            <span className={`text-[8px] font-black ${card.avatarColor}`}>{card.initials}</span>
+                                    <div className="flex items-center gap-2.5">
+                                        <div className={`h-9 w-9 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0`}>
+                                            <span className={`text-[10px] font-bold ${card.avatarColor}`}>{card.initials}</span>
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="text-[11px] font-bold text-foreground">{card.orderId}</div>
-                                            <div className="text-[9px] text-muted-foreground truncate">{card.agency}</div>
+                                            <div className="text-xs font-semibold text-foreground">{card.orderId}</div>
+                                            <div className="text-[11px] text-muted-foreground truncate">{card.agency}</div>
                                         </div>
                                     </div>
                                     {card.desc && (
-                                        <p className="text-[9px] text-muted-foreground leading-relaxed">{card.desc}</p>
+                                        <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>
                                     )}
-                                    <div className="flex items-center justify-between pt-0.5">
-                                        <span className="text-[10px] font-semibold text-foreground">{card.value}</span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-medium text-foreground">{card.value}</span>
                                     </div>
                                     {card.isNew && colIdx === 0 && onReviewDoe && (
                                         <button
                                             onClick={onReviewDoe}
-                                            className="w-full py-1.5 text-[9px] font-black rounded-lg bg-foreground text-background hover:opacity-80 transition-all uppercase tracking-widest"
+                                            className="w-full py-2 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
                                         >
-                                            REVIEW
+                                            Review
                                         </button>
                                     )}
                                 </div>
