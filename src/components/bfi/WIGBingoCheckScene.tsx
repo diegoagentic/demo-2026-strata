@@ -283,9 +283,9 @@ function LaurenNotificationDialog({ isOpen, notes, onSent }: { isOpen: boolean; 
                     enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
                 </TransitionChild>
-                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                <div className="fixed inset-0 flex items-center justify-center p-6">
                     <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
@@ -376,7 +376,7 @@ function LaurenNotificationDialog({ isOpen, notes, onSent }: { isOpen: boolean; 
                                     <button onClick={handleSend}
                                         className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
                                         <Send className="h-3.5 w-3.5" />
-                                        Send to Lauren →
+                                        Send →
                                     </button>
                                 </div>
                             )}
