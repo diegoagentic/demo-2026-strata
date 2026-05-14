@@ -460,41 +460,39 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
             {/* ══ UPLOAD MODE ══════════════════════════════════════════════════ */}
             {uploadMode && (
                 <>
-                    {/* Upload zones header — side by side */}
+                    {/* Header — only while pending uploads */}
                     {!bothUploaded && (
-                        <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-3">
-                            <div className="flex items-center gap-2">
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                                <div>
-                                    <div className="text-[12px] font-bold text-foreground">DOE-2847 · Warehouse Documents</div>
-                                    <div className="text-[10px] text-muted-foreground">Attach receiving documents to continue</div>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <UploadZone label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf"
-                                    uploaded={bingoUploaded} onUpload={() => setBingoUploaded(true)} />
-                                <UploadZone label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf"
-                                    uploaded={poUploaded} onUpload={() => setPoUploaded(true)} />
+                        <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                                <div className="text-[12px] font-bold text-foreground">DOE-2847 · Warehouse Documents</div>
+                                <div className="text-[10px] text-muted-foreground">Attach receiving documents to continue</div>
                             </div>
                         </div>
                     )}
 
-                    {/* Uploaded documents — side by side when both available */}
-                    {(bingoUploaded || poUploaded) && (
-                        <div className={bothUploaded ? 'grid grid-cols-2 gap-3' : undefined}>
-                            {bingoUploaded && (
-                                <UploadedFileCard label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf">
-                                    <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
-                                    <BingoGrid />
-                                </UploadedFileCard>
-                            )}
-                            {poUploaded && (
-                                <UploadedFileCard label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf">
-                                    <PODocument />
-                                </UploadedFileCard>
-                            )}
-                        </div>
-                    )}
+                    {/* Always-2-column grid — each column switches independently */}
+                    <div className="grid grid-cols-2 gap-3">
+                        {/* Left: Bingo Sheet */}
+                        {bingoUploaded ? (
+                            <UploadedFileCard label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf">
+                                <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
+                                <BingoGrid />
+                            </UploadedFileCard>
+                        ) : (
+                            <UploadZone label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf"
+                                uploaded={bingoUploaded} onUpload={() => setBingoUploaded(true)} />
+                        )}
+                        {/* Right: Purchase Order */}
+                        {poUploaded ? (
+                            <UploadedFileCard label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf">
+                                <PODocument />
+                            </UploadedFileCard>
+                        ) : (
+                            <UploadZone label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf"
+                                uploaded={poUploaded} onUpload={() => setPoUploaded(true)} />
+                        )}
+                    </div>
 
                     {/* Notes */}
                     {bothUploaded && !coreUpdated && (
