@@ -11,21 +11,120 @@
  *   → Send to Nancy → Dialog (editable From, To Nancy, pre-filled message) → send → nextStep()
  */
 
-import { useState, Fragment } from 'react'
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
     CheckCircle2, FileText, Mail, Send, Building2, Sparkles,
+    Bell, AlertTriangle, Clock, DollarSign, ChevronRight,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
-import BFIDashboardScene from './BFIDashboardScene'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DASHBOARD_NOTIFICATION = {
+const NOTIF = {
     title: 'CPR approved · Final quote ready · DOE-2847',
     desc: 'Lauren DeMarco completed CPR reconciliation — Carpenters −5h, OT −2h · Total −$2,340 · Pending: send final quote to Herman Miller',
     cta: 'Review & send final quote to Nancy →',
+}
+
+const STAT_CARDS = [
+    { icon: FileText,      label: 'Active Agency Fees',  value: '7',       color: 'text-foreground' },
+    { icon: AlertTriangle, label: 'CPR Pending',          value: '2',       color: 'text-warning' },
+    { icon: Clock,         label: 'Invoices Awaited',     value: '4',       color: 'text-muted-foreground' },
+    { icon: DollarSign,    label: 'Agency Fee (MTD)',      value: '$48,200', color: 'text-success' },
+]
+
+const QUEUE_ORDERS = [
+    { id: 'DOE-2847', client: 'NYC Dept. of Education', status: 'CPR Approved',      badge: 'success',     detail: 'Invoice request pending → Nancy Rodriguez' },
+    { id: 'MTA-1203', client: 'MTA Headquarters',       status: 'Fee Verification',   badge: 'warning',     detail: 'Patricia reviewing T-code discrepancy' },
+    { id: 'NYCHA-88', client: 'NYCHA Brooklyn',         status: 'CPR Pending',        badge: 'warning',     detail: 'Carpenters 8h discrepancy · OT mismatch' },
+    { id: 'DSNY-441', client: 'Dept. of Sanitation',   status: 'Invoice Received',   badge: 'muted',       detail: 'Herman Miller invoice under review' },
+    { id: 'HPD-2201', client: 'HPD Housing',            status: 'Quote Validated',    badge: 'muted',       detail: 'SIF confirmed · Awaiting PO' },
+]
+
+const BADGE: Record<string, string> = {
+    success: 'bg-success/10 text-success border border-success/20',
+    warning: 'bg-warning/10 text-warning border border-warning/20',
+    muted:   'bg-muted text-muted-foreground border border-border',
+}
+
+// ─── Agency Fee Funnel Dashboard ───────────────────────────────────────────────
+
+function AgencyFeeFunnel({ onNotifClick }: { onNotifClick: () => void }) {
+    const { isPaused } = useDemo()
+    const isPausedRef  = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+
+    const [showNotif, setShowNotif] = useState(false)
+
+    const pauseAware = useCallback((fn: () => void, delay: number) => {
+        let elapsed = 0
+        const interval = setInterval(() => {
+            if (!isPausedRef.current) elapsed += 100
+            if (elapsed >= delay) { clearInterval(interval); fn() }
+        }, 100)
+        return () => clearInterval(interval)
+    }, [])
+
+    useEffect(() => pauseAware(() => setShowNotif(true), 900), [pauseAware])
+
+    return (
+        <div className="space-y-4">
+            {/* Notification */}
+            {showNotif && (
+                <button
+                    onClick={onNotifClick}
+                    className="w-full text-left flex items-start gap-3 p-4 bg-ai/5 border border-ai/30 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300 hover:bg-ai/10 transition-colors group"
+                >
+                    <Bell className="h-4 w-4 text-ai shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-black text-ai uppercase tracking-wider">{NOTIF.title}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{NOTIF.desc}</p>
+                        <p className="text-[11px] font-bold text-ai mt-2 group-hover:underline">{NOTIF.cta}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-ai shrink-0 mt-0.5 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+            )}
+
+            {/* Stat cards */}
+            <div className="grid grid-cols-4 gap-3">
+                {STAT_CARDS.map(card => (
+                    <div key={card.label} className="bg-card border border-border rounded-2xl px-4 py-3">
+                        <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                            <card.icon className="h-3.5 w-3.5" />
+                            <span className="text-[10px] font-medium">{card.label}</span>
+                        </div>
+                        <p className={`text-xl font-black ${card.color}`}>{card.value}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Order queue */}
+            <div className="bg-card border border-border rounded-2xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-border">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Agency Fee Queue · CoNY Orders</p>
+                </div>
+                <div className="divide-y divide-border/60">
+                    {QUEUE_ORDERS.map(order => (
+                        <div key={order.id} className={`flex items-center gap-4 px-5 py-3 ${order.id === 'DOE-2847' ? 'bg-success/5' : ''}`}>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[12px] font-bold text-foreground">{order.id}</span>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${BADGE[order.badge]}`}>{order.status}</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">{order.client}</p>
+                                <p className="text-[10px] text-muted-foreground/70 mt-0.5">{order.detail}</p>
+                            </div>
+                            {order.id === 'DOE-2847' && (
+                                <ChevronRight className="h-4 w-4 text-success shrink-0" />
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
 }
 
 const QUOTE_LINES = [
@@ -193,12 +292,7 @@ export default function MichaelApprovalScene() {
     const [sent, setSent] = useState(false)
 
     if (phase === 'dashboard') {
-        return (
-            <BFIDashboardScene
-                notificationConfig={DASHBOARD_NOTIFICATION}
-                onNavigate={() => setPhase('detail')}
-            />
-        )
+        return <AgencyFeeFunnel onNotifClick={() => setPhase('detail')} />
     }
 
     return (

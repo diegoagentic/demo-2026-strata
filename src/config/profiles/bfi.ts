@@ -113,7 +113,7 @@ export const BFI_STEPS: DemoStep[] = [
         title: 'Manager Review & Invoice Request',
         description: 'Michael Chen (Lauren\'s manager) receives the CPR approval from Lauren, reviews the final labor quote ($6,920 after −$2,340 adjustment), and sends the final cotización to Nancy Rodriguez (Herman Miller invoice processor) requesting the invoice — without touching CORE.',
         app: 'bfi-agency-fee',
-        role: 'Account Manager',
+        role: 'BFI Manager',
     },
     {
         id: 'a1.4',

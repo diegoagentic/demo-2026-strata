@@ -89,6 +89,11 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'CoNY Account Manager',
         photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face',
     },
+    'BFI Manager': {
+        name: 'Michael C.',
+        role: 'Account Manager · BFI',
+        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
+    },
     'BFI Project Manager': {
         name: 'Walter G.',
         role: 'CoNY Project Manager',
@@ -120,6 +125,7 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
         if (role === 'Finance / AR')         return 'BFI Finance';
         if (role === 'Designer')             return 'BFI Designer';
         if (role === 'Receiving Coordinator') return 'BFI Receiving';
+        if (role === 'BFI Manager')          return 'BFI Manager';
         return 'BFI Account Manager';
     }
     if (role === 'Expert') return 'Expert';
