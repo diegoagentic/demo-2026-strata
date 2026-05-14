@@ -481,10 +481,12 @@ export default function BFIProcessKanban({
                             return (
                                 <div key={c.id} className="space-y-3">
                                     {/* Column header */}
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className={`text-sm font-semibold ${c.color}`}>{c.label}</span>
-                                        <span className="text-xs font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md">{count}</span>
-                                        <button className="ml-auto p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options">
+                                    <div className="flex items-center justify-between mb-1 px-1">
+                                        <h4 className="font-medium text-foreground flex items-center gap-2">
+                                            {c.label}
+                                            <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full">{count}</span>
+                                        </h4>
+                                        <button className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options">
                                             <MoreHorizontal className="h-4 w-4" />
                                         </button>
                                     </div>
