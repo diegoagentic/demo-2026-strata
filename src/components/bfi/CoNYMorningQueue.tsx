@@ -34,13 +34,6 @@ const INGEST_LINES = [
     { icon: AlertTriangle,text: 'CPR discrepancy detected · Carpenters −5h · OT −2h · −$2,340', color: 'text-warning' },
 ]
 
-const QUEUE_TABS = [
-    { label: 'All',             count: 4 },
-    { label: 'Needs Attention', count: 1 },
-    { label: 'In Progress',     count: 2 },
-    { label: 'Done',            count: 1 },
-]
-
 const NOTIFY_MESSAGE = `Hi Robert — SIF for DOE-2847 has been ingested and validated. CPR discrepancy detected: Carpenters −5h, OT −2h (−$2,340). Quote Q-2026-0089 is being processed. We'll follow up shortly with confirmation.
 
 — Lauren DeMarco, BFI Furniture`
@@ -55,7 +48,6 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isSendOpen, setIsSendOpen]   = useState(false)
     const [sendStep, setSendStep]       = useState<'compose' | 'sent'>('compose')
-    const [activeTab, setActiveTab]     = useState(0)
 
     const pauseAware = useCallback((fn: () => void, delay: number) => {
         const start = Date.now()
@@ -115,40 +107,8 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
 
     const showDoe = queueState === 'ready'
 
-    // Map active tab index to visible kanban column indices
-    // 0=All, 1=Needs Attention (col 0), 2=In Progress (cols 1,2), 3=Done (col 4)
-    const TAB_FILTER: Record<number, number[] | undefined> = {
-        0: undefined,
-        1: [0],
-        2: [1, 2],
-        3: [4],
-    }
-    const filterColIdxs = TAB_FILTER[activeTab]
-
     return (
         <div className="space-y-4">
-
-            {/* ── Tab filters ── */}
-            <div className="flex items-center gap-1 flex-wrap">
-                {QUEUE_TABS.map((tab, i) => (
-                    <button
-                        key={tab.label}
-                        onClick={() => setActiveTab(i)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                            activeTab === i
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                        }`}
-                    >
-                        {tab.label}
-                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
-                            activeTab === i ? 'bg-primary-foreground/20' : 'bg-card'
-                        }`}>
-                            {tab.count}
-                        </span>
-                    </button>
-                ))}
-            </div>
 
             {/* ── Notification panel ── */}
             {(queueState === 'notification' || queueState === 'ingesting' || queueState === 'ready') && (
@@ -224,7 +184,6 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                 showDoe={showDoe}
                 animateDoe={true}
                 onReviewDoe={queueState === 'ready' ? handleReviewOrder : undefined}
-                filterColIdxs={filterColIdxs}
             />
 
             <p className="text-[11px] text-muted-foreground text-center">
