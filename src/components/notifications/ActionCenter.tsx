@@ -180,6 +180,7 @@ export default function ActionCenter() {
         setTimeout(() => {
             setA11IngestState('ready');
             window.dispatchEvent(new CustomEvent('bfi:ingest'));
+            setTimeout(() => setA11PanelClosed(true), 800);
         }, 2300);
     };
 
