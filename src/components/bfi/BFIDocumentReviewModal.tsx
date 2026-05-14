@@ -521,7 +521,7 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
 
 type UploadState = 'idle' | 'uploading' | 'detected'
 
-function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceUpload?: boolean; michaelMode?: boolean; onValidate?: () => void }) {
+function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boolean; onValidate?: () => void }) {
     const [lightbox, setLightbox] = useState<{ path: string; name: string } | null>(null)
     const [uploadState,        setUploadState]        = useState<UploadState>('idle')
     const [progress,           setProgress]           = useState(0)
@@ -882,8 +882,10 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
     const [approved, setApproved] = useState<Set<string>>(
         (michaelMode || invoiceUpload) ? new Set(diffLines.map(l => l.id)) : new Set()
     )
-    const [sent, setSent]         = useState(false)
+    const [sent, setSent]             = useState(false)
     const [showDialog, setShowDialog] = useState(false)
+    const [showReject, setShowReject] = useState(false)
+    const [rejectSent, setRejectSent] = useState(false)
     // invoiceUpload mode starts on attachments tab
     const [rightTab, setRightTab] = useState<'review' | 'attachments'>(invoiceUpload ? 'attachments' : 'review')
 
@@ -1001,24 +1003,96 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
                         {approved.size}/{diffLines.length} lines approved
                     </div>
                 )}
-                <button
-                    onClick={allApproved ? (michaelMode ? () => onValidate?.() : () => setShowDialog(true)) : undefined}
-                    disabled={!allApproved}
-                    className={`w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
-                        allApproved
-                            ? 'bg-ai text-white hover:opacity-90 cursor-pointer'
-                            : 'bg-muted text-muted-foreground cursor-not-allowed opacity-40'
-                    }`}
-                >
-                    {michaelMode
-                        ? 'Send Final Quote to Nancy →'
-                        : (sent ? '✓ CORE Updated & Notified' : allApproved ? 'Update CORE & Notify →' : 'Approve lines to continue')
-                    }
-                </button>
+                <div className={michaelMode ? 'flex gap-2' : ''}>
+                    {michaelMode && (
+                        <button
+                            onClick={() => setShowReject(true)}
+                            className="shrink-0 px-4 py-2.5 text-[11px] font-black rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all uppercase tracking-widest"
+                        >
+                            Return
+                        </button>
+                    )}
+                    <button
+                        onClick={allApproved ? (michaelMode ? () => onValidate?.() : () => setShowDialog(true)) : undefined}
+                        disabled={!allApproved}
+                        className={`flex-1 py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
+                            allApproved
+                                ? 'bg-ai text-white hover:opacity-90 cursor-pointer'
+                                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-40'
+                        }`}
+                    >
+                        {michaelMode
+                            ? 'Send Final Quote →'
+                            : (sent ? '✓ CORE Updated & Notified' : allApproved ? 'Update CORE & Notify →' : 'Approve lines to continue')
+                        }
+                    </button>
+                </div>
             </div>
             )}
 
             {!michaelMode && <CPRNotifyDialog isOpen={showDialog} onSent={handleDialogSent} />}
+
+            {/* Michael reject dialog */}
+            <Transition show={showReject} as={Fragment}>
+                <Dialog as="div" className="relative z-[500]" onClose={() => setShowReject(false)}>
+                    <TransitionChild as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                        leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+                    >
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+                    </TransitionChild>
+                    <div className="fixed inset-0 flex items-center justify-center p-6">
+                        <TransitionChild as={Fragment}
+                            enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
+                            leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                        >
+                            <DialogPanel className="w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl overflow-hidden">
+                                <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border bg-muted/30">
+                                    <div className="h-8 w-8 rounded-xl bg-warning/10 flex items-center justify-center">
+                                        <Mail className="h-4 w-4 text-warning" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[13px] font-bold text-foreground">Return to Lauren</p>
+                                        <p className="text-[11px] text-muted-foreground">DOE-2847 · Add a note for Lauren DeMarco</p>
+                                    </div>
+                                    <button onClick={() => setShowReject(false)} className="ml-auto p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                <div className="px-5 py-4 space-y-3">
+                                    {[
+                                        { label: 'From', value: 'michael.chen@bfifurniture.com' },
+                                        { label: 'To',   value: 'lauren.demarco@bfifurniture.com' },
+                                    ].map(r => (
+                                        <div key={r.label} className="flex items-start gap-2 text-[11px]">
+                                            <span className="text-muted-foreground w-10 shrink-0">{r.label}</span>
+                                            <span className="font-medium text-foreground">{r.value}</span>
+                                        </div>
+                                    ))}
+                                    <textarea
+                                        defaultValue={`Hi Lauren,\n\nReturning DOE-2847 for review before I sign off on the final quote.\n\nPlease double-check the adjusted labor hours against the OmniQuote invoice and confirm before I forward to the client.\n\n— Michael C.\n  BFI Furniture · Account Manager`}
+                                        rows={7}
+                                        className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    />
+                                </div>
+                                <div className="px-5 py-4 border-t border-border flex gap-3">
+                                    <button onClick={() => setShowReject(false)} className="text-[12px] font-bold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                                    <button
+                                        onClick={() => { setRejectSent(true); setTimeout(() => { setShowReject(false); setRejectSent(false) }, 900) }}
+                                        disabled={rejectSent}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-warning/10 text-warning border border-warning/30 text-[12px] font-black hover:bg-warning/20 transition-all uppercase tracking-widest disabled:opacity-60"
+                                    >
+                                        {rejectSent
+                                            ? <><CheckCircle2 className="h-3.5 w-3.5" /> Returned to Lauren</>
+                                            : <><Send className="h-3.5 w-3.5" /> Return →</>
+                                        }
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </Dialog>
+            </Transition>
         </div>
     )
 }
