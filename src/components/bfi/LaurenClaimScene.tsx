@@ -352,7 +352,7 @@ export default function LaurenClaimScene() {
         return () => window.removeEventListener('bfi:claim-open', handler)
     }, [])
 
-    const [orderExpanded, setOrderExpanded] = useState(false)
+    const [orderExpanded, setOrderExpanded] = useState(true)
     const [proofAttached,  setProofAttached]  = useState(false)
     const [showClaim,      setShowClaim]      = useState(false)
 
@@ -416,7 +416,7 @@ export default function LaurenClaimScene() {
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-destructive text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm mt-auto"
                     >
                         <AlertTriangle className="h-4 w-4" />
-                        {canSendClaim ? 'File Claim →' : 'Attach proof to continue'}
+                        {canSendClaim ? 'Claim →' : 'Attach proof to continue'}
                     </button>
                 </div>
             </div>

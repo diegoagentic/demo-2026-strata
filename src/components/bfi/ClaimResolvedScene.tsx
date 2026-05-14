@@ -189,10 +189,10 @@ function WalterNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () =>
                     enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                <div className="fixed inset-0 flex items-center justify-center p-6">
                     <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
@@ -334,7 +334,7 @@ export default function ClaimResolvedScene() {
     }
 
     return (
-        <div className="space-y-4 animate-in fade-in duration-300">
+        <div className="space-y-3 animate-in fade-in duration-300">
 
             {/* ── Resolved banner ── */}
             <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-success/30 bg-success/5">
@@ -345,64 +345,70 @@ export default function ClaimResolvedScene() {
                 </div>
             </div>
 
-            {/* ── Floor Plan card ── */}
-            <div className="border border-border rounded-xl bg-card overflow-hidden">
-                <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border">
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <div className="flex-1">
-                        <div className="text-[10px] font-bold text-foreground">DOE-2847 · Zone A·B·C Installation Layout</div>
-                        <div className="text-[9px] text-muted-foreground">Floor plan · 3 zones · May 14–21 delivery window</div>
+            {/* ── 2-column: Floor Plan | Work Order + CTA ── */}
+            <div className="grid grid-cols-2 gap-3">
+
+                {/* Left: Floor Plan */}
+                <div className="border border-border rounded-xl bg-card overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border">
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-bold text-foreground truncate">DOE-2847 · Zone A·B·C Layout</div>
+                            <div className="text-[9px] text-muted-foreground">Floor plan · 3 zones · May 14–21</div>
+                        </div>
+                        <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">Confirmed</span>
                     </div>
-                    <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">Confirmed</span>
+                    <div className="px-3.5 py-3 space-y-2">
+                        <div className="rounded-lg border border-border overflow-hidden bg-white dark:bg-zinc-950 p-2">
+                            <div className="flex items-center gap-2 mb-2 px-1">
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">52 Chambers St · Floor 12</span>
+                                <span className="ml-auto text-[9px] text-success font-medium">OCR ✓</span>
+                            </div>
+                            <FloorPlanSVG />
+                            <div className="flex gap-3 mt-2 px-1 flex-wrap">
+                                {[
+                                    { color: 'bg-[#e4e4e7]', label: 'Zone A ×24' },
+                                    { color: 'bg-[#e4e4e7]', label: 'Zone B ×12' },
+                                    { color: 'bg-[#e4e4e7]', label: 'Zone C ×6' },
+                                ].map(l => (
+                                    <div key={l.label} className="flex items-center gap-1 text-[8px] text-muted-foreground">
+                                        <div className={`h-2 w-2 rounded-sm ${l.color} border border-zinc-400`} />
+                                        {l.label}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <DownloadPrintBar filename="DOE-2847-ZoneLayout.pdf" />
+                    </div>
                 </div>
-                <div className="px-3.5 py-3 space-y-2">
-                    <div className="rounded-lg border border-border overflow-hidden bg-white dark:bg-zinc-950 p-2">
-                        <div className="flex items-center gap-2 mb-2 px-1">
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Architectural Layout · 52 Chambers St · Floor 12</span>
-                            <span className="ml-auto text-[9px] text-success font-medium">OCR ✓</span>
+
+                {/* Right: CORE Work Order + CTA */}
+                <div className="flex flex-col gap-3">
+                    <div className="border border-border rounded-xl bg-card overflow-hidden">
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border">
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[10px] font-bold text-foreground truncate">CORE Work Order · WO-2026-0089</div>
+                                <div className="text-[9px] text-muted-foreground">DOE-2847 · replacement ETA May 18</div>
+                            </div>
+                            <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">Updated</span>
                         </div>
-                        <FloorPlanSVG />
-                        <div className="flex gap-4 mt-2 px-1">
-                            {[
-                                { color: 'bg-[#e4e4e7]', label: 'Zone A — Workstations ×24' },
-                                { color: 'bg-[#e4e4e7]', label: 'Zone B — Lounge ×12' },
-                                { color: 'bg-[#e4e4e7]', label: 'Zone C — Filing ×6' },
-                            ].map(l => (
-                                <div key={l.label} className="flex items-center gap-1 text-[8px] text-muted-foreground">
-                                    <div className={`h-2 w-2 rounded-sm ${l.color} border border-zinc-400`} />
-                                    {l.label}
-                                </div>
-                            ))}
+                        <div className="px-3.5 py-3">
+                            <CoreWorkOrder />
+                            <DownloadPrintBar filename="DOE-2847-WorkOrder.pdf" />
                         </div>
                     </div>
-                    <DownloadPrintBar filename="DOE-2847-ZoneLayout.pdf" />
+
+                    {/* Notify Walter CTA */}
+                    <button
+                        onClick={() => setShowDialog(true)}
+                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all shadow-sm mt-auto"
+                    >
+                        <Send className="h-4 w-4" />
+                        Notify Walter →
+                    </button>
                 </div>
             </div>
-
-            {/* ── CORE Work Order card ── */}
-            <div className="border border-border rounded-xl bg-card overflow-hidden">
-                <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border">
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <div className="flex-1">
-                        <div className="text-[10px] font-bold text-foreground">CORE Work Order · WO-2026-0089</div>
-                        <div className="text-[9px] text-muted-foreground">DOE-2847 · all line items · replacement ETA May 18</div>
-                    </div>
-                    <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">Updated</span>
-                </div>
-                <div className="px-3.5 py-3">
-                    <CoreWorkOrder />
-                    <DownloadPrintBar filename="DOE-2847-WorkOrder.pdf" />
-                </div>
-            </div>
-
-            {/* ── Notify Walter CTA ── */}
-            <button
-                onClick={() => setShowDialog(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all shadow-sm"
-            >
-                <Send className="h-4 w-4" />
-                Notify Walter — approve scheduling →
-            </button>
 
             <WalterNotifyDialog
                 isOpen={showDialog}

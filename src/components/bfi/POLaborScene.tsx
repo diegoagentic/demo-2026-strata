@@ -129,7 +129,7 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                     <div className="flex flex-col gap-1.5">
                                         {[
                                             { name: 'DOE-2847-SIF-updated.pdf',  label: 'Updated SIF' },
-                                            { name: 'Q-2026-0089-OmniQuote.pdf', label: 'OmniQuote'  },
+                                            { name: 'OmniQuote-DOE-2847.pdf', label: 'OmniQuote'  },
                                         ].map(a => (
                                             <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
                                                 <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

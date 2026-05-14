@@ -320,18 +320,23 @@ const FIELDS_EXTRACT: ReviewField[] = [
 
 const FIELDS_LABOR: ReviewField[] = [
     // ── Document Header ──────────────────────────────────────────────────────
-    { id: 'lh1', name: 'Quote #',    category: 'header', extractedValue: 'Q-2026-0089',            status: 'valid' },
+    { id: 'lh1', name: 'PO #',       category: 'header', extractedValue: 'DOE-2847',                status: 'valid' },
     { id: 'lh2', name: 'Contract',   category: 'header', extractedValue: 'CoNY · City of New York', status: 'valid' },
     { id: 'lh3', name: 'Agency',     category: 'header', extractedValue: 'NYC Dept. of Education',  status: 'valid' },
     { id: 'lh4', name: 'PO Date',    category: 'header', extractedValue: 'May 6, 2026',             status: 'valid' },
-    // ── Labor (from SIF) ─────────────────────────────────────────────────────
+    // ── Labor (from SIF) — IDs match SIF_GROUPS fieldId (f1, f2) so doc updates live
     {
-        id: 'l1', name: 'Carpenters labor', category: 'labor',
-        extractedValue: '48h', expectedValue: '45h', ovniqSuggestion: '45h',
+        id: 'f1', name: 'Carpenters labor', category: 'labor',
+        extractedValue: '50h', expectedValue: '45h', ovniqSuggestion: '45h',
         status: 'inconsistent',
-        reason: 'PO shows 48h but OmniQuote confirmed 45h in Quote validation. Accept 45h before CORE entry — consistent with CPR package.',
+        reason: 'PO shows 50h but OmniQuote confirmed 45h in Quote validation. Accept 45h before CORE entry — consistent with CPR package.',
     },
-    { id: 'l2', name: 'Overtime labor',       category: 'labor', extractedValue: '6h',  status: 'valid' },
+    {
+        id: 'f2', name: 'Overtime labor', category: 'labor',
+        extractedValue: '8h', expectedValue: '6h', ovniqSuggestion: '6h',
+        status: 'inconsistent',
+        reason: 'PO shows 8h overtime but OmniQuote confirmed 6h per T-code applied. Accept 6h — consistent with CPR package.',
+    },
     { id: 'l3', name: 'Teamsters',            category: 'labor', extractedValue: '24h', status: 'valid' },
     // ── Pricing & Delivery ────────────────────────────────────────────────────
     { id: 'l4', name: 'PO amount',        category: 'logistics', extractedValue: '$235,560',         status: 'valid' },

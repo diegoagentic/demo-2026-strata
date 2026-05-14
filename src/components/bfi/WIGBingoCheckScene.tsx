@@ -215,11 +215,11 @@ function UploadZone({ label, filename, uploaded, onUpload }: {
     if (uploaded) return null
     if (uploading) {
         return (
-            <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-border bg-muted/30 min-h-[100px]">
-                <Loader2 className="h-4 w-4 text-muted-foreground animate-spin shrink-0" />
-                <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-medium text-muted-foreground">Uploading {label}…</div>
-                    <div className="mt-1.5 h-1 rounded-full bg-border overflow-hidden">
+            <div className="flex flex-col items-center justify-center gap-2.5 px-3.5 py-3 rounded-xl border border-border bg-muted/30 h-full min-h-[160px]">
+                <Loader2 className="h-5 w-5 text-muted-foreground animate-spin shrink-0" />
+                <div className="w-full max-w-[140px] space-y-1.5">
+                    <div className="text-[10px] font-medium text-muted-foreground text-center">Uploading {label}…</div>
+                    <div className="h-1 rounded-full bg-border overflow-hidden">
                         <div className="h-full bg-primary rounded-full" style={{ transition: 'width 1.5s ease-in-out', width: '100%' }} />
                     </div>
                 </div>
@@ -228,13 +228,13 @@ function UploadZone({ label, filename, uploaded, onUpload }: {
     }
     return (
         <button onClick={handleClick}
-            className="w-full h-full min-h-[100px] flex flex-col items-center justify-center gap-2 px-3.5 py-6 rounded-xl border border-dashed border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all group text-center">
-            <div className="h-8 w-8 rounded-xl bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                <Upload className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            className="w-full h-full min-h-[160px] flex flex-col items-center justify-center gap-3 px-3.5 py-6 rounded-xl border-2 border-dashed border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all group text-center">
+            <div className="h-10 w-10 rounded-xl bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
-            <div>
-                <div className="text-[11px] font-bold text-muted-foreground group-hover:text-foreground transition-colors">{label}</div>
-                <div className="text-[9px] text-muted-foreground">Click to attach</div>
+            <div className="space-y-1">
+                <div className="text-[11px] font-bold text-foreground">{label}</div>
+                <div className="text-[9px] text-muted-foreground">Drag & drop or click to attach</div>
             </div>
         </button>
     )
@@ -460,7 +460,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                                 <BingoGrid />
                             </UploadedFileCard>
                         ) : (
-                            <UploadZone label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf"
+                            <UploadZone label="Bingo Sheet" filename="BD-2026-0412_BingoSheet.pdf"
                                 uploaded={bingoUploaded} onUpload={() => setBingoUploaded(true)} />
                         )}
                         {/* Right: Purchase Order */}
@@ -469,7 +469,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                                 <PODocument />
                             </UploadedFileCard>
                         ) : (
-                            <UploadZone label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf"
+                            <UploadZone label="Purchase Order" filename="DOE-2847-PO.pdf"
                                 uploaded={poUploaded} onUpload={() => setPoUploaded(true)} />
                         )}
                     </div>
