@@ -89,10 +89,11 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                     <div className="text-[12px] text-foreground leading-relaxed space-y-3">
                                         <p>Good morning,</p>
                                         <p>
-                                            Quote <span className="font-semibold">Q-2026-0089</span> for order{' '}
-                                            <span className="font-semibold">DOE-2847</span> has been validated against
-                                            the CoNY contract through OmniQuote. We are requesting that you issue the
-                                            Purchase Order based on the confirmed pricing below.
+                                            Please find attached our formal proposal for Purchase Order{' '}
+                                            <span className="font-semibold">DOE-2847</span>. Pricing has been
+                                            validated against the CoNY contract through OmniQuote (one correction
+                                            applied: Filing Units $8,100 → $7,560 per T-code) and the Workplace
+                                            labor schedule has been reviewed and confirmed.
                                         </p>
 
                                         {/* Order summary */}
@@ -115,9 +116,9 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                         </div>
 
                                         <p>
-                                            The OmniQuote-validated SIF and Workplace labor quote are attached for
-                                            your records. Please issue the PO at your earliest convenience so we can
-                                            confirm the delivery schedule and coordinate installation.
+                                            The updated SIF and OmniQuote validation are attached for your records.
+                                            Kindly confirm the Purchase Order at your earliest convenience so we can
+                                            finalize the delivery schedule and coordinate installation.
                                         </p>
                                         <p className="text-muted-foreground text-[11px]">
                                             — Lauren DeMarco<br />BFI Furniture · CoNY Account Manager
