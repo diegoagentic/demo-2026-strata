@@ -15,7 +15,7 @@ import {
     X, FileText, Truck, Package,
     ChevronDown, ChevronUp, CheckCircle2, Sparkles,
     Edit, Zap, Info, MapPin, Send, AlertCircle,
-    Download, Mail
+    Download, Mail, Upload, Loader2, Paperclip
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -31,6 +31,8 @@ interface BFIDocumentReviewModalProps {
     scenario?: 'match' | 'gap'  // for step='fee'
     /** Michael mode: pre-approves CPR lines, changes footer to send-to-Nancy */
     michaelMode?: boolean
+    /** Invoice upload mode: opens on Attachments tab, adds upload zone + Strata detection + forward to Patricia */
+    invoiceUpload?: boolean
 }
 
 interface ReviewField {
@@ -360,12 +362,227 @@ const CATEGORY_COLORS: Record<string, string> = {
     'Sign-In': 'bg-success/10 text-success border-success/20',
 }
 
-function AttachmentsPanel() {
+// ─── Patricia Dialog ──────────────────────────────────────────────────────────
+
+const PATRICIA_MESSAGE =
+`Hi Patricia,
+
+The OmniQuote approved invoice for DOE-2847 (NYC Dept. of Education) has been received and attached.
+
+Invoice details:
+  · Vendor: Herman Miller
+  · Order: Q-2026-0089
+  · Amount: $6,920 (CPR reconciliation approved)
+  · OmniQuote status: Approved · May 6, 2026
+
+Please proceed with agency fee verification at your earliest convenience.
+
+— Lauren DeMarco
+  BFI Furniture · CoNY Account Manager`
+
+function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }) {
+    const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [message,   setMessage]   = useState(PATRICIA_MESSAGE)
+    const [sending,   setSending]   = useState(false)
+    const [sent,      setSent]      = useState(false)
+
+    const handleSend = () => {
+        setSending(true)
+        setTimeout(() => { setSending(false); setSent(true); setTimeout(() => onSent(), 900) }, 800)
+    }
+
+    const META_ROWS = [
+        { label: 'From', editable: true },
+        { label: 'To',   value: 'patricia.hayes@bfifurniture.com · Finance / AR' },
+        { label: 'CC',   value: 'michael.chen@bfifurniture.com', muted: true },
+        { label: 'Subj', value: 'OmniQuote Approved Invoice · DOE-2847 · Fee Verification' },
+    ]
+
+    return (
+        <Transition show={isOpen} as={Fragment}>
+            <Dialog onClose={() => {}} className="relative z-[400]">
+                <TransitionChild as={Fragment}
+                    enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                    leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+                >
+                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                </TransitionChild>
+                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                    <TransitionChild as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0 scale-95 translate-y-2" enterTo="opacity-100 scale-100 translate-y-0"
+                        leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                    >
+                        <DialogPanel className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl flex flex-col max-h-[88vh] border border-border overflow-hidden">
+                            {/* Header */}
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
+                                <div className="h-8 w-8 rounded-full bg-ai/10 flex items-center justify-center shrink-0">
+                                    <span className="text-[11px] font-black text-ai">ST</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] font-bold text-foreground">Fee Verification · DOE-2847</p>
+                                    <p className="text-[10px] text-muted-foreground">OmniQuote invoice attached · Strata AI</p>
+                                </div>
+                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                                {/* Invoice verified chip */}
+                                <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-success/30 bg-success/5">
+                                    <Paperclip className="h-3.5 w-3.5 text-success shrink-0" />
+                                    <span className="text-[11px] font-semibold text-foreground flex-1">invoice-OQ-DOE2847.pdf</span>
+                                    <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded">OmniQuote Approved</span>
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                </div>
+
+                                {/* Email metadata */}
+                                <div className="rounded-xl border border-border overflow-hidden text-[11px]">
+                                    {META_ROWS.map((row, i) => (
+                                        <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
+                                            <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
+                                            {row.editable ? (
+                                                <input value={fromEmail} onChange={e => setFromEmail(e.target.value)}
+                                                    className="flex-1 bg-transparent outline-none text-foreground border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors" />
+                                            ) : (
+                                                <span className={row.muted ? 'text-muted-foreground italic' : 'text-foreground'}>{row.value}</span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Editable message */}
+                                <textarea value={message} onChange={e => setMessage(e.target.value)} rows={12}
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono" />
+
+                                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OVNIQ] }]} />
+                            </div>
+
+                            <div className="px-5 py-4 border-t border-border shrink-0">
+                                {sent ? (
+                                    <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-success/10 border border-success/20">
+                                        <CheckCircle2 className="h-4 w-4 text-success" />
+                                        <span className="text-[12px] font-bold text-success">Sent to Patricia · Fee verification initiated</span>
+                                    </div>
+                                ) : (
+                                    <button onClick={handleSend} disabled={sending}
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-ai text-white text-[12px] font-bold hover:opacity-90 transition-all disabled:opacity-60">
+                                        <Send className="h-3.5 w-3.5" />
+                                        {sending ? 'Sending…' : 'Send to Patricia →'}
+                                    </button>
+                                )}
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </Transition>
+    )
+}
+
+// ─── Attachments Panel ────────────────────────────────────────────────────────
+
+type UploadState = 'idle' | 'uploading' | 'detected'
+
+function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boolean; onValidate?: () => void }) {
     const [lightbox, setLightbox] = useState<{ path: string; name: string; rotate: boolean } | null>(null)
+    const [uploadState,        setUploadState]        = useState<UploadState>('idle')
+    const [progress,           setProgress]           = useState(0)
+    const [showPatriciaDialog, setShowPatriciaDialog] = useState(false)
+
+    const simulateUpload = () => {
+        if (uploadState !== 'idle') return
+        setUploadState('uploading')
+        setProgress(0)
+        const start = Date.now()
+        const tick = setInterval(() => {
+            const p = Math.min(100, Math.round(((Date.now() - start) / 1400) * 100))
+            setProgress(p)
+            if (p >= 100) { clearInterval(tick); setUploadState('detected') }
+        }, 40)
+    }
 
     return (
         <>
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+
+                {/* ── Invoice upload zone (invoiceUpload mode only) ── */}
+                {invoiceUpload && (
+                    <div className="space-y-3">
+                        {uploadState === 'idle' && (
+                            <button
+                                onClick={simulateUpload}
+                                className="w-full border-2 border-dashed border-ai/30 rounded-2xl p-5 flex flex-col items-center gap-2 hover:border-ai/60 hover:bg-ai/5 transition-all group"
+                            >
+                                <Upload className="h-6 w-6 text-ai/60 group-hover:text-ai transition-colors" />
+                                <p className="text-[12px] font-bold text-foreground">Drop OmniQuote invoice PDF · or click to upload</p>
+                                <p className="text-[10px] text-muted-foreground">invoice-OQ-DOE2847.pdf · Accepted: PDF · Max 10MB</p>
+                            </button>
+                        )}
+
+                        {uploadState === 'uploading' && (
+                            <div className="rounded-2xl border border-border bg-card px-4 py-4 space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3.5 w-3.5 text-ai animate-spin shrink-0" />
+                                    <span className="text-[11px] font-bold text-foreground">Uploading invoice-OQ-DOE2847.pdf…</span>
+                                    <span className="ml-auto text-[10px] font-mono text-muted-foreground">{progress}%</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                    <div className="h-full bg-ai rounded-full transition-all duration-75" style={{ width: `${progress}%` }} />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">Strata AI scanning document…</p>
+                            </div>
+                        )}
+
+                        {uploadState === 'detected' && (
+                            <div className="rounded-2xl border-2 border-ai/50 bg-ai/8 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                {/* Detection header */}
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="h-5 w-5 text-ai shrink-0" />
+                                    <span className="text-[14px] font-black text-ai">Strata AI · Invoice Detected</span>
+                                    <CheckCircle2 className="h-5 w-5 text-success ml-auto shrink-0" />
+                                </div>
+
+                                {/* Detection detail */}
+                                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-ai/20 px-3 py-3 space-y-1.5">
+                                    {[
+                                        ['Document type', 'OmniQuote Invoice · APPROVED'],
+                                        ['Order',         'Q-2026-0089 · DOE-2847'],
+                                        ['Vendor',        'Herman Miller'],
+                                        ['Amount',        '$6,920 · Matches CPR reconciliation ✓'],
+                                        ['Date',          'May 6, 2026'],
+                                    ].map(([label, value]) => (
+                                        <div key={label} className="flex gap-2 text-[11px]">
+                                            <span className="text-muted-foreground w-24 shrink-0">{label}</span>
+                                            <span className="font-semibold text-foreground">{value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* File chip */}
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-success/30 bg-success/5">
+                                    <Paperclip className="h-3.5 w-3.5 text-success shrink-0" />
+                                    <span className="text-[11px] font-medium text-foreground flex-1">invoice-OQ-DOE2847.pdf · 284 KB</span>
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                </div>
+
+                                {/* CTA */}
+                                <button
+                                    onClick={() => setShowPatriciaDialog(true)}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-ai text-white text-[12px] font-bold hover:opacity-90 transition-all"
+                                >
+                                    <Send className="h-3.5 w-3.5" />
+                                    Forward to Patricia · Fee Verification →
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Divider */}
+                        {uploadState !== 'idle' && (
+                            <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-center">Existing attachments</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Existing files list */}
                 {BFI_ATTACHMENTS.map(file => (
                     <div key={file.path} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border bg-card hover:border-border/80 transition-colors">
                         <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -385,49 +602,29 @@ function AttachmentsPanel() {
 
             {/* Lightbox */}
             {lightbox && (
-                <div
-                    className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-200"
-                    onClick={() => setLightbox(null)}
-                >
-                    <div
-                        className="relative bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+                <div className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setLightbox(null)}>
+                    <div className="relative bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
                         style={{ width: lightbox.rotate ? 640 : 560, maxHeight: '90vh' }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {/* Header */}
+                        onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-800 shrink-0">
                             <span className="text-[10px] font-bold text-zinc-300 truncate">{lightbox.name}</span>
                             <button onClick={() => setLightbox(null)} className="text-zinc-400 hover:text-white text-lg leading-none ml-4 transition-colors">×</button>
                         </div>
-
-                        {/* PDF — rotated files get a wrapper that corrects orientation */}
                         <div className="flex-1 overflow-hidden flex items-center justify-center bg-zinc-950" style={{ minHeight: lightbox.rotate ? 480 : 560 }}>
                             {lightbox.rotate ? (
                                 <div style={{ width: 480, height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                    <iframe
-                                        src={lightbox.path}
-                                        title={lightbox.name}
-                                        style={{
-                                            width: 600,
-                                            height: 480,
-                                            transform: 'rotate(90deg)',
-                                            transformOrigin: 'center',
-                                            border: 'none',
-                                            flexShrink: 0,
-                                        }}
-                                    />
+                                    <iframe src={lightbox.path} title={lightbox.name}
+                                        style={{ width: 600, height: 480, transform: 'rotate(90deg)', transformOrigin: 'center', border: 'none', flexShrink: 0 }} />
                                 </div>
                             ) : (
-                                <iframe
-                                    src={lightbox.path}
-                                    title={lightbox.name}
-                                    style={{ width: '100%', height: 560, border: 'none' }}
-                                />
+                                <iframe src={lightbox.path} title={lightbox.name} style={{ width: '100%', height: 560, border: 'none' }} />
                             )}
                         </div>
                     </div>
                 </div>
             )}
+
+            <PatriciaDialog isOpen={showPatriciaDialog} onSent={() => { setShowPatriciaDialog(false); onValidate?.() }} />
         </>
     )
 }
@@ -589,7 +786,7 @@ The SIF has been updated and the order is ready to proceed to fee verification. 
 
 // ─── CPR Review Panel ─────────────────────────────────────────────────────────
 
-function CPRReviewPanel({ onValidate, michaelMode }: { onValidate?: () => void; michaelMode?: boolean }) {
+function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload }: { onValidate?: () => void; michaelMode?: boolean; invoiceUpload?: boolean }) {
     const diffLines = CPR_LINES.filter(l => !l.ok)
     // Michael mode: lines arrive pre-approved (Lauren already signed off)
     const [approved, setApproved] = useState<Set<string>>(
@@ -597,7 +794,8 @@ function CPRReviewPanel({ onValidate, michaelMode }: { onValidate?: () => void; 
     )
     const [sent, setSent]         = useState(false)
     const [showDialog, setShowDialog] = useState(false)
-    const [rightTab, setRightTab] = useState<'review' | 'attachments'>('review')
+    // invoiceUpload mode starts on attachments tab
+    const [rightTab, setRightTab] = useState<'review' | 'attachments'>(invoiceUpload ? 'attachments' : 'review')
 
     const allApproved  = diffLines.every(l => approved.has(l.id))
     const totalImpact  = '-$2,340'
@@ -636,7 +834,7 @@ function CPRReviewPanel({ onValidate, michaelMode }: { onValidate?: () => void; 
             </div>
 
             {rightTab === 'attachments' ? (
-                <AttachmentsPanel />
+                <AttachmentsPanel invoiceUpload={invoiceUpload} onValidate={onValidate} />
             ) : (
             <div className="flex-1 overflow-y-auto">
                 {/* AI Banner */}
@@ -700,7 +898,7 @@ function CPRReviewPanel({ onValidate, michaelMode }: { onValidate?: () => void; 
             )}
 
             {/* Footer — only shown on CPR Review tab */}
-            {rightTab === 'review' && (
+            {rightTab === 'review' && !invoiceUpload && (
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
                 {!michaelMode && (
                     <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
@@ -1117,14 +1315,15 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
-function RightPanel({ step, scenario, onValidate, michaelMode }: {
+function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
     michaelMode?: boolean
+    invoiceUpload?: boolean
 }) {
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
-    if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} />
+    if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
     return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} />
 }
@@ -1488,7 +1687,7 @@ function BFIFieldReview({ step, scenario, onValidate }: {
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 export default function BFIDocumentReviewModal({
-    isOpen, onClose, step, onValidate, scenario, michaelMode
+    isOpen, onClose, step, onValidate, scenario, michaelMode, invoiceUpload
 }: BFIDocumentReviewModalProps) {
     const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>('sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
@@ -1657,7 +1856,7 @@ export default function BFIDocumentReviewModal({
 
                                     {/* Right: Contextual panel per step (2/5) */}
                                     <div className="col-span-2 flex flex-col min-h-0">
-                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} />
+                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} />
                                     </div>
 
                                 </div>

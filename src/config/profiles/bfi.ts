@@ -116,6 +116,15 @@ export const BFI_STEPS: DemoStep[] = [
         role: 'BFI Manager',
     },
     {
+        id: 'a1.3c',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
+        title: 'Invoice Upload & Fee Forward',
+        description: 'Lauren uploads the OmniQuote approved invoice to the CPR record. Strata AI detects it is the approved invoice for DOE-2847 ($6,920) and flags it prominently. Lauren forwards it to Patricia (Finance / AR) to proceed with agency fee verification.',
+        app: 'bfi-agency-fee',
+        role: 'Account Manager',
+    },
+    {
         id: 'a1.4',
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
@@ -192,6 +201,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.2f': { mode: 'interactive', userAction: 'Receive claim-resolved notification · review floor plan + work order · download/print · notify Walter to approve scheduling' },
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line-by-line · approve · open CORE update + stakeholder notification dialog · send' },
     'a1.3b': { mode: 'interactive', userAction: 'Michael receives Lauren\'s CPR notification · reviews final labor quote · sends cotización to Nancy (HM) requesting the invoice' },
+    'a1.3c': { mode: 'interactive', userAction: 'Upload OmniQuote approved invoice · Strata AI detects document · forward to Patricia (Finance/AR) for fee verification' },
     'a1.4': { mode: 'interactive', userAction: 'Patricia verifies the agency fee — toggle match/gap scenario · confirm or flag the $1,250 discrepancy' },
 };
 
@@ -266,6 +276,12 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Calculating total: $6,920 (−$2,340 from original quote)',
         'Drafting invoice request to Nancy Rodriguez · Herman Miller',
     ],
+    'a1.3c': [
+        'OmniQuote invoice received · invoice-OQ-DOE2847.pdf',
+        'Scanning document · OCR extraction in progress',
+        'Invoice type: OmniQuote · Status: APPROVED · Amount: $6,920',
+        'Invoice matches CPR reconciliation · ready to forward to Patricia',
+    ],
     'a1.4': [
         'Loading CoNY contract T-codes for DOE-2847',
         'Calculating expected agency fee at 18% per product line',
@@ -278,5 +294,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const BFI_SELF_INDICATED: string[] = [
     'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
-    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.4',
+    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
 ];
