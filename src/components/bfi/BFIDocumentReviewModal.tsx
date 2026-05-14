@@ -94,13 +94,14 @@ export function FloorPlanSVG() {
 
 // ─── Quote Document Tab ───────────────────────────────────────────────────────
 
-const QUOTE_LINE_ITEMS = [
-    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', tcode: '18%', sif: '$144,000', net: '$144,000' },
-    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', tcode: '18%', sif: '$84,000',  net: '$84,000'  },
-    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  tcode: '18%', sif: '$8,100',   net: '$7,560'   },
-]
 
-function QuoteDocumentTab() {
+function QuoteDocumentTab({ ovniqLines }: { ovniqLines: OvniqLine[] }) {
+    const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
+    const fmt = (n: number) => '$' + n.toLocaleString('en-US')
+    const sifTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.sifPrice), 0)
+    const adjTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.ovniq), 0)
+    const discountAmt = Math.round(adjTotal * 0.375)
+
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
@@ -134,19 +135,19 @@ function QuoteDocumentTab() {
                         ))}
                     </div>
 
-                    {/* Quote rows */}
+                    {/* Quote rows — driven by live ovniqLines */}
                     <div className="px-6 pb-4 space-y-0">
-                        {QUOTE_LINE_ITEMS.map((item) => {
-                            const corrected = item.sif !== item.net
+                        {ovniqLines.map((line) => {
+                            const corrected = line.sifPrice !== line.ovniq
                             return (
-                                <div key={item.code} className={`grid grid-cols-6 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
-                                    <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{item.code}</span>
-                                    <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{item.name} {item.qty}</span>
-                                    <span className="text-[10px] font-mono text-zinc-500">{item.qty}</span>
-                                    <span className="text-[10px] font-mono text-zinc-500">{item.tcode}</span>
-                                    <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{item.sif}</span>
+                                <div key={line.code ?? line.product} className={`grid grid-cols-6 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                    <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
+                                    <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
+                                    <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
+                                    <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
+                                    <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{line.sifPrice}</span>
                                     <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
-                                        {item.net}
+                                        {line.ovniq}
                                         {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
                                     </span>
                                 </div>
@@ -157,9 +158,9 @@ function QuoteDocumentTab() {
                     {/* Totals */}
                     <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
                         {[
-                            { label: 'SIF Total',      value: '$236,100', muted: true },
-                            { label: 'Adjusted Total', value: '$235,560', bold: true  },
-                            { label: 'Discount (−37.5% CoNY)', value: '−$88,335', accent: true },
+                            { label: 'SIF Total',               value: fmt(sifTotal),     muted: true  },
+                            { label: 'Adjusted Total',          value: fmt(adjTotal),     bold: true   },
+                            { label: 'Discount (−37.5% CoNY)', value: `−${fmt(discountAmt)}`, accent: true },
                         ].map(row => (
                             <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${row.bold ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''}`}>
                                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{row.label}</span>
@@ -1247,54 +1248,36 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
 
 // ─── Quote Review Panel ───────────────────────────────────────────────────────
 
-interface OvniqLine { product: string; sifPrice: string; ovniq: string; corrected: boolean }
+interface OvniqLine { product: string; sifPrice: string; ovniq: string; corrected: boolean; code?: string; qty?: string; tcode?: string }
 
 const INITIAL_OVNIQ_LINES: OvniqLine[] = [
-    { product: 'Filing Units ×6',    sifPrice: '$8,100',   ovniq: '$7,560',   corrected: true  },
-    { product: 'Workstations ×24',   sifPrice: '$144,000', ovniq: '$144,000', corrected: false },
-    { product: 'Lounge Seating ×12', sifPrice: '$84,000',  ovniq: '$84,000',  corrected: false },
+    { product: 'Lateral Filing Unit', sifPrice: '$8,100',   ovniq: '$7,560',   corrected: true,  code: 'HMI-FU-300',  qty: '×6',  tcode: '18%' },
+    { product: 'Locale Open-Plan Wks', sifPrice: '$144,000', ovniq: '$144,000', corrected: false, code: 'HMI-WS-2400', qty: '×24', tcode: '18%' },
+    { product: 'Brody WorkLounge',    sifPrice: '$84,000',  ovniq: '$84,000',  corrected: false, code: 'HMI-LS-500',  qty: '×12', tcode: '18%' },
 ]
 
-function EditableCell({
-    value,
-    onChange,
-    mono = true,
-    className = '',
-}: {
-    value: string
-    onChange: (v: string) => void
-    mono?: boolean
-    className?: string
-}) {
-    return (
-        <input
-            type="text"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            className={`w-full bg-transparent border-b border-dashed border-border focus:border-primary focus:outline-none text-[11px] ${mono ? 'font-mono' : ''} ${className} py-0.5`}
-        />
-    )
-}
 
-function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
+function QuoteReviewPanel({
+    onValidate,
+    ovniqLines,
+    onUpdateLine,
+    acceptedRows,
+    onSetAccepted,
+}: {
+    onValidate?: () => void
+    ovniqLines: OvniqLine[]
+    onUpdateLine: (i: number, field: keyof OvniqLine, val: string) => void
+    acceptedRows: Set<number>
+    onSetAccepted: (next: Set<number>) => void
+}) {
     const [activeTab, setActiveTab]       = useState<'ovniq' | 'discount'>('ovniq')
     const [contract, setContract]         = useState<'city' | 'state'>('city')
-    const [filingAccepted, setFiling]     = useState(false)
     const [copiedToCore, setCopiedToCore] = useState(false)
+    const [editingIdx, setEditingIdx]     = useState<number | null>(null)
 
-    // Editable OmniQuote comparison rows
-    const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
-
-    const updateLine = (i: number, field: keyof OvniqLine, val: string) => {
-        setOvniqLines(prev => {
-            const n = [...prev]
-            n[i] = { ...n[i], [field]: val }
-            return n
-        })
-    }
-
-    // Editable discount calc values
-    const [sellPrice, setSellPrice] = useState('$7,560')
+    // Sell price tracks the first corrected line's OmniQuote value
+    const firstCorrected = ovniqLines.find(l => l.corrected)
+    const [sellPrice, setSellPrice] = useState(firstCorrected?.ovniq ?? '$7,560')
     const [listPrice, setListPrice] = useState('$12,000')
 
     const computeDiscount = () => {
@@ -1304,6 +1287,22 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
         const disc = ((sell / list) - 1) * 100
         return `${disc >= 0 ? '+' : ''}${disc.toFixed(1)}%`
     }
+
+    const toggleAccept = (i: number) => {
+        const next = new Set(acceptedRows)
+        if (next.has(i)) { next.delete(i) } else { next.add(i) }
+        onSetAccepted(next)
+    }
+
+    const acceptAll = () => {
+        const next = new Set(acceptedRows)
+        ovniqLines.forEach((l, i) => { if (l.corrected) next.add(i) })
+        onSetAccepted(next)
+    }
+
+    const totalCorrections = ovniqLines.filter(l => l.corrected).length
+    const acceptedCount    = ovniqLines.filter((l, i) => l.corrected && acceptedRows.has(i)).length
+    const allAccepted      = acceptedCount === totalCorrections
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
@@ -1315,7 +1314,7 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                         <p className="text-[11px] text-muted-foreground/70 mt-0.5">OmniQuote · DOE-2847 · Q-2026-0089</p>
                     </div>
                     {/* Contract toggle */}
-                    <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg border border-border shrink-0">
+                    <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg border border-border shrink-0 ml-auto">
                         {(['city', 'state'] as const).map(c => (
                             <button
                                 key={c}
@@ -1356,79 +1355,107 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
             <div className="flex-1 overflow-y-auto">
                 {activeTab === 'ovniq' ? (
                     <div className="px-5 mt-4 space-y-4">
-                        {/* OmniQuote comparison table — all cells editable */}
+                        {/* OmniQuote + CORE comparison table — per-row editing */}
                         <div className="rounded-xl border border-border overflow-hidden">
-                            <div className="grid grid-cols-3 px-3 py-2 bg-muted/40 border-b border-border">
-                                {['Product', 'SIF Price', 'OmniQuote'].map(h => (
+                            <div className="grid grid-cols-[1fr_auto_auto_auto_auto] px-3 py-2 bg-muted/40 border-b border-border gap-2">
+                                {['Product', 'SIF Price', 'OmniQuote', 'CORE', ''].map(h => (
                                     <span key={h} className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{h}</span>
                                 ))}
                             </div>
-                            {ovniqLines.map((line, i) => (
-                                <div key={i} className={`grid grid-cols-3 items-center px-3 py-2.5 border-b border-border/50 last:border-0 transition-colors ${
-                                    line.corrected && !filingAccepted ? 'bg-warning/5' : line.corrected ? 'bg-success/5' : ''
-                                }`}>
-                                    {/* Product — editable */}
-                                    <EditableCell
-                                        value={line.product}
-                                        onChange={v => updateLine(i, 'product', v)}
-                                        mono={false}
-                                        className="font-medium text-foreground"
-                                    />
-                                    {/* SIF Price — editable */}
-                                    <EditableCell
-                                        value={line.sifPrice}
-                                        onChange={v => updateLine(i, 'sifPrice', v)}
-                                        className={line.corrected && !filingAccepted ? 'text-warning line-through' : 'text-muted-foreground'}
-                                    />
-                                    {/* OmniQuote — editable + accept */}
-                                    <div className="flex items-center gap-1.5">
-                                        <EditableCell
-                                            value={line.ovniq}
-                                            onChange={v => updateLine(i, 'ovniq', v)}
-                                            className={`font-semibold ${
-                                                line.corrected ? (filingAccepted ? 'text-success' : 'text-warning') : 'text-foreground'
-                                            }`}
-                                        />
-                                        {line.corrected && !filingAccepted && (
+                            {ovniqLines.map((line, i) => {
+                                const isRowEditing = editingIdx === i
+                                const isAccepted   = acceptedRows.has(i)
+                                return (
+                                    <div key={i} className={`grid grid-cols-[1fr_auto_auto_auto_auto] items-center px-3 py-2.5 border-b border-border/50 last:border-0 gap-2 transition-colors ${
+                                        isRowEditing ? 'bg-primary/5 border-primary/20' :
+                                        line.corrected && !isAccepted ? 'bg-warning/5' :
+                                        line.corrected && isAccepted ? 'bg-success/5' : ''
+                                    }`}>
+                                        {/* Product */}
+                                        {isRowEditing ? (
+                                            <input value={line.product} onChange={e => onUpdateLine(i, 'product', e.target.value)}
+                                                className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-medium text-foreground transition-colors" />
+                                        ) : (
+                                            <span className="text-[11px] font-medium text-foreground">{line.product}</span>
+                                        )}
+                                        {/* SIF Price */}
+                                        {isRowEditing ? (
+                                            <input value={line.sifPrice} onChange={e => onUpdateLine(i, 'sifPrice', e.target.value)}
+                                                className="w-20 bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono transition-colors text-muted-foreground" />
+                                        ) : (
+                                            <span className={`text-[11px] font-mono ${line.corrected && !isAccepted ? 'text-warning line-through' : 'text-muted-foreground'}`}>{line.sifPrice}</span>
+                                        )}
+                                        {/* OmniQuote */}
+                                        {isRowEditing ? (
+                                            <input value={line.ovniq} onChange={e => onUpdateLine(i, 'ovniq', e.target.value)}
+                                                className="w-20 bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono font-semibold text-foreground transition-colors" />
+                                        ) : (
+                                            <span className={`text-[11px] font-mono font-semibold ${
+                                                line.corrected ? (isAccepted ? 'text-success' : 'text-warning') : 'text-foreground'
+                                            }`}>{line.ovniq}</span>
+                                        )}
+                                        {/* CORE — matches OmniQuote value, shows status */}
+                                        <div className="flex items-center gap-1">
+                                            <span className={`text-[11px] font-mono font-semibold ${isAccepted ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                                                {line.ovniq}
+                                            </span>
+                                            {isAccepted ? (
+                                                <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                                            ) : (
+                                                <span className="text-[8px] font-bold text-muted-foreground/40 border border-border/40 rounded px-1 py-px">pending</span>
+                                            )}
+                                        </div>
+                                        {/* Actions: accept/undo + edit toggle */}
+                                        <div className="flex items-center gap-1 justify-end">
+                                            {line.corrected && !isAccepted && !isRowEditing && (
+                                                <button onClick={() => toggleAccept(i)}
+                                                    className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0">
+                                                    Accept ✓
+                                                </button>
+                                            )}
+                                            {line.corrected && isAccepted && !isRowEditing && (
+                                                <button onClick={() => toggleAccept(i)}
+                                                    className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border hover:text-foreground transition-all shrink-0">
+                                                    Undo
+                                                </button>
+                                            )}
+                                            {!line.corrected && !isRowEditing && (
+                                                <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                                            )}
                                             <button
-                                                onClick={() => setFiling(true)}
-                                                className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0"
+                                                onClick={() => setEditingIdx(isRowEditing ? null : i)}
+                                                className={`p-0.5 rounded transition-colors ${isRowEditing ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                                                title={isRowEditing ? 'Done' : 'Edit row'}
                                             >
-                                                Accept ✓
+                                                {isRowEditing ? <CheckCircle2 className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
                                             </button>
-                                        )}
-                                        {line.corrected && filingAccepted && (
-                                            <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
-                                        )}
-                                        {!line.corrected && (
-                                            <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
 
-                        {!filingAccepted && (
+                        {!allAccepted && (
                             <button
-                                onClick={() => setFiling(true)}
+                                onClick={acceptAll}
                                 className="w-full py-2 text-[10px] font-black rounded-xl bg-muted/50 text-muted-foreground border border-border hover:bg-muted/70 transition-all uppercase tracking-widest"
                             >
                                 Apply All Corrections
                             </button>
                         )}
 
-                        {filingAccepted && (
+                        {allAccepted && (
                             <div className="flex items-center gap-2 p-3 bg-success/5 border border-success/20 rounded-xl animate-in fade-in duration-300">
                                 <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
                                 <p className="text-[11px] text-success font-medium">
-                                    Filing Units corrected · {ovniqLines[0].sifPrice} → {ovniqLines[0].ovniq} · Quote updated
+                                    {ovniqLines.filter(l => l.corrected).map(l => `${l.sifPrice} → ${l.ovniq}`).join(' · ')} · Quote updated
                                 </p>
                             </div>
                         )}
                     </div>
                 ) : (
                     <div className="px-5 mt-4 space-y-4">
-                        {/* Discount Calc — sell and list prices are editable */}
+                        {/* Discount Calc */}
                         <div className="rounded-xl border border-border overflow-hidden">
                             <div className="px-4 py-3 bg-muted/30 border-b border-border">
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Formula · {contract === 'city' ? 'City' : 'State'} Contract</p>
@@ -1442,27 +1469,16 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                                 </div>
                                 <div className="h-px bg-border" />
                                 <div className="grid grid-cols-3 gap-2">
-                                    {/* Sell Price — editable */}
                                     <div className="bg-muted/30 rounded-lg px-3 py-2">
                                         <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Sell Price</p>
-                                        <input
-                                            type="text"
-                                            value={sellPrice}
-                                            onChange={e => setSellPrice(e.target.value)}
-                                            className="w-full bg-transparent text-[13px] font-black font-mono text-foreground focus:outline-none border-b border-dashed border-border focus:border-primary"
-                                        />
+                                        <input type="text" value={sellPrice} onChange={e => setSellPrice(e.target.value)}
+                                            className="w-full bg-transparent text-[13px] font-black font-mono text-foreground focus:outline-none border-b border-dashed border-border focus:border-primary" />
                                     </div>
-                                    {/* List Price — editable */}
                                     <div className="bg-muted/30 rounded-lg px-3 py-2">
                                         <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">List Price</p>
-                                        <input
-                                            type="text"
-                                            value={listPrice}
-                                            onChange={e => setListPrice(e.target.value)}
-                                            className="w-full bg-transparent text-[13px] font-black font-mono text-muted-foreground focus:outline-none border-b border-dashed border-border focus:border-primary"
-                                        />
+                                        <input type="text" value={listPrice} onChange={e => setListPrice(e.target.value)}
+                                            className="w-full bg-transparent text-[13px] font-black font-mono text-muted-foreground focus:outline-none border-b border-dashed border-border focus:border-primary" />
                                     </div>
-                                    {/* Discount — computed */}
                                     <div className="bg-muted/30 rounded-lg px-3 py-2">
                                         <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Discount</p>
                                         <p className="text-[13px] font-black font-mono mt-0.5 text-warning">{computeDiscount()}</p>
@@ -1490,13 +1506,13 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
             {/* Footer */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
                 <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
-                    {filingAccepted ? '1/1 correction accepted' : '0/1 corrections accepted'}
+                    {acceptedCount}/{totalCorrections} correction{totalCorrections !== 1 ? 's' : ''} accepted
                 </div>
                 <button
-                    onClick={() => filingAccepted && onValidate?.()}
-                    disabled={!filingAccepted}
+                    onClick={() => allAccepted && onValidate?.()}
+                    disabled={!allAccepted}
                     className={`w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
-                        filingAccepted
+                        allAccepted
                             ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-sm'
                             : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
                     }`}
@@ -1510,16 +1526,20 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
-function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange }: {
+function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
     michaelMode?: boolean
     invoiceUpload?: boolean
     onResolveChange?: (ids: Set<string>) => void
+    ovniqLines: OvniqLine[]
+    onUpdateLine: (i: number, field: keyof OvniqLine, val: string) => void
+    acceptedRows: Set<number>
+    onSetAccepted: (next: Set<number>) => void
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} />
-    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
+    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
     return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} />
@@ -2123,7 +2143,16 @@ export default function BFIDocumentReviewModal({
 }: BFIDocumentReviewModalProps) {
     const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
-    const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set())
+    // Labor corrections (f1, f2) were resolved in step 'extract' — show as applied in all subsequent steps
+    const [resolvedIds, setResolvedIds] = useState<Set<string>>(() =>
+        ['quote', 'labor', 'cpr', 'fee'].includes(step) ? new Set(['f1', 'f2']) : new Set()
+    )
+    // OmniQuote lines — shared between left doc and right review panel
+    const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
+    const [acceptedRows, setAcceptedRows] = useState<Set<number>>(new Set())
+    const updateOvniqLine = (i: number, field: keyof OvniqLine, val: string) => {
+        setOvniqLines(prev => { const n = [...prev]; n[i] = { ...n[i], [field]: val }; return n })
+    }
 
     const handleDownload = () => {
         const filename = activeTab === 'sif' ? 'DOE-2847.sif' : 'NYC-DOE-2847-specs.pdf'
@@ -2262,7 +2291,7 @@ export default function BFIDocumentReviewModal({
                                             {activeTab === 'sif' ? (
                                                 <SIFDocumentPreview resolvedIds={resolvedIds} />
                                             ) : activeTab === 'specs' ? (
-                                                <QuoteDocumentTab />
+                                                <QuoteDocumentTab ovniqLines={ovniqLines} />
                                             ) : (
                                                 <div className="h-full overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950">
                                                     <div className="border border-border rounded-xl overflow-hidden bg-card">
@@ -2289,7 +2318,7 @@ export default function BFIDocumentReviewModal({
 
                                     {/* Right: Contextual panel per step (2/5) */}
                                     <div className="col-span-2 flex flex-col min-h-0">
-                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} />
+                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} ovniqLines={ovniqLines} onUpdateLine={updateOvniqLine} acceptedRows={acceptedRows} onSetAccepted={setAcceptedRows} />
                                     </div>
 
                                 </div>
