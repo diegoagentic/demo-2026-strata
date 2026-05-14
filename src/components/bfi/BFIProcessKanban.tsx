@@ -567,30 +567,65 @@ export default function BFIProcessKanban({
                                                     : 'border-border opacity-60 pointer-events-none'
                                             }`}
                                         >
-                                            <div className="flex items-center gap-2.5">
-                                                <div className={`h-8 w-8 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
-                                                    <span className={`text-[10px] font-black ${card.avatarColor}`}>{card.initials}</span>
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <div className="text-sm font-semibold text-foreground">{card.orderId}</div>
-                                                    <div className="text-[10px] text-muted-foreground truncate font-mono">{card.agency}</div>
-                                                </div>
-                                            </div>
-                                            {card.desc && (
-                                                <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>
-                                            )}
-                                            <div className="h-px bg-border" />
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[10px] text-muted-foreground">Amount</span>
-                                                <span className="text-xs font-semibold text-foreground">{card.value}</span>
-                                            </div>
-                                            {card.isNew && colIdx === 0 && onReviewDoe && (
-                                                <button
-                                                    onClick={onReviewDoe}
-                                                    className="w-full py-2 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
-                                                >
-                                                    Review
-                                                </button>
+                                            {card.isNew ? (
+                                                /* Rich template for new cards — matches DOE card style */
+                                                <>
+                                                    <div className="flex items-start gap-2.5">
+                                                        <div className={`h-8 w-8 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
+                                                            <span className={`text-[10px] font-black ${card.avatarColor}`}>{card.initials}</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                                                                <span className="text-sm font-bold text-foreground">{card.orderId}</span>
+                                                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-info/10 text-info border border-info/20">Intake</span>
+                                                            </div>
+                                                            <span className="text-[10px] text-muted-foreground font-mono block">{card.agency}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">Document</span>
+                                                            <span className="font-medium text-foreground truncate ml-2">{card.orderId}-SIF.pdf</span>
+                                                        </div>
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">Amount</span>
+                                                            <span className="font-semibold text-foreground">{card.value}</span>
+                                                        </div>
+                                                    </div>
+                                                    {card.desc && <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>}
+                                                    <div className="pt-2 border-t border-border flex items-center justify-between">
+                                                        <span className="text-[11px] text-muted-foreground">Just now</span>
+                                                        {onReviewDoe && (
+                                                            <button
+                                                                onClick={onReviewDoe}
+                                                                className="py-1.5 px-3 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
+                                                            >
+                                                                {reviewLabel}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                /* Simple template for context-only cards */
+                                                <>
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className={`h-8 w-8 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
+                                                            <span className={`text-[10px] font-black ${card.avatarColor}`}>{card.initials}</span>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm font-semibold text-foreground">{card.orderId}</div>
+                                                            <div className="text-[10px] text-muted-foreground truncate font-mono">{card.agency}</div>
+                                                        </div>
+                                                    </div>
+                                                    {card.desc && (
+                                                        <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>
+                                                    )}
+                                                    <div className="h-px bg-border" />
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] text-muted-foreground">Amount</span>
+                                                        <span className="text-xs font-semibold text-foreground">{card.value}</span>
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
                                     ))}
@@ -641,14 +676,14 @@ export default function BFIProcessKanban({
                                             </td>
                                             <td className="px-4 py-3 text-sm font-medium text-foreground">{item.value}</td>
                                             <td className="px-4 py-3 text-right">
-                                                {item.isDoe && onReviewDoe && (
+                                                {(item.isDoe || item.isNew) && onReviewDoe && (
                                                     <div className="relative inline-block">
-                                                        {highlightReview && (
+                                                        {item.isDoe && highlightReview && (
                                                             <span className="absolute -inset-1 rounded-xl bg-ai/20 animate-pulse pointer-events-none" />
                                                         )}
                                                         <button
                                                             onClick={onReviewDoe}
-                                                            className={`py-1.5 px-3 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all${highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`}
+                                                            className={`py-1.5 px-3 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all${item.isDoe && highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`}
                                                         >
                                                             {reviewLabel}
                                                         </button>

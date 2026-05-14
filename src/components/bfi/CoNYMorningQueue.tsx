@@ -67,7 +67,7 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                 activeCol={0}
                 showDoe={showDoe}
                 animateDoe={true}
-                onReviewDoe={showDoe ? () => setIsModalOpen(true) : undefined}
+                onReviewDoe={() => setIsModalOpen(true)}
                 highlightReview={showDoe}
             />
 
