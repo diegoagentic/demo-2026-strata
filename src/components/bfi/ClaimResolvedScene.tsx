@@ -297,7 +297,7 @@ function WalterNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () =>
                                     <button onClick={handleSend}
                                         className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
                                         <Send className="h-3.5 w-3.5" />
-                                        Notify Walter →
+                                        Notify →
                                     </button>
                                 </div>
                             )}
