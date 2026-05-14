@@ -11,7 +11,7 @@
  *   Lines pre-approved → "Send Final Quote to Nancy →" → NancyDialog → nextStep()
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import {
     CheckCircle2, Mail, Send,
 } from 'lucide-react'
