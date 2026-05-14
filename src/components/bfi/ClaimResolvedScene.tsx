@@ -327,7 +327,7 @@ export default function ClaimResolvedScene() {
     if (phase === 'dashboard') {
         return (
             <BFIDashboardScene
-                notificationConfig={DASHBOARD_NOTIFICATION}
+                staticMode
                 onNavigate={() => setPhase('detail')}
             />
         )

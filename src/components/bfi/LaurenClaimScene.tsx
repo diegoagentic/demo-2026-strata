@@ -361,7 +361,7 @@ export default function LaurenClaimScene() {
     if (phase === 'dashboard') {
         return (
             <BFIDashboardScene
-                notificationConfig={LAUREN_NOTIFICATION}
+                staticMode
                 onNavigate={() => setPhase('detail')}
             />
         )

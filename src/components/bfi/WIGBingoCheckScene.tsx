@@ -447,7 +447,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
     if (phase === 'dashboard') {
         return (
             <BFIDashboardScene
-                notificationConfig={notificationConfig ?? DEFAULT_NOTIFICATION}
+                staticMode
                 onNavigate={() => setPhase('checking')}
             />
         )
