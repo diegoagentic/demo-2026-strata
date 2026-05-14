@@ -235,7 +235,7 @@ function UploadZone({ label, filename, uploaded, onUpload }: {
     if (uploaded) return null
     if (uploading) {
         return (
-            <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-border bg-muted/30">
+            <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-border bg-muted/30 min-h-[100px]">
                 <Loader2 className="h-4 w-4 text-muted-foreground animate-spin shrink-0" />
                 <div className="flex-1 min-w-0">
                     <div className="text-[11px] font-medium text-muted-foreground">Uploading {label}…</div>
@@ -248,13 +248,13 @@ function UploadZone({ label, filename, uploaded, onUpload }: {
     }
     return (
         <button onClick={handleClick}
-            className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-dashed border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all group text-left">
-            <div className="h-7 w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                <Upload className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+            className="w-full h-full min-h-[100px] flex flex-col items-center justify-center gap-2 px-3.5 py-6 rounded-xl border border-dashed border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all group text-center">
+            <div className="h-8 w-8 rounded-xl bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                <Upload className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <div>
                 <div className="text-[11px] font-bold text-muted-foreground group-hover:text-foreground transition-colors">{label}</div>
-                <div className="text-[9px] text-muted-foreground">Click to attach · {filename}</div>
+                <div className="text-[9px] text-muted-foreground">Click to attach</div>
             </div>
         </button>
     )
