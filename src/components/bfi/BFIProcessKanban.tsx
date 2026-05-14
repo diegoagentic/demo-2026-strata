@@ -105,8 +105,8 @@ function NewOrderModal({
     onClose: () => void
     onCreate: (card: ContextCard) => void
 }) {
-    const [agencyName, setAgencyName] = useState('')
-    const [orderId,    setOrderId]    = useState('')
+    const [agencyName, setAgencyName] = useState('NYC Dept. of Education')
+    const [orderId,    setOrderId]    = useState('DOE-2847')
     const [uploads,    setUploads]    = useState<UploadState[]>(['idle', 'idle', 'idle'])
     const [creating,   setCreating]   = useState(false)
     const [created,    setCreated]    = useState(false)
