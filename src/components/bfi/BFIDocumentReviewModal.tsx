@@ -212,19 +212,6 @@ function SIFDocumentPreview() {
                         </div>
                     </div>
 
-                    {/* Stats mini row */}
-                    <div className="grid grid-cols-3 border-b border-zinc-100 dark:border-zinc-800">
-                        {[
-                            { label: 'Valid', value: validCount, color: 'text-success', bg: 'bg-success/10' },
-                            { label: 'Issues', value: issueCount, color: 'text-warning', bg: 'bg-warning/10' },
-                            { label: 'Total', value: allFields.length, color: 'text-foreground', bg: 'bg-muted/30' },
-                        ].map((s, i) => (
-                            <div key={i} className={`${s.bg} px-3 py-2 ${i < 2 ? 'border-r border-border' : ''}`}>
-                                <div className={`text-base font-extrabold ${s.color}`}>{s.value}</div>
-                                <div className="text-[9px] text-zinc-500 uppercase tracking-wide">{s.label}</div>
-                            </div>
-                        ))}
-                    </div>
 
                     {/* Field groups */}
                     <div className="px-6 py-4 space-y-4">
