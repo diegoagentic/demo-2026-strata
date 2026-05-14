@@ -110,8 +110,8 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
     return (
         <div className="space-y-4">
 
-            {/* ── Notification panel ── */}
-            {(queueState === 'notification' || queueState === 'ingesting' || queueState === 'ready') && (
+            {/* ── Notification panel — only shows after Action Center triggers ingest ── */}
+            {(queueState === 'ingesting' || queueState === 'ready') && (
                 <div className="rounded-xl border border-border bg-card shadow-md overflow-hidden animate-in slide-in-from-top-2 fade-in duration-400">
                     <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/30 border-b border-border">
                         <div className="h-6 w-6 rounded-lg bg-ai/10 flex items-center justify-center shrink-0">
@@ -154,15 +154,6 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                                     </div>
                                 ))}
                             </div>
-                        )}
-
-                        {queueState === 'notification' && (
-                            <button
-                                onClick={handleIngest}
-                                className="w-full py-2 text-[11px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest shadow-sm"
-                            >
-                                Ingest with Strata →
-                            </button>
                         )}
 
                         {queueState === 'ready' && (

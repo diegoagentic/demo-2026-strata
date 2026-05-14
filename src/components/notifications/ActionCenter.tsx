@@ -337,8 +337,8 @@ export default function ActionCenter() {
                     {/* Footer */}
                     <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
                         <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
-                        <p className="text-xs font-bold text-primary flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <p className="text-xs font-bold text-ai flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
                             Awaiting ingest
                         </p>
                     </div>
