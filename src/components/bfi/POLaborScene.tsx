@@ -64,7 +64,7 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                 {/* Metadata */}
                                 <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
                                     <div className="text-[13px] font-bold text-foreground leading-snug">
-                                        Proposal · DOE-2847 · Q-2026-0089 · Delivery Date Request
+                                        Purchase Order Request · DOE-2847 · Q-2026-0089
                                     </div>
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2 text-[10px]">
@@ -89,21 +89,23 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                     <div className="text-[12px] text-foreground leading-relaxed space-y-3">
                                         <p>Good morning,</p>
                                         <p>
-                                            Please find attached the formal proposal for order{' '}
-                                            <span className="font-semibold">DOE-2847</span> — Quote{' '}
-                                            <span className="font-semibold">Q-2026-0089</span>.
+                                            Quote <span className="font-semibold">Q-2026-0089</span> for order{' '}
+                                            <span className="font-semibold">DOE-2847</span> has been validated against
+                                            the CoNY contract through OmniQuote. We are requesting that you issue the
+                                            Purchase Order based on the confirmed pricing below.
                                         </p>
 
                                         {/* Order summary */}
                                         <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-[11px]">
-                                            <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Order Summary</p>
+                                            <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Quote Summary · OmniQuote Validated</p>
                                             {[
                                                 { label: 'Contract',        value: 'CoNY · City of New York' },
-                                                { label: 'SIF validated',   value: 'Filing Units $8,100 → $7,560 (OmniQuote)' },
-                                                { label: 'Quote total',     value: '$48,200' },
-                                                { label: 'Labor',           value: 'Carpenters 45h · OT Carpenters 6h' },
+                                                { label: 'Price corrected', value: 'Filing Units $8,100 → $7,560 per T-code' },
+                                                { label: 'Adjusted total',  value: '$235,560' },
+                                                { label: 'CoNY discount',   value: '−$88,335 (37.5%)' },
+                                                { label: 'Labor (Workplace)', value: 'Teamsters 24h · Carpenters 45h · OT 6h' },
                                                 { label: 'Delivery window', value: 'May 14–21, 2026 (30 days)' },
-                                                { label: 'Install crew',    value: '3 technicians · Zone A·B·C' },
+                                                { label: 'Install crew',    value: '3 technicians · Zones A · B · C' },
                                             ].map(r => (
                                                 <div key={r.label} className="flex items-start gap-2">
                                                     <span className="text-muted-foreground w-28 shrink-0">{r.label}:</span>
@@ -113,20 +115,27 @@ function ProposalDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                         </div>
 
                                         <p>
-                                            Kindly review the attached proposal and{' '}
-                                            <span className="font-semibold">confirm the delivery date</span>{' '}
-                                            at your earliest convenience so we can initiate the purchase order and coordinate installation with the Workplace labor team.
+                                            The OmniQuote-validated SIF and Workplace labor quote are attached for
+                                            your records. Please issue the PO at your earliest convenience so we can
+                                            confirm the delivery schedule and coordinate installation.
                                         </p>
                                         <p className="text-muted-foreground text-[11px]">
                                             — Lauren DeMarco<br />BFI Furniture · CoNY Account Manager
                                         </p>
                                     </div>
 
-                                    {/* PDF attachment chip */}
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium w-fit">
-                                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                        DOE-2847-Proposal.pdf
-                                        <span className="text-[9px] text-muted-foreground ml-1">· 3 pages</span>
+                                    {/* Attachment chips */}
+                                    <div className="flex flex-col gap-1.5">
+                                        {[
+                                            { name: 'DOE-2847-SIF-updated.pdf',  label: 'Updated SIF' },
+                                            { name: 'Q-2026-0089-OmniQuote.pdf', label: 'Quote'       },
+                                        ].map(a => (
+                                            <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
+                                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                {a.name}
+                                                <span className="text-[9px] text-muted-foreground ml-1">· {a.label}</span>
+                                            </div>
+                                        ))}
                                     </div>
 
                                     {/* Sent confirmation */}

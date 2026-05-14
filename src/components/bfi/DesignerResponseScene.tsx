@@ -43,7 +43,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                 {/* Email metadata */}
                 <div className="px-4 pt-4 pb-3 border-b border-border/60 space-y-1.5">
                     <div className="text-[13px] font-bold text-foreground leading-snug">
-                        Re: Quote Q-2026-0089 Confirmed · DOE-2847
+                        Re: RFQ Received · Q-2026-0089 · DOE-2847
                     </div>
                     <div className="space-y-0.5">
                         {[
@@ -64,19 +64,17 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                     <div className="text-[12px] text-foreground leading-relaxed space-y-3">
                         <p>Hi Robert,</p>
                         <p>
-                            We've received and ingested all documents for{' '}
-                            <span className="font-semibold">DOE-2847</span> — SIF, spec sheet, and floor plan.
-                            The quote is being validated against the CoNY contract and the order is moving forward.
+                            We've received your Request for Quote for{' '}
+                            <span className="font-semibold">DOE-2847</span> — SIF, spec sheet, and floor plan
+                            are all ingested and on file.
                         </p>
                         <p>
-                            During our CPR review we identified a labor reconciliation —{' '}
-                            <span className="font-semibold">Carpenters: 50h → 45h</span> and{' '}
-                            <span className="font-semibold">OT: 8h → 6h</span> — which we are processing with the team.
-                            This will not affect the delivery window.
+                            Quote <span className="font-semibold">Q-2026-0089</span> is now being validated
+                            against the CoNY contract through OmniQuote. We'll follow up once pricing is confirmed
+                            and the order is ready to move forward.
                         </p>
                         <p>
-                            Quote <span className="font-semibold">Q-2026-0089</span> is confirmed.
-                            Updated SIF and CPR package attached for your records.
+                            Copies of your submitted documents are attached below for reference.
                         </p>
                         <p className="text-muted-foreground">
                             — Lauren DeMarco<br />BFI Furniture · CoNY Account Manager
@@ -86,9 +84,9 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                     {/* Attachment chips */}
                     <div className="flex flex-col gap-1.5 mt-2">
                         {[
-                            { name: 'DOE-2847-SIF-updated.pdf',  label: 'Updated SIF' },
-                            { name: 'Q-2026-0089-OmniQuote.pdf', label: 'Quote'        },
-                            { name: 'DOE-2847-CPR-package.pdf',  label: 'CPR Package' },
+                            { name: 'DOE-2847-SIF.pdf',         label: 'SIF'        },
+                            { name: 'DOE-2847-spec-sheet.pdf',  label: 'Spec Sheet' },
+                            { name: 'DOE-2847-floor-plan.pdf',  label: 'Floor Plan' },
                         ].map(a => (
                             <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
                                 <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -105,7 +103,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                         <div className="text-xs">
                             <div className="font-bold text-foreground">Receipt acknowledged · Q-2026-0089 · May 6 · 9:25 AM</div>
-                            <div className="text-muted-foreground mt-0.5">Loop closed in Strata · BFI proceeding to OmniQuote validation</div>
+                            <div className="text-muted-foreground mt-0.5">Documents logged in Strata · BFI proceeding to OmniQuote validation</div>
                         </div>
                     </div>
                 )}

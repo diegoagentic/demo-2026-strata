@@ -312,15 +312,24 @@ const FIELDS_EXTRACT: ReviewField[] = [
 ]
 
 const FIELDS_LABOR: ReviewField[] = [
+    // ── Document Header ──────────────────────────────────────────────────────
+    { id: 'lh1', name: 'Quote #',    category: 'header', extractedValue: 'Q-2026-0089',            status: 'valid' },
+    { id: 'lh2', name: 'Contract',   category: 'header', extractedValue: 'CoNY · City of New York', status: 'valid' },
+    { id: 'lh3', name: 'Agency',     category: 'header', extractedValue: 'NYC Dept. of Education',  status: 'valid' },
+    { id: 'lh4', name: 'PO Date',    category: 'header', extractedValue: 'May 6, 2026',             status: 'valid' },
+    // ── Labor (from SIF) ─────────────────────────────────────────────────────
     {
-        id: 'l1', name: 'PO Labor hours', category: 'labor',
+        id: 'l1', name: 'Carpenters labor', category: 'labor',
         extractedValue: '48h', expectedValue: '45h', ovniqSuggestion: '45h',
         status: 'inconsistent',
-        reason: 'PO indica 48h pero el quote ajustado por OmniQuote es 45h.',
+        reason: 'PO shows 48h but OmniQuote confirmed 45h in Quote validation. Accept 45h before CORE entry — consistent with CPR package.',
     },
-    { id: 'l2', name: 'WIG delivery date', category: 'logistics', extractedValue: 'May 14, 2026', status: 'valid' },
-    { id: 'l3', name: 'Install crew',      category: 'labor',    extractedValue: '3 techs', status: 'valid' },
-    { id: 'l4', name: 'PO total',          category: 'fee',      extractedValue: '$45,860', status: 'valid' },
+    { id: 'l2', name: 'Overtime labor',       category: 'labor', extractedValue: '6h',  status: 'valid' },
+    { id: 'l3', name: 'Teamsters',            category: 'labor', extractedValue: '24h', status: 'valid' },
+    // ── Pricing & Delivery ────────────────────────────────────────────────────
+    { id: 'l4', name: 'PO amount',        category: 'logistics', extractedValue: '$235,560',         status: 'valid' },
+    { id: 'l5', name: 'Delivery window',  category: 'logistics', extractedValue: 'May 14–21, 2026',  status: 'valid' },
+    { id: 'l6', name: 'Install crew',     category: 'logistics', extractedValue: '3 techs · A·B·C',  status: 'valid' },
 ]
 
 const FIELDS_CPR: ReviewField[] = [
@@ -1270,14 +1279,13 @@ function QuoteReviewPanel({
     acceptedRows: Set<number>
     onSetAccepted: (next: Set<number>) => void
 }) {
-    const [activeTab, setActiveTab]       = useState<'ovniq' | 'discount'>('ovniq')
-    const [contract, setContract]         = useState<'city' | 'state'>('city')
-    const [copiedToCore, setCopiedToCore] = useState(false)
-    const [editingIdx, setEditingIdx]     = useState<number | null>(null)
+    const [activeTab, setActiveTab]         = useState<'ovniq' | 'discount'>('ovniq')
+    const [contract, setContract]           = useState<'city' | 'state'>('city')
+    const [copiedToCore, setCopiedToCore]   = useState(false)
+    const [editingIdx, setEditingIdx]       = useState<number | null>(null)
+    const [isEditingDiscount, setEditingDiscount] = useState(false)
 
-    // Sell price tracks the first corrected line's OmniQuote value
-    const firstCorrected = ovniqLines.find(l => l.corrected)
-    const [sellPrice, setSellPrice] = useState(firstCorrected?.ovniq ?? '$7,560')
+    const [sellPrice, setSellPrice] = useState('$7,560')
     const [listPrice, setListPrice] = useState('$12,000')
 
     const computeDiscount = () => {
@@ -1291,12 +1299,6 @@ function QuoteReviewPanel({
     const toggleAccept = (i: number) => {
         const next = new Set(acceptedRows)
         if (next.has(i)) { next.delete(i) } else { next.add(i) }
-        onSetAccepted(next)
-    }
-
-    const acceptAll = () => {
-        const next = new Set(acceptedRows)
-        ovniqLines.forEach((l, i) => { if (l.corrected) next.add(i) })
         onSetAccepted(next)
     }
 
@@ -1355,113 +1357,140 @@ function QuoteReviewPanel({
             <div className="flex-1 overflow-y-auto">
                 {activeTab === 'ovniq' ? (
                     <div className="px-5 mt-4 space-y-4">
-                        {/* OmniQuote + CORE comparison table — per-row editing */}
+                        {/* OmniQuote + CORE comparison table */}
                         <div className="rounded-xl border border-border overflow-hidden">
-                            <div className="grid grid-cols-[1fr_auto_auto_auto_auto] px-3 py-2 bg-muted/40 border-b border-border gap-2">
-                                {['Product', 'SIF Price', 'OmniQuote', 'CORE', ''].map(h => (
-                                    <span key={h} className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{h}</span>
-                                ))}
+                            {/* Header — col template: product | sif | ovniq | core | actions */}
+                            <div className="grid grid-cols-[1fr_5rem_5.5rem_6.5rem_2.5rem] px-4 py-2 bg-muted/40 border-b border-border">
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Product</span>
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">SIF Price</span>
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">OmniQuote</span>
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right pr-1">CORE</span>
+                                <span />
                             </div>
+
                             {ovniqLines.map((line, i) => {
                                 const isRowEditing = editingIdx === i
                                 const isAccepted   = acceptedRows.has(i)
                                 return (
-                                    <div key={i} className={`grid grid-cols-[1fr_auto_auto_auto_auto] items-center px-3 py-2.5 border-b border-border/50 last:border-0 gap-2 transition-colors ${
-                                        isRowEditing ? 'bg-primary/5 border-primary/20' :
+                                    <div key={i} className={`grid grid-cols-[1fr_5rem_5.5rem_6.5rem_2.5rem] items-center px-4 py-3 border-b border-border/50 last:border-0 transition-colors ${
+                                        isRowEditing        ? 'bg-primary/5'  :
                                         line.corrected && !isAccepted ? 'bg-warning/5' :
-                                        line.corrected && isAccepted ? 'bg-success/5' : ''
+                                        line.corrected &&  isAccepted ? 'bg-success/5' : ''
                                     }`}>
+
                                         {/* Product */}
-                                        {isRowEditing ? (
-                                            <input value={line.product} onChange={e => onUpdateLine(i, 'product', e.target.value)}
-                                                className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-medium text-foreground transition-colors" />
-                                        ) : (
-                                            <span className="text-[11px] font-medium text-foreground">{line.product}</span>
-                                        )}
-                                        {/* SIF Price */}
-                                        {isRowEditing ? (
-                                            <input value={line.sifPrice} onChange={e => onUpdateLine(i, 'sifPrice', e.target.value)}
-                                                className="w-20 bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono transition-colors text-muted-foreground" />
-                                        ) : (
-                                            <span className={`text-[11px] font-mono ${line.corrected && !isAccepted ? 'text-warning line-through' : 'text-muted-foreground'}`}>{line.sifPrice}</span>
-                                        )}
-                                        {/* OmniQuote */}
-                                        {isRowEditing ? (
-                                            <input value={line.ovniq} onChange={e => onUpdateLine(i, 'ovniq', e.target.value)}
-                                                className="w-20 bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono font-semibold text-foreground transition-colors" />
-                                        ) : (
-                                            <span className={`text-[11px] font-mono font-semibold ${
-                                                line.corrected ? (isAccepted ? 'text-success' : 'text-warning') : 'text-foreground'
-                                            }`}>{line.ovniq}</span>
-                                        )}
-                                        {/* CORE — matches OmniQuote value, shows status */}
-                                        <div className="flex items-center gap-1">
-                                            <span className={`text-[11px] font-mono font-semibold ${isAccepted ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                                        <div className="min-w-0 pr-2">
+                                            {isRowEditing ? (
+                                                <input value={line.product} onChange={e => onUpdateLine(i, 'product', e.target.value)}
+                                                    className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-medium text-foreground transition-colors" />
+                                            ) : (
+                                                <span className="text-[11px] font-medium text-foreground truncate block">{line.product}</span>
+                                            )}
+                                        </div>
+
+                                        {/* SIF Price — right-aligned */}
+                                        <div className="text-right">
+                                            {isRowEditing ? (
+                                                <input value={line.sifPrice} onChange={e => onUpdateLine(i, 'sifPrice', e.target.value)}
+                                                    className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono text-right transition-colors text-muted-foreground" />
+                                            ) : (
+                                                <span className={`text-[11px] font-mono tabular-nums ${line.corrected && !isAccepted ? 'text-warning line-through' : 'text-muted-foreground'}`}>
+                                                    {line.sifPrice}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* OmniQuote — right-aligned */}
+                                        <div className="text-right">
+                                            {isRowEditing ? (
+                                                <input value={line.ovniq} onChange={e => onUpdateLine(i, 'ovniq', e.target.value)}
+                                                    className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono font-semibold text-right transition-colors" />
+                                            ) : (
+                                                <span className={`text-[11px] font-mono font-semibold tabular-nums ${
+                                                    line.corrected ? (isAccepted ? 'text-success' : 'text-warning') : 'text-foreground'
+                                                }`}>{line.ovniq}</span>
+                                            )}
+                                        </div>
+
+                                        {/* CORE — right-aligned value + status icon */}
+                                        <div className="flex items-center justify-end gap-1.5">
+                                            <span className={`text-[11px] font-mono tabular-nums ${isAccepted ? 'text-foreground font-semibold' : 'text-muted-foreground/40'}`}>
                                                 {line.ovniq}
                                             </span>
                                             {isAccepted ? (
                                                 <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
                                             ) : (
-                                                <span className="text-[8px] font-bold text-muted-foreground/40 border border-border/40 rounded px-1 py-px">pending</span>
+                                                <div className="h-3 w-3 rounded-full border border-border/50 shrink-0" />
                                             )}
                                         </div>
-                                        {/* Actions: accept/undo + edit toggle */}
-                                        <div className="flex items-center gap-1 justify-end">
-                                            {line.corrected && !isAccepted && !isRowEditing && (
-                                                <button onClick={() => toggleAccept(i)}
-                                                    className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0">
-                                                    Accept ✓
+
+                                        {/* Actions — edit icon + accept/undo */}
+                                        <div className="flex items-center justify-center">
+                                            {isRowEditing ? (
+                                                <button onClick={() => setEditingIdx(null)}
+                                                    className="p-0.5 rounded text-primary transition-colors" title="Done">
+                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => setEditingIdx(i)}
+                                                    className="p-0.5 rounded text-muted-foreground/30 hover:text-muted-foreground transition-colors" title="Edit row">
+                                                    <Edit2 className="h-3 w-3" />
                                                 </button>
                                             )}
-                                            {line.corrected && isAccepted && !isRowEditing && (
-                                                <button onClick={() => toggleAccept(i)}
-                                                    className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border hover:text-foreground transition-all shrink-0">
-                                                    Undo
-                                                </button>
-                                            )}
-                                            {!line.corrected && !isRowEditing && (
-                                                <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
-                                            )}
-                                            <button
-                                                onClick={() => setEditingIdx(isRowEditing ? null : i)}
-                                                className={`p-0.5 rounded transition-colors ${isRowEditing ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
-                                                title={isRowEditing ? 'Done' : 'Edit row'}
-                                            >
-                                                {isRowEditing ? <CheckCircle2 className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
-                                            </button>
                                         </div>
                                     </div>
                                 )
                             })}
+
+                            {/* Accept row — shown below table when there are pending corrections */}
+                            {ovniqLines.some((l, i) => l.corrected && !acceptedRows.has(i)) && (
+                                <div className="px-4 py-2.5 bg-warning/5 border-t border-warning/20 flex items-center justify-between">
+                                    <span className="text-[10px] text-warning font-medium">
+                                        {ovniqLines.filter((l, i) => l.corrected && !acceptedRows.has(i)).map(l => `${l.product}: ${l.sifPrice} → ${l.ovniq}`).join(' · ')}
+                                    </span>
+                                    <button onClick={() => ovniqLines.forEach((l, i) => { if (l.corrected && !acceptedRows.has(i)) toggleAccept(i) })}
+                                        className="text-[9px] font-bold px-2.5 py-1 rounded-lg bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0 ml-3">
+                                        Accept ✓
+                                    </button>
+                                </div>
+                            )}
+                            {ovniqLines.some((l, i) => l.corrected && acceptedRows.has(i)) && (
+                                <div className="px-4 py-2 bg-success/5 border-t border-success/20 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                                        <span className="text-[10px] text-success font-medium">
+                                            {ovniqLines.filter((l, i) => l.corrected && acceptedRows.has(i)).map(l => `${l.sifPrice} → ${l.ovniq}`).join(' · ')} · accepted
+                                        </span>
+                                    </div>
+                                    <button onClick={() => { const next = new Set(acceptedRows); ovniqLines.forEach((l, i) => { if (l.corrected) next.delete(i) }); onSetAccepted(next) }}
+                                        className="text-[9px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border hover:text-foreground transition-all shrink-0 ml-3">
+                                        Undo all
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
-                        {!allAccepted && (
-                            <button
-                                onClick={acceptAll}
-                                className="w-full py-2 text-[10px] font-black rounded-xl bg-muted/50 text-muted-foreground border border-border hover:bg-muted/70 transition-all uppercase tracking-widest"
-                            >
-                                Apply All Corrections
-                            </button>
-                        )}
-
-                        {allAccepted && (
-                            <div className="flex items-center gap-2 p-3 bg-success/5 border border-success/20 rounded-xl animate-in fade-in duration-300">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                                <p className="text-[11px] text-success font-medium">
-                                    {ovniqLines.filter(l => l.corrected).map(l => `${l.sifPrice} → ${l.ovniq}`).join(' · ')} · Quote updated
-                                </p>
-                            </div>
-                        )}
                     </div>
                 ) : (
                     <div className="px-5 mt-4 space-y-4">
                         {/* Discount Calc */}
-                        <div className="rounded-xl border border-border overflow-hidden">
-                            <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                        <div className={`rounded-xl border overflow-hidden transition-colors ${isEditingDiscount ? 'border-primary/40' : 'border-border'}`}>
+                            <div className={`px-4 py-3 border-b flex items-center justify-between transition-colors ${isEditingDiscount ? 'bg-primary/5 border-primary/20' : 'bg-muted/30 border-border'}`}>
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Formula · {contract === 'city' ? 'City' : 'State'} Contract</p>
+                                <button
+                                    onClick={() => setEditingDiscount(e => !e)}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                                        isEditingDiscount
+                                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                            : 'text-muted-foreground border-border hover:text-foreground hover:border-foreground/30'
+                                    }`}
+                                >
+                                    {isEditingDiscount ? <CheckCircle2 className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
+                                    {isEditingDiscount ? 'Done' : 'Edit'}
+                                </button>
                             </div>
                             <div className="px-4 py-4 space-y-3">
-                                <div className="font-mono text-[12px] text-foreground">
+                                <div className="font-mono text-[12px] text-muted-foreground">
                                     sell ÷ list − 1 = discount%
                                 </div>
                                 <div className="font-mono text-[14px] font-bold text-foreground">
@@ -1469,19 +1498,39 @@ function QuoteReviewPanel({
                                 </div>
                                 <div className="h-px bg-border" />
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="bg-muted/30 rounded-lg px-3 py-2">
-                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Sell Price</p>
-                                        <input type="text" value={sellPrice} onChange={e => setSellPrice(e.target.value)}
-                                            className="w-full bg-transparent text-[13px] font-black font-mono text-foreground focus:outline-none border-b border-dashed border-border focus:border-primary" />
+                                    {/* Sell Price */}
+                                    <div className={`rounded-lg px-3 py-2 transition-colors ${isEditingDiscount ? 'bg-primary/5 border border-primary/30 ring-1 ring-primary/10' : 'bg-muted/30'}`}>
+                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">Sell Price</p>
+                                        {isEditingDiscount ? (
+                                            <input
+                                                type="text"
+                                                value={sellPrice}
+                                                onChange={e => setSellPrice(e.target.value)}
+                                                autoFocus
+                                                className="w-full bg-transparent text-[13px] font-black font-mono text-foreground focus:outline-none border-b-2 border-primary"
+                                            />
+                                        ) : (
+                                            <p className="text-[13px] font-black font-mono text-foreground">{sellPrice}</p>
+                                        )}
                                     </div>
-                                    <div className="bg-muted/30 rounded-lg px-3 py-2">
-                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">List Price</p>
-                                        <input type="text" value={listPrice} onChange={e => setListPrice(e.target.value)}
-                                            className="w-full bg-transparent text-[13px] font-black font-mono text-muted-foreground focus:outline-none border-b border-dashed border-border focus:border-primary" />
+                                    {/* List Price */}
+                                    <div className={`rounded-lg px-3 py-2 transition-colors ${isEditingDiscount ? 'bg-primary/5 border border-primary/30 ring-1 ring-primary/10' : 'bg-muted/30'}`}>
+                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">List Price</p>
+                                        {isEditingDiscount ? (
+                                            <input
+                                                type="text"
+                                                value={listPrice}
+                                                onChange={e => setListPrice(e.target.value)}
+                                                className="w-full bg-transparent text-[13px] font-black font-mono text-muted-foreground focus:outline-none border-b-2 border-primary"
+                                            />
+                                        ) : (
+                                            <p className="text-[13px] font-black font-mono text-muted-foreground">{listPrice}</p>
+                                        )}
                                     </div>
+                                    {/* Discount — always read-only */}
                                     <div className="bg-muted/30 rounded-lg px-3 py-2">
-                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Discount</p>
-                                        <p className="text-[13px] font-black font-mono mt-0.5 text-warning">{computeDiscount()}</p>
+                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">Discount</p>
+                                        <p className="text-[13px] font-black font-mono text-warning">{computeDiscount()}</p>
                                     </div>
                                 </div>
                             </div>
