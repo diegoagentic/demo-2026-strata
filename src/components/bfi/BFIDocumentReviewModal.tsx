@@ -521,7 +521,7 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
 
 type UploadState = 'idle' | 'uploading' | 'detected'
 
-function AttachmentsPanel({ onValidate }: { invoiceUpload?: boolean; onValidate?: () => void }) {
+function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceUpload?: boolean; michaelMode?: boolean; onValidate?: () => void }) {
     const [lightbox, setLightbox] = useState<{ path: string; name: string } | null>(null)
     const [uploadState,        setUploadState]        = useState<UploadState>('idle')
     const [progress,           setProgress]           = useState(0)
@@ -546,15 +546,24 @@ function AttachmentsPanel({ onValidate }: { invoiceUpload?: boolean; onValidate?
                 {/* ── Invoice upload zone ── */}
                 <div className="space-y-3">
                     {uploadState === 'idle' && (
+                        michaelMode ? (
+                            <div className="w-full border-2 border-dashed border-border/40 rounded-2xl p-5 flex flex-col items-center gap-2 opacity-50 cursor-not-allowed bg-muted/20">
+                                <Upload className="h-6 w-6 text-muted-foreground" />
+                                <p className="text-[12px] font-bold text-muted-foreground">OmniQuote Invoice Upload</p>
+                                <p className="text-[10px] text-muted-foreground">Pending — Lauren will upload after CPR approval</p>
+                            </div>
+                        ) : (
                             <button
                                 onClick={simulateUpload}
                                 className="w-full border-2 border-dashed border-ai/30 rounded-2xl p-5 flex flex-col items-center gap-2 hover:border-ai/60 hover:bg-ai/5 transition-all group"
                             >
                                 <Upload className="h-6 w-6 text-ai/60 group-hover:text-ai transition-colors" />
                                 <p className="text-[12px] font-bold text-foreground">OmniQuote Approved Invoice</p>
-                                <p className="text-[10px] text-muted-foreground">Drag & drop or click · PDF only · OmniQuote invoices accepted</p>
+                                <p className="text-[10px] text-muted-foreground">Attach the OmniQuote invoice PDF for Purchase Order DOE-2847</p>
+                                <p className="text-[9px] text-muted-foreground/60">Accepted: PDF · Max 10MB</p>
                             </button>
-                        )}
+                        )
+                    )}
 
                         {uploadState === 'uploading' && (
                             <div className="rounded-2xl border border-border bg-card px-4 py-4 space-y-3">
@@ -830,11 +839,17 @@ CORE has been updated (WO-2026-0089) and the SIF reflects the reconciled figures
 
 // ─── CPR Review Panel ─────────────────────────────────────────────────────────
 
-function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload }: { onValidate?: () => void; michaelMode?: boolean; invoiceUpload?: boolean }) {
+// CPR line id → SIF_GROUPS fieldId mapping (for live doc sync)
+const CPR_TO_SIF: Record<string, string> = {
+    'carpenters':    'f1',
+    'ot-carpenters': 'f2',
+}
+
+function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChange }: { onValidate?: () => void; michaelMode?: boolean; invoiceUpload?: boolean; onResolveChange?: (ids: Set<string>) => void }) {
     const diffLines = CPR_LINES.filter(l => !l.ok)
-    // Michael mode: lines arrive pre-approved (Lauren already signed off)
+    // Michael/invoiceUpload mode: lines arrive pre-approved
     const [approved, setApproved] = useState<Set<string>>(
-        michaelMode ? new Set(diffLines.map(l => l.id)) : new Set()
+        (michaelMode || invoiceUpload) ? new Set(diffLines.map(l => l.id)) : new Set()
     )
     const [sent, setSent]         = useState(false)
     const [showDialog, setShowDialog] = useState(false)
@@ -844,7 +859,13 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload }: { onValidate
     const allApproved  = diffLines.every(l => approved.has(l.id))
     const totalImpact  = '-$2,340'
 
-    const handleApprove = (id: string) => setApproved(prev => new Set([...prev, id]))
+    const handleApprove = (id: string) => {
+        const next = new Set([...approved, id])
+        setApproved(next)
+        // sync resolved SIF fields: map each approved CPR line to its SIF fieldId
+        const sifIds = new Set([...next].map(cprId => CPR_TO_SIF[cprId]).filter(Boolean))
+        onResolveChange?.(sifIds)
+    }
 
     const handleDialogSent = () => {
         setSent(true)
@@ -878,7 +899,7 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload }: { onValidate
             </div>
 
             {rightTab === 'attachments' ? (
-                <AttachmentsPanel invoiceUpload={invoiceUpload} onValidate={onValidate} />
+                <AttachmentsPanel invoiceUpload={invoiceUpload} michaelMode={michaelMode} onValidate={onValidate} />
             ) : (
             <div className="flex-1 overflow-y-auto">
                 {/* AI Banner */}
@@ -976,9 +997,11 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload }: { onValidate
 const ASK_LAUREN_MESSAGE =
 `Hi Lauren,
 
-I'm reviewing the agency fee for DOE-2847. Before I confirm, can you verify that the OmniQuote invoice ($6,920) matches the final CPR reconciliation you approved?
+Returning DOE-2847 for a quick check before I confirm the agency fee.
 
-Specifically: are Carpenters 45h and OT 6h the figures that went to Herman Miller, or are there any updates I should be aware of?
+Please verify that the CPR-adjusted hours (Carpenters 45h, OT 6h) are correctly reflected in the MK Invoice before I close this out.
+
+Let me know once confirmed and I'll approve.
 
 — Patricia Hayes
   BFI Furniture · Finance & AR`
@@ -1004,10 +1027,10 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                     enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-150"  leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                <div className="fixed inset-0 flex items-center justify-center p-6">
                     <TransitionChild as={Fragment}
                         enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
                         leave="ease-in duration-150"  leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
@@ -1020,8 +1043,8 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                                         <Mail className="h-4 w-4 text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-[13px] font-bold text-foreground">Ask Lauren · Fee Verification</p>
-                                        <p className="text-[11px] text-muted-foreground">DOE-2847 · Clarification request</p>
+                                        <p className="text-[13px] font-bold text-foreground">Return to Lauren</p>
+                                        <p className="text-[11px] text-muted-foreground">DOE-2847 · Add a note for Lauren DeMarco</p>
                                     </div>
                                 </div>
                                 <button onClick={onClose} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
@@ -1060,10 +1083,10 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-[12px] font-black hover:opacity-90 transition-all uppercase tracking-widest disabled:opacity-60"
                                 >
                                     {sent
-                                        ? <><CheckCircle2 className="h-3.5 w-3.5" /> Sent to Lauren</>
+                                        ? <><CheckCircle2 className="h-3.5 w-3.5" /> Returned to Lauren</>
                                         : sending
                                         ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
-                                        : <><Send className="h-3.5 w-3.5" /> Send to Lauren →</>
+                                        : <><Send className="h-3.5 w-3.5" /> Send & Return →</>
                                     }
                                 </button>
                             </div>
@@ -1128,6 +1151,33 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                     </p>
                 </div>
 
+                {/* CPR Reconciliation Summary — already applied */}
+                <div className="px-5 mt-3">
+                    <div className="rounded-xl border border-border bg-muted/20 p-3">
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                            CPR Reconciliation · Applied
+                        </p>
+                        <div className="space-y-1">
+                            {[
+                                { label: 'Carpenters',    quoted: '50h', cpr: '45h', impact: '−$1,800' },
+                                { label: 'OT Carpenters', quoted: '8h',  cpr: '6h',  impact: '−$540'   },
+                            ].map(row => (
+                                <div key={row.label} className="flex items-center gap-2 text-[10px]">
+                                    <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                                    <span className="text-foreground font-medium w-24 shrink-0">{row.label}</span>
+                                    <span className="text-muted-foreground line-through">{row.quoted}</span>
+                                    <span className="text-success font-bold ml-1">{row.cpr}</span>
+                                    <span className="ml-auto text-success font-mono text-[9px]">{row.impact}</span>
+                                </div>
+                            ))}
+                            <div className="flex items-center gap-2 text-[10px] pt-1 border-t border-border/50 mt-1">
+                                <span className="font-black text-foreground ml-5 w-24 shrink-0">Total impact</span>
+                                <span className="ml-auto text-success font-black font-mono text-[11px]">−$2,340</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Fee breakdown table */}
                 <div className="px-5 mt-4">
                     <div className="rounded-xl border border-border overflow-hidden">
@@ -1186,7 +1236,7 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                         onClick={() => setShowAskLauren(true)}
                         className="px-3 py-2.5 text-[11px] font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all shrink-0"
                     >
-                        Ask Lauren →
+                        Return to Lauren →
                     </button>
                     {isMatch ? (
                         <button
@@ -1226,10 +1276,10 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                         enter="ease-out duration-250" enterFrom="opacity-0" enterTo="opacity-100"
                         leave="ease-in duration-150"  leaveFrom="opacity-100" leaveTo="opacity-0"
                     >
-                        <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/50 backdrop-blur-sm" />
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
                     </TransitionChild>
 
-                    <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-8">
+                    <div className="fixed inset-0 flex items-center justify-center p-8">
                         <TransitionChild as={Fragment}
                             enter="ease-out duration-300" enterFrom="opacity-0 scale-90" enterTo="opacity-100 scale-100"
                             leave="ease-in duration-150"  leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-90"
@@ -1250,7 +1300,7 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                                 <div className="mx-6 mb-6 rounded-xl border border-success/20 bg-success/5 px-4 py-3 space-y-1.5 text-left">
                                     {[
                                         ['Order',    'DOE-2847 · NYC Dept. of Education'],
-                                        ['Invoice',  'Q-2026-0089 · OmniQuote Approved'],
+                                        ['PO',       'DOE-2847 · Purchase Order Confirmed'],
                                         ['Amount',   '$6,920 · Agency fee confirmed'],
                                         ['Verified', 'Patricia Hayes · Finance & AR'],
                                         ['Date',     'May 13, 2026'],
@@ -1613,7 +1663,7 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} />
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
-    if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} />
+    if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
     return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} />
 }
@@ -2216,9 +2266,10 @@ export default function BFIDocumentReviewModal({
 }: BFIDocumentReviewModalProps) {
     const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
-    // Labor corrections (f1, f2) were resolved in step 'extract' — show as applied in all subsequent steps
+    // For cpr: start empty so approvals on the right drive the SIF doc live
+    // For quote/fee: f1+f2 already resolved from prior steps
     const [resolvedIds, setResolvedIds] = useState<Set<string>>(() =>
-        ['quote', 'cpr', 'fee'].includes(step) ? new Set(['f1', 'f2']) : new Set()
+        ['quote', 'fee'].includes(step) ? new Set(['f1', 'f2']) : new Set()
     )
     // OmniQuote lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
@@ -2325,7 +2376,7 @@ export default function BFIDocumentReviewModal({
                                         <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2">
                                             {([
                                                 { id: 'sif' as const,      icon: FileText, label: 'SIF · DOE-2847' },
-                                                { id: 'specs' as const,    icon: FileText, label: (step === 'labor' || step === 'cpr') ? 'DOE-2847 · Purchase Order' : 'Q-2026-0089 · Quote' },
+                                                { id: 'specs' as const,    icon: FileText, label: (step === 'labor' || step === 'cpr' || step === 'fee') ? 'DOE-2847 · Purchase Order' : 'Q-2026-0089 · Quote' },
                                                 { id: 'floorplan' as const, icon: MapPin,   label: 'Floor Plan' },
                                             ]).map(tab => (
                                                 <button
