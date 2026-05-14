@@ -504,10 +504,9 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
         <>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
 
-                {/* ── Invoice upload zone (invoiceUpload mode only) ── */}
-                {invoiceUpload && (
-                    <div className="space-y-3">
-                        {uploadState === 'idle' && (
+                {/* ── Invoice upload zone ── */}
+                <div className="space-y-3">
+                    {uploadState === 'idle' && (
                             <button
                                 onClick={simulateUpload}
                                 className="w-full border-2 border-dashed border-ai/30 rounded-2xl p-5 flex flex-col items-center gap-2 hover:border-ai/60 hover:bg-ai/5 transition-all group"
@@ -579,8 +578,7 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
                         {uploadState !== 'idle' && (
                             <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-center">Existing attachments</p>
                         )}
-                    </div>
-                )}
+                </div>
 
                 {/* Existing files list */}
                 {BFI_ATTACHMENTS.map(file => (
@@ -927,6 +925,110 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload }: { onValidate
     )
 }
 
+// ─── Ask Lauren Dialog ────────────────────────────────────────────────────────
+
+const ASK_LAUREN_MESSAGE =
+`Hi Lauren,
+
+I'm reviewing the agency fee for DOE-2847. Before I confirm, can you verify that the OmniQuote invoice ($6,920) matches the final CPR reconciliation you approved?
+
+Specifically: are Carpenters 45h and OT 6h the figures that went to Herman Miller, or are there any updates I should be aware of?
+
+— Patricia Hayes
+  BFI Furniture · Finance & AR`
+
+function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    const [message, setMessage] = useState(ASK_LAUREN_MESSAGE)
+    const [sending, setSending] = useState(false)
+    const [sent,    setSent]    = useState(false)
+
+    const handleSend = () => {
+        setSending(true)
+        setTimeout(() => {
+            setSending(false)
+            setSent(true)
+            setTimeout(onClose, 900)
+        }, 800)
+    }
+
+    return (
+        <Transition show={isOpen} as={Fragment}>
+            <Dialog as="div" className="relative z-[500]" onClose={onClose}>
+                <TransitionChild as={Fragment}
+                    enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                    leave="ease-in duration-150"  leaveFrom="opacity-100" leaveTo="opacity-0"
+                >
+                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                </TransitionChild>
+
+                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                    <TransitionChild as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
+                        leave="ease-in duration-150"  leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                    >
+                        <DialogPanel className="w-full max-w-lg rounded-2xl bg-card border border-border shadow-2xl overflow-hidden">
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/30">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                                        <Mail className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[13px] font-bold text-foreground">Ask Lauren · Fee Verification</p>
+                                        <p className="text-[11px] text-muted-foreground">DOE-2847 · Clarification request</p>
+                                    </div>
+                                </div>
+                                <button onClick={onClose} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <div className="px-5 pt-4 pb-2 space-y-2.5">
+                                {[
+                                    { label: 'From', value: 'patricia.hayes@bfifurniture.com' },
+                                    { label: 'To',   value: 'lauren.demarco@bfifurniture.com · Account Manager' },
+                                ].map(row => (
+                                    <div key={row.label} className="flex items-start gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0 pt-0.5">{row.label}</span>
+                                        <span className="font-medium text-foreground">{row.value}</span>
+                                    </div>
+                                ))}
+
+                                <textarea
+                                    value={message}
+                                    onChange={e => setMessage(e.target.value)}
+                                    rows={9}
+                                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                            </div>
+
+                            <div className="px-5 pb-4">
+                                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OVNIQ] }]} />
+                            </div>
+
+                            <div className="px-5 py-4 border-t border-border flex items-center gap-3">
+                                <button onClick={onClose} className="text-[12px] font-bold text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                                <button
+                                    onClick={handleSend}
+                                    disabled={sending || sent}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-[12px] font-black hover:opacity-90 transition-all uppercase tracking-widest disabled:opacity-60"
+                                >
+                                    {sent
+                                        ? <><CheckCircle2 className="h-3.5 w-3.5" /> Sent to Lauren</>
+                                        : sending
+                                        ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
+                                        : <><Send className="h-3.5 w-3.5" /> Send to Lauren →</>
+                                    }
+                                </button>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </Transition>
+    )
+}
+
 // ─── Fee Review Panel ─────────────────────────────────────────────────────────
 
 const FEE_LINES = [
@@ -941,8 +1043,19 @@ const MK_INVOICE_GAP   = '$8,940'
 const FEE_GAP          = '−$315'
 
 function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; onValidate?: () => void }) {
-    const isMatch   = scenario === 'match'
-    const mkInvoice = isMatch ? MK_INVOICE_MATCH : MK_INVOICE_GAP
+    const isMatch        = scenario === 'match'
+    const mkInvoice      = isMatch ? MK_INVOICE_MATCH : MK_INVOICE_GAP
+    const [showAskLauren, setShowAskLauren] = useState(false)
+    const [confirming,    setConfirming]    = useState(false)
+    const [showSuccess,   setShowSuccess]   = useState(false)
+
+    const handleConfirm = () => {
+        setConfirming(true)
+        setTimeout(() => {
+            setConfirming(false)
+            setShowSuccess(true)
+        }, 1200)
+    }
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
@@ -1021,31 +1134,101 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
-                {isMatch ? (
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-2">
+                <div className="flex gap-2">
                     <button
-                        onClick={() => onValidate?.()}
-                        className="w-full py-2.5 text-[11px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest shadow-sm"
+                        onClick={() => setShowAskLauren(true)}
+                        className="px-3 py-2.5 text-[11px] font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all shrink-0"
                     >
-                        Confirm Fee
+                        Ask Lauren →
                     </button>
-                ) : (
-                    <div className="flex gap-2">
+                    {isMatch ? (
                         <button
-                            onClick={() => onValidate?.()}
-                            className="flex-1 py-2.5 text-[11px] font-black rounded-xl bg-warning/10 text-warning border border-warning/30 hover:bg-warning/20 transition-all uppercase tracking-widest"
+                            onClick={handleConfirm}
+                            disabled={confirming}
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest shadow-sm disabled:opacity-70"
                         >
-                            Request Changes
+                            {confirming
+                                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Processing…</>
+                                : 'Confirm Fee'
+                            }
                         </button>
-                        <button
-                            onClick={() => onValidate?.()}
-                            className="flex-1 py-2.5 text-[11px] font-black rounded-xl border border-border text-foreground bg-card hover:bg-muted/50 transition-all uppercase tracking-widest"
-                        >
-                            Flag for Review
-                        </button>
-                    </div>
-                )}
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => onValidate?.()}
+                                className="flex-1 py-2.5 text-[11px] font-black rounded-xl bg-warning/10 text-warning border border-warning/30 hover:bg-warning/20 transition-all uppercase tracking-widest"
+                            >
+                                Request Changes
+                            </button>
+                            <button
+                                onClick={() => onValidate?.()}
+                                className="flex-1 py-2.5 text-[11px] font-black rounded-xl border border-border text-foreground bg-card hover:bg-muted/50 transition-all uppercase tracking-widest"
+                            >
+                                Flag
+                            </button>
+                        </>
+                    )}
+                </div>
+                <AskLaurenDialog isOpen={showAskLauren} onClose={() => setShowAskLauren(false)} />
             </div>
+
+            {/* Success overlay modal */}
+            <Transition show={showSuccess} as={Fragment}>
+                <Dialog as="div" className="relative z-[500]" onClose={() => {}}>
+                    <TransitionChild as={Fragment}
+                        enter="ease-out duration-250" enterFrom="opacity-0" enterTo="opacity-100"
+                        leave="ease-in duration-150"  leaveFrom="opacity-100" leaveTo="opacity-0"
+                    >
+                        <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/50 backdrop-blur-sm" />
+                    </TransitionChild>
+
+                    <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-8">
+                        <TransitionChild as={Fragment}
+                            enter="ease-out duration-300" enterFrom="opacity-0 scale-90" enterTo="opacity-100 scale-100"
+                            leave="ease-in duration-150"  leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-90"
+                        >
+                            <DialogPanel className="w-full max-w-sm rounded-2xl bg-card border border-border shadow-2xl overflow-hidden text-center">
+                                {/* Success icon */}
+                                <div className="px-8 pt-8 pb-5">
+                                    <div className="h-16 w-16 rounded-full bg-success/10 border-2 border-success/30 flex items-center justify-center mx-auto mb-4">
+                                        <CheckCircle2 className="h-8 w-8 text-success" />
+                                    </div>
+                                    <h3 className="text-[17px] font-black text-foreground mb-1">Process Closed Successfully</h3>
+                                    <p className="text-[12px] text-muted-foreground leading-relaxed">
+                                        Agency fee verification complete for DOE-2847
+                                    </p>
+                                </div>
+
+                                {/* Summary */}
+                                <div className="mx-6 mb-6 rounded-xl border border-success/20 bg-success/5 px-4 py-3 space-y-1.5 text-left">
+                                    {[
+                                        ['Order',    'DOE-2847 · NYC Dept. of Education'],
+                                        ['Invoice',  'Q-2026-0089 · OmniQuote Approved'],
+                                        ['Amount',   '$6,920 · Agency fee confirmed'],
+                                        ['Verified', 'Patricia Hayes · Finance & AR'],
+                                        ['Date',     'May 13, 2026'],
+                                    ].map(([label, value]) => (
+                                        <div key={label} className="flex gap-2 text-[11px]">
+                                            <span className="text-muted-foreground w-16 shrink-0">{label}</span>
+                                            <span className="font-semibold text-foreground">{value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="px-6 pb-6">
+                                    <button
+                                        onClick={() => { setShowSuccess(false); onValidate?.() }}
+                                        className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-[12px] font-black hover:opacity-90 transition-all uppercase tracking-widest shadow-sm"
+                                    >
+                                        Done →
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </Dialog>
+            </Transition>
         </div>
     )
 }

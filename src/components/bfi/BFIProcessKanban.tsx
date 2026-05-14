@@ -325,6 +325,8 @@ export interface BFIProcessKanbanProps {
     showNewFee?: boolean
     /** When set, only context cards in these column indices are visible. DOE card is unaffected. */
     filterColIdxs?: number[]
+    /** Adds a pulsing highlight to the Review button to guide the user. */
+    highlightReview?: boolean
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -339,6 +341,7 @@ export default function BFIProcessKanban({
     reviewLabel = 'Review',
     showNewFee  = true,
     filterColIdxs,
+    highlightReview = false,
 }: BFIProcessKanbanProps) {
     const badge    = DOE_BADGE[activeCol]
     const subtitle = doeSubtitle ?? DOE_SUBTITLE[activeCol]
@@ -424,14 +427,21 @@ export default function BFIProcessKanban({
                                                 </button>
                                             )}
                                             {onReviewDoe && (
-                                                <button
-                                                    onClick={onReviewDoe}
-                                                    className={`py-1.5 text-[9px] font-bold rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all uppercase tracking-widest ${
-                                                        onSendDoe ? 'px-3' : 'flex-1 font-black border-transparent bg-foreground text-background hover:opacity-80'
-                                                    }`}
-                                                >
-                                                    {reviewLabel}
-                                                </button>
+                                                <div className={`relative ${onSendDoe ? '' : 'flex-1'}`}>
+                                                    {highlightReview && (
+                                                        <span className="absolute -inset-1 rounded-xl bg-ai/20 animate-pulse pointer-events-none" />
+                                                    )}
+                                                    <button
+                                                        onClick={onReviewDoe}
+                                                        className={`w-full py-1.5 text-[9px] font-bold rounded-lg transition-all uppercase tracking-widest ${
+                                                            onSendDoe
+                                                                ? 'px-3 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                                                : `font-black border-transparent bg-foreground text-background hover:opacity-80${highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`
+                                                        }`}
+                                                    >
+                                                        {reviewLabel}
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     )}

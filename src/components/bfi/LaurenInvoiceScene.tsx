@@ -21,7 +21,7 @@ const ACTIVE_COL = 3
 
 export default function LaurenInvoiceScene() {
     const { nextStep } = useDemo()
-    const [isModalOpen, setIsModalOpen] = useState(true)
+    const [isModalOpen, setIsModalOpen] = useState(false)
 
     const handleValidate = () => {
         setIsModalOpen(false)
@@ -67,6 +67,7 @@ export default function LaurenInvoiceScene() {
                 activeCol={ACTIVE_COL}
                 showDoe={true}
                 onReviewDoe={() => setIsModalOpen(true)}
+                highlightReview
             />
 
             <p className="text-[11px] text-muted-foreground text-center">
