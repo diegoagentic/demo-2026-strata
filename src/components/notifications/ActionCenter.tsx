@@ -130,12 +130,17 @@ export default function ActionCenter() {
     const [a11IngestCount,  setA11IngestCount]  = useState(0);
     // BFI generic step panel (a1.2d / a1.2e / a1.2f / a1.3b)
     const [bfiPanelClosed, setBfiPanelClosed] = useState(false);
-    // Reset all BFI panels when step changes
+    // Delay before any BFI notification panel appears (2s after step loads)
+    const [notifDelayReady, setNotifDelayReady] = useState(false);
+    // Reset all BFI panels when step changes, then reveal after 2s
     useEffect(() => {
         setA11PanelClosed(false);
         setA11IngestState('idle');
         setA11IngestCount(0);
         setBfiPanelClosed(false);
+        setNotifDelayReady(false);
+        const t = setTimeout(() => setNotifDelayReady(true), 2000);
+        return () => clearTimeout(t);
     }, [currentStep?.id]);
 
     // Step 1.10: Auto-open with single notification
@@ -239,9 +244,9 @@ export default function ActionCenter() {
     };
 
     const bfiStepConfig = isDemoActive ? BFI_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
-    const isBfiStepActive = !!bfiStepConfig && !bfiPanelClosed;
+    const isBfiStepActive = !!bfiStepConfig && !bfiPanelClosed && notifDelayReady;
 
-    const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed) || isBfiStepActive;
+    const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed && notifDelayReady) || isBfiStepActive;
 
     return (
         <>
@@ -377,7 +382,7 @@ export default function ActionCenter() {
         )}
 
         {/* BFI Step a1.1: Always-visible Action Center — Miller Knoll quote request */}
-        {isStepA11 && !a11PanelClosed && (
+        {isStepA11 && !a11PanelClosed && notifDelayReady && (
             <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
                 <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
 
