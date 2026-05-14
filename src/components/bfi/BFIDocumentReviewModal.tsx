@@ -29,6 +29,8 @@ interface BFIDocumentReviewModalProps {
     step: BFIReviewStep
     onValidate?: () => void
     scenario?: 'match' | 'gap'  // for step='fee'
+    /** Michael mode: pre-approves CPR lines, changes footer to send-to-Nancy */
+    michaelMode?: boolean
 }
 
 interface ReviewField {
@@ -587,13 +589,16 @@ The SIF has been updated and the order is ready to proceed to fee verification. 
 
 // ─── CPR Review Panel ─────────────────────────────────────────────────────────
 
-function CPRReviewPanel({ onValidate }: { onValidate?: () => void }) {
-    const [approved, setApproved] = useState<Set<string>>(new Set())
+function CPRReviewPanel({ onValidate, michaelMode }: { onValidate?: () => void; michaelMode?: boolean }) {
+    const diffLines = CPR_LINES.filter(l => !l.ok)
+    // Michael mode: lines arrive pre-approved (Lauren already signed off)
+    const [approved, setApproved] = useState<Set<string>>(
+        michaelMode ? new Set(diffLines.map(l => l.id)) : new Set()
+    )
     const [sent, setSent]         = useState(false)
     const [showDialog, setShowDialog] = useState(false)
     const [rightTab, setRightTab] = useState<'review' | 'attachments'>('review')
 
-    const diffLines    = CPR_LINES.filter(l => !l.ok)
     const allApproved  = diffLines.every(l => approved.has(l.id))
     const totalImpact  = '-$2,340'
 
@@ -697,11 +702,13 @@ function CPRReviewPanel({ onValidate }: { onValidate?: () => void }) {
             {/* Footer — only shown on CPR Review tab */}
             {rightTab === 'review' && (
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
-                <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
-                    {approved.size}/{diffLines.length} lines approved
-                </div>
+                {!michaelMode && (
+                    <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
+                        {approved.size}/{diffLines.length} lines approved
+                    </div>
+                )}
                 <button
-                    onClick={allApproved ? () => setShowDialog(true) : undefined}
+                    onClick={allApproved ? (michaelMode ? () => onValidate?.() : () => setShowDialog(true)) : undefined}
                     disabled={!allApproved}
                     className={`w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
                         allApproved
@@ -709,12 +716,15 @@ function CPRReviewPanel({ onValidate }: { onValidate?: () => void }) {
                             : 'bg-muted text-muted-foreground cursor-not-allowed opacity-40'
                     }`}
                 >
-                    {sent ? '✓ CORE Updated & Notified' : allApproved ? 'Update CORE & Notify →' : 'Approve lines to continue'}
+                    {michaelMode
+                        ? 'Send Final Quote to Nancy →'
+                        : (sent ? '✓ CORE Updated & Notified' : allApproved ? 'Update CORE & Notify →' : 'Approve lines to continue')
+                    }
                 </button>
             </div>
             )}
 
-            <CPRNotifyDialog isOpen={showDialog} onSent={handleDialogSent} />
+            {!michaelMode && <CPRNotifyDialog isOpen={showDialog} onSent={handleDialogSent} />}
         </div>
     )
 }
@@ -1107,13 +1117,14 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
-function RightPanel({ step, scenario, onValidate }: {
+function RightPanel({ step, scenario, onValidate, michaelMode }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
+    michaelMode?: boolean
 }) {
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
-    if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} />
+    if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
     return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} />
 }
@@ -1477,7 +1488,7 @@ function BFIFieldReview({ step, scenario, onValidate }: {
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 export default function BFIDocumentReviewModal({
-    isOpen, onClose, step, onValidate, scenario
+    isOpen, onClose, step, onValidate, scenario, michaelMode
 }: BFIDocumentReviewModalProps) {
     const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>('sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
@@ -1646,7 +1657,7 @@ export default function BFIDocumentReviewModal({
 
                                     {/* Right: Contextual panel per step (2/5) */}
                                     <div className="col-span-2 flex flex-col min-h-0">
-                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} />
+                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} />
                                     </div>
 
                                 </div>
