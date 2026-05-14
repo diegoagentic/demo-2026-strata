@@ -27,6 +27,7 @@ import DesignerResponseScene from './DesignerResponseScene'
 import POLaborScene from './POLaborScene'
 import LaurenClaimScene from './LaurenClaimScene'
 import ClaimResolvedScene from './ClaimResolvedScene'
+import MichaelApprovalScene from './MichaelApprovalScene'
 
 const STEP_TITLES: Record<string, string> = {
     'r1.2': 'Product Receiving',
@@ -41,6 +42,7 @@ const STEP_TITLES: Record<string, string> = {
     'a1.2e': 'Product Receiving',
     'a1.2f': 'Product Receiving',
     'a1.3': 'Agency Fee',
+    'a1.3b': 'Agency Fee',
     'a1.4': 'Agency Fee',
 }
 
@@ -108,6 +110,7 @@ export default function BFIPage() {
                 {stepId === 'a1.2e' && <LaurenClaimScene />}
                 {stepId === 'a1.2f' && <ClaimResolvedScene />}
                 {stepId === 'a1.3' && <CPRScene onSend={nextStep} />}
+                {stepId === 'a1.3b' && <MichaelApprovalScene />}
                 {stepId === 'a1.4' && <AgencyFeeVerifyScene />}
             </div>
         </MBIPageShell>

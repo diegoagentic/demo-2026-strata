@@ -107,6 +107,15 @@ export const BFI_STEPS: DemoStep[] = [
         role: 'Account Manager',
     },
     {
+        id: 'a1.3b',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
+        title: 'Manager Review & Invoice Request',
+        description: 'Michael Chen (Lauren\'s manager) receives the CPR approval from Lauren, reviews the final labor quote ($6,920 after −$2,340 adjustment), and sends the final cotización to Nancy Rodriguez (Herman Miller invoice processor) requesting the invoice — without touching CORE.',
+        app: 'bfi-agency-fee',
+        role: 'Account Manager',
+    },
+    {
         id: 'a1.4',
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
@@ -181,7 +190,8 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
     'a1.2e': { mode: 'interactive', userAction: 'Review Lena\'s missing-carton notification · expand order · attach proof of shipment · send shortage claim to Herman Miller' },
     'a1.2f': { mode: 'interactive', userAction: 'Receive claim-resolved notification · review floor plan + work order · download/print · notify Walter to approve scheduling' },
-    'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line-by-line · approve · see the pre-drafted message to Michael → send without leaving the screen' },
+    'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line-by-line · approve · open CORE update + stakeholder notification dialog · send' },
+    'a1.3b': { mode: 'interactive', userAction: 'Michael receives Lauren\'s CPR notification · reviews final labor quote · sends cotización to Nancy (HM) requesting the invoice' },
     'a1.4': { mode: 'interactive', userAction: 'Patricia verifies the agency fee — toggle match/gap scenario · confirm or flag the $1,250 discrepancy' },
 };
 
@@ -248,7 +258,13 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Loading CPR document for DOE-2847',
         'Extracting certified hours by labor category',
         'Comparing against quoted hours · Carpenters −5h · OT −2h',
-        'Drafting revision message to Michael Boyle and Nancy Bos',
+        'Drafting CORE update + stakeholder notification · Michael Chen + Nancy Rodriguez',
+    ],
+    'a1.3b': [
+        'CPR approval received from Lauren DeMarco',
+        'Compiling final labor quote: Teamsters 24h · Carpenters 45h · OT 6h',
+        'Calculating total: $6,920 (−$2,340 from original quote)',
+        'Drafting invoice request to Nancy Rodriguez · Herman Miller',
     ],
     'a1.4': [
         'Loading CoNY contract T-codes for DOE-2847',
@@ -262,5 +278,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 
 export const BFI_SELF_INDICATED: string[] = [
     'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
-    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.4',
+    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.4',
 ];
