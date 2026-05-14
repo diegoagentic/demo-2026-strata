@@ -1,5 +1,5 @@
 import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react';
-import { BellIcon, MagnifyingGlassIcon, XMarkIcon, Squares2X2Icon, ExclamationTriangleIcon, CreditCardIcon, ClipboardDocumentCheckIcon, TruckIcon, DocumentTextIcon, CheckCircleIcon, SparklesIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { BellIcon, MagnifyingGlassIcon, XMarkIcon, Squares2X2Icon, ExclamationTriangleIcon, CreditCardIcon, ClipboardDocumentCheckIcon, TruckIcon, DocumentTextIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { Fragment, useState, useMemo, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { mockNotifications } from './data';
@@ -174,16 +174,13 @@ export default function ActionCenter() {
 
     const handleA11Ingest = () => {
         setA11IngestState('ingesting');
-        window.dispatchEvent(new CustomEvent('bfi:ingest'));
         setTimeout(() => setA11IngestCount(1), 600);
         setTimeout(() => setA11IngestCount(2), 1200);
         setTimeout(() => setA11IngestCount(3), 1800);
-        setTimeout(() => setA11IngestState('ready'), 2300);
-    };
-
-    const handleA11Review = () => {
-        setA11PanelClosed(true);
-        window.dispatchEvent(new CustomEvent('bfi:review'));
+        setTimeout(() => {
+            setA11IngestState('ready');
+            window.dispatchEvent(new CustomEvent('bfi:ingest'));
+        }, 2300);
     };
 
     const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed);
@@ -441,16 +438,6 @@ export default function ActionCenter() {
                                             {line.text}
                                         </div>
                                     ))}
-                                </div>
-                                {/* Review Order CTA */}
-                                <div className="px-4 py-4">
-                                    <button
-                                        onClick={handleA11Review}
-                                        className="w-full py-2.5 text-[12px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
-                                    >
-                                        <EyeIcon className="w-4 h-4" />
-                                        Review Order →
-                                    </button>
                                 </div>
                             </div>
                         )}

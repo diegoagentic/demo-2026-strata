@@ -38,12 +38,6 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
         return () => window.removeEventListener('bfi:ingest', handler)
     }, [])
 
-    // Modal opens when Action Center fires "Review Order →"
-    useEffect(() => {
-        const handler = () => setIsModalOpen(true)
-        window.addEventListener('bfi:review', handler)
-        return () => window.removeEventListener('bfi:review', handler)
-    }, [])
 
     const handleModalValidate = () => {
         setIsModalOpen(false)
@@ -73,6 +67,8 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                 activeCol={0}
                 showDoe={showDoe}
                 animateDoe={true}
+                onReviewDoe={showDoe ? () => setIsModalOpen(true) : undefined}
+                highlightReview={showDoe}
             />
 
             <p className="text-[11px] text-muted-foreground text-center">
