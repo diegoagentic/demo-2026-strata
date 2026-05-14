@@ -9,7 +9,7 @@
  *   → Notify Walter → Dialog (editable From, CC procurement) → send → nextStep()
  */
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
     CheckCircle2, FileText, Mail, Send, Download, Printer, Loader2,
 } from 'lucide-react'
@@ -312,7 +312,16 @@ function WalterNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () =>
 // ─── Main Scene ───────────────────────────────────────────────────────────────
 
 export default function ClaimResolvedScene() {
-    const { nextStep } = useDemo()
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const [phase,       setPhase]       = useState<'dashboard' | 'detail'>('dashboard')
 
     useEffect(() => {
@@ -411,7 +420,7 @@ export default function ClaimResolvedScene() {
 
             <WalterNotifyDialog
                 isOpen={showDialog}
-                onSent={() => { setShowDialog(false); nextStep() }}
+                onSent={() => { setShowDialog(false); pauseAware(() => nextStep())() }}
             />
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />

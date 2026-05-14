@@ -4,8 +4,9 @@
  *          confirmation email in his mail client and acknowledges receipt.
  */
 
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { CheckCircle2, FileText, ArrowLeft, Mail } from 'lucide-react'
+import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 interface DesignerResponseSceneProps {
@@ -13,11 +14,21 @@ interface DesignerResponseSceneProps {
 }
 
 export default function DesignerResponseScene({ onAcknowledge }: DesignerResponseSceneProps) {
+    const { isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const [acknowledged, setAcknowledged] = useState(false)
 
     const handleAcknowledge = () => {
         setAcknowledged(true)
-        setTimeout(() => { onAcknowledge?.() }, 800)
+        setTimeout(pauseAware(() => { onAcknowledge?.() }), 800)
     }
 
     return (

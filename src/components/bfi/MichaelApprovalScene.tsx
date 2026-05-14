@@ -11,7 +11,7 @@
  *   Lines pre-approved → "Send Final Quote to Nancy →" → NancyDialog → nextStep()
  */
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
     CheckCircle2, Mail, Send,
 } from 'lucide-react'
@@ -169,7 +169,15 @@ function NancyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
 const ACTIVE_COL = 3
 
 export default function MichaelApprovalScene() {
-    const { nextStep } = useDemo()
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
 
     const [isModalOpen,  setIsModalOpen]  = useState(false)
     const [showNancy,    setShowNancy]    = useState(false)
@@ -189,7 +197,7 @@ export default function MichaelApprovalScene() {
 
     const handleNancySent = () => {
         setShowNancy(false)
-        setTimeout(() => nextStep?.(), 600)
+        setTimeout(pauseAware(() => nextStep?.()), 600)
     }
 
     return (

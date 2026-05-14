@@ -8,7 +8,7 @@
  *   modal validate   → "Notify designer?" send dialog → nextStep()
  */
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import { CheckCircle2, Send, User } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
@@ -25,7 +25,16 @@ const NOTIFY_MESSAGE = `Hi Robert — SIF for DOE-2847 has been ingested and val
 — Lauren DeMarco, BFI Furniture`
 
 export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProps) {
-    const { nextStep } = useDemo()
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const [showDoe,    setShowDoe]    = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isSendOpen, setIsSendOpen] = useState(false)
@@ -48,10 +57,10 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
 
     const handleSend = () => {
         setSendStep('sent')
-        setTimeout(() => {
+        setTimeout(pauseAware(() => {
             setIsSendOpen(false)
             nextStep()
-        }, 1200)
+        }), 1200)
     }
 
     const handleSkip = () => {

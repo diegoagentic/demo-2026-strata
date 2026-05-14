@@ -9,7 +9,7 @@
  *   → "Confirm Fee" → modal closes → success banner → card moves to Fee Verify (col 4)
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -21,7 +21,16 @@ interface AgencyFeeVerifySceneProps {
 }
 
 export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifySceneProps) {
-    const { nextStep } = useDemo()
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const scenario = 'match' as const
     const [isModalOpen,  setIsModalOpen]  = useState(false)
     const [kanbanCol,    setKanbanCol]    = useState<3 | 4>(3)
@@ -39,7 +48,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
         setIsModalOpen(false)
         setVerified(true)
         setKanbanCol(4)
-        setTimeout(() => { onComplete?.(); nextStep() }, 1400)
+        setTimeout(pauseAware(() => { onComplete?.(); nextStep() }), 1400)
     }
 
     return (

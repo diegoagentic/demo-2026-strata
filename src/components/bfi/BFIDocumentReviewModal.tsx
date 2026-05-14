@@ -444,9 +444,9 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                     enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/40 backdrop-blur-sm" />
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
                 </TransitionChild>
-                <div className="fixed top-16 left-80 right-0 bottom-0 flex items-center justify-center p-6">
+                <div className="fixed inset-0 flex items-center justify-center p-6">
                     <TransitionChild as={Fragment}
                         enter="ease-out duration-200" enterFrom="opacity-0 scale-95 translate-y-2" enterTo="opacity-100 scale-100 translate-y-0"
                         leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
@@ -505,7 +505,7 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                     <button onClick={handleSend} disabled={sending}
                                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-ai text-white text-[12px] font-bold hover:opacity-90 transition-all disabled:opacity-60">
                                         <Send className="h-3.5 w-3.5" />
-                                        {sending ? 'Sending…' : 'Send to Patricia →'}
+                                        {sending ? 'Sending…' : 'Send →'}
                                     </button>
                                 )}
                             </div>

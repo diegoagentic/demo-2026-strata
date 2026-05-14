@@ -8,7 +8,7 @@
  * DS TOKENS: bg-card · bg-success/5 · bg-amber-50 · border-border
  */
 
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Sparkles, CheckCircle2, AlertTriangle, Package, ChevronDown, ChevronUp, Truck, Lock } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -57,16 +57,25 @@ const ORDERS = [
 ]
 
 export default function CoNYOrderMonitorScene({ onDispatch }: CoNYOrderMonitorSceneProps) {
-    const { nextStep } = useDemo()
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const [fedexExpanded, setFedexExpanded] = useState(false)
     const [dispatched, setDispatched] = useState(false)
 
     const handleDispatch = () => {
         setDispatched(true)
-        setTimeout(() => {
+        setTimeout(pauseAware(() => {
             onDispatch?.()
             nextStep()
-        }, 700)
+        }), 700)
     }
 
     return (

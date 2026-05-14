@@ -8,7 +8,7 @@
  *   → attach proof → compose claim dialog → send → nextStep()
  */
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
     AlertTriangle, CheckCircle2, FileText, Mail, Send,
     Package, Paperclip, Loader2, ChevronDown, ChevronUp,
@@ -343,7 +343,16 @@ function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
 // ─── Main Scene ───────────────────────────────────────────────────────────────
 
 export default function LaurenClaimScene() {
-    const { nextStep } = useDemo()
+    const { nextStep, isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const [phase,         setPhase]         = useState<'dashboard' | 'detail'>('dashboard')
 
     useEffect(() => {
@@ -421,7 +430,7 @@ export default function LaurenClaimScene() {
                 </div>
             </div>
 
-            <ClaimDialog isOpen={showClaim} onSent={() => { setShowClaim(false); nextStep() }} />
+            <ClaimDialog isOpen={showClaim} onSent={() => { setShowClaim(false); pauseAware(() => nextStep())() }} />
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>

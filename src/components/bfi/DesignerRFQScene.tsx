@@ -5,8 +5,9 @@
  *          Includes SIF, spec sheet, and floor plan attachments.
  */
 
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Send, FileText, ArrowLeft, Mail } from 'lucide-react'
+import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 interface DesignerRFQSceneProps {
@@ -20,13 +21,21 @@ const ATTACHMENTS = [
 ]
 
 export default function DesignerRFQScene({ onSend }: DesignerRFQSceneProps) {
+    const { isPaused } = useDemo()
+    const isPausedRef = useRef(isPaused)
+    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+    const pauseAware = useCallback((fn: () => void) => () => {
+        if (!isPausedRef.current) { fn(); return }
+        const poll = setInterval(() => {
+            if (!isPausedRef.current) { clearInterval(poll); fn() }
+        }, 200)
+    }, [])
+
     const [sent, setSent] = useState(false)
 
     const handleSend = () => {
         setSent(true)
-        setTimeout(() => {
-            onSend?.()
-        }, 900)
+        setTimeout(pauseAware(() => { onSend?.() }), 900)
     }
 
     return (
