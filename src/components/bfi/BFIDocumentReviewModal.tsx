@@ -213,7 +213,7 @@ const SIF_GROUPS: SifGroup[] = [
     },
 ]
 
-function SIFDocumentPreview({ resolvedIds = new Set<string>(), step }: { resolvedIds?: Set<string>; step?: BFIReviewStep }) {
+function SIFDocumentPreview({ resolvedIds = new Set<string>(), step, customValues = {} }: { resolvedIds?: Set<string>; step?: BFIReviewStep; customValues?: Record<string, string> }) {
     const isLabor = step === 'labor' || step === 'cpr' || step === 'fee'
     return (
         <div className="flex flex-col h-full">
@@ -252,7 +252,9 @@ function SIFDocumentPreview({ resolvedIds = new Set<string>(), step }: { resolve
                                 <div className="rounded-lg overflow-hidden border border-zinc-100 dark:border-zinc-800">
                                     {group.fields.map((field, i) => {
                                         const isFieldResolved = field.fieldId ? resolvedIds.has(field.fieldId) : false
-                                        const displayValue = isFieldResolved && field.resolvedValue ? field.resolvedValue : field.value
+                                        const displayValue = isFieldResolved
+                                            ? (field.fieldId && customValues[field.fieldId] ? customValues[field.fieldId] : (field.resolvedValue ?? field.value))
+                                            : field.value
                                         const isInconsistent = field.status === 'inconsistent' && !isFieldResolved
                                         return (
                                         <div key={i} className={`flex items-center justify-between py-1.5 px-3 text-[11px] transition-colors duration-300 ${
@@ -1754,23 +1756,24 @@ function QuoteReviewPanel({
 
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
-function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted }: {
+function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, onCustomValue, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
     michaelMode?: boolean
     invoiceUpload?: boolean
     onResolveChange?: (ids: Set<string>) => void
+    onCustomValue?: (fieldId: string, value: string) => void
     ovniqLines: OvniqLine[]
     onUpdateLine: (i: number, field: keyof OvniqLine, val: string) => void
     acceptedRows: Set<number>
     onSetAccepted: (next: Set<number>) => void
 }) {
-    if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} />
+    if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
-    return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} />
+    return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
 }
 
 // ─── Funnel Stepper ──────────────────────────────────────────────────────────
@@ -1845,7 +1848,7 @@ const EXTRACT_ZONES = [
     { id: 'C', label: 'Zone C · Filing ×6',         qty: '6 units',  chip: 'bg-success/10 text-success border-success/20',    dot: 'bg-success' },
 ]
 
-function ExtractReviewPanel({ onValidate, onResolveChange }: { onValidate?: () => void; onResolveChange?: (ids: Set<string>) => void }) {
+function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { onValidate?: () => void; onResolveChange?: (ids: Set<string>) => void; onCustomValue?: (fieldId: string, value: string) => void }) {
     const [tab, setTab] = useState<'sif' | 'quote' | 'zones'>('sif')
     const [quoteLines, setQuoteLines] = useState<ExtractQuoteLine[]>(EXTRACT_QUOTE_LINES)
     const [editingIdx, setEditingIdx] = useState<number | null>(null)
@@ -1876,7 +1879,7 @@ function ExtractReviewPanel({ onValidate, onResolveChange }: { onValidate?: () =
             </div>
 
             {tab === 'sif' && (
-                <BFIFieldReview step="extract" onValidate={onValidate} onResolveChange={onResolveChange} />
+                <BFIFieldReview step="extract" onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
             )}
 
             {tab === 'quote' && (
@@ -1997,11 +2000,12 @@ const CATEGORY_STYLE: Record<string, { label: string; chip: string }> = {
     fee:       { label: 'Agency Fee',         chip: 'bg-warning/10 text-warning border-warning/20'          },
 }
 
-function BFIFieldReview({ step, scenario, onValidate, onResolveChange }: {
+function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomValue }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
     onResolveChange?: (ids: Set<string>) => void
+    onCustomValue?: (fieldId: string, value: string) => void
 }) {
     const [fields]            = useState<ReviewField[]>(() => getFields(step, scenario))
     const [resolved, setResolved] = useState<Set<string>>(new Set())
@@ -2297,7 +2301,12 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange }: {
                                         {manualEditId === field.id ? (
                                             <div className="flex items-center gap-2 pt-1">
                                                 <button
-                                                    onClick={() => { handleAcceptOVNIQ(field.id); setManualEditId(null) }}
+                                                    onClick={() => {
+                                                        const val = editValues[field.id] ?? field.extractedValue
+                                                        onCustomValue?.(field.id, val)
+                                                        handleAcceptOVNIQ(field.id)
+                                                        setManualEditId(null)
+                                                    }}
                                                     className="flex-1 py-2 text-[12px] font-bold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all"
                                                 >
                                                     Save custom value
@@ -2378,6 +2387,7 @@ export default function BFIDocumentReviewModal({
             ? new Set(['f1', 'f2'])
             : new Set()
     )
+    const [customValues, setCustomValues] = useState<Record<string, string>>({})
     // OmniQuote lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
     const [acceptedRows, setAcceptedRows] = useState<Set<number>>(new Set())
@@ -2523,7 +2533,7 @@ export default function BFIDocumentReviewModal({
                                         {/* Tab content */}
                                         <div className="flex-1 min-h-0 overflow-hidden">
                                             {activeTab === 'sif' ? (
-                                                <SIFDocumentPreview resolvedIds={resolvedIds} step={step} />
+                                                <SIFDocumentPreview resolvedIds={resolvedIds} step={step} customValues={customValues} />
                                             ) : activeTab === 'specs' ? (
                                                 <QuoteDocumentTab ovniqLines={ovniqLines} />
                                             ) : (
@@ -2552,7 +2562,7 @@ export default function BFIDocumentReviewModal({
 
                                     {/* Right: Contextual panel per step (2/5) */}
                                     <div className="col-span-2 flex flex-col min-h-0">
-                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} ovniqLines={ovniqLines} onUpdateLine={updateOvniqLine} acceptedRows={acceptedRows} onSetAccepted={setAcceptedRows} />
+                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} onCustomValue={(fid, val) => setCustomValues(prev => ({ ...prev, [fid]: val }))} ovniqLines={ovniqLines} onUpdateLine={updateOvniqLine} acceptedRows={acceptedRows} onSetAccepted={setAcceptedRows} />
                                     </div>
 
                                 </div>
