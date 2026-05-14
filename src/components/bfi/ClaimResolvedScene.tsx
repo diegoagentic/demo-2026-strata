@@ -11,8 +11,7 @@
 
 import { useState, useEffect, Fragment } from 'react'
 import {
-    CheckCircle2, FileText, Mail, Send, Download, Printer,
-    Clock, Loader2,
+    CheckCircle2, FileText, Mail, Send, Download, Printer, Loader2,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
@@ -47,58 +46,61 @@ const WO_LINES = [
     { abbr: 'WS-72', desc: 'Work Surface 72" × 30"',             qty: 4, cartons: '19–22',  status: 'received' },
     { abbr: 'SC',    desc: 'Storage Cabinet Overhead 72"',        qty: 3, cartons: '23–25',  status: 'received' },
     { abbr: 'CHAIR', desc: 'Ergonomic Chair · Aeron B · HM',     qty: 8, cartons: '26–33',  status: 'received' },
-    { abbr: 'M-ARM', desc: 'Monitor Arm Dual Adjustable',         qty: 2, cartons: '34–35',  status: 'eta' },
+    { abbr: 'M-ARM', desc: 'Monitor Arm Dual Adjustable',         qty: 2, cartons: '34–35',  status: 'confirmed' },
 ]
+
+// ─── Download toast (fixed, shared via module-level signal) ──────────────────
+
+let _setToast: ((msg: string | null) => void) | null = null
+
+function DownloadToast() {
+    const [msg, setMsg] = useState<string | null>(null)
+    _setToast = setMsg
+    if (!msg) return null
+    return (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[600] animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xl text-[12px] font-semibold">
+                <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                {msg}
+            </div>
+        </div>
+    )
+}
+
+function showToast(msg: string) {
+    _setToast?.(msg)
+    setTimeout(() => _setToast?.(null), 2800)
+}
 
 // ─── Download / Print bar ─────────────────────────────────────────────────────
 
-type ActionState = 'idle' | 'loading' | 'done'
+type ActionState = 'idle' | 'loading'
 
 function DownloadPrintBar({ filename }: { filename: string }) {
     const [dlState,    setDlState]    = useState<ActionState>('idle')
     const [printState, setPrintState] = useState<ActionState>('idle')
 
-    const trigger = (setter: (s: ActionState) => void) => {
-        setter('loading')
-        setTimeout(() => {
-            setter('done')
-            setTimeout(() => setter('idle'), 3000)
-        }, 1400)
+    const handleDownload = () => {
+        setDlState('loading')
+        setTimeout(() => { setDlState('idle'); showToast(`${filename} downloaded`) }, 1400)
+    }
+    const handlePrint = () => {
+        setPrintState('loading')
+        setTimeout(() => { setPrintState('idle'); showToast(`${filename} sent to printer`) }, 1400)
     }
 
     return (
         <div className="flex items-center gap-2 justify-end mt-2">
-            {/* Download */}
-            {dlState === 'done' ? (
-                <span className="flex items-center gap-1 text-[9px] font-bold text-success animate-in fade-in duration-200">
-                    <CheckCircle2 className="h-3 w-3" /> Downloaded
-                </span>
-            ) : (
-                <button onClick={() => trigger(setDlState)} disabled={dlState === 'loading'}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-[10px] font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-50">
-                    {dlState === 'loading'
-                        ? <Loader2 className="h-3 w-3 animate-spin" />
-                        : <Download className="h-3 w-3" />
-                    }
-                    {dlState === 'loading' ? 'Downloading…' : 'Download PDF'}
-                </button>
-            )}
-
-            {/* Print */}
-            {printState === 'done' ? (
-                <span className="flex items-center gap-1 text-[9px] font-bold text-success animate-in fade-in duration-200">
-                    <CheckCircle2 className="h-3 w-3" /> Print sent
-                </span>
-            ) : (
-                <button onClick={() => trigger(setPrintState)} disabled={printState === 'loading'}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-[10px] font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-50">
-                    {printState === 'loading'
-                        ? <Loader2 className="h-3 w-3 animate-spin" />
-                        : <Printer className="h-3 w-3" />
-                    }
-                    {printState === 'loading' ? 'Sending…' : 'Print'}
-                </button>
-            )}
+            <button onClick={handleDownload} disabled={dlState === 'loading'}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-[10px] font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-50">
+                {dlState === 'loading' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                {dlState === 'loading' ? 'Downloading…' : 'Download PDF'}
+            </button>
+            <button onClick={handlePrint} disabled={printState === 'loading'}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-[10px] font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-50">
+                {printState === 'loading' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Printer className="h-3 w-3" />}
+                {printState === 'loading' ? 'Sending…' : 'Print'}
+            </button>
         </div>
     )
 }
@@ -148,18 +150,15 @@ function CoreWorkOrder() {
                     <span className="text-right">Ctn</span><span className="text-right">Status</span>
                 </div>
                 {WO_LINES.map(l => (
-                    <div key={l.abbr} className={`grid grid-cols-[2rem_1fr_2rem_3rem_4.5rem] gap-1 py-0.5 ${l.status === 'eta' ? 'text-warning' : 'text-foreground'}`}>
-                        <span className={`text-[8px] font-bold px-1 rounded text-center self-center ${l.status === 'eta' ? 'bg-warning/10 text-warning' : 'bg-muted text-muted-foreground'}`}>
+                    <div key={l.abbr} className="grid grid-cols-[2rem_1fr_2rem_3rem_4.5rem] gap-1 py-0.5 text-foreground">
+                        <span className="text-[8px] font-bold px-1 rounded text-center self-center bg-muted text-muted-foreground">
                             {l.abbr}
                         </span>
                         <span className="truncate self-center">{l.desc}</span>
                         <span className="text-right self-center">{l.qty}</span>
                         <span className="text-right self-center text-muted-foreground">{l.cartons}</span>
-                        <span className={`text-right self-center text-[9px] font-bold flex items-center justify-end gap-0.5 ${l.status === 'eta' ? 'text-warning' : 'text-success'}`}>
-                            {l.status === 'eta'
-                                ? <><Clock className="h-2.5 w-2.5 shrink-0" />May 18</>
-                                : '✓ Rcv\'d'
-                            }
+                        <span className="text-right self-center text-[9px] font-bold text-success">
+                            {l.status === 'confirmed' ? '✓ Confirmed' : '✓ Rcv\'d'}
                         </span>
                     </div>
                 ))}
@@ -399,13 +398,13 @@ export default function ClaimResolvedScene() {
                         </div>
                     </div>
 
-                    {/* Notify Walter CTA */}
+                    {/* Notify CoNY PM CTA */}
                     <button
                         onClick={() => setShowDialog(true)}
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all shadow-sm mt-auto"
                     >
                         <Send className="h-4 w-4" />
-                        Notify Walter →
+                        Notify CoNY PM →
                     </button>
                 </div>
             </div>
@@ -416,6 +415,7 @@ export default function ClaimResolvedScene() {
             />
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+            <DownloadToast />
         </div>
     )
 }
