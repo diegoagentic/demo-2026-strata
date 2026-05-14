@@ -9,7 +9,7 @@
 
 import { useState, Fragment } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { Plus, FileText, Upload, CheckCircle2, X, Loader2 } from 'lucide-react'
+import { Plus, FileText, Upload, CheckCircle2, X, Loader2, Search, LayoutGrid, List, MoreHorizontal } from 'lucide-react'
 
 // ─── Shared funnel steps (5-stage process) ───────────────────────────────────
 
@@ -146,7 +146,6 @@ function NewOrderModal({
                     isNew: true,
                 })
                 onClose()
-                // reset
                 setAgencyName(''); setOrderId(''); setUploads(['idle','idle','idle']); setCreating(false); setCreated(false)
             }, 800)
         }, 1200)
@@ -225,7 +224,6 @@ function NewOrderModal({
                                                 : 'border-border bg-muted/20'
                                             }`}>
                                                 <div className="flex items-center gap-3 px-3.5 py-3">
-                                                    {/* Icon */}
                                                     <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${
                                                         state === 'done' ? 'bg-success/10' : 'bg-muted/40'
                                                     }`}>
@@ -236,8 +234,6 @@ function NewOrderModal({
                                                             : <FileText className="h-4 w-4 text-muted-foreground" />
                                                         }
                                                     </div>
-
-                                                    {/* Label + status */}
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-[11px] font-bold text-foreground">{zone.label}</p>
                                                         <p className="text-[10px] text-muted-foreground truncate">
@@ -246,8 +242,6 @@ function NewOrderModal({
                                                             : zone.filename}
                                                         </p>
                                                     </div>
-
-                                                    {/* Action */}
                                                     {state === 'idle' && (
                                                         <button
                                                             onClick={() => handleBrowse(idx)}
@@ -270,7 +264,6 @@ function NewOrderModal({
                                     })}
                                 </div>
 
-                                {/* Creation success state */}
                                 {created && (
                                     <div className="flex items-center gap-2 p-3 bg-success/5 border border-success/20 rounded-xl animate-in fade-in duration-300">
                                         <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
@@ -349,143 +342,306 @@ export default function BFIProcessKanban({
 
     const [contextCards, setContextCards] = useState<ContextCard[]>(BASE_CONTEXT_CARDS)
     const [isNewFeeOpen, setIsNewFeeOpen] = useState(false)
+    const [activeTab,    setActiveTab]    = useState<string>('all')
+    const [searchQuery,  setSearchQuery]  = useState('')
+    const [viewMode,     setViewMode]     = useState<'kanban' | 'list'>('kanban')
 
     const handleCreate = (card: ContextCard) => {
         setContextCards(prev => [...prev, card])
     }
 
+    // Counts per column for tab badges
+    const colCounts = PROCESS_COLUMNS.map((_, i) => {
+        const doeHere = showDoe && i === activeCol ? 1 : 0
+        const ctxHere = contextCards.filter(c => c.colIdx === i).length
+        return doeHere + ctxHere
+    })
+    const totalCount = (showDoe ? 1 : 0) + contextCards.length
+
+    // Filter context cards by tab + search
+    const filteredCards = contextCards.filter(card => {
+        const colId = PROCESS_COLUMNS[card.colIdx]?.id
+        const matchesTab    = activeTab === 'all' || colId === activeTab
+        const matchesSearch = card.agency.toLowerCase().includes(searchQuery.toLowerCase()) || card.orderId.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesProp   = filterColIdxs === undefined || filterColIdxs.includes(card.colIdx)
+        return matchesTab && matchesSearch && matchesProp
+    })
+
+    // All cards for list view (DOE + context)
+    const allListItems = [
+        ...(showDoe ? [{
+            orderId: 'DOE-2847',
+            initials: 'DOE',
+            agency: 'NYC Dept. of Education',
+            value: '$48,200',
+            colIdx: activeCol,
+            avatarBg: 'bg-success/15',
+            avatarColor: 'text-success',
+            desc: subtitle,
+            isDoe: true,
+        }] : []),
+        ...filteredCards.map(c => ({ ...c, isDoe: false })),
+    ]
+
     return (
-        <>
-            {/* New Fee button row */}
-            {showNewFee && (
-                <div className="flex justify-end mb-1">
-                    <button
-                        onClick={() => setIsNewFeeOpen(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest shadow-sm"
-                    >
-                        <Plus className="h-3 w-3" />
-                        New Fee
-                    </button>
-                </div>
-            )}
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
 
-            <div className="grid grid-cols-5 gap-2">
-                {PROCESS_COLUMNS.map((c, colIdx) => {
-                    const isDoeCol     = colIdx === activeCol
-                    const colCards     = contextCards.filter(card =>
-                        card.colIdx === colIdx &&
-                        (filterColIdxs === undefined || filterColIdxs.includes(colIdx))
-                    )
-                    const doeVisible   = showDoe && isDoeCol
-                    const count        = (doeVisible ? 1 : 0) + colCards.length
+            {/* ── Card Header ── */}
+            <div className="px-5 py-4 border-b border-border">
+                <div className="flex flex-col gap-3">
 
-                    return (
-                        <div key={c.id} className="space-y-2.5">
-                            {/* Column header — clean label + muted count badge */}
-                            <div className="flex items-center justify-between px-1 py-1">
-                                <span className={`text-[11px] font-semibold ${c.color}`}>{c.label}</span>
-                                <span className="text-[10px] font-medium text-muted-foreground bg-muted rounded-md px-1.5 py-0.5 leading-none">
-                                    {count}
-                                </span>
-                            </div>
+                    {/* Top row: Title + divider + Tabs + New Fee */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <h3 className="text-sm font-semibold text-foreground whitespace-nowrap">Agency Fee AI</h3>
+                        <div className="hidden sm:block w-px h-5 bg-border" />
 
-                            {/* DOE-2847 card — highlighted */}
-                            {doeVisible && (
-                                <div className={`rounded-2xl border ${col.border} bg-card p-4 space-y-3 shadow-sm ${
-                                    animateDoe ? 'animate-in fade-in slide-in-from-top-2 duration-500' : ''
-                                }`}>
-                                    <div className="flex items-start gap-2.5">
-                                        <div className="h-9 w-9 rounded-full bg-success/15 flex items-center justify-center shrink-0">
-                                            <span className="text-[10px] font-bold text-success">DOE</span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between gap-1 mb-0.5">
-                                                <span className="text-xs font-semibold text-foreground">DOE-2847</span>
-                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
-                                                    {badge.label}
-                                                </span>
-                                            </div>
-                                            <span className="text-[11px] text-muted-foreground block">NYC Dept. of Education</span>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{subtitle}</p>
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-foreground">$48,200</span>
-                                        <span className="text-[11px] text-muted-foreground">May 6</span>
-                                    </div>
-
-                                    {(onSendDoe || onReviewDoe) && (
-                                        <div className="flex gap-2 pt-0.5">
-                                            {onSendDoe && (
-                                                <button
-                                                    onClick={onSendDoe}
-                                                    className="flex-1 py-2 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
-                                                >
-                                                    Send →
-                                                </button>
-                                            )}
-                                            {onReviewDoe && (
-                                                <div className={`relative ${onSendDoe ? '' : 'flex-1'}`}>
-                                                    {highlightReview && (
-                                                        <span className="absolute -inset-1 rounded-xl bg-ai/20 animate-pulse pointer-events-none" />
-                                                    )}
-                                                    <button
-                                                        onClick={onReviewDoe}
-                                                        className={`w-full py-2 text-[11px] font-semibold rounded-xl transition-all ${
-                                                            onSendDoe
-                                                                ? 'px-3 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                                                                : `font-bold bg-foreground text-background hover:opacity-80${highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`
-                                                        }`}
-                                                    >
-                                                        {reviewLabel}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Context cards */}
-                            {colCards.map(card => (
-                                <div
-                                    key={card.orderId}
-                                    className={`rounded-2xl border bg-card p-4 space-y-3 shadow-sm ${
-                                        card.isNew
-                                            ? 'border-primary/30 animate-in fade-in slide-in-from-top-2 duration-500'
-                                            : 'border-border/60 opacity-50 pointer-events-none'
+                        {/* Status tabs */}
+                        <div className="flex gap-1 bg-muted p-1 rounded-lg overflow-x-auto">
+                            {[
+                                { id: 'all', label: 'All', count: totalCount },
+                                ...PROCESS_COLUMNS.map((c, i) => ({ id: c.id, label: c.label, count: colCounts[i] })),
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all flex items-center gap-1.5 whitespace-nowrap outline-none ${
+                                        activeTab === tab.id
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-background/60'
                                     }`}
                                 >
-                                    <div className="flex items-center gap-2.5">
-                                        <div className={`h-9 w-9 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0`}>
-                                            <span className={`text-[10px] font-bold ${card.avatarColor}`}>{card.initials}</span>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="text-xs font-semibold text-foreground">{card.orderId}</div>
-                                            <div className="text-[11px] text-muted-foreground truncate">{card.agency}</div>
-                                        </div>
-                                    </div>
-                                    {card.desc && (
-                                        <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>
-                                    )}
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-medium text-foreground">{card.value}</span>
-                                    </div>
-                                    {card.isNew && colIdx === 0 && onReviewDoe && (
-                                        <button
-                                            onClick={onReviewDoe}
-                                            className="w-full py-2 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
-                                        >
-                                            Review
-                                        </button>
-                                    )}
-                                </div>
+                                    {tab.label}
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full transition-colors ${
+                                        activeTab === tab.id
+                                            ? 'bg-primary-foreground/15 text-primary-foreground'
+                                            : 'bg-background text-muted-foreground'
+                                    }`}>
+                                        {tab.count}
+                                    </span>
+                                </button>
                             ))}
                         </div>
-                    )
-                })}
+
+                        {/* New Fee button — pushed to the right */}
+                        {showNewFee && (
+                            <button
+                                onClick={() => setIsNewFeeOpen(true)}
+                                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest shadow-sm shrink-0"
+                            >
+                                <Plus className="h-3 w-3" />
+                                New Fee
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Bottom row: Search + view toggle */}
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex-1 max-w-xs">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                            <input
+                                type="text"
+                                placeholder="Search orders..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-3 py-1.5 text-[11px] bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+                            />
+                        </div>
+                        <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                            <button
+                                onClick={() => setViewMode('list')}
+                                title="List view"
+                                className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
+                            >
+                                <List className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('kanban')}
+                                title="Board view"
+                                className={`p-2 transition-colors ${viewMode === 'kanban' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
+                            >
+                                <LayoutGrid className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Content ── */}
+            <div className="p-5">
+
+                {/* Kanban view */}
+                {viewMode === 'kanban' && (
+                    <div className="grid grid-cols-5 gap-3">
+                        {PROCESS_COLUMNS.map((c, colIdx) => {
+                            const isDoeCol  = colIdx === activeCol
+                            const colCards  = filteredCards.filter(card => card.colIdx === colIdx)
+                            const doeVisible = showDoe && isDoeCol && (activeTab === 'all' || activeTab === c.id)
+                            const count     = (doeVisible ? 1 : 0) + colCards.length
+
+                            return (
+                                <div key={c.id} className="space-y-3">
+                                    {/* Column header */}
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className={`text-sm font-semibold ${c.color}`}>{c.label}</span>
+                                        <span className="text-xs font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md">{count}</span>
+                                        <button className="ml-auto p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* DOE-2847 card — highlighted */}
+                                    {doeVisible && (
+                                        <div className={`rounded-2xl border ${col.border} bg-card p-4 space-y-3 shadow-sm ${
+                                            animateDoe ? 'animate-in fade-in slide-in-from-top-2 duration-500' : ''
+                                        }`}>
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="h-9 w-9 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                                                    <span className="text-[10px] font-bold text-success">DOE</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                                                        <span className="text-sm font-bold text-foreground">DOE-2847</span>
+                                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
+                                                            {badge.label}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[11px] text-muted-foreground block">NYC Dept. of Education</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-muted-foreground">Document</span>
+                                                    <span className="font-medium text-foreground truncate ml-2">DOE-2847-SIF.pdf</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-muted-foreground">Amount</span>
+                                                    <span className="font-semibold text-foreground">$48,200</span>
+                                                </div>
+                                            </div>
+
+                                            <p className="text-[11px] text-muted-foreground leading-relaxed">{subtitle}</p>
+
+                                            <div className="pt-2 border-t border-border flex items-center justify-between">
+                                                <span className="text-[11px] text-muted-foreground">May 6</span>
+                                                <div className="flex gap-2">
+                                                    {onSendDoe && (
+                                                        <button
+                                                            onClick={onSendDoe}
+                                                            className="py-1.5 px-3 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
+                                                        >
+                                                            Send →
+                                                        </button>
+                                                    )}
+                                                    {onReviewDoe && (
+                                                        <div className={`relative ${onSendDoe ? '' : 'flex-1 min-w-[80px]'}`}>
+                                                            {highlightReview && (
+                                                                <span className="absolute -inset-1 rounded-xl bg-ai/20 animate-pulse pointer-events-none" />
+                                                            )}
+                                                            <button
+                                                                onClick={onReviewDoe}
+                                                                className={`w-full py-1.5 px-3 text-[11px] font-bold rounded-xl transition-all ${
+                                                                    onSendDoe
+                                                                        ? 'border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                                                        : `bg-foreground text-background hover:opacity-80${highlightReview ? ' ring-2 ring-ai ring-offset-1' : ''}`
+                                                                }`}
+                                                            >
+                                                                {reviewLabel}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Context cards */}
+                                    {colCards.map(card => (
+                                        <div
+                                            key={card.orderId}
+                                            className={`rounded-2xl border bg-card p-4 space-y-3 shadow-sm ${
+                                                card.isNew
+                                                    ? 'border-primary/30 animate-in fade-in slide-in-from-top-2 duration-500'
+                                                    : 'border-border/60 opacity-50 pointer-events-none'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <div className={`h-9 w-9 rounded-full ${card.avatarBg} flex items-center justify-center shrink-0`}>
+                                                    <span className={`text-[10px] font-bold ${card.avatarColor}`}>{card.initials}</span>
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-bold text-foreground">{card.orderId}</div>
+                                                    <div className="text-[11px] text-muted-foreground truncate">{card.agency}</div>
+                                                </div>
+                                            </div>
+                                            {card.desc && (
+                                                <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>
+                                            )}
+                                            <div className="pt-2 border-t border-border flex items-center justify-between">
+                                                <span className="text-xs font-medium text-foreground">{card.value}</span>
+                                            </div>
+                                            {card.isNew && colIdx === 0 && onReviewDoe && (
+                                                <button
+                                                    onClick={onReviewDoe}
+                                                    className="w-full py-2 text-[11px] font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all"
+                                                >
+                                                    Review
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {/* Empty state */}
+                                    {count === 0 && (
+                                        <div className="border-2 border-dashed border-border rounded-xl p-5 text-center">
+                                            <p className="text-xs text-muted-foreground">No orders</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+
+                {/* List view */}
+                {viewMode === 'list' && (
+                    <div className="overflow-hidden rounded-xl border border-border">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-border bg-muted/30">
+                                    <th className="text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-3">Order</th>
+                                    <th className="text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-3">Agency</th>
+                                    <th className="text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-3">Stage</th>
+                                    <th className="text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-3">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {allListItems.map(item => {
+                                    const stageCol = PROCESS_COLUMNS[item.colIdx]
+                                    return (
+                                        <tr key={item.orderId} className="border-b border-border hover:bg-muted/20 transition-colors last:border-0">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className={`h-8 w-8 rounded-full ${item.avatarBg} flex items-center justify-center shrink-0`}>
+                                                        <span className={`text-[9px] font-bold ${item.avatarColor}`}>{item.initials}</span>
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-foreground">{item.orderId}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-foreground">{item.agency}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`text-xs font-semibold px-2 py-1 rounded-md bg-muted ${stageCol?.color ?? 'text-muted-foreground'}`}>
+                                                    {stageCol?.label ?? '—'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm font-medium text-foreground">{item.value}</td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             <NewOrderModal
@@ -493,6 +649,6 @@ export default function BFIProcessKanban({
                 onClose={() => setIsNewFeeOpen(false)}
                 onCreate={handleCreate}
             />
-        </>
+        </div>
     )
 }
