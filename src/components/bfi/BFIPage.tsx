@@ -1,24 +1,17 @@
 /**
  * COMPONENT: BFIPage
- * PURPOSE: Container for BFI demo — 2 flows, 9 steps, stepId-based routing.
- *
- *   FLOW 1 — Product Receiving (r1.2–r1.6)  · r1.6 = Walter (mobile dark bg)
- *   FLOW 2 — Agency Fee (a1.1–a1.4)
+ * PURPOSE: Container for BFI demo — Agency Fee flow (a1.1–a1.4), 11 steps.
  *
  * BFIDashboardPage: standalone export for the persistent Dashboard navbar tab.
  */
 
-import { Building2, Package, LayoutDashboard } from 'lucide-react'
+import { Building2, LayoutDashboard } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
 import MobileDeviceFrame from '../simulations/MobileDeviceFrame'
 import { useDemo } from '../../context/DemoContext'
 
 import BFIDashboardScene from './BFIDashboardScene'
 import WIGBingoCheckScene from './WIGBingoCheckScene'
-import AIAnalysisScene from './AIAnalysisScene'
-import AlertClaimScene from './AlertClaimScene'
-import CoreEntryScene from './CoreEntryScene'
-import WalterNotifScene from './WalterNotifScene'
 import CoNYMorningQueue from './CoNYMorningQueue'
 import QuoteIntakePricingScene from './QuoteIntakePricingScene'
 import CPRScene from './CPRScene'
@@ -31,10 +24,6 @@ import MichaelApprovalScene from './MichaelApprovalScene'
 import LaurenInvoiceScene from './LaurenInvoiceScene'
 
 const STEP_TITLES: Record<string, string> = {
-    'r1.2': 'Product Receiving',
-    'r1.3': 'Product Receiving',
-    'r1.4': 'Product Receiving',
-    'r1.5': 'Product Receiving',
     'a1.1': 'Agency Fee',
     'a1.2': 'Agency Fee',
     'a1.2b': 'Agency Fee',
@@ -52,17 +41,6 @@ export default function BFIPage() {
     const { currentStep, nextStep } = useDemo()
     const stepId = currentStep?.id ?? 'r1.2'
 
-    // Walter (r1.6) — CoNY client PM on phone, breaks out of the MBIPageShell
-    if (stepId === 'r1.6') {
-        return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center py-6 animate-in fade-in duration-500">
-                <MobileDeviceFrame size="lg" darkScreen>
-                    <WalterNotifScene key="r1.6" onConfirm={nextStep} />
-                </MobileDeviceFrame>
-            </div>
-        )
-    }
-
     // Robert Chen (a1.2) — Miller Knoll designer email view, breaks out of the MBIPageShell
     if (stepId === 'a1.2') {
         return (
@@ -74,12 +52,7 @@ export default function BFIPage() {
         )
     }
 
-    const isReceiving = stepId.startsWith('r')
-    const isAgencyFee = stepId.startsWith('a')
-
-    const icon = isReceiving
-        ? <Package className="h-5 w-5" />
-        : isAgencyFee
+    const icon = stepId.startsWith('a')
         ? <Building2 className="h-5 w-5" />
         : <LayoutDashboard className="h-5 w-5" />
 
@@ -91,10 +64,6 @@ export default function BFIPage() {
             icon={icon}
         >
             <div key={stepId} className="space-y-4 animate-in fade-in duration-500">
-                {stepId === 'r1.2' && <WIGBingoCheckScene onAnalyze={nextStep} />}
-                {stepId === 'r1.3' && <AIAnalysisScene onComplete={nextStep} />}
-                {stepId === 'r1.4' && <AlertClaimScene onProceed={nextStep} />}
-                {stepId === 'r1.5' && <CoreEntryScene onConfirm={nextStep} />}
                 {stepId === 'a1.1' && <CoNYMorningQueue onSelectOrder={nextStep} />}
                 {stepId === 'a1.2b' && <QuoteIntakePricingScene onApply={nextStep} />}
                 {stepId === 'a1.2c' && <POLaborScene />}

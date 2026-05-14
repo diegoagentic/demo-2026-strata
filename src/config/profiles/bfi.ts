@@ -134,64 +134,11 @@ export const BFI_STEPS: DemoStep[] = [
         role: 'Finance / AR',
     },
 
-    // ═══════════════════════════════════════════
-    // FLOW 2: Product Receiving (5 steps)
-    // ═══════════════════════════════════════════
-    {
-        id: 'r1.2',
-        groupId: 2,
-        groupTitle: 'Flow 2: Product Receiving',
-        title: 'WIG Bingo Check',
-        description: 'WIG sends the Receiving Report and Bingo Sheet as a Word document. Strata captures it digitally and prepares the AI analysis — eliminating the manual cross-reference that used to take Lena up to a week.',
-        app: 'bfi-receiving',
-        role: 'Receiving Coordinator',
-    },
-    {
-        id: 'r1.3',
-        groupId: 2,
-        groupTitle: 'Flow 2: Product Receiving',
-        title: 'AI Analysis',
-        description: 'Strata cross-references the packing list against the bingo sheet across 3 pages — carton by carton — and flags any discrepancy in under 10 seconds. Carton #34 is missing and pulsing red.',
-        app: 'bfi-receiving',
-        role: 'Account Manager',
-    },
-    {
-        id: 'r1.4',
-        groupId: 2,
-        groupTitle: 'Flow 2: Product Receiving',
-        title: 'Alert & Claim',
-        description: 'Strata auto-drafts the notification to Andy at Herman Miller and the Omni service claim — both pre-filled with the PMO, bingo number, line item, and item description. Lauren sends both with one click each.',
-        app: 'bfi-receiving',
-        role: 'Account Manager',
-    },
-    {
-        id: 'r1.5',
-        groupId: 2,
-        groupTitle: 'Flow 2: Product Receiving',
-        title: 'Core Entry',
-        description: 'With 34/35 cartons confirmed and carton #34 flagged as short-shipped, Lauren confirms receiving in CORE. Line 24 is excluded from the entry until the claim resolves.',
-        app: 'bfi-receiving',
-        role: 'Account Manager',
-    },
-    {
-        id: 'r1.6',
-        groupId: 2,
-        groupTitle: 'Flow 2: Product Receiving',
-        title: 'Notify Walter',
-        description: 'Strata notifies Walter (CoNY Project Manager) digitally — before the paper work order arrives. He sees which items are ready, the delivery window, and the missing carton claim status.',
-        app: 'bfi-receiving',
-        role: 'Project Manager',
-    },
 ];
 
 // ─── STEP BEHAVIOR ───────────────────────────────────────────────────────────
 
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
-    'r1.2': { mode: 'interactive', userAction: 'Dashboard overview · WIG document notification slides in → click → review Receiving Report + Bingo Sheet · click Run AI Analysis' },
-    'r1.3': { mode: 'interactive', userAction: 'Watch the AI cross-reference 35 cartons — progress bar runs → bingo grid reveals → carton #34 flags red' },
-    'r1.4': { mode: 'interactive', userAction: 'Send POD request to Andy · wait for response · Andy confirms not shipped → open Omni claim · submit claim · proceed to CORE entry' },
-    'r1.5': { mode: 'interactive', userAction: 'Review Strata pre-filled CORE entry (34/35, Line 24 excluded, claim linked) · confirm → watch CORE sync animation · Notify Walter to advance' },
-    'r1.6': { mode: 'interactive', userAction: 'See Walter\'s phone — notification arrives before paper · Walter sees items · delivery window · claim status · confirms' },
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · CPR flag on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges the update · loop closed' },
     'a1.2b': { mode: 'interactive', userAction: 'Review SIF validation via OmniQuote → accept Filing Units correction → toggle City/State contract → apply discount & continue' },
@@ -208,38 +155,6 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
 // ─── STEP MESSAGES (AI Agent Progress) ───────────────────────────────────────
 
 export const BFI_STEP_MESSAGES: Record<string, string[]> = {
-    'r1.2': [
-        'WIG Receiving Report received via email',
-        'Bingo Sheet attachment detected',
-        'Document ready for AI analysis',
-        'Waiting for analysis trigger',
-    ],
-    'r1.3': [
-        'Parsing packing list PDF',
-        'Reading bingo sheet — Page 1',
-        'Reading line item sequence — Page 2',
-        'Cross-referencing bingo numbers — Page 3',
-        'Detecting discrepancies',
-        '✓ Analysis complete — 1 issue found · Carton #34 missing',
-    ],
-    'r1.4': [
-        'Identifying responsible contact at Herman Miller',
-        'Pre-drafting notification with PMO, bingo#, and line item',
-        'Pre-filling Omni claim form',
-        'Both actions ready · awaiting Lauren\'s review and send',
-    ],
-    'r1.5': [
-        'Preparing CORE entry for PMO-2026-0412',
-        '34/35 cartons confirmed · Line 24 flagged short-shipped',
-        'CORE entry excludes Line 24 pending claim resolution',
-        'Ready for Lauren confirmation',
-    ],
-    'r1.6': [
-        'Generating work order notification for Walter (CoNY PM)',
-        'Attaching items, delivery window, and claim status',
-        'Sending via push notification to Walter\'s device',
-        'Walter notified · pre-coordination enabled before paper arrives',
-    ],
     'a1.1': [
         'Fetching active CoNY orders from CORE',
         'Scanning CPR packages for hour discrepancies',
@@ -293,6 +208,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const BFI_SELF_INDICATED: string[] = [
-    'r1.2', 'r1.3', 'r1.4', 'r1.5', 'r1.6',
     'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
 ];
