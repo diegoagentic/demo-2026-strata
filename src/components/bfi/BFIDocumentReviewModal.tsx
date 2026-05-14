@@ -623,7 +623,7 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
                                 <div className="bg-white dark:bg-zinc-900 rounded-xl border border-ai/20 px-3 py-3 space-y-1.5">
                                     {[
                                         ['Document type', 'OmniQuote Invoice · APPROVED'],
-                                        ['Order',         'Q-2026-0089 · DOE-2847'],
+                                        ['Purchase Order', 'DOE-2847 · NYC Dept. of Education'],
                                         ['Vendor',        'Herman Miller'],
                                         ['Amount',        '$6,920 · Matches CPR reconciliation ✓'],
                                         ['Date',          'May 6, 2026'],
@@ -648,7 +648,7 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
                                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-ai text-white text-[12px] font-bold hover:opacity-90 transition-all"
                                 >
                                     <Send className="h-3.5 w-3.5" />
-                                    Forward to Patricia · Fee Verification →
+                                    Forward to Fee Verification →
                                 </button>
                             </div>
                         )}
