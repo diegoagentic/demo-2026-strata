@@ -2,20 +2,14 @@
  * COMPONENT: CoNYMorningQueue (a1.1)
  * PURPOSE: Flow 1 · Scene 1 — BFI Agency Fee order queue.
  *
- * FLOW:
- *   idle        → BFIProcessKanban without DOE visible (3 context orders)
- *   notification → Notification panel slides in: email + .sif + .pdf + [Ingest →]
- *   ingesting   → 3 progress lines appear → DOE card fades into Intake col
- *   ready       → DOE card + CPR badge + [Review order →] → opens modal
- *   modal       → BFIDocumentReviewModal step='extract' → validate
- *   sendDialog  → "Notify designer?" → send flow → nextStep()
+ * FLOW (driven by Action Center):
+ *   bfi:ingest event → DOE card appears in Intake kanban column
+ *   bfi:review event → BFIDocumentReviewModal opens (extract step)
+ *   modal validate   → "Notify designer?" send dialog → nextStep()
  */
 
-import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
-import {
-    Sparkles, CheckCircle2, AlertTriangle,
-    FileText, Mail, Send, User, Eye,
-} from 'lucide-react'
+import { useState, useEffect, Fragment } from 'react'
+import { CheckCircle2, Send, User } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -26,64 +20,30 @@ interface CoNYMorningQueueProps {
     onSelectOrder?: () => void
 }
 
-type QueueState = 'idle' | 'notification' | 'ingesting' | 'ready'
-
-const INGEST_LINES = [
-    { icon: CheckCircle2, text: 'DOE-2847.sif parsed · 6 line items extracted',                 color: 'text-success' },
-    { icon: CheckCircle2, text: 'NYC-DOE-2847-specs.pdf · floor plan detected · Zone A·B·C',   color: 'text-success' },
-    { icon: AlertTriangle,text: 'CPR discrepancy detected · Carpenters −5h · OT −2h · −$2,340', color: 'text-warning' },
-]
-
 const NOTIFY_MESSAGE = `Hi Robert — SIF for DOE-2847 has been ingested and validated. CPR discrepancy detected: Carpenters −5h, OT −2h (−$2,340). Quote Q-2026-0089 is being processed. We'll follow up shortly with confirmation.
 
 — Lauren DeMarco, BFI Furniture`
 
 export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProps) {
-    const { nextStep, isPaused } = useDemo()
-    const isPausedRef = useRef(isPaused)
-    useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
-
-    const [queueState, setQueueState]   = useState<QueueState>('idle')
-    const [ingestCount, setIngestCount] = useState(0)
+    const { nextStep } = useDemo()
+    const [showDoe,    setShowDoe]    = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [isSendOpen, setIsSendOpen]   = useState(false)
-    const [sendStep, setSendStep]       = useState<'compose' | 'sent'>('compose')
+    const [isSendOpen, setIsSendOpen] = useState(false)
+    const [sendStep,   setSendStep]   = useState<'compose' | 'sent'>('compose')
 
-    const pauseAware = useCallback((fn: () => void, delay: number) => {
-        const start = Date.now()
-        const poll  = setInterval(() => {
-            if (isPausedRef.current) return
-            if (Date.now() - start >= delay) { clearInterval(poll); fn() }
-        }, 100)
-        return () => clearInterval(poll)
-    }, [])
-
+    // DOE card appears in kanban when ingest starts
     useEffect(() => {
-        if (queueState !== 'idle') return
-        const cleanup = pauseAware(() => setQueueState('notification'), 900)
-        return cleanup
-    }, [queueState, pauseAware])
-
-    // Listen for Action Center "Ingest with Strata" trigger
-    useEffect(() => {
-        const handler = () => setQueueState('ingesting')
+        const handler = () => setShowDoe(true)
         window.addEventListener('bfi:ingest', handler)
         return () => window.removeEventListener('bfi:ingest', handler)
     }, [])
 
+    // Modal opens when Action Center fires "Review Order →"
     useEffect(() => {
-        if (queueState !== 'ingesting') return
-        if (ingestCount >= INGEST_LINES.length) {
-            const cleanup = pauseAware(() => setQueueState('ready'), 400)
-            return cleanup
-        }
-        const cleanup = pauseAware(() => setIngestCount(c => c + 1), 650)
-        return cleanup
-    }, [queueState, ingestCount, pauseAware])
-
-    const handleIngest = () => setQueueState('ingesting')
-
-    const handleReviewOrder = () => setIsModalOpen(true)
+        const handler = () => setIsModalOpen(true)
+        window.addEventListener('bfi:review', handler)
+        return () => window.removeEventListener('bfi:review', handler)
+    }, [])
 
     const handleModalValidate = () => {
         setIsModalOpen(false)
@@ -105,76 +65,14 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
         nextStep()
     }
 
-    const showDoe = queueState === 'ready'
-
     return (
         <div className="space-y-4">
 
-            {/* ── Notification panel — only shows after Action Center triggers ingest ── */}
-            {(queueState === 'ingesting' || queueState === 'ready') && (
-                <div className="rounded-xl border border-border bg-card shadow-md overflow-hidden animate-in slide-in-from-top-2 fade-in duration-400">
-                    <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/30 border-b border-border">
-                        <div className="h-6 w-6 rounded-lg bg-ai/10 flex items-center justify-center shrink-0">
-                            <Sparkles className="h-3.5 w-3.5 text-ai" />
-                        </div>
-                        <span className="text-[11px] font-bold text-foreground">New quote request · Miller Knoll</span>
-                        <span className="ml-auto text-[10px] text-muted-foreground shrink-0">May 6 · 8:14 AM</span>
-                        <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    </div>
-
-                    <div className="p-4 space-y-3">
-                        <div className="space-y-1">
-                            {[
-                                { label: 'From', value: 'Robert Chen · Miller Knoll Rep' },
-                                { label: 'Re',   value: 'DOE-2847 · NYC Dept. of Education · quote request' },
-                            ].map(f => (
-                                <div key={f.label} className="flex items-center gap-2 text-[11px]">
-                                    <span className="text-muted-foreground w-8 shrink-0">{f.label}:</span>
-                                    <span className="text-foreground font-medium">{f.value}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide">Attachments:</span>
-                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-ai/5 border border-ai/20 text-[10px] text-ai font-medium">
-                                <FileText className="h-3 w-3" /> DOE-2847.sif
-                            </div>
-                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/40 border border-border text-[10px] text-muted-foreground">
-                                <FileText className="h-3 w-3" /> NYC-DOE-2847-specs.pdf
-                            </div>
-                        </div>
-
-                        {(queueState === 'ingesting' || queueState === 'ready') && (
-                            <div className="space-y-1.5 pt-1 border-t border-border">
-                                {INGEST_LINES.slice(0, ingestCount).map((line, i) => (
-                                    <div key={i} className={`flex items-center gap-2 text-[10px] ${line.color} animate-in fade-in duration-300`}>
-                                        <line.icon className="h-3 w-3 shrink-0" />
-                                        {line.text}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {queueState === 'ready' && (
-                            <button
-                                onClick={handleReviewOrder}
-                                className="w-full py-2 text-[11px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
-                            >
-                                <Eye className="h-3.5 w-3.5" />
-                                Review order →
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* ── Process Kanban ── */}
+            {/* ── Process Kanban — DOE card appears after ingest ── */}
             <BFIProcessKanban
                 activeCol={0}
                 showDoe={showDoe}
                 animateDoe={true}
-                onReviewDoe={queueState === 'ready' ? handleReviewOrder : undefined}
             />
 
             <p className="text-[11px] text-muted-foreground text-center">
@@ -248,7 +146,6 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                                         </div>
                                     </div>
 
-                                    {/* Sent confirmation */}
                                     {sendStep === 'sent' && (
                                         <div className="flex items-center gap-2 p-3 bg-success/5 border border-success/20 rounded-xl animate-in fade-in duration-300">
                                             <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
@@ -257,7 +154,6 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                                     )}
                                 </div>
 
-                                {/* Footer */}
                                 {sendStep === 'compose' && (
                                     <div className="px-5 pb-5 flex items-center gap-3">
                                         <button
@@ -275,8 +171,7 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                                         </button>
                                     </div>
                                 )}
-
-            </DialogPanel>
+                            </DialogPanel>
                         </TransitionChild>
                     </div>
                 </Dialog>

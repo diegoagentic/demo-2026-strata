@@ -1,5 +1,5 @@
 import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react';
-import { BellIcon, MagnifyingGlassIcon, XMarkIcon, Squares2X2Icon, ExclamationTriangleIcon, CreditCardIcon, ClipboardDocumentCheckIcon, TruckIcon, DocumentTextIcon, CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { BellIcon, MagnifyingGlassIcon, XMarkIcon, Squares2X2Icon, ExclamationTriangleIcon, CreditCardIcon, ClipboardDocumentCheckIcon, TruckIcon, DocumentTextIcon, CheckCircleIcon, SparklesIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Fragment, useState, useMemo, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { mockNotifications } from './data';
@@ -74,9 +74,15 @@ export default function ActionCenter() {
 
     // BFI Step a1.1: Auto-open with Miller Knoll quote request
     const isStepA11 = isDemoActive && currentStep?.id === 'a1.1';
-    const [a11PanelClosed, setA11PanelClosed] = useState(false);
+    const [a11PanelClosed,  setA11PanelClosed]  = useState(false);
+    const [a11IngestState,  setA11IngestState]  = useState<'idle' | 'ingesting' | 'ready'>('idle');
+    const [a11IngestCount,  setA11IngestCount]  = useState(0);
     // Reset panel when step changes
-    useEffect(() => { setA11PanelClosed(false); }, [currentStep?.id]);
+    useEffect(() => {
+        setA11PanelClosed(false);
+        setA11IngestState('idle');
+        setA11IngestCount(0);
+    }, [currentStep?.id]);
 
     // Step 1.10: Auto-open with single notification
     const isStep19 = isDemoActive && currentStep?.id === '1.10';
@@ -159,6 +165,26 @@ export default function ActionCenter() {
         { id: 'acks', label: 'Acknowledgements', count: FLOW2_NOTIFICATIONS.filter(n => n.type === 'ack_received').length, icon: DocumentTextIcon, colorTheme: { activeBg: 'bg-blue-500/15', activeText: 'text-blue-500', activeBorder: 'border-blue-500/20', badgeBg: 'bg-blue-500/20', badgeText: 'text-blue-500' }, filter: (n) => n.type === 'ack_received' },
         { id: 'system', label: 'System', count: FLOW2_NOTIFICATIONS.filter(n => n.type === 'system').length, icon: SparklesIcon, colorTheme: { activeBg: 'bg-emerald-500/15', activeText: 'text-emerald-500', activeBorder: 'border-emerald-500/20', badgeBg: 'bg-emerald-500/20', badgeText: 'text-emerald-500' }, filter: (n) => n.type === 'system' },
     ];
+
+    const A11_INGEST_LINES = [
+        { text: 'DOE-2847.sif parsed · 6 line items extracted',                  isWarning: false },
+        { text: 'NYC-DOE-2847-specs.pdf · floor plan detected · Zone A·B·C',    isWarning: false },
+        { text: 'CPR discrepancy detected · Carpenters −5h · OT −2h · −$2,340', isWarning: true  },
+    ];
+
+    const handleA11Ingest = () => {
+        setA11IngestState('ingesting');
+        window.dispatchEvent(new CustomEvent('bfi:ingest'));
+        setTimeout(() => setA11IngestCount(1), 600);
+        setTimeout(() => setA11IngestCount(2), 1200);
+        setTimeout(() => setA11IngestCount(3), 1800);
+        setTimeout(() => setA11IngestState('ready'), 2300);
+    };
+
+    const handleA11Review = () => {
+        setA11PanelClosed(true);
+        window.dispatchEvent(new CustomEvent('bfi:review'));
+    };
 
     const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed);
 
@@ -299,49 +325,147 @@ export default function ActionCenter() {
         {isStepA11 && !a11PanelClosed && (
             <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
                 <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
+
                     {/* Header */}
                     <div className="px-5 pt-5 pb-3 shrink-0">
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary-foreground font-bold animate-pulse">1 new</span>
+                                {a11IngestState === 'idle' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/10 text-foreground font-bold">1 new</span>
+                                )}
+                                {a11IngestState === 'ingesting' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-ai/15 text-ai font-bold animate-pulse">Ingesting…</span>
+                                )}
+                                {a11IngestState === 'ready' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">Ready</span>
+                                )}
                             </div>
-                            <button
-                                onClick={() => setA11PanelClosed(true)}
-                                className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
-                            >
-                                <XMarkIcon className="w-5 h-5" />
-                            </button>
+                            {a11IngestState === 'idle' && (
+                                <button onClick={() => setA11PanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                    <XMarkIcon className="w-5 h-5" />
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Highlighted notification */}
-                    <div className="px-5 pb-5">
-                        <div className="relative rounded-2xl ring-2 ring-primary shadow-lg shadow-primary/20 animate-in fade-in duration-500">
-                            {/* "Incoming" badge */}
-                            <span className="absolute -top-2 right-4 text-[9px] font-black text-primary-foreground bg-primary px-2 py-0.5 rounded-full shadow-sm z-10">
-                                INCOMING
-                            </span>
-                            <NotificationItem
-                                notification={BFI_A11_NOTIFICATIONS[0]}
-                                onActionClick={(action) => {
-                                    if (action === 'Ingest with Strata') {
-                                        setA11PanelClosed(true)
-                                        window.dispatchEvent(new CustomEvent('bfi:ingest'))
-                                    }
-                                }}
-                            />
-                        </div>
+                    {/* Body — depends on ingest state */}
+                    <div className="px-5 pb-5 space-y-3">
+
+                        {/* idle: original notification card */}
+                        {a11IngestState === 'idle' && (
+                            <div className="relative rounded-2xl ring-2 ring-primary shadow-lg shadow-primary/20 animate-in fade-in duration-500">
+                                <span className="absolute -top-2 right-4 text-[9px] font-black text-primary-foreground bg-primary px-2 py-0.5 rounded-full shadow-sm z-10">
+                                    INCOMING
+                                </span>
+                                <NotificationItem
+                                    notification={BFI_A11_NOTIFICATIONS[0]}
+                                    onActionClick={(action) => {
+                                        if (action === 'Ingest with Strata') handleA11Ingest()
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* ingesting: processing animation */}
+                        {a11IngestState === 'ingesting' && (
+                            <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border p-5 space-y-4 animate-in fade-in duration-300">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 rounded-xl bg-ai/10 flex items-center justify-center shrink-0">
+                                        <SparklesIcon className="w-4 h-4 text-ai animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-foreground">Ingesting with Strata AI…</p>
+                                        <p className="text-[11px] text-muted-foreground">DOE-2847 · Miller Knoll quote</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {A11_INGEST_LINES.slice(0, a11IngestCount).map((line, i) => (
+                                        <div key={i} className={`flex items-center gap-2 text-[11px] animate-in fade-in duration-300 ${line.isWarning ? 'text-warning' : 'text-success'}`}>
+                                            {line.isWarning
+                                                ? <ExclamationTriangleIcon className="w-3.5 h-3.5 shrink-0" />
+                                                : <CheckCircleIcon className="w-3.5 h-3.5 shrink-0" />
+                                            }
+                                            {line.text}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-ai rounded-full transition-all duration-700"
+                                        style={{ width: `${Math.round((a11IngestCount / A11_INGEST_LINES.length) * 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ready: email detail + all lines + Review Order button */}
+                        {a11IngestState === 'ready' && (
+                            <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden animate-in fade-in duration-400">
+                                {/* Email header */}
+                                <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                                    <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
+                                    <span className="text-sm font-semibold text-foreground flex-1">New quote request · Miller Knoll</span>
+                                    <span className="text-[10px] text-muted-foreground shrink-0">May 6 · 8:14 AM</span>
+                                </div>
+                                {/* Email meta */}
+                                <div className="px-4 py-3 space-y-1 border-b border-border">
+                                    {[
+                                        { label: 'From', value: 'Robert Chen · Miller Knoll Rep' },
+                                        { label: 'Re',   value: 'DOE-2847 · NYC Dept. of Education · quote request' },
+                                    ].map(f => (
+                                        <div key={f.label} className="flex gap-2 text-[11px]">
+                                            <span className="text-muted-foreground w-8 shrink-0">{f.label}</span>
+                                            <span className="text-foreground font-medium">{f.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Attachments */}
+                                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 flex-wrap">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Attachments:</span>
+                                    <span className="flex items-center gap-1 text-[10px] text-ai font-medium px-2 py-0.5 rounded bg-ai/10 border border-ai/20">
+                                        <DocumentTextIcon className="w-3 h-3" /> DOE-2847.sif
+                                    </span>
+                                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground px-2 py-0.5 rounded bg-muted/40 border border-border">
+                                        <DocumentTextIcon className="w-3 h-3" /> NYC-DOE-2847-specs.pdf
+                                    </span>
+                                </div>
+                                {/* AI results */}
+                                <div className="px-4 py-3 border-b border-border space-y-2">
+                                    {A11_INGEST_LINES.map((line, i) => (
+                                        <div key={i} className={`flex items-center gap-2 text-[11px] ${line.isWarning ? 'text-warning' : 'text-success'}`}>
+                                            {line.isWarning
+                                                ? <ExclamationTriangleIcon className="w-3.5 h-3.5 shrink-0" />
+                                                : <CheckCircleIcon className="w-3.5 h-3.5 shrink-0" />
+                                            }
+                                            {line.text}
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Review Order CTA */}
+                                <div className="px-4 py-4">
+                                    <button
+                                        onClick={handleA11Review}
+                                        className="w-full py-2.5 text-[12px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                    >
+                                        <EyeIcon className="w-4 h-4" />
+                                        Review Order →
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Footer */}
-                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
-                        <p className="text-xs font-bold text-ai flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
-                            Awaiting ingest
-                        </p>
-                    </div>
+                    {a11IngestState === 'idle' && (
+                        <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                            <p className="text-xs font-bold text-ai flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
+                                Awaiting ingest
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         )}
