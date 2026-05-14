@@ -2024,7 +2024,7 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange }: {
                                                 }`}
                                             />
                                             {manualEditId === field.id && (
-                                                <p className="text-[10px] text-primary font-medium animate-in fade-in duration-200">
+                                                <p className="text-[10px] text-muted-foreground animate-in fade-in duration-200">
                                                     Type your custom value above, then click Save.
                                                 </p>
                                             )}
