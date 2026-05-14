@@ -11,7 +11,7 @@
  *   Lines pre-approved → "Send Final Quote to Nancy →" → NancyDialog → nextStep()
  */
 
-import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
     CheckCircle2, Mail, Send, Bell, ChevronRight,
 } from 'lucide-react'
@@ -19,7 +19,7 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIDocumentReviewModal from './BFIDocumentReviewModal'
-import BFIProcessKanban, { BFI_PROCESS_FUNNEL } from './BFIProcessKanban'
+import BFIProcessKanban from './BFIProcessKanban'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -164,46 +164,9 @@ function NancyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
     )
 }
 
-// ─── Funnel stepper (same as CPRScene) ────────────────────────────────────────
+// ─── Main scene ───────────────────────────────────────────────────────────────
 
 const ACTIVE_COL = 3
-
-function FunnelStepper() {
-    return (
-        <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
-            {BFI_PROCESS_FUNNEL.map((step, i) => {
-                const active = i === ACTIVE_COL
-                const past   = i < ACTIVE_COL
-                return (
-                    <Fragment key={step.id}>
-                        <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all shrink-0 ${
-                            active ? 'bg-primary text-primary-foreground shadow-sm'
-                            : past  ? 'bg-muted/60 text-foreground/70'
-                            :         'bg-muted/30 text-muted-foreground'
-                        }`}>
-                            <span className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${
-                                active ? 'bg-primary-foreground/20'
-                                : past  ? 'bg-success/20'
-                                :         'bg-muted/60 text-muted-foreground'
-                            }`}>
-                                {past
-                                    ? <CheckCircle2 className="h-2.5 w-2.5 text-success" />
-                                    : <span className="text-[9px] font-bold">{i + 1}</span>
-                                }
-                            </span>
-                            {step.label}
-                        </div>
-                        {i < BFI_PROCESS_FUNNEL.length - 1 && (
-                            <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                        )}
-                    </Fragment>
-                )
-            })}
-        </div>
-    )
-}
-
-// ─── Main scene ───────────────────────────────────────────────────────────────
 
 export default function MichaelApprovalScene() {
     const { nextStep, isPaused } = useDemo()
@@ -254,9 +217,6 @@ export default function MichaelApprovalScene() {
                     <ChevronRight className="h-4 w-4 text-ai shrink-0 mt-0.5 group-hover:translate-x-0.5 transition-transform" />
                 </button>
             )}
-
-            {/* Funnel stepper */}
-            <FunnelStepper />
 
             {/* CPR kanban — same as step 1.8 */}
             <BFIProcessKanban
