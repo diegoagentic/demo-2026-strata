@@ -351,9 +351,9 @@ function getFields(step: BFIReviewStep, scenario?: 'match' | 'gap'): ReviewField
 // ─── Attachments Panel ───────────────────────────────────────────────────────
 
 const BFI_ATTACHMENTS = [
-    { name: 'CPR-NYPL-17706.pdf',      path: '/docs/bfi/cpr/CPR-NYPL-17706.pdf',              category: 'CPR',     rotate: true  },
-    { name: 'invoice-030923-NYPL.pdf', path: '/docs/bfi/invoices/invoice-030923-NYPL.pdf',     category: 'Invoice', rotate: false },
-    { name: 'signin-NYPL-17706.pdf',   path: '/docs/bfi/signin/signin-NYPL-17706.pdf',         category: 'Sign-In', rotate: true  },
+    { name: 'CPR-NYPL-17706.pdf',      path: '/docs/bfi/cpr/CPR-NYPL-17706.pdf?v=2',          category: 'CPR'     },
+    { name: 'invoice-030923-NYPL.pdf', path: '/docs/bfi/invoices/invoice-030923-NYPL.pdf?v=2', category: 'Invoice' },
+    { name: 'signin-NYPL-17706.pdf',   path: '/docs/bfi/signin/signin-NYPL-17706.pdf?v=2',     category: 'Sign-In' },
 ]
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -482,8 +482,8 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
 
 type UploadState = 'idle' | 'uploading' | 'detected'
 
-function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boolean; onValidate?: () => void }) {
-    const [lightbox, setLightbox] = useState<{ path: string; name: string; rotate: boolean } | null>(null)
+function AttachmentsPanel({ onValidate }: { invoiceUpload?: boolean; onValidate?: () => void }) {
+    const [lightbox, setLightbox] = useState<{ path: string; name: string } | null>(null)
     const [uploadState,        setUploadState]        = useState<UploadState>('idle')
     const [progress,           setProgress]           = useState(0)
     const [showPatriciaDialog, setShowPatriciaDialog] = useState(false)
@@ -602,22 +602,17 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
             {lightbox && (
                 <div className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setLightbox(null)}>
                     <div className="relative bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
-                        style={{ width: lightbox.rotate ? 640 : 560, maxHeight: '90vh' }}
+                        style={{ width: 680, height: '88vh' }}
                         onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-800 shrink-0">
                             <span className="text-[10px] font-bold text-zinc-300 truncate">{lightbox.name}</span>
                             <button onClick={() => setLightbox(null)} className="text-zinc-400 hover:text-white text-lg leading-none ml-4 transition-colors">×</button>
                         </div>
-                        <div className="flex-1 overflow-hidden flex items-center justify-center bg-zinc-950" style={{ minHeight: lightbox.rotate ? 480 : 560 }}>
-                            {lightbox.rotate ? (
-                                <div style={{ width: 480, height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                    <iframe src={lightbox.path} title={lightbox.name}
-                                        style={{ width: 600, height: 480, transform: 'rotate(90deg)', transformOrigin: 'center', border: 'none', flexShrink: 0 }} />
-                                </div>
-                            ) : (
-                                <iframe src={lightbox.path} title={lightbox.name} style={{ width: '100%', height: 560, border: 'none' }} />
-                            )}
-                        </div>
+                        <iframe
+                            src={`${lightbox.path}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                            title={lightbox.name}
+                            className="flex-1 w-full border-none bg-zinc-950"
+                        />
                     </div>
                 </div>
             )}
