@@ -17,6 +17,7 @@ import QuoteIntakePricingScene from './QuoteIntakePricingScene'
 import CPRScene from './CPRScene'
 import AgencyFeeVerifyScene from './AgencyFeeVerifyScene'
 import DesignerResponseScene from './DesignerResponseScene'
+import DesignerRFQScene from './DesignerRFQScene'
 import POLaborScene from './POLaborScene'
 import LaurenClaimScene from './LaurenClaimScene'
 import ClaimResolvedScene from './ClaimResolvedScene'
@@ -41,7 +42,17 @@ export default function BFIPage() {
     const { currentStep, nextStep } = useDemo()
     const stepId = currentStep?.id ?? 'r1.2'
 
-    // Robert Chen (a1.2) — Miller Knoll designer email view, breaks out of the MBIPageShell
+    // Mobile email views — break out of MBIPageShell (full-screen phone frame)
+    if (stepId === 'a1.0') {
+        return (
+            <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center py-6 animate-in fade-in duration-500">
+                <MobileDeviceFrame size="lg">
+                    <DesignerRFQScene key="a1.0" onSend={nextStep} />
+                </MobileDeviceFrame>
+            </div>
+        )
+    }
+
     if (stepId === 'a1.2') {
         return (
             <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center py-6 animate-in fade-in duration-500">

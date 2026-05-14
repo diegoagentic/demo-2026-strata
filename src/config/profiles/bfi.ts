@@ -35,6 +35,15 @@ export const BFI_STEPS: DemoStep[] = [
     // FLOW 1: Agency Fee (4 steps · consolidated)
     // ═══════════════════════════════════════════
     {
+        id: 'a1.0',
+        groupId: 1,
+        groupTitle: 'Flow 1: Agency Fee',
+        title: 'Request for Quote',
+        description: 'Robert Chen (Miller Knoll Rep) sends a Request for Quote to Lauren DeMarco (BFI) for the NYC Dept. of Education installation — DOE-2847. He attaches the SIF, spec sheet, and floor plan. Before Strata, Lauren manually tracked these requests by email and spreadsheet. Now documents land directly in the Strata intake queue.',
+        app: 'bfi-agency-fee',
+        role: 'Designer',
+    },
+    {
         id: 'a1.1',
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
@@ -139,6 +148,7 @@ export const BFI_STEPS: DemoStep[] = [
 // ─── STEP BEHAVIOR ───────────────────────────────────────────────────────────
 
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
+    'a1.0': { mode: 'interactive', userAction: 'Robert Chen sends the RFQ to BFI with SIF, spec sheet, and floor plan attached — documents land in Strata intake queue automatically' },
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · CPR flag on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges the update · loop closed' },
     'a1.2b': { mode: 'interactive', userAction: 'Review SIF validation via OmniQuote → accept Filing Units correction → toggle City/State contract → apply discount & continue' },
@@ -155,6 +165,12 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
 // ─── STEP MESSAGES (AI Agent Progress) ───────────────────────────────────────
 
 export const BFI_STEP_MESSAGES: Record<string, string[]> = {
+    'a1.0': [
+        'Request for Quote received · DOE-2847 · Miller Knoll',
+        'Parsing attachments: SIF, spec sheet, floor plan',
+        'Extracting line items and CPR package from SIF',
+        'Documents queued in Strata intake · notifying Lauren DeMarco',
+    ],
     'a1.1': [
         'Fetching active CoNY orders from CORE',
         'Scanning CPR packages for hour discrepancies',
@@ -208,5 +224,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const BFI_SELF_INDICATED: string[] = [
-    'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
+    'a1.0', 'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
 ];
