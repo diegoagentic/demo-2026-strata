@@ -2322,7 +2322,7 @@ export default function BFIDocumentReviewModal({
                                         <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2">
                                             {([
                                                 { id: 'sif' as const,      icon: FileText, label: 'SIF · DOE-2847' },
-                                                { id: 'specs' as const,    icon: FileText, label: step === 'labor' ? 'DOE-2847 · Purchase Order' : 'Q-2026-0089 · Quote' },
+                                                { id: 'specs' as const,    icon: FileText, label: (step === 'labor' || step === 'cpr') ? 'DOE-2847 · Purchase Order' : 'Q-2026-0089 · Quote' },
                                                 { id: 'floorplan' as const, icon: MapPin,   label: 'Floor Plan' },
                                             ]).map(tab => (
                                                 <button
