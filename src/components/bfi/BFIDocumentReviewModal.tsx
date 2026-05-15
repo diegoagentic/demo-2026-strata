@@ -14,7 +14,7 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import {
     X, FileText, Truck, Package,
     ChevronDown, ChevronUp, CheckCircle2, Sparkles,
-    Edit, Edit2, Zap, Info, MapPin, Send, AlertCircle,
+    Edit, Edit2, Edit3, Zap, Info, MapPin, Send, AlertCircle,
     Download, Mail, Upload, Loader2, Paperclip
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -947,6 +947,21 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
     const [showComment, setShowComment] = useState(false)
     const [commentTo,   setCommentTo]   = useState<'lauren' | 'michael' | 'doe'>('lauren')
     const [commentSent, setCommentSent] = useState(false)
+    const [editingLine,  setEditingLine]  = useState<string | null>(null)
+    const [editHours,    setEditHours]    = useState('')
+    const [editReason,   setEditReason]   = useState('')
+    const [editedMap,    setEditedMap]    = useState<Record<string, { hours: string; reason: string }>>({})
+
+    const handleEditSave = (id: string) => {
+        setEditedMap(prev => ({ ...prev, [id]: { hours: editHours, reason: editReason } }))
+        const next = new Set([...approved, id])
+        setApproved(next)
+        const sifIds = new Set([...next].map(cprId => CPR_TO_SIF[cprId]).filter(Boolean))
+        onResolveChange?.(sifIds)
+        setEditingLine(null)
+        setEditHours('')
+        setEditReason('')
+    }
 
     const COMMENT_RECIPIENTS = {
         lauren:  { initials: 'LD',  name: 'Lauren DeMarco',       role: 'BFI · Account Manager',         color: 'bg-info/20 text-info'       },
@@ -1027,9 +1042,12 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
                         </div>
                         {CPR_LINES.map(line => {
                             const isApproved = approved.has(line.id)
+                            const isEditing  = editingLine === line.id
+                            const wasEdited  = editedMap[line.id] !== undefined
                             return (
-                                <div key={line.id} className={`grid grid-cols-4 items-center px-3 py-2.5 border-b border-border/50 last:border-0 transition-colors ${
-                                    isApproved ? 'bg-success/5' : line.ok ? '' : 'bg-warning/5'
+                                <div key={line.id} className="border-b border-border/50 last:border-0">
+                                <div className={`grid grid-cols-4 items-center px-3 py-2.5 transition-colors ${
+                                    isApproved ? 'bg-success/5' : line.ok ? '' : isEditing ? 'bg-muted/30' : 'bg-warning/5'
                                 }`}>
                                     <div className="flex items-center gap-2">
                                         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
@@ -1038,23 +1056,81 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
                                         <span className="text-[11px] font-medium text-foreground">{line.category}</span>
                                     </div>
                                     <span className="text-[11px] text-muted-foreground font-mono">{line.quoted}</span>
-                                    <span className={`text-[11px] font-mono font-semibold ${line.ok ? 'text-foreground' : 'text-warning'}`}>
-                                        {line.cpr}
+                                    <span className={`text-[11px] font-mono font-semibold ${line.ok || isApproved ? 'text-foreground' : 'text-warning'}`}>
+                                        {wasEdited ? editedMap[line.id].hours : line.cpr}
+                                        {wasEdited && <span className="ml-1 text-[8px] text-muted-foreground font-normal">edited</span>}
                                     </span>
                                     <div className="flex items-center justify-between gap-1">
-                                        <span className={`text-[11px] font-mono font-semibold ${line.impact ? 'text-warning' : 'text-muted-foreground'}`}>
+                                        <span className={`text-[11px] font-mono font-semibold ${line.impact ? (isApproved ? 'text-success' : 'text-warning') : 'text-muted-foreground'}`}>
                                             {line.impact ?? '—'}
                                         </span>
-                                        {!line.ok && !isApproved && (
-                                            <button
-                                                onClick={() => handleApprove(line.id)}
-                                                className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0"
-                                            >
-                                                Approve
+                                        {!line.ok && !isApproved && !isEditing && (
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => { setEditingLine(line.id); setEditHours(line.cpr); setEditReason('') }}
+                                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border hover:bg-muted/80 hover:text-foreground transition-all shrink-0 flex items-center gap-0.5"
+                                                >
+                                                    <Edit3 className="h-2.5 w-2.5" /> Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleApprove(line.id)}
+                                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0"
+                                                >
+                                                    Approve
+                                                </button>
+                                            </div>
+                                        )}
+                                        {!line.ok && !isApproved && isEditing && (
+                                            <button onClick={() => { setEditingLine(null); setEditHours(''); setEditReason('') }}
+                                                className="text-[9px] text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                                                Cancel
                                             </button>
                                         )}
                                         {isApproved && <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />}
                                     </div>
+                                </div>
+                                {/* Inline edit form */}
+                                {isEditing && (
+                                    <div className="px-3 pb-3 pt-2.5 bg-muted/20 border-t border-border/40 space-y-2.5 animate-in fade-in duration-150">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-24 space-y-1">
+                                                <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Adj. hours</label>
+                                                <input
+                                                    type="text"
+                                                    value={editHours}
+                                                    onChange={e => setEditHours(e.target.value)}
+                                                    placeholder={line.cpr}
+                                                    className="w-full text-[11px] bg-background border border-border rounded-lg px-2 py-1.5 outline-none focus:border-primary/50 transition-colors font-mono"
+                                                />
+                                            </div>
+                                            <div className="flex-1 space-y-1">
+                                                <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Reason</label>
+                                                <input
+                                                    type="text"
+                                                    value={editReason}
+                                                    onChange={e => setEditReason(e.target.value)}
+                                                    placeholder="e.g. Confirmed by receiving coordinator"
+                                                    className="w-full text-[11px] bg-background border border-border rounded-lg px-2 py-1.5 outline-none focus:border-primary/50 transition-colors"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end gap-2">
+                                            <button
+                                                onClick={() => { setEditingLine(null); setEditHours(''); setEditReason('') }}
+                                                className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={() => handleEditSave(line.id)}
+                                                disabled={!editHours.trim()}
+                                                className="px-3 py-1.5 text-[10px] font-bold rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-all"
+                                            >
+                                                Save adjustment
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                                 </div>
                             )
                         })}
@@ -1101,60 +1177,6 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
                         }
                     </button>
                 </div>
-                {/* Comment to stakeholders — solo Lauren CPR (no michael, no invoice) */}
-                {!michaelMode && !showComment && (
-                    <button
-                        onClick={() => setShowComment(true)}
-                        className="w-full py-2.5 text-[12px] font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all"
-                    >
-                        Comment to stakeholders →
-                    </button>
-                )}
-                {/* Inline compose */}
-                {!michaelMode && showComment && (
-                    <div className="rounded-xl border border-border bg-muted/20 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                        <div className="px-4 py-3 border-b border-border bg-background flex items-center gap-2">
-                            <Send className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <p className="text-[11px] font-bold text-foreground flex-1">Comment · DOE-2847</p>
-                            <button onClick={() => setShowComment(false)} className="text-muted-foreground hover:text-foreground transition-colors">
-                                <X className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
-                        <div className="p-4 space-y-3">
-                            <div className="flex gap-1.5">
-                                {(['lauren', 'michael', 'doe'] as const).map(key => {
-                                    const r = COMMENT_RECIPIENTS[key]
-                                    return (
-                                        <button key={key} onClick={() => setCommentTo(key)}
-                                            className={`flex items-center gap-1.5 flex-1 px-2 py-1.5 rounded-lg border text-left transition-all ${
-                                                commentTo === key ? 'border-foreground bg-foreground/5' : 'border-border hover:border-foreground/30'
-                                            }`}>
-                                            <div className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 text-[7px] font-black ${r.color}`}>{r.initials}</div>
-                                            <p className="text-[9px] font-bold text-foreground truncate">{r.name.split(' ')[0]}</p>
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                            <div className="rounded-xl border border-border bg-background px-3 py-2.5 text-[10px] text-foreground leading-relaxed whitespace-pre-line">
-                                {commentMessage}
-                            </div>
-                            {commentSent ? (
-                                <div className="flex items-center gap-2 p-2.5 bg-success/5 border border-success/20 rounded-xl animate-in fade-in duration-300">
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                                    <p className="text-[11px] font-bold text-success">Sent to {commentRecipient.name.split(' ')[0]} · May 6 · 10:45 AM</p>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => setShowComment(false)} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-                                    <button onClick={handleCommentSend}
-                                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-foreground text-background text-[11px] font-black hover:opacity-80 transition-all uppercase tracking-widest">
-                                        <Send className="h-3 w-3" /> Send →
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
             </div>
             )}
 
