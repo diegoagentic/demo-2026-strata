@@ -33,7 +33,7 @@ We are filing an incomplete shipment claim for PO DOE-2847 (CoNY · NYC Dept. of
 
 Shipment summary:
   · Cartons received: 35 of 35
-  · Incomplete item:  Monitor Arm Dual Adjustable · carton #34
+  · Incomplete item: Monitor Arm Dual Adjustable · carton #34
 
 Issue:
   · Unit arrived with mounting hardware missing
@@ -275,7 +275,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                     <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 space-y-1 text-[11px]">
                                         <div className="flex items-center gap-1.5 mb-1">
                                             <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
-                                            <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Damaged Item</span>
+                                            <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Incomplete Item</span>
                                         </div>
                                         {[
                                             { label: 'Order',    value: 'DOE-2847' },
