@@ -320,18 +320,8 @@ const FIELDS_EXTRACT: ReviewField[] = [
     { id: 'fh2', name: 'Contract',   category: 'header', extractedValue: 'CoNY · City of New York', status: 'valid' },
     { id: 'fh3', name: 'Agency',     category: 'header', extractedValue: 'NYC Dept. of Education',  status: 'valid' },
     { id: 'fh4', name: 'Date',       category: 'header', extractedValue: 'May 6, 2026',             status: 'valid' },
-    {
-        id: 'f1', name: 'Carpenters labor', category: 'labor',
-        extractedValue: '50h', expectedValue: '45h', ovniqSuggestion: '45h',
-        status: 'inconsistent',
-        reason: 'OmniQuote detectó 45h en contrato CoNY. El SIF indica 50h — discrepancia de 5h · Impact: −$1,800.',
-    },
-    {
-        id: 'f2', name: 'Overtime labor', category: 'labor',
-        extractedValue: '8h', expectedValue: '6h', ovniqSuggestion: '6h',
-        status: 'inconsistent',
-        reason: 'OmniQuote establece 6h overtime según T-code aplicado. SIF indica 8h · Impact: −$540.',
-    },
+    { id: 'f1', name: 'Carpenters labor', category: 'labor', extractedValue: '45h', status: 'valid' },
+    { id: 'f2', name: 'Overtime labor',   category: 'labor', extractedValue: '6h',  status: 'valid' },
     { id: 'f3', name: 'Zone A workstations', category: 'items', extractedValue: '24 units', status: 'valid' },
     { id: 'f4', name: 'Zone B chairs',       category: 'items', extractedValue: '48 units', status: 'valid' },
     { id: 'f5', name: 'Installation',        category: 'logistics', extractedValue: '$12,400', status: 'valid' },
@@ -2328,12 +2318,7 @@ const EXTRACT_ZONES = [
 
 function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { onValidate?: () => void; onResolveChange?: (ids: Set<string>) => void; onCustomValue?: (fieldId: string, value: string) => void }) {
     const [tab, setTab] = useState<'sif' | 'quote' | 'zones'>('sif')
-    const [quoteLines, setQuoteLines] = useState<ExtractQuoteLine[]>(EXTRACT_QUOTE_LINES)
-    const [editingIdx, setEditingIdx] = useState<number | null>(null)
-
-    const updateLine = (idx: number, val: string) => {
-        setQuoteLines(prev => prev.map((l, i) => i === idx ? { ...l, net: val } : l))
-    }
+    const [quoteLines] = useState<ExtractQuoteLine[]>(EXTRACT_QUOTE_LINES)
 
     const TABS = [
         { id: 'sif'   as const, label: 'SIF Fields'   },
@@ -2373,42 +2358,25 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                                 <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide">{h}</span>
                             ))}
                         </div>
-                        {/* Editable line items */}
-                        {quoteLines.map((line, idx) => {
-                            const isEditing = editingIdx === idx
-                            return (
-                                <div key={line.code} className={`rounded-xl border p-3 transition-all ${
-                                    isEditing ? 'border-primary/40 bg-primary/5' :
-                                    line.corrected ? 'border-warning/30 bg-warning/5' : 'border-border bg-card'
-                                }`}>
-                                    <div className="grid grid-cols-4 gap-2 items-center">
-                                        <div className="min-w-0">
-                                            <p className="text-[9px] font-mono text-muted-foreground truncate">{line.code}</p>
-                                            <p className="text-[10px] font-semibold text-foreground leading-tight truncate">{line.name}</p>
-                                        </div>
-                                        <span className="text-[10px] font-mono text-muted-foreground">{line.qty}</span>
-                                        <span className={`text-[10px] font-mono ${line.corrected ? 'text-warning line-through' : 'text-muted-foreground'}`}>{line.sif}</span>
-                                        <div className="flex items-center gap-1">
-                                            {isEditing ? (
-                                                <input type="text" value={line.net} onChange={e => updateLine(idx, e.target.value)}
-                                                    className="w-full text-[10px] font-mono font-semibold text-foreground bg-transparent border-b border-primary focus:outline-none"
-                                                    autoFocus
-                                                />
-                                            ) : (
-                                                <span className={`text-[10px] font-mono font-semibold ${line.corrected ? 'text-success' : 'text-foreground'}`}>{line.net}</span>
-                                            )}
-                                            <button onClick={() => setEditingIdx(isEditing ? null : idx)}
-                                                className="text-muted-foreground hover:text-foreground transition-colors shrink-0" aria-label="Edit">
-                                                {isEditing ? <CheckCircle2 className="h-3 w-3 text-success" /> : <Edit2 className="h-3 w-3" />}
-                                            </button>
-                                        </div>
+                        {/* Read-only line items */}
+                        {quoteLines.map((line) => (
+                            <div key={line.code} className={`rounded-xl border p-3 ${
+                                line.corrected ? 'border-success/30 bg-success/5' : 'border-border bg-card'
+                            }`}>
+                                <div className="grid grid-cols-4 gap-2 items-center">
+                                    <div className="min-w-0">
+                                        <p className="text-[9px] font-mono text-muted-foreground truncate">{line.code}</p>
+                                        <p className="text-[10px] font-semibold text-foreground leading-tight truncate">{line.name}</p>
                                     </div>
-                                    {line.corrected && (
-                                        <p className="text-[9px] text-success mt-1.5">↓ Corrected from {line.sif} per CoNY T-code 18%</p>
-                                    )}
+                                    <span className="text-[10px] font-mono text-muted-foreground">{line.qty}</span>
+                                    <span className={`text-[10px] font-mono ${line.corrected ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{line.sif}</span>
+                                    <span className={`text-[10px] font-mono font-semibold ${line.corrected ? 'text-success' : 'text-foreground'}`}>{line.net}</span>
                                 </div>
-                            )
-                        })}
+                                {line.corrected && (
+                                    <p className="text-[9px] text-success mt-1.5">↓ Corrected from {line.sif} per CoNY T-code 18%</p>
+                                )}
+                            </div>
+                        ))}
                         {/* Totals */}
                         <div className="rounded-xl border border-border overflow-hidden">
                             {[
