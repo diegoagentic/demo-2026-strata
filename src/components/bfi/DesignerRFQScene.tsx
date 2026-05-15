@@ -88,11 +88,11 @@ export default function DesignerRFQScene({ onSend }: DesignerRFQSceneProps) {
                         </p>
                         <p>
                             Scope includes Filing Units ×6, Aeron seating ×12, and Ethospace workstations ×8.
-                            The CPR package is enclosed — please flag any discrepancies before submitting to CoNY.
+                            All supporting documents are attached for your review.
                         </p>
                         <p>
-                            We need the agency fee quote confirmed by <span className="font-semibold">end of week</span> to meet
-                            the May 14 install window. Let me know if you need anything else.
+                            Please confirm receipt and let us know if you need anything additional to get started.
+                            We're targeting the <span className="font-semibold">May 14</span> install window.
                         </p>
                         <p className="text-muted-foreground">
                             — Robert Chen<br />
