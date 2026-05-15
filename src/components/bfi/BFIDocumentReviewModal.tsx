@@ -215,8 +215,8 @@ const SIF_GROUPS: SifGroup[] = [
     {
         id: 'labor', label: 'Labor (from SIF)', icon: Package,
         fields: [
-            { name: 'Carpenters labor', value: '50h', status: 'inconsistent', fieldId: 'f1', resolvedValue: '45h' },
-            { name: 'Overtime labor',   value: '8h',  status: 'inconsistent', fieldId: 'f2', resolvedValue: '6h'  },
+            { name: 'Carpenters labor', value: '45h', status: 'valid' },
+            { name: 'Overtime labor',   value: '6h',  status: 'valid' },
             { name: 'Zone A workstations', value: '24 units', status: 'valid' },
             { name: 'Zone B chairs',       value: '48 units', status: 'valid' },
         ]
@@ -2326,6 +2326,13 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
         { id: 'zones' as const, label: 'Zones'         },
     ]
 
+    const SIF_GROUPS_DISPLAY = [
+        { label: 'Document Header',    fields: FIELDS_EXTRACT.filter(f => f.category === 'header')    },
+        { label: 'Labor (from SIF)',   fields: FIELDS_EXTRACT.filter(f => f.category === 'labor')     },
+        { label: 'Items',              fields: FIELDS_EXTRACT.filter(f => f.category === 'items')     },
+        { label: 'Pricing & Delivery', fields: FIELDS_EXTRACT.filter(f => f.category === 'logistics') },
+    ].filter(g => g.fields.length > 0)
+
     return (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
             {/* Tab bar */}
@@ -2342,7 +2349,27 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
             </div>
 
             {tab === 'sif' && (
-                <BFIFieldReview step="extract" onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 min-h-0">
+                    {SIF_GROUPS_DISPLAY.map(group => (
+                        <div key={group.label}>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{group.label}</p>
+                            <div className="rounded-xl border border-border overflow-hidden">
+                                {group.fields.map((field, i) => (
+                                    <div key={field.id} className={`flex items-center justify-between px-3 py-2 text-[11px] ${
+                                        i > 0 ? 'border-t border-border/40' : ''
+                                    }`}>
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
+                                            <span className="text-muted-foreground">{field.name}</span>
+                                        </div>
+                                        <span className="font-mono font-semibold text-foreground">{field.extractedValue}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                    <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI] }]} />
+                </div>
             )}
 
             {tab === 'quote' && (
@@ -2432,6 +2459,24 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                     </div>
                 </div>
             )}
+
+            {/* Shared footer — always visible */}
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
+                <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
+                    {FIELDS_EXTRACT.length} fields · 0 need review
+                </div>
+                <div className="flex gap-2">
+                    <button className="flex-1 py-2.5 text-[12px] font-black border border-border text-foreground rounded-xl hover:bg-muted/50 transition-all uppercase tracking-wide">
+                        Save
+                    </button>
+                    <button
+                        onClick={() => onValidate?.()}
+                        className="flex-1 py-2.5 text-[12px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 shadow-sm transition-all uppercase tracking-wide"
+                    >
+                        Validate Extraction
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }
