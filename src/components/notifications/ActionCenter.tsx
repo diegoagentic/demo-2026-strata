@@ -7,6 +7,7 @@ import FilterTabs from './FilterTabs';
 import NotificationItem from './NotificationItem';
 import type { Notification, NotificationTab } from './types';
 import { useDemo } from '../../context/DemoContext';
+import { usePauseAware } from '../../context/usePauseAware';
 
 // Flow 2 notifications for Step 2.6
 const FLOW2_NOTIFICATIONS: Notification[] = [
@@ -137,6 +138,7 @@ const FLOW1_NOTIFICATIONS: Notification[] = [
 
 export default function ActionCenter() {
     const { isDemoActive, isSidebarCollapsed, currentStep, nextStep } = useDemo();
+    const { pauseAwareTimeout } = usePauseAware();
     const sidebarExpanded = isDemoActive && !isSidebarCollapsed;
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -150,16 +152,16 @@ export default function ActionCenter() {
     const [bfiPanelClosed, setBfiPanelClosed] = useState(false);
     // Delay before any BFI notification panel appears (2s after step loads)
     const [notifDelayReady, setNotifDelayReady] = useState(false);
-    // Reset all BFI panels when step changes, then reveal after 2s
+    // Reset all BFI panels when step changes, then reveal after 2s (pause-aware)
     useEffect(() => {
         setA11PanelClosed(false);
         setA11IngestState('idle');
         setA11IngestCount(0);
         setBfiPanelClosed(false);
         setNotifDelayReady(false);
-        const t = setTimeout(() => setNotifDelayReady(true), 2000);
-        return () => clearTimeout(t);
-    }, [currentStep?.id]);
+        const cancel = pauseAwareTimeout(() => setNotifDelayReady(true), 2000);
+        return () => cancel?.();
+    }, [currentStep?.id, pauseAwareTimeout]);
 
     // Step 1.10: Auto-open with single notification
     const isStep19 = isDemoActive && currentStep?.id === '1.10';
@@ -170,13 +172,14 @@ export default function ActionCenter() {
 
     useEffect(() => {
         if (!isStep27) { setNotifDelivered27([]); return; }
-        const timeouts: ReturnType<typeof setTimeout>[] = [];
-        timeouts.push(setTimeout(() => setNotifDelivered27([0]), 1500));
-        timeouts.push(setTimeout(() => setNotifDelivered27([0, 1]), 3000));
-        timeouts.push(setTimeout(() => setNotifDelivered27([0, 1, 2]), 4500));
-        timeouts.push(setTimeout(() => setNotifDelivered27([0, 1, 2, 3]), 6000));
-        return () => timeouts.forEach(clearTimeout);
-    }, [isStep27]);
+        const cancels = [
+            pauseAwareTimeout(() => setNotifDelivered27([0]),          1500),
+            pauseAwareTimeout(() => setNotifDelivered27([0, 1]),       3000),
+            pauseAwareTimeout(() => setNotifDelivered27([0, 1, 2]),    4500),
+            pauseAwareTimeout(() => setNotifDelivered27([0, 1, 2, 3]),6000),
+        ];
+        return () => cancels.forEach(c => c?.());
+    }, [isStep27, pauseAwareTimeout]);
 
     const tabs: NotificationTab[] = [
         {
@@ -251,13 +254,13 @@ export default function ActionCenter() {
 
     const handleA11Ingest = () => {
         setA11IngestState('ingesting');
-        setTimeout(() => setA11IngestCount(1), 600);
-        setTimeout(() => setA11IngestCount(2), 1200);
-        setTimeout(() => setA11IngestCount(3), 1800);
-        setTimeout(() => {
+        pauseAwareTimeout(() => setA11IngestCount(1), 600);
+        pauseAwareTimeout(() => setA11IngestCount(2), 1200);
+        pauseAwareTimeout(() => setA11IngestCount(3), 1800);
+        pauseAwareTimeout(() => {
             setA11IngestState('ready');
             window.dispatchEvent(new CustomEvent('bfi:ingest'));
-            setTimeout(() => setA11PanelClosed(true), 800);
+            pauseAwareTimeout(() => setA11PanelClosed(true), 800);
         }, 2300);
     };
 
