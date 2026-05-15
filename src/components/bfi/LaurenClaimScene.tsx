@@ -412,8 +412,29 @@ export default function LaurenClaimScene() {
                         <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Receiving Report · RR-37577</span>
                     </div>
-                    <div className="p-3">
-                        <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
+                    <div className="p-3 space-y-3">
+                        <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={200} extractedFields={[]} />
+                        {/* Bingo grid */}
+                        <div className="space-y-2">
+                            <div className="grid grid-cols-7 gap-0.5">
+                                {Array.from({ length: 35 }, (_, i) => i + 1).map(n => {
+                                    const missing = n === 34
+                                    return (
+                                        <div key={n} className={`flex items-center justify-center rounded p-1 text-center min-h-[28px] ${
+                                            missing ? 'bg-destructive/10 border border-destructive/30' : 'bg-success/5 border border-success/20'
+                                        }`}>
+                                            <span className={`text-[9px] font-bold leading-tight ${missing ? 'text-destructive' : 'text-muted-foreground/70'}`}>
+                                                {missing ? '✗' : `#${n}`}
+                                            </span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div className="bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-2 flex items-center gap-2">
+                                <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
+                                <span className="text-[10px] font-bold text-foreground">Carton #34 missing · not received at dock</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
