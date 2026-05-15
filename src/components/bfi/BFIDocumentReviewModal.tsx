@@ -1747,6 +1747,10 @@ function QuoteReviewPanel({
 // ─── Labor Ready Panel (paso 1.5 — all reconciled, send PO) ─────────────────
 
 function LaborReadyPanel({ onValidate }: { onValidate?: () => void }) {
+    const [showAsk, setShowAsk] = useState(false)
+    const [askTo,   setAskTo]   = useState<'designer' | 'manager'>('designer')
+    const [askSent, setAskSent] = useState(false)
+
     const READY_ITEMS = [
         { label: 'PO confirmed',        detail: 'DOE-2847 · NYC Dept. of Education · $235,560' },
         { label: 'OmniQuote validated', detail: 'Filing Units corrected $8,100 → $7,560 · discount −37.5%' },
@@ -1758,6 +1762,18 @@ function LaborReadyPanel({ onValidate }: { onValidate?: () => void }) {
         { initials: 'MC', label: 'Michael Chen',  sub: 'BFI Manager',      color: 'bg-ai/15 text-ai' },
         { initials: 'DOE', label: 'NYC DOE',      sub: 'Procurement',      color: 'bg-success/15 text-success' },
     ]
+    const RECIPIENTS = {
+        designer: { initials: 'RC', name: 'Robert Chen',  role: 'Miller Knoll Rep', color: 'bg-info/20 text-info' },
+        manager:  { initials: 'MC', name: 'Michael Chen', role: 'BFI Manager',       color: 'bg-ai/15 text-ai'    },
+    }
+    const recipient = RECIPIENTS[askTo]
+    const askMessage = `Hi ${recipient.name.split(' ')[0]} — quick check on PO DOE-2847 before we confirm: can you verify the labor schedule (Carpenters 45h · OT 6h) matches your records? We're ready to transmit to CORE.\n\n— Lauren DeMarco, BFI Furniture`
+
+    const handleAskSend = () => {
+        setAskSent(true)
+        setTimeout(() => { setShowAsk(false); setAskSent(false) }, 1200)
+    }
+
     return (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
             <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
@@ -1804,10 +1820,88 @@ function LaborReadyPanel({ onValidate }: { onValidate?: () => void }) {
                         </div>
                     ))}
                 </div>
+
+                {/* Ask clarification compose — inline */}
+                {showAsk && (
+                    <div className="rounded-xl border border-border bg-muted/20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        {/* Compose header */}
+                        <div className="px-4 py-3 border-b border-border bg-background flex items-center gap-2">
+                            <Send className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <p className="text-[11px] font-bold text-foreground flex-1">Ask clarification · DOE-2847</p>
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                            {/* Recipient toggle */}
+                            <div className="space-y-1.5">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Send to</p>
+                                <div className="flex gap-2">
+                                    {(['designer', 'manager'] as const).map(key => {
+                                        const r = RECIPIENTS[key]
+                                        const active = askTo === key
+                                        return (
+                                            <button
+                                                key={key}
+                                                onClick={() => setAskTo(key)}
+                                                className={`flex items-center gap-2 flex-1 px-3 py-2 rounded-lg border text-left transition-all ${
+                                                    active ? 'border-foreground bg-foreground/5' : 'border-border hover:border-foreground/30'
+                                                }`}
+                                            >
+                                                <div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 text-[8px] font-black ${r.color}`}>{r.initials}</div>
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] font-bold text-foreground truncate">{r.name}</p>
+                                                    <p className="text-[9px] text-muted-foreground truncate">{r.role}</p>
+                                                </div>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Message */}
+                            <div className="rounded-lg border border-border bg-background px-3 py-2.5 text-[11px] text-foreground leading-relaxed whitespace-pre-line">
+                                {askMessage}
+                            </div>
+
+                            {/* Sent confirmation */}
+                            {askSent && (
+                                <div className="flex items-center gap-2 p-2.5 bg-success/5 border border-success/20 rounded-lg animate-in fade-in duration-200">
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                    <p className="text-[11px] font-bold text-success">Sent to {recipient.name} · May 6 · 10:45 AM</p>
+                                </div>
+                            )}
+
+                            {/* Actions */}
+                            {!askSent && (
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => setShowAsk(false)}
+                                        className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleAskSend}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-black rounded-lg bg-foreground text-background hover:opacity-80 transition-all uppercase tracking-widest"
+                                    >
+                                        <Send className="h-3 w-3" /> Send →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-2">
                 <p className="text-[10px] text-muted-foreground text-center uppercase tracking-widest">10 fields · 0 need review</p>
+                {!showAsk && (
+                    <button
+                        onClick={() => setShowAsk(true)}
+                        className="w-full py-2 text-[12px] text-muted-foreground hover:text-foreground border border-border rounded-xl transition-colors"
+                    >
+                        Ask clarification →
+                    </button>
+                )}
                 <button
                     onClick={onValidate}
                     className="w-full py-2.5 text-[13px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest"
