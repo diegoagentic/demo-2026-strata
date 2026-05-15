@@ -76,16 +76,13 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                         <p>Hi Robert,</p>
                         <p>
                             We've received your Request for Quote for{' '}
-                            <span className="font-semibold">DOE-2847</span> — SIF, spec sheet, and floor plan
-                            are all ingested and on file.
+                            <span className="font-semibold">DOE-2847</span>. Your submitted documents have been
+                            validated and are on file.
                         </p>
                         <p>
                             Quote <span className="font-semibold">Q-2026-0089</span> is now being validated
                             against the CoNY contract through OmniQuote. We'll follow up once pricing is confirmed
                             and the order is ready to move forward.
-                        </p>
-                        <p>
-                            Copies of your submitted documents are attached below for reference.
                         </p>
                         <p className="text-muted-foreground">
                             — Lauren DeMarco<br />BFI Furniture · CoNY Account Manager
