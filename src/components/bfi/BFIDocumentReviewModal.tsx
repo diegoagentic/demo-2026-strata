@@ -2834,10 +2834,10 @@ export default function BFIDocumentReviewModal({
                     enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-200"  leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+                    <div className="fixed top-0 left-80 right-0 bottom-0 bg-black/50 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed inset-0 overflow-y-auto">
+                <div className="fixed top-0 left-80 right-0 bottom-0 overflow-y-auto">
                     <div className="flex min-h-full items-center justify-center p-3">
                         <TransitionChild
                             as={Fragment}
