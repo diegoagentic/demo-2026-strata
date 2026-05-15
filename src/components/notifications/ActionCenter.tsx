@@ -54,6 +54,15 @@ interface BfiStepNotif {
 }
 
 const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
+    'a1.2c': {
+        badge: '1 new', badgeColor: 'success',
+        title: 'RFQ approved · DOE-2847 converted to Purchase Order',
+        desc: 'Request for Quote Q-2026-0089 has been approved by NYC Dept. of Education and converted to Purchase Order DOE-2847 ($235,560). Please review PO and labor figures before confirming and sending.',
+        sender: 'NYC Dept. of Education · Procurement Office',
+        cta: 'Review PO →',
+        event: 'bfi:po-review-open',
+        footerText: 'PO review pending',
+    },
     'a1.2d': {
         badge: '1 new', badgeColor: 'ai',
         title: 'Purchase Order confirmed · NYC Dept. of Education',

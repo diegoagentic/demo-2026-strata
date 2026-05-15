@@ -6,7 +6,7 @@
  *   kanban → modal (step="labor") → validate → ProposalDialog (overlay) → send → nextStep()
  */
 
-import { useState, Fragment } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { CheckCircle2, FileText, Send, Mail } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
@@ -182,6 +182,12 @@ export default function POLaborScene() {
     const { nextStep } = useDemo()
     const [isModalOpen,    setIsModalOpen]    = useState(false)
     const [showProposal,   setShowProposal]   = useState(false)
+
+    useEffect(() => {
+        const handler = () => setIsModalOpen(true)
+        window.addEventListener('bfi:po-review-open', handler)
+        return () => window.removeEventListener('bfi:po-review-open', handler)
+    }, [])
 
     const handleValidate = () => {
         setIsModalOpen(false)
