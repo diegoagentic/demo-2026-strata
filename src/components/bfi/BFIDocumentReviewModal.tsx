@@ -521,7 +521,7 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
 
 type UploadState = 'idle' | 'uploading' | 'detected'
 
-function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boolean; onValidate?: () => void }) {
+function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceUpload?: boolean; michaelMode?: boolean; onValidate?: () => void }) {
     const [lightbox, setLightbox] = useState<{ path: string; name: string } | null>(null)
     const [uploadState,        setUploadState]        = useState<UploadState>('idle')
     const [progress,           setProgress]           = useState(0)
@@ -593,9 +593,9 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
                     </div>
                 )}
 
-                {/* ── Invoice upload zone ── */}
+                {/* ── Invoice upload zone — hidden for manager (read-only) ── */}
                 <div className="space-y-3">
-                    {uploadState === 'idle' && (
+                    {uploadState === 'idle' && !michaelMode && (
                         invoiceUpload ? (
                             <button
                                 onClick={simulateUpload}
@@ -717,7 +717,7 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
                                     className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors shrink-0">
                                     Preview
                                 </button>
-                                {!isUploaded && !isUploading && !invoiceUpload && (
+                                {!isUploaded && !isUploading && !invoiceUpload && !michaelMode && (
                                     <button onClick={() => simulateFileUpload(file.name)}
                                         className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0">
                                         Upload →
