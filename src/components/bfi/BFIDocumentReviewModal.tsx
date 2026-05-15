@@ -784,17 +784,13 @@ function CPRNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => vo
     const [message, setMessage]     = useState(
 `Hi Michael, Nancy,
 
-All 35 cartons for DOE-2847 have been received and confirmed at WIG NJ Warehouse (replacement carton #34 — Monitor Arm Dual Adjustable — arrived May 18 as scheduled).
+CPR reconciliation for DOE-2847 is complete. Adjusted labor hours have been reviewed and applied in CORE:
 
-The CPR reconciliation is complete. Please confirm the adjusted labor hours before we proceed to fee verification:
+  · Carpenters:    50h → 45h (−5h · −$1,800)
+  · OT Carpenters: 8h → 6h (−2h · −$540)
+  · Total impact:  −$2,340
 
-  · Teamsters:        24h — no change
-  · Carpenters:       50h → 45h (−5h · −$1,800)
-  · OT Carpenters:    8h → 6h (−2h · −$540)
-  · Inside Delivery:  4h — no change
-  · Total adjustment: −$2,340
-
-CORE has been updated (WO-2026-0089) and the SIF reflects the reconciled figures. Once you confirm, we'll proceed with agency fee verification.
+Please confirm so we can proceed to agency fee verification.
 
 — Lauren DeMarco
   BFI Furniture · CoNY Account Manager`
