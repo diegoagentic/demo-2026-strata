@@ -20,8 +20,8 @@ import BFIDocViewer, { BFI_DOCS } from './BFIDocViewer'
 import BFIDashboardScene from './BFIDashboardScene'
 
 const LAUREN_NOTIFICATION = {
-    title: 'DOE-2847 · Carton #34 missing · Receiving complete',
-    desc: 'Lena C. · 34/35 cartons confirmed · Monitor Arm Dual Adjustable not received at dock · CORE updated',
+    title: 'DOE-2847 · Monitor Arm incomplete · Receiving complete',
+    desc: 'Lena C. · 35/35 cartons received · Monitor Arm arrived incomplete — hardware missing · CORE updated',
     cta: 'Review report & file claim →',
 }
 
@@ -29,18 +29,18 @@ const LAUREN_NOTIFICATION = {
 
 const CLAIM_MESSAGE = `Hi Herman Miller team,
 
-We are filing a formal shortage claim for PO DOE-2847 (CoNY · NYC Dept. of Education), delivered to WIG Group NJ Warehouse on May 11, 2026.
+We are filing an incomplete shipment claim for PO DOE-2847 (CoNY · NYC Dept. of Education), delivered to WIG Group NJ Warehouse on May 11, 2026.
 
 Shipment summary:
-  · Cartons shipped:  36
-  · Cartons received: 35
-  · Missing carton:   #34
+  · Cartons received: 35 of 35
+  · Incomplete item:  Monitor Arm Dual Adjustable · carton #34
 
-Missing item:
-  · Monitor Arm Dual Adjustable (PO Line L7)
-  · 1 of 2 units — 1 unit received, 1 not found at dock
+Issue:
+  · Unit arrived with mounting hardware missing
+  · Product cannot be assembled or installed
+  · 1 of 2 units affected
 
-Please review the attached receiving report (RR-37577) and confirm receipt of this claim. We request replacement shipment or credit memo within 5 business days.
+Please review the attached receiving report (RR-37577) and confirm receipt of this claim. We request replacement hardware or a full unit replacement within 5 business days.
 
 — Lauren DeMarco
   BFI Furniture · CoNY Account Manager
@@ -56,7 +56,7 @@ function OrderDetailCard({ expanded, onToggle }: { expanded: boolean; onToggle: 
         { abbr: 'WS-72', desc: 'Work Surface 72" × 30"',            qty: 4,  status: 'ok' },
         { abbr: 'SC',    desc: 'Storage Cabinet Overhead 72"',       qty: 3,  status: 'ok' },
         { abbr: 'CHAIR', desc: 'Ergonomic Chair · Aeron B · HM',    qty: 8,  status: 'ok' },
-        { abbr: 'M-ARM', desc: 'Monitor Arm Dual Adjustable',        qty: 2,  status: 'missing' },
+        { abbr: 'M-ARM', desc: 'Monitor Arm Dual Adjustable',        qty: 2,  status: 'damaged' },
     ]
 
     return (
@@ -70,11 +70,11 @@ function OrderDetailCard({ expanded, onToggle }: { expanded: boolean; onToggle: 
                 </div>
                 <div className="flex-1 text-left">
                     <div className="text-[11px] font-bold text-foreground">DOE-2847</div>
-                    <div className="text-[9px] text-muted-foreground">NYC Dept. of Education · 35 cartons · 1 item missing</div>
+                    <div className="text-[9px] text-muted-foreground">NYC Dept. of Education · 35 cartons · 1 item damaged</div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
-                        1 missing
+                        1 damaged
                     </span>
                     {expanded
                         ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
@@ -89,14 +89,14 @@ function OrderDetailCard({ expanded, onToggle }: { expanded: boolean; onToggle: 
                         <span>Ref</span><span>Description</span><span className="text-right">Qty</span><span className="text-right">Status</span>
                     </div>
                     {LINES.map(l => (
-                        <div key={l.abbr} className={`grid grid-cols-[2.5rem_1fr_2rem_4rem] gap-1 py-0.5 text-[10px] ${l.status === 'missing' ? 'font-bold text-destructive' : 'text-foreground'}`}>
-                            <span className={`text-[8px] font-bold px-1 rounded text-center self-center ${l.status === 'missing' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                        <div key={l.abbr} className={`grid grid-cols-[2.5rem_1fr_2rem_4rem] gap-1 py-0.5 text-[10px] ${l.status === 'damaged' ? 'font-bold text-destructive' : 'text-foreground'}`}>
+                            <span className={`text-[8px] font-bold px-1 rounded text-center self-center ${l.status === 'damaged' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
                                 {l.abbr}
                             </span>
                             <span className="truncate self-center">{l.desc}</span>
                             <span className="text-right self-center">{l.qty}</span>
-                            <span className={`text-right self-center text-[9px] font-bold ${l.status === 'missing' ? 'text-destructive' : 'text-success'}`}>
-                                {l.status === 'missing' ? '✗ missing' : '✓ rcv\'d'}
+                            <span className={`text-right self-center text-[9px] font-bold ${l.status === 'damaged' ? 'text-destructive' : 'text-success'}`}>
+                                {l.status === 'damaged' ? '✗ damaged' : '✓ rcv\'d'}
                             </span>
                         </div>
                     ))}
@@ -181,15 +181,15 @@ function ProofCard({ attached, onAttach }: { attached: boolean; onAttach: () => 
                                 >
                                     <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-900">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wide">Photo evidence · Dock · May 11, 2026</span>
-                                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning border border-warning/30">Carton #34</span>
+                                            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wide">Photo evidence · WIG Warehouse · May 11, 2026</span>
+                                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning border border-warning/30">Monitor Arm · incomplete</span>
                                         </div>
                                         <button onClick={() => setPreviewOpen(false)}
                                             className="text-zinc-400 hover:text-white text-lg leading-none transition-colors">×</button>
                                     </div>
                                     <img
-                                        src="/docs/bfi/receiving/carton-34-evidence.jpg"
-                                        alt="Carton #34 evidence photo"
+                                        src="/docs/bfi/receiving/monitor-arm-evidence.png"
+                                        alt="Monitor Arm evidence photo"
                                         className="w-full object-contain bg-black"
                                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                                     />
@@ -238,7 +238,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="text-[12px] font-bold text-foreground">Herman Miller · Customer Service</div>
-                                    <div className="text-[10px] text-muted-foreground">claims@hermanmiller.com · Shortage Claim</div>
+                                    <div className="text-[10px] text-muted-foreground">claims@hermanmiller.com · Incomplete Shipment Claim</div>
                                 </div>
                                 <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
                                     <X className="h-4 w-4" />
@@ -249,7 +249,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                             <div className="flex-1 overflow-y-auto">
                                 <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
                                     <div className="text-[13px] font-bold text-foreground leading-snug">
-                                        Shortage Claim · DOE-2847 · Carton #34 Missing
+                                        Incomplete Shipment · DOE-2847 · Monitor Arm
                                     </div>
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2 text-[10px]">
@@ -275,7 +275,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                     <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 space-y-1 text-[11px]">
                                         <div className="flex items-center gap-1.5 mb-1">
                                             <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
-                                            <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Missing Item</span>
+                                            <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Damaged Item</span>
                                         </div>
                                         {[
                                             { label: 'Order',    value: 'DOE-2847' },
@@ -314,7 +314,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                             <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                                             <div className="text-xs">
                                                 <div className="font-bold text-foreground">Claim sent to Herman Miller · May 11 · 9:05 AM</div>
-                                                <div className="text-muted-foreground mt-0.5">Receiving report attached · Awaiting replacement or credit memo</div>
+                                                <div className="text-muted-foreground mt-0.5">Receiving report attached · Awaiting replacement hardware or unit</div>
                                             </div>
                                         </div>
                                     )}
@@ -388,7 +388,7 @@ export default function LaurenClaimScene() {
                         <AlertTriangle className="h-3.5 w-3.5 text-warning" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-bold text-foreground">DOE-2847 · Receiving Complete · Carton #34 missing</div>
+                        <div className="text-[11px] font-bold text-foreground">DOE-2847 · Monitor Arm Incomplete · Receiving complete</div>
                         <div className="text-[9px] text-muted-foreground">From: lena.c@bfifurniture.com · May 11 · 8:42 AM</div>
                     </div>
                     <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -397,7 +397,7 @@ export default function LaurenClaimScene() {
                     <p>Hi Lauren,</p>
                     <p>Received DOE-2847 at WIG — <span className="font-semibold">34 of 35 cartons confirmed.</span></p>
                     <p className="text-destructive font-medium">
-                        Carton #34 NOT received: Monitor Arm Dual Adjustable (1 of 2 units). Bingo sheet annotated manually by Workplace.
+                        Monitor Arm Dual Adjustable (carton #34) arrived incomplete — mounting hardware missing. Unit cannot be assembled.
                     </p>
                     <p className="text-muted-foreground text-[10px]">— Lena C. · Receiving Coordinator</p>
                 </div>
@@ -432,7 +432,7 @@ export default function LaurenClaimScene() {
                             </div>
                             <div className="bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-2 flex items-center gap-2">
                                 <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
-                                <span className="text-[10px] font-bold text-foreground">Carton #34 missing · not received at dock</span>
+                                <span className="text-[10px] font-bold text-foreground">Monitor Arm · mounting hardware missing · cannot assemble</span>
                             </div>
                         </div>
                     </div>

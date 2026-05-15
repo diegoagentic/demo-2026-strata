@@ -50,11 +50,11 @@ const DEFAULT_NOTIFICATION: NotificationConfig = {
 const DEFAULT_NOTES =
 `Hi Lauren,
 
-Received DOE-2847 at WIG — 34 of 35 cartons confirmed.
+Received DOE-2847 at WIG — 35 of 35 cartons received.
 
-Carton #34 NOT received: Monitor Arm Dual Adjustable (1 of 2 units). Bingo sheet annotated manually by Workplace.
+Monitor Arm Dual Adjustable (carton #34) arrived incomplete — mounting hardware missing. Unit cannot be assembled.
 
-CORE updated — partial shipment flag set. Line 7 excluded from entry pending claim resolution.
+CORE updated — incomplete shipment flag set. M-ARM flagged for claim.
 
 — Lena C. · Receiving Coordinator`
 
@@ -149,7 +149,7 @@ function BingoGrid() {
             {/* Missing annotation */}
             <div className="bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-2 flex items-center gap-2">
                 <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
-                <span className="text-[10px] font-bold text-foreground">Carton #34 missing · not received at dock</span>
+                <span className="text-[10px] font-bold text-foreground">Monitor Arm · mounting hardware missing · cannot assemble</span>
             </div>
         </div>
     )
@@ -188,7 +188,7 @@ function BingoSheetCard() {
                 <div className="bg-warning/5 border border-warning/20 rounded-lg px-2.5 py-2">
                     <div className="text-[10px] text-muted-foreground">
                         <span className="font-medium text-foreground">Carton #34 — </span>
-                        <span className="italic text-amber-600 dark:text-amber-400">"not rcv'd at dock"</span>
+                        <span className="italic text-amber-600 dark:text-amber-400">"Monitor Arm · hardware missing"</span>
                         {' '}(written manually by Workplace)
                     </div>
                 </div>
@@ -308,7 +308,7 @@ function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: 
                             <div className="flex-1 overflow-y-auto">
                                 <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
                                     <div className="text-[13px] font-bold text-foreground leading-snug">
-                                        DOE-2847 · Receiving Complete · Carton #34 missing
+                                        DOE-2847 · Monitor Arm Incomplete · Hardware Missing
                                     </div>
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2 text-[10px]">
@@ -334,12 +334,12 @@ function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: 
 
                                     {/* Missing item summary */}
                                     <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 space-y-1.5 text-[11px]">
-                                        <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Missing Item — Carton #34</p>
+                                        <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Damaged Item — Monitor Arm</p>
                                         {[
                                             { label: 'Item',     value: 'Monitor Arm Dual Adjustable' },
                                             { label: 'PO line',  value: 'L7 · 1 of 2 units' },
                                             { label: 'Zone',     value: 'C · Install crew' },
-                                            { label: 'Status',   value: 'CORE flagged · claim pending' },
+                                            { label: 'Status',   value: 'CORE flagged · damage claim pending' },
                                         ].map(r => (
                                             <div key={r.label} className="flex items-start gap-2">
                                                 <span className="text-muted-foreground w-16 shrink-0">{r.label}:</span>
@@ -363,7 +363,7 @@ function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: 
                                             <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                                             <div className="text-xs">
                                                 <div className="font-bold text-foreground">Sent to Lauren · May 11 · 8:42 AM</div>
-                                                <div className="text-muted-foreground mt-0.5">Carton #34 flagged · CORE updated · claim pending</div>
+                                                <div className="text-muted-foreground mt-0.5">M-ARM flagged · CORE updated · damage claim pending</div>
                                             </div>
                                         </div>
                                     )}
@@ -505,7 +505,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                             <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                             <div className="text-[11px]">
                                 <span className="font-bold text-foreground">CORE updated · </span>
-                                <span className="text-muted-foreground">DOE-2847 · 34/35 cartons · carton #34 (M-ARM) flagged as missing</span>
+                                <span className="text-muted-foreground">DOE-2847 · 35/35 cartons received · M-ARM incomplete · claim filed</span>
                             </div>
                         </div>
                     )}
@@ -537,7 +537,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
 Date: 05/11/2026  Carrier: ALTL
 Cartons rcv'd: 35  Damage: None
 [bingo sheet + packing slips · pages 2-4]
-Note: carton 34 not received at dock`}</pre>
+Note: carton 34 · Monitor Arm incomplete · hardware missing`}</pre>
                             </div>
                         </div>
                     </div>
