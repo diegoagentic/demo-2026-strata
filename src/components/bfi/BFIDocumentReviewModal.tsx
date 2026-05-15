@@ -1746,17 +1746,27 @@ function QuoteReviewPanel({
 
 // ─── Labor Ready Panel (paso 1.5 — all reconciled, send PO) ─────────────────
 
-function LaborReadyPanel({ onValidate }: { onValidate?: () => void }) {
-    const [showAsk, setShowAsk] = useState(false)
-    const [askTo,   setAskTo]   = useState<'designer' | 'manager'>('designer')
-    const [askSent, setAskSent] = useState(false)
+function LaborReadyPanel({ onValidate, onCustomValue }: { onValidate?: () => void; onCustomValue?: (fieldId: string, value: string) => void }) {
+    const [showAsk,   setShowAsk]   = useState(false)
+    const [askTo,     setAskTo]     = useState<'designer' | 'manager'>('designer')
+    const [askSent,   setAskSent]   = useState(false)
+    const [editingId, setEditingId] = useState<string | null>(null)
+    const [fieldEdits, setFieldEdits] = useState<Record<string, string>>({})
 
-    const READY_ITEMS = [
-        { label: 'PO confirmed',        detail: 'DOE-2847 · NYC Dept. of Education · $235,560' },
-        { label: 'OmniQuote validated', detail: 'Filing Units corrected $8,100 → $7,560 · discount −37.5%' },
-        { label: 'Labor reconciled',    detail: 'Carpenters 45h · OT 6h · Teamsters 24h (OmniQuote confirmed)' },
-        { label: 'Delivery window',     detail: 'May 14–21, 2026 · 3 technicians · Zones A · B · C' },
+    const FIELD_GROUPS: { label: string; fields: ReviewField[] }[] = [
+        { label: 'Document Header',    fields: FIELDS_LABOR.filter(f => f.category === 'header')    },
+        { label: 'Labor (from SIF)',   fields: FIELDS_LABOR.filter(f => f.category === 'labor')     },
+        { label: 'Pricing & Delivery', fields: FIELDS_LABOR.filter(f => f.category === 'logistics') },
     ]
+
+    const getVal = (f: ReviewField) => fieldEdits[f.id] ?? f.extractedValue ?? ''
+
+    const handleSaveField = (f: ReviewField) => {
+        const val = fieldEdits[f.id] ?? f.extractedValue ?? ''
+        onCustomValue?.(f.id, val)
+        setEditingId(null)
+    }
+
     const NOTIFY = [
         { initials: 'RC', label: 'Robert Chen',   sub: 'Miller Knoll Rep', color: 'bg-info/20 text-info' },
         { initials: 'MC', label: 'Michael Chen',  sub: 'BFI Manager',      color: 'bg-ai/15 text-ai' },
@@ -1793,14 +1803,57 @@ function LaborReadyPanel({ onValidate }: { onValidate?: () => void }) {
                     </div>
                 </div>
 
-                {/* Summary checklist */}
-                <div className="space-y-2">
-                    {READY_ITEMS.map(item => (
-                        <div key={item.label} className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/30 border border-border">
-                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                            <div>
-                                <p className="text-[12px] font-bold text-foreground">{item.label}</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">{item.detail}</p>
+                {/* Editable field list */}
+                <div className="space-y-4">
+                    {FIELD_GROUPS.map(group => (
+                        <div key={group.label}>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{group.label}</p>
+                            <div className="space-y-1.5">
+                                {group.fields.map(field => (
+                                    <div key={field.id} className={`border rounded-xl overflow-hidden transition-all ${
+                                        editingId === field.id ? 'border-primary/40 bg-card' : 'border-success/20 bg-success/5'
+                                    }`}>
+                                        {editingId !== field.id ? (
+                                            <div className="flex items-center gap-2.5 px-3 py-2.5">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
+                                                <span className="text-[11px] font-bold text-foreground flex-1 min-w-0 truncate">{field.name}</span>
+                                                <span className="text-[11px] font-mono text-muted-foreground shrink-0">{getVal(field)}</span>
+                                                <button
+                                                    onClick={() => { setEditingId(field.id); setFieldEdits(prev => ({ ...prev, [field.id]: getVal(field) })) }}
+                                                    className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                                    aria-label="Edit field"
+                                                >
+                                                    <Edit className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="p-3 space-y-2 animate-in fade-in duration-150">
+                                                <p className="text-[11px] font-bold text-foreground">{field.name}</p>
+                                                <input
+                                                    type="text"
+                                                    value={fieldEdits[field.id] ?? ''}
+                                                    onChange={e => setFieldEdits(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                                    className="w-full rounded-lg border border-primary px-2.5 py-1.5 bg-card ring-2 ring-primary/20 text-[12px] font-mono text-foreground focus:outline-none"
+                                                    autoFocus
+                                                />
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleSaveField(field)}
+                                                        className="flex-1 py-1.5 text-[11px] font-bold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setEditingId(null)}
+                                                        className="py-1.5 px-3 text-[11px] font-bold border border-border text-foreground bg-card rounded-lg hover:bg-muted/50 transition-all"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     ))}
@@ -1930,7 +1983,7 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
-    if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} />
+    if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} onCustomValue={onCustomValue} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
     return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
