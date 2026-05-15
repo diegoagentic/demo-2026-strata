@@ -1759,6 +1759,23 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
     const [askSent,   setAskSent]   = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [fieldEdits, setFieldEdits] = useState<Record<string, string>>({})
+    const [editingOvniqIdx, setEditingOvniqIdx] = useState<number | null>(null)
+    const [ovniqEditVals,   setOvniqEditVals]   = useState<{ sif: string; ovniq: string }>({ sif: '', ovniq: '' })
+
+    const openOvniqEdit = (i: number) => {
+        setEditingOvniqIdx(i)
+        setOvniqEditVals({ sif: ovniqLines[i].sifPrice, ovniq: ovniqLines[i].ovniq })
+    }
+    const saveOvniqEdit = () => {
+        if (editingOvniqIdx === null) return
+        const i = editingOvniqIdx
+        onUpdateLine(i, 'sifPrice', ovniqEditVals.sif)
+        onUpdateLine(i, 'ovniq',    ovniqEditVals.ovniq)
+        if (ovniqEditVals.sif !== ovniqEditVals.ovniq) {
+            const n = new Set(acceptedRows); n.add(i); onSetAccepted(n)
+        }
+        setEditingOvniqIdx(null)
+    }
 
     const FIELD_GROUPS: { label: string; fields: ReviewField[] }[] = [
         { label: 'Document Header',    fields: FIELDS_LABOR.filter(f => f.category === 'header')    },
@@ -1824,6 +1841,43 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
                         {ovniqLines.map((line, i) => {
                             const isAccepted   = acceptedRows.has(i)
                             const corrected    = line.sifPrice !== line.ovniq
+                            const isEditingRow = editingOvniqIdx === i
+
+                            if (isEditingRow) return (
+                                <div key={i} className="px-4 py-3 border-b border-border/50 last:border-0 bg-card animate-in fade-in duration-150">
+                                    <p className="text-[10px] font-bold text-muted-foreground mb-2 truncate">{line.product}</p>
+                                    <div className="grid grid-cols-2 gap-2 mb-2">
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] text-muted-foreground uppercase tracking-wide font-bold">SIF Price</label>
+                                            <input
+                                                value={ovniqEditVals.sif}
+                                                onChange={e => setOvniqEditVals(v => ({ ...v, sif: e.target.value }))}
+                                                className="w-full rounded-lg border border-primary px-2 py-1 bg-card ring-2 ring-primary/20 text-[11px] font-mono text-foreground focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] text-muted-foreground uppercase tracking-wide font-bold">OmniQuote</label>
+                                            <input
+                                                value={ovniqEditVals.ovniq}
+                                                onChange={e => setOvniqEditVals(v => ({ ...v, ovniq: e.target.value }))}
+                                                className="w-full rounded-lg border border-primary px-2 py-1 bg-card ring-2 ring-primary/20 text-[11px] font-mono text-foreground focus:outline-none"
+                                                autoFocus
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={saveOvniqEdit}
+                                            className="flex-1 py-1.5 text-[11px] font-bold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all">
+                                            Save
+                                        </button>
+                                        <button onClick={() => setEditingOvniqIdx(null)}
+                                            className="py-1.5 px-3 text-[11px] font-bold border border-border text-foreground bg-card rounded-lg hover:bg-muted/50 transition-all">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+
                             return (
                                 <div key={i} className={`grid grid-cols-[1fr_5rem_5.5rem_2rem] items-center px-4 py-2.5 border-b border-border/50 last:border-0 transition-colors ${
                                     corrected && isAccepted ? 'bg-success/5' : corrected ? 'bg-warning/5' : ''
@@ -1836,10 +1890,11 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
                                         {line.ovniq}
                                     </span>
                                     <div className="flex items-center justify-center">
-                                        {isAccepted
-                                            ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                                            : <button onClick={() => { const n = new Set(acceptedRows); n.add(i); onSetAccepted(n) }}
-                                                className="p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+                                        {corrected && isAccepted
+                                            ? <button onClick={() => openOvniqEdit(i)} className="p-0.5 rounded text-success/60 hover:text-success transition-colors" aria-label="Edit price">
+                                                <Edit2 className="h-3 w-3" />
+                                              </button>
+                                            : <button onClick={() => openOvniqEdit(i)} className="p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors" aria-label="Edit price">
                                                 <Edit2 className="h-3 w-3" />
                                               </button>
                                         }

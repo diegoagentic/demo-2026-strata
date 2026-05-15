@@ -41,13 +41,15 @@ const FLOW2_NOTIFICATIONS: Notification[] = [
     },
 ];
 
-// BFI steps a1.2d / a1.2e / a1.2f / a1.3b — generic incoming-event notifications
+// BFI steps generic incoming-event notifications
 interface BfiStepNotif {
     badge: string
     badgeColor: 'ai' | 'warning' | 'success'
     title: string
     desc: string
     sender: string
+    re?: string
+    attachment?: string
     cta: string
     event: string
     footerText: string
@@ -56,9 +58,11 @@ interface BfiStepNotif {
 const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
     'a1.2c': {
         badge: '1 new', badgeColor: 'success',
-        title: 'RFQ approved · DOE-2847 converted to Purchase Order',
-        desc: 'Request for Quote Q-2026-0089 has been approved by NYC Dept. of Education and converted to Purchase Order DOE-2847 ($235,560). Please review PO and labor figures before confirming and sending.',
-        sender: 'NYC Dept. of Education · Procurement Office',
+        title: 'Purchase Order approved · DOE-2847 ready for review',
+        desc: 'Q-2026-0089 has been approved and converted to PO DOE-2847 ($235,560). Please review PO and labor figures before confirming and sending to CORE.',
+        sender: 'nycdoe-procurement@schools.nyc.gov',
+        re: 'Purchase Order DOE-2847 · NYC Dept. of Education · $235,560',
+        attachment: 'DOE-2847-PurchaseOrder.pdf',
         cta: 'Review PO →',
         event: 'bfi:po-review-open',
         footerText: 'PO review pending',
@@ -573,20 +577,45 @@ export default function ActionCenter() {
                     {/* Body */}
                     <div className="px-5 pb-5">
                         <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden">
+                            {/* Email subject line */}
                             <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
                                 <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
                                 <span className="text-sm font-semibold text-foreground flex-1">{bfiStepConfig.title}</span>
+                                <span className="text-[10px] text-muted-foreground shrink-0">May 6 · 9:30 AM</span>
                             </div>
+                            {/* Email meta */}
                             <div className="px-4 py-3 border-b border-border space-y-1">
                                 <div className="flex gap-2 text-[11px]">
                                     <span className="text-muted-foreground w-10 shrink-0">From</span>
                                     <span className="text-foreground font-medium">{bfiStepConfig.sender}</span>
                                 </div>
-                                <div className="flex gap-2 text-[11px]">
-                                    <span className="text-muted-foreground w-10 shrink-0">Info</span>
-                                    <span className="text-foreground">{bfiStepConfig.desc}</span>
-                                </div>
+                                {bfiStepConfig.re ? (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Re</span>
+                                        <span className="text-foreground">{bfiStepConfig.re}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Info</span>
+                                        <span className="text-foreground">{bfiStepConfig.desc}</span>
+                                    </div>
+                                )}
                             </div>
+                            {/* Attachment chip — only when present */}
+                            {bfiStepConfig.attachment && (
+                                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide shrink-0">Attachment:</span>
+                                    <span className="flex items-center gap-1 text-[10px] text-success font-medium px-2 py-0.5 rounded bg-success/10 border border-success/20">
+                                        <DocumentTextIcon className="w-3 h-3" /> {bfiStepConfig.attachment}
+                                    </span>
+                                </div>
+                            )}
+                            {/* Body excerpt — shown only when re is present (full email style) */}
+                            {bfiStepConfig.re && (
+                                <div className="px-4 py-3 border-b border-border">
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{bfiStepConfig.desc}</p>
+                                </div>
+                            )}
                             <div className="px-4 py-4">
                                 <button
                                     onClick={() => {
