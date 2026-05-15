@@ -152,7 +152,7 @@ function NancyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
                                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-ai text-white text-[12px] font-bold hover:opacity-90 transition-all disabled:opacity-60"
                                     >
                                         <Send className="h-3.5 w-3.5" />
-                                        {sending ? 'Sending…' : 'Send Final Quote →'}
+                                        {sending ? 'Sending…' : 'Send →'}
                                     </button>
                                 )}
                             </div>

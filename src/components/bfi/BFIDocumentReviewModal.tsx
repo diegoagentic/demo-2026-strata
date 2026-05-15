@@ -539,6 +539,25 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
     const [activation, setActivation] = useState<'detecting' | 'activated'>(
         invoiceUpload ? 'detecting' : 'activated'
     )
+    const [uploadedFiles, setUploadedFiles] = useState<Set<string>>(new Set())
+    const [uploadingFile, setUploadingFile] = useState<string | null>(null)
+    const [fileProgress,  setFileProgress]  = useState(0)
+
+    const simulateFileUpload = (name: string) => {
+        if (uploadingFile || uploadedFiles.has(name)) return
+        setUploadingFile(name)
+        setFileProgress(0)
+        const start = Date.now()
+        const tick = setInterval(() => {
+            const p = Math.min(100, Math.round(((Date.now() - start) / 1200) * 100))
+            setFileProgress(p)
+            if (p >= 100) {
+                clearInterval(tick)
+                setUploadedFiles(prev => new Set([...prev, name]))
+                setUploadingFile(null)
+            }
+        }, 40)
+    }
 
     useEffect(() => {
         if (activation === 'detecting') {
@@ -669,31 +688,70 @@ function AttachmentsPanel({ invoiceUpload, onValidate }: { invoiceUpload?: boole
                         )}
                 </div>
 
-                {/* Reference files header — always visible */}
+                {/* Reference files header */}
                 {uploadState === 'idle' && (
                     <div className="flex items-center gap-2">
                         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Reference documents</span>
                         <div className="flex-1 h-px bg-border/60" />
-                        <span className="text-[9px] text-muted-foreground italic">not valid for this upload</span>
+                        {uploadedFiles.size === 0 && !uploadingFile && (
+                            <span className="text-[9px] text-muted-foreground italic">not valid for this upload</span>
+                        )}
+                        {uploadedFiles.size > 0 && (
+                            <span className="text-[9px] text-success font-bold">{uploadedFiles.size} uploaded</span>
+                        )}
                     </div>
                 )}
 
                 {/* Existing files list */}
-                {BFI_ATTACHMENTS.map(file => (
-                    <div key={file.path} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border/60 bg-muted/20 opacity-70">
-                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="text-[11px] font-medium text-muted-foreground flex-1 min-w-0 truncate">{file.name}</span>
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${CATEGORY_COLORS[file.category]}`}>
-                            {file.category}
-                        </span>
-                        <button
-                            onClick={() => setLightbox(file)}
-                            className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors shrink-0"
-                        >
-                            Preview
-                        </button>
-                    </div>
-                ))}
+                {BFI_ATTACHMENTS.map(file => {
+                    const isUploaded  = uploadedFiles.has(file.name)
+                    const isUploading = uploadingFile === file.name
+                    return (
+                        <div key={file.path} className={`rounded-xl border overflow-hidden transition-all ${
+                            isUploaded  ? 'border-success/30 bg-success/5 opacity-100' :
+                            isUploading ? 'border-ai/30 bg-ai/5 opacity-100' :
+                            'border-border/60 bg-muted/20 opacity-70'
+                        }`}>
+                            <div className="flex items-center gap-2.5 px-3 py-2.5">
+                                {isUploaded
+                                    ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                    : <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                }
+                                <span className={`text-[11px] font-medium flex-1 min-w-0 truncate ${isUploaded ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {file.name}
+                                </span>
+                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${CATEGORY_COLORS[file.category]}`}>
+                                    {file.category}
+                                </span>
+                                <button onClick={() => setLightbox(file)}
+                                    className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors shrink-0">
+                                    Preview
+                                </button>
+                                {!isUploaded && !isUploading && !invoiceUpload && (
+                                    <button onClick={() => simulateFileUpload(file.name)}
+                                        className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0">
+                                        Upload →
+                                    </button>
+                                )}
+                                {isUploaded && (
+                                    <span className="text-[9px] font-bold text-success shrink-0">✓ Done</span>
+                                )}
+                            </div>
+                            {isUploading && (
+                                <div className="px-3 pb-2.5 space-y-1.5">
+                                    <div className="flex items-center gap-2 text-[10px]">
+                                        <Loader2 className="h-3 w-3 text-ai animate-spin shrink-0" />
+                                        <span className="text-ai font-medium">Uploading…</span>
+                                        <span className="ml-auto font-mono text-muted-foreground">{fileProgress}%</span>
+                                    </div>
+                                    <div className="h-1 rounded-full bg-muted overflow-hidden">
+                                        <div className="h-full bg-ai rounded-full transition-all duration-75" style={{ width: `${fileProgress}%` }} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
             </div>
 
             {/* Lightbox */}
@@ -896,6 +954,22 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
     const [showDialog, setShowDialog] = useState(false)
     const [showReject, setShowReject] = useState(false)
     const [rejectSent, setRejectSent] = useState(false)
+    const [showComment, setShowComment] = useState(false)
+    const [commentTo,   setCommentTo]   = useState<'lauren' | 'michael' | 'doe'>('lauren')
+    const [commentSent, setCommentSent] = useState(false)
+
+    const COMMENT_RECIPIENTS = {
+        lauren:  { initials: 'LD',  name: 'Lauren DeMarco',       role: 'BFI · Account Manager',         color: 'bg-info/20 text-info'       },
+        michael: { initials: 'MC',  name: 'Michael Chen',         role: 'BFI Manager',                   color: 'bg-ai/15 text-ai'           },
+        doe:     { initials: 'DOE', name: 'NYC DOE Procurement',  role: 'nycdoe-procurement@schools.nyc.gov', color: 'bg-success/15 text-success' },
+    } as const
+    const commentRecipient = COMMENT_RECIPIENTS[commentTo]
+    const commentMessage = `Hi ${commentRecipient.name.split(' ')[0]} — update on DOE-2847 CPR reconciliation: both labor adjustments (Carpenters −5h · OT −2h · total impact −$2,340) have been reviewed and approved. Figures are now reflected in CORE.\n\n— Lauren DeMarco, BFI Furniture`
+
+    const handleCommentSend = () => {
+        setCommentSent(true)
+        setTimeout(() => { setShowComment(false); setCommentSent(false) }, 1200)
+    }
     // invoiceUpload mode starts on attachments tab
     const [rightTab, setRightTab] = useState<'review' | 'attachments'>(invoiceUpload ? 'attachments' : 'review')
 
@@ -1007,17 +1081,17 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
 
             {/* Footer — only shown on CPR Review tab */}
             {rightTab === 'review' && !invoiceUpload && (
-            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-2.5">
                 {!michaelMode && (
-                    <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
+                    <div className="text-[10px] text-muted-foreground font-bold text-center uppercase tracking-widest">
                         {approved.size}/{diffLines.length} lines approved
                     </div>
                 )}
-                <div className={michaelMode ? 'flex gap-2' : ''}>
+                <div className="flex gap-2">
                     {michaelMode && (
                         <button
                             onClick={() => setShowReject(true)}
-                            className="shrink-0 px-4 py-2.5 text-[11px] font-black rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all uppercase tracking-widest"
+                            className="shrink-0 px-5 py-3 text-[12px] font-black rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all uppercase tracking-widest"
                         >
                             Return
                         </button>
@@ -1025,18 +1099,72 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
                     <button
                         onClick={allApproved ? (michaelMode ? () => onValidate?.() : () => setShowDialog(true)) : undefined}
                         disabled={!allApproved}
-                        className={`flex-1 py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
+                        className={`flex-1 py-3 px-6 text-[12px] font-black rounded-xl transition-all uppercase tracking-wide ${
                             allApproved
                                 ? 'bg-ai text-white hover:opacity-90 cursor-pointer'
                                 : 'bg-muted text-muted-foreground cursor-not-allowed opacity-40'
                         }`}
                     >
                         {michaelMode
-                            ? 'Send Final Quote →'
+                            ? 'Send →'
                             : (sent ? '✓ CORE Updated & Notified' : allApproved ? 'Update CORE & Notify →' : 'Approve lines to continue')
                         }
                     </button>
                 </div>
+                {/* Comment to stakeholders — solo Lauren CPR (no michael, no invoice) */}
+                {!michaelMode && !showComment && (
+                    <button
+                        onClick={() => setShowComment(true)}
+                        className="w-full py-2.5 text-[12px] font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all"
+                    >
+                        Comment to stakeholders →
+                    </button>
+                )}
+                {/* Inline compose */}
+                {!michaelMode && showComment && (
+                    <div className="rounded-xl border border-border bg-muted/20 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <div className="px-4 py-3 border-b border-border bg-background flex items-center gap-2">
+                            <Send className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <p className="text-[11px] font-bold text-foreground flex-1">Comment · DOE-2847</p>
+                            <button onClick={() => setShowComment(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                        <div className="p-4 space-y-3">
+                            <div className="flex gap-1.5">
+                                {(['lauren', 'michael', 'doe'] as const).map(key => {
+                                    const r = COMMENT_RECIPIENTS[key]
+                                    return (
+                                        <button key={key} onClick={() => setCommentTo(key)}
+                                            className={`flex items-center gap-1.5 flex-1 px-2 py-1.5 rounded-lg border text-left transition-all ${
+                                                commentTo === key ? 'border-foreground bg-foreground/5' : 'border-border hover:border-foreground/30'
+                                            }`}>
+                                            <div className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 text-[7px] font-black ${r.color}`}>{r.initials}</div>
+                                            <p className="text-[9px] font-bold text-foreground truncate">{r.name.split(' ')[0]}</p>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            <div className="rounded-xl border border-border bg-background px-3 py-2.5 text-[10px] text-foreground leading-relaxed whitespace-pre-line">
+                                {commentMessage}
+                            </div>
+                            {commentSent ? (
+                                <div className="flex items-center gap-2 p-2.5 bg-success/5 border border-success/20 rounded-xl animate-in fade-in duration-300">
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                    <p className="text-[11px] font-bold text-success">Sent to {commentRecipient.name.split(' ')[0]} · May 6 · 10:45 AM</p>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setShowComment(false)} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                                    <button onClick={handleCommentSend}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-foreground text-background text-[11px] font-black hover:opacity-80 transition-all uppercase tracking-widest">
+                                        <Send className="h-3 w-3" /> Send →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
             )}
 
