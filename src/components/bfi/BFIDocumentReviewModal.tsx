@@ -1060,35 +1060,33 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
                                         {wasEdited ? editedMap[line.id].hours : line.cpr}
                                         {wasEdited && <span className="ml-1 text-[8px] text-muted-foreground font-normal">edited</span>}
                                     </span>
-                                    <div className="flex items-center justify-between gap-1">
+                                    <div className="flex items-center justify-end gap-1">
                                         <span className={`text-[11px] font-mono font-semibold ${line.impact ? (isApproved ? 'text-success' : 'text-warning') : 'text-muted-foreground'}`}>
                                             {line.impact ?? '—'}
                                         </span>
-                                        {!line.ok && !isApproved && !isEditing && (
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => { setEditingLine(line.id); setEditHours(line.cpr); setEditReason('') }}
-                                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border hover:bg-muted/80 hover:text-foreground transition-all shrink-0 flex items-center gap-0.5"
-                                                >
-                                                    <Edit3 className="h-2.5 w-2.5" /> Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleApprove(line.id)}
-                                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0"
-                                                >
-                                                    Approve
-                                                </button>
-                                            </div>
-                                        )}
-                                        {!line.ok && !isApproved && isEditing && (
-                                            <button onClick={() => { setEditingLine(null); setEditHours(''); setEditReason('') }}
-                                                className="text-[9px] text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                                                Cancel
-                                            </button>
-                                        )}
                                         {isApproved && <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />}
                                     </div>
                                 </div>
+                                {/* Action bar — below the row for pending discrepancy lines */}
+                                {!line.ok && !isApproved && !isEditing && (
+                                    <div className="flex items-center gap-2 px-3 pb-2 bg-warning/5">
+                                        <span className="text-[10px] text-muted-foreground flex-1">
+                                            {line.category}: {line.quoted} quoted → {line.cpr} actual
+                                        </span>
+                                        <button
+                                            onClick={() => { setEditingLine(line.id); setEditHours(line.cpr); setEditReason('') }}
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-colors shrink-0"
+                                        >
+                                            <Edit3 className="h-3 w-3" /> Edit hours
+                                        </button>
+                                        <button
+                                            onClick={() => handleApprove(line.id)}
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold bg-success/10 text-success border border-success/20 rounded-lg hover:bg-success/20 transition-all shrink-0"
+                                        >
+                                            <CheckCircle2 className="h-3 w-3" /> Accept CPR
+                                        </button>
+                                    </div>
+                                )}
                                 {/* Inline edit form */}
                                 {isEditing && (
                                     <div className="px-3 pb-3 pt-2.5 bg-muted/20 border-t border-border/40 space-y-2.5 animate-in fade-in duration-150">
