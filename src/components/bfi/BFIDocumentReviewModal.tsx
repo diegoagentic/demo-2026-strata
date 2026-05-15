@@ -1298,8 +1298,8 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                             {/* Header */}
                             <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/30">
                                 <div className="flex items-center gap-2.5">
-                                    <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                                        <Mail className="h-4 w-4 text-primary" />
+                                    <div className="h-8 w-8 rounded-xl bg-warning/10 flex items-center justify-center">
+                                        <Mail className="h-4 w-4 text-warning" />
                                     </div>
                                     <div>
                                         <p className="text-[13px] font-bold text-foreground">Return to Lauren</p>
