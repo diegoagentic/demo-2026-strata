@@ -2025,16 +2025,7 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
                                     <span className={`text-[11px] font-mono font-semibold tabular-nums text-right ${corrected ? (isAccepted ? 'text-success' : 'text-warning') : 'text-foreground'}`}>
                                         {line.ovniq}
                                     </span>
-                                    <div className="flex items-center justify-center">
-                                        {corrected && isAccepted
-                                            ? <button onClick={() => openOvniqEdit(i)} className="p-0.5 rounded text-success/60 hover:text-success transition-colors" aria-label="Edit price">
-                                                <Edit2 className="h-3 w-3" />
-                                              </button>
-                                            : <button onClick={() => openOvniqEdit(i)} className="p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors" aria-label="Edit price">
-                                                <Edit2 className="h-3 w-3" />
-                                              </button>
-                                        }
-                                    </div>
+                                    <span />
                                 </div>
                             )
                         })}
@@ -2073,13 +2064,15 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
                                                 <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
                                                 <span className="text-[11px] font-bold text-foreground flex-1 min-w-0 truncate">{field.name}</span>
                                                 <span className="text-[11px] font-mono text-muted-foreground shrink-0">{getVal(field)}</span>
-                                                <button
-                                                    onClick={() => { setEditingId(field.id); setFieldEdits(prev => ({ ...prev, [field.id]: getVal(field) })) }}
-                                                    className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                                                    aria-label="Edit field"
-                                                >
-                                                    <Edit className="h-3 w-3" />
-                                                </button>
+                                                {field.id === 'lh2' && (
+                                                    <button
+                                                        onClick={() => { setEditingId(field.id); setFieldEdits(prev => ({ ...prev, [field.id]: getVal(field) })) }}
+                                                        className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                                        aria-label="Edit field"
+                                                    >
+                                                        <Edit className="h-3 w-3" />
+                                                    </button>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="p-3 space-y-2 animate-in fade-in duration-150">
