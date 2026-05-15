@@ -13,7 +13,7 @@
 
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
-    CheckCircle2, Mail, Send,
+    CheckCircle2, Mail, Send, X,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
@@ -53,7 +53,7 @@ BFI Furniture · Account Manager`
 
 // ─── Nancy Send Dialog ────────────────────────────────────────────────────────
 
-function NancyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }) {
+function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () => void; onClose?: () => void }) {
     const [fromEmail, setFromEmail] = useState('michael.chen@bfifurniture.com')
     const [message,   setMessage]   = useState(NANCY_MESSAGE)
     const [sending,   setSending]   = useState(false)
@@ -102,7 +102,9 @@ function NancyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
                                     <p className="text-[13px] font-bold text-foreground">Invoice Request · Herman Miller</p>
                                     <p className="text-[10px] text-muted-foreground">Strata AI pre-drafted · final quote {QUOTE_TOTAL}</p>
                                 </div>
-                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
 
                             {/* Body */}
@@ -225,7 +227,7 @@ export default function MichaelApprovalScene() {
             />
 
             {/* Nancy invoice request dialog */}
-            <NancyDialog isOpen={showNancy} onSent={handleNancySent} />
+            <NancyDialog isOpen={showNancy} onSent={handleNancySent} onClose={() => setShowNancy(false)} />
         </div>
     )
 }

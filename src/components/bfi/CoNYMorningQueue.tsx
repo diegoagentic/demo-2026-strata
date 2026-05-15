@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
-import { CheckCircle2, Send, User } from 'lucide-react'
+import { CheckCircle2, Send, User, X } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
@@ -120,10 +120,13 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
                                         <div className="h-8 w-8 rounded-xl bg-ai/10 flex items-center justify-center shrink-0">
                                             <Send className="h-4 w-4 text-ai" />
                                         </div>
-                                        <div>
+                                        <div className="flex-1 min-w-0">
                                             <p className="text-[13px] font-bold text-foreground">Notify designer · DOE-2847</p>
                                             <p className="text-[11px] text-muted-foreground">Strata AI pre-drafted the message</p>
                                         </div>
+                                        <button onClick={() => setIsSendOpen(false)} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
+                                            <X className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 </div>
 

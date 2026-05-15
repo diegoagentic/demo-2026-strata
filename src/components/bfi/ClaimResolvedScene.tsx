@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
-    CheckCircle2, FileText, Mail, Send, Download, Printer, Loader2,
+    CheckCircle2, FileText, Mail, Send, Download, Printer, Loader2, X,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
@@ -173,7 +173,7 @@ function CoreWorkOrder() {
 
 // ─── Walter Notify Dialog ─────────────────────────────────────────────────────
 
-function WalterNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }) {
+function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () => void; onClose?: () => void }) {
     const [sent,      setSent]      = useState(false)
     const [message,   setMessage]   = useState(WALTER_MESSAGE)
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
@@ -208,7 +208,9 @@ function WalterNotifyDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () =>
                                     <div className="text-[12px] font-bold text-foreground">Walter · CoNY PM</div>
                                     <div className="text-[10px] text-muted-foreground">walter@conyny.gov · Scheduling approval</div>
                                 </div>
-                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
 
                             {/* Scrollable body */}
@@ -421,6 +423,7 @@ export default function ClaimResolvedScene() {
             <WalterNotifyDialog
                 isOpen={showDialog}
                 onSent={() => { setShowDialog(false); pauseAware(() => nextStep())() }}
+                onClose={() => setShowDialog(false)}
             />
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />

@@ -6,7 +6,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
-import { FileText, Mail, Sparkles, AlertTriangle, Upload, CheckCircle2, Send, Loader2, Package } from 'lucide-react'
+import { FileText, Mail, Sparkles, AlertTriangle, Upload, CheckCircle2, Send, Loader2, Package, X } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
 import BFIDashboardScene from './BFIDashboardScene'
@@ -270,7 +270,7 @@ function UploadedFileCard({ filename, label, children }: {
 
 // ─── Lauren Notification Dialog ───────────────────────────────────────────────
 
-function LaurenNotificationDialog({ isOpen, notes, onSent }: { isOpen: boolean; notes: string; onSent: () => void }) {
+function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: boolean; notes: string; onSent: () => void; onClose?: () => void }) {
     const [sent,      setSent]      = useState(false)
     const [fromEmail, setFromEmail] = useState('lena.c@bfifurniture.com')
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
@@ -300,7 +300,9 @@ function LaurenNotificationDialog({ isOpen, notes, onSent }: { isOpen: boolean; 
                                     <div className="text-[12px] font-bold text-foreground">Lauren DeMarco</div>
                                     <div className="text-[10px] text-muted-foreground">lauren.demarco@bfifurniture.com · CoNY Account Manager</div>
                                 </div>
-                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto">
@@ -509,7 +511,8 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                     )}
 
                     <LaurenNotificationDialog isOpen={showNotify} notes={notes}
-                        onSent={() => { setShowNotify(false); onAnalyze?.() }} />
+                        onSent={() => { setShowNotify(false); onAnalyze?.() }}
+                        onClose={() => setShowNotify(false)} />
                 </>
             )}
 

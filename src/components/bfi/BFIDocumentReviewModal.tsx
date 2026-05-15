@@ -2827,24 +2827,24 @@ export default function BFIDocumentReviewModal({
 
     return (
         <Transition show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={onClose}>
+            <Dialog as="div" className="relative z-[200]" onClose={onClose}>
                 {/* Backdrop */}
                 <TransitionChild
                     as={Fragment}
                     enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
                     leave="ease-in duration-200"  leaveFrom="opacity-100" leaveTo="opacity-0"
                 >
-                    <div className="fixed top-16 left-80 right-0 bottom-0 bg-black/50 backdrop-blur-sm" />
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed top-16 left-80 right-0 bottom-0 overflow-y-auto">
+                <div className="fixed inset-0 overflow-y-auto">
                     <div className="flex min-h-full items-center justify-center p-3">
                         <TransitionChild
                             as={Fragment}
                             enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
                             leave="ease-in duration-200"  leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
                         >
-                            <DialogPanel className="w-full max-w-6xl h-[calc(100vh-5rem)] transform overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 text-left shadow-2xl transition-all border border-border flex flex-col">
+                            <DialogPanel className="w-full max-w-6xl h-[calc(100vh-1.5rem)] transform overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 text-left shadow-2xl transition-all border border-border flex flex-col">
 
                                 {/* ── Header ── */}
                                 <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0 gap-4">

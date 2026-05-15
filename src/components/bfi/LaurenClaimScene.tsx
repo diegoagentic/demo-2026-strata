@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
-    AlertTriangle, CheckCircle2, FileText, Mail, Send,
+    AlertTriangle, CheckCircle2, FileText, Mail, Send, X,
     Package, Paperclip, Loader2, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
@@ -205,7 +205,7 @@ function ProofCard({ attached, onAttach }: { attached: boolean; onAttach: () => 
 
 // ─── Claim Dialog ─────────────────────────────────────────────────────────────
 
-function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }) {
+function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () => void; onClose?: () => void }) {
     const [sent,      setSent]      = useState(false)
     const [message,   setMessage]   = useState(CLAIM_MESSAGE)
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
@@ -240,7 +240,9 @@ function ClaimDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }
                                     <div className="text-[12px] font-bold text-foreground">Herman Miller · Customer Service</div>
                                     <div className="text-[10px] text-muted-foreground">claims@hermanmiller.com · Shortage Claim</div>
                                 </div>
-                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
 
                             {/* Scrollable body */}
@@ -430,7 +432,7 @@ export default function LaurenClaimScene() {
                 </div>
             </div>
 
-            <ClaimDialog isOpen={showClaim} onSent={() => { setShowClaim(false); pauseAware(() => nextStep())() }} />
+            <ClaimDialog isOpen={showClaim} onSent={() => { setShowClaim(false); pauseAware(() => nextStep())() }} onClose={() => setShowClaim(false)} />
 
             <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
         </div>
