@@ -1746,7 +1746,14 @@ function QuoteReviewPanel({
 
 // ─── Labor Ready Panel (paso 1.5 — all reconciled, send PO) ─────────────────
 
-function LaborReadyPanel({ onValidate, onCustomValue }: { onValidate?: () => void; onCustomValue?: (fieldId: string, value: string) => void }) {
+function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted }: {
+    onValidate?: () => void
+    onCustomValue?: (fieldId: string, value: string) => void
+    ovniqLines: OvniqLine[]
+    onUpdateLine: (i: number, field: keyof OvniqLine, val: string) => void
+    acceptedRows: Set<number>
+    onSetAccepted: (next: Set<number>) => void
+}) {
     const [showAsk,   setShowAsk]   = useState(false)
     const [askTo,     setAskTo]     = useState<'designer' | 'manager'>('designer')
     const [askSent,   setAskSent]   = useState(false)
@@ -1800,6 +1807,63 @@ function LaborReadyPanel({ onValidate, onCustomValue }: { onValidate?: () => voi
                         <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
                             PO, pricing, and labor figures are reconciled with OmniQuote. Ready to update CORE and notify stakeholders.
                         </p>
+                    </div>
+                </div>
+
+                {/* OmniQuote Validated — pricing from paso 1.4, editable */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">OmniQuote Validated · Q-2026-0089</p>
+                    <div className="rounded-xl border border-border overflow-hidden">
+                        {/* Column headers */}
+                        <div className="grid grid-cols-[1fr_5rem_5.5rem_2rem] px-4 py-2 bg-muted/40 border-b border-border">
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Product</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">SIF Price</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">OmniQuote</span>
+                            <span />
+                        </div>
+                        {ovniqLines.map((line, i) => {
+                            const isAccepted   = acceptedRows.has(i)
+                            const corrected    = line.sifPrice !== line.ovniq
+                            return (
+                                <div key={i} className={`grid grid-cols-[1fr_5rem_5.5rem_2rem] items-center px-4 py-2.5 border-b border-border/50 last:border-0 transition-colors ${
+                                    corrected && isAccepted ? 'bg-success/5' : corrected ? 'bg-warning/5' : ''
+                                }`}>
+                                    <span className="text-[11px] font-medium text-foreground truncate pr-2">{line.product}</span>
+                                    <span className={`text-[11px] font-mono tabular-nums text-right ${corrected ? 'text-warning line-through' : 'text-muted-foreground'}`}>
+                                        {line.sifPrice}
+                                    </span>
+                                    <span className={`text-[11px] font-mono font-semibold tabular-nums text-right ${corrected ? (isAccepted ? 'text-success' : 'text-warning') : 'text-foreground'}`}>
+                                        {line.ovniq}
+                                    </span>
+                                    <div className="flex items-center justify-center">
+                                        {isAccepted
+                                            ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                            : <button onClick={() => { const n = new Set(acceptedRows); n.add(i); onSetAccepted(n) }}
+                                                className="p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+                                                <Edit2 className="h-3 w-3" />
+                                              </button>
+                                        }
+                                    </div>
+                                </div>
+                            )
+                        })}
+                        {/* Accepted footer */}
+                        {ovniqLines.some((l, i) => l.sifPrice !== l.ovniq && acceptedRows.has(i)) && (
+                            <div className="px-4 py-2 bg-success/5 border-t border-success/20 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                                    <span className="text-[10px] text-success font-medium">
+                                        {ovniqLines.filter((l, i) => l.sifPrice !== l.ovniq && acceptedRows.has(i)).map(l => `${l.sifPrice} → ${l.ovniq}`).join(' · ')} · accepted
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => { const n = new Set(acceptedRows); ovniqLines.forEach((l, i) => { if (l.sifPrice !== l.ovniq) n.delete(i) }); onSetAccepted(n) }}
+                                    className="text-[9px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border hover:text-foreground transition-all shrink-0 ml-3"
+                                >
+                                    Undo
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1983,7 +2047,7 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
-    if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} onCustomValue={onCustomValue} />
+    if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} onCustomValue={onCustomValue} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
     return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
@@ -2617,7 +2681,9 @@ export default function BFIDocumentReviewModal({
     )
     // OmniQuote lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
-    const [acceptedRows, setAcceptedRows] = useState<Set<number>>(new Set())
+    const [acceptedRows, setAcceptedRows] = useState<Set<number>>(() =>
+        step === 'labor' ? new Set([0]) : new Set()
+    )
     const updateOvniqLine = (i: number, field: keyof OvniqLine, val: string) => {
         setOvniqLines(prev => { const n = [...prev]; n[i] = { ...n[i], [field]: val }; return n })
     }
