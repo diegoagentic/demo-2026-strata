@@ -90,7 +90,7 @@ const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
         title: 'Shortage claim resolved · Herman Miller',
         desc: 'Monitor Arm Dual Adjustable · Replacement carton ETA May 18 · Cleared for work order scheduling.',
         sender: 'Herman Miller · Customer Service',
-        cta: 'Review & notify Walter →',
+        cta: 'Review & notify →',
         event: 'bfi:resolved-open',
         footerText: 'Work order ready',
     },
