@@ -1744,6 +1744,81 @@ function QuoteReviewPanel({
     )
 }
 
+// ─── Labor Ready Panel (paso 1.5 — all reconciled, send PO) ─────────────────
+
+function LaborReadyPanel({ onValidate }: { onValidate?: () => void }) {
+    const READY_ITEMS = [
+        { label: 'PO confirmed',        detail: 'DOE-2847 · NYC Dept. of Education · $235,560' },
+        { label: 'OmniQuote validated', detail: 'Filing Units corrected $8,100 → $7,560 · discount −37.5%' },
+        { label: 'Labor reconciled',    detail: 'Carpenters 45h · OT 6h · Teamsters 24h (OmniQuote confirmed)' },
+        { label: 'Delivery window',     detail: 'May 14–21, 2026 · 3 technicians · Zones A · B · C' },
+    ]
+    const NOTIFY = [
+        { initials: 'RC', label: 'Robert Chen',   sub: 'Miller Knoll Rep', color: 'bg-info/20 text-info' },
+        { initials: 'MC', label: 'Michael Chen',  sub: 'BFI Manager',      color: 'bg-ai/15 text-ai' },
+        { initials: 'DOE', label: 'NYC DOE',      sub: 'Procurement',      color: 'bg-success/15 text-success' },
+    ]
+    return (
+        <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
+            <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
+                <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">PO &amp; LABOR REVIEW</h4>
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">DOE-2847 · Ready to confirm &amp; send</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                {/* All-clear banner */}
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-success/5 border border-success/25">
+                    <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-[13px] font-bold text-success">All fields validated</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                            PO, pricing, and labor figures are reconciled with OmniQuote. Ready to update CORE and notify stakeholders.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Summary checklist */}
+                <div className="space-y-2">
+                    {READY_ITEMS.map(item => (
+                        <div key={item.label} className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/30 border border-border">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-[12px] font-bold text-foreground">{item.label}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{item.detail}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Stakeholders to notify */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Stakeholders notified</p>
+                    {NOTIFY.map(n => (
+                        <div key={n.initials} className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/20 border border-border">
+                            <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 text-[9px] font-black ${n.color}`}>{n.initials}</div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-bold text-foreground">{n.label}</p>
+                                <p className="text-[10px] text-muted-foreground">{n.sub}</p>
+                            </div>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-2">
+                <p className="text-[10px] text-muted-foreground text-center uppercase tracking-widest">10 fields · 0 need review</p>
+                <button
+                    onClick={onValidate}
+                    className="w-full py-2.5 text-[13px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest"
+                >
+                    Confirm &amp; Send PO →
+                </button>
+            </div>
+        </div>
+    )
+}
+
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
 function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, onCustomValue, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted }: {
@@ -1761,6 +1836,7 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
+    if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
     return <BFIFieldReview step={step} scenario={scenario} onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
@@ -2382,14 +2458,16 @@ export default function BFIDocumentReviewModal({
 }: BFIDocumentReviewModalProps) {
     const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
-    // quote/fee + cpr(michaelMode/invoiceUpload): start with f1+f2 resolved (already reconciled)
+    // quote/fee/labor + cpr(michaelMode/invoiceUpload): start with f1+f2 resolved (already reconciled)
     // cpr regular (paso 1.9): start empty so approvals drive the SIF doc live
     const [resolvedIds, setResolvedIds] = useState<Set<string>>(() =>
-        ['quote', 'fee'].includes(step) || (step === 'cpr' && (michaelMode || invoiceUpload))
+        ['quote', 'fee', 'labor'].includes(step) || (step === 'cpr' && (michaelMode || invoiceUpload))
             ? new Set(['f1', 'f2'])
             : new Set()
     )
-    const [customValues, setCustomValues] = useState<Record<string, string>>({})
+    const [customValues, setCustomValues] = useState<Record<string, string>>(
+        step === 'labor' ? { f1: '45h', f2: '6h' } : {}
+    )
     // OmniQuote lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
     const [acceptedRows, setAcceptedRows] = useState<Set<number>>(new Set())
