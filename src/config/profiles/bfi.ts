@@ -240,5 +240,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const BFI_SELF_INDICATED: string[] = [
-    'a1.0', 'a1.1', 'a1.2', 'a1.2b', 'a1.2b2', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
+    'a1.0', 'a1.1', 'a1.2', 'a1.2b', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
 ];
