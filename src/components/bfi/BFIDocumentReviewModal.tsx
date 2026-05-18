@@ -1729,21 +1729,228 @@ const LQ_LABOR = [
     { role: 'Overtime (OT)',hours: 8,  rate: '$129/h', subtotal: '$1,032' },
 ]
 
+// ─── Labor Quote Dialog (Headless UI modal — same pattern as ClaimDialog) ────
+
+function LaborQuoteDialog({ isOpen, onComplete, onClose }: {
+    isOpen: boolean
+    onComplete: () => void
+    onClose: () => void
+}) {
+    const [phase, setPhase] = useState<'draft' | 'sent' | 'received'>('draft')
+
+    useEffect(() => { if (!isOpen) setPhase('draft') }, [isOpen])
+
+    const handleSend = () => {
+        setPhase('sent')
+        setTimeout(() => setPhase('received'), 1400)
+    }
+
+    return (
+        <Transition show={isOpen} as={Fragment}>
+            <Dialog as="div" className="relative z-[400]" onClose={() => {}}>
+                <TransitionChild
+                    as={Fragment}
+                    enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                    leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+                </TransitionChild>
+
+                <div className="fixed inset-0 flex items-center justify-center p-6">
+                    <TransitionChild
+                        as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
+                        leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                    >
+                        <DialogPanel className="w-full max-w-lg transform rounded-2xl bg-card border border-border shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+
+                            {/* Header */}
+                            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30 shrink-0">
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                    <span className="text-[8px] font-black text-muted-foreground">WIG</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-[12px] font-bold text-foreground">Labor Quote Request · WIG</div>
+                                    <div className="text-[10px] text-muted-foreground">DOE-2847 · Workplace Installation Group</div>
+                                </div>
+                                <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            {/* Scrollable body */}
+                            <div className="flex-1 overflow-y-auto">
+                                {/* Email metadata */}
+                                <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
+                                    <div className="text-[13px] font-bold text-foreground leading-snug">
+                                        Labor Quote Request · DOE-2847 · NYC Dept. of Education
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        {[
+                                            { label: 'From', value: 'lauren.demarco@bfifurniture.com' },
+                                            { label: 'To',   value: 'm.weller@wiginstall.com (WIG Installation)' },
+                                            { label: 'Date', value: 'May 6, 2026 · 2:47 PM' },
+                                        ].map(r => (
+                                            <div key={r.label} className="flex items-center gap-2 text-[10px]">
+                                                <span className="text-muted-foreground w-7 shrink-0">{r.label}:</span>
+                                                <span className="text-foreground font-medium truncate">{r.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="px-5 py-4 space-y-3">
+                                    {/* Email body */}
+                                    <div className="space-y-2.5">
+                                        <p className="text-[12px] text-foreground leading-relaxed">
+                                            Hi Michael,
+                                        </p>
+                                        <p className="text-[12px] text-foreground leading-relaxed">
+                                            Please provide a labor quote for the following installation at{' '}
+                                            <span className="font-semibold">30 Court Street, Brooklyn, NY 11201</span>{' '}
+                                            (NYC Dept. of Education · Order DOE-2847).
+                                        </p>
+                                        <p className="text-[12px] text-foreground leading-relaxed">
+                                            Pricing has been validated through Quote Tool against CoNY Contract ANT122.
+                                            Please quote for crew and installation scope below:
+                                        </p>
+                                        {/* Scope table */}
+                                        <div className="rounded-xl border border-border overflow-hidden">
+                                            <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Installation Scope · DOE-2847</p>
+                                            </div>
+                                            {LQ_SCOPE.map(l => (
+                                                <div key={l.code} className="flex items-center gap-3 px-3 py-2 border-b border-border/40 last:border-0">
+                                                    <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                                                    <span className="text-[10px] font-mono text-muted-foreground">{l.code}</span>
+                                                    <span className="text-[10px] font-medium text-foreground flex-1">{l.desc}</span>
+                                                    <span className="text-[10px] font-mono text-foreground">{l.qty}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Please confirm crew availability and delivery window. Quote needed ASAP to proceed with the NYC DOE purchase order.
+                                        </p>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            — Lauren DeMarco<br />
+                                            BFI Furniture · Account Manager
+                                        </p>
+                                    </div>
+
+                                    {/* Sent confirmation */}
+                                    {phase !== 'draft' && (
+                                        <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
+                                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                                            <div className="text-xs">
+                                                <div className="font-bold text-foreground">Sent to WIG · May 6 · 2:47 PM</div>
+                                                <div className="text-muted-foreground mt-0.5">Awaiting labor quote from Michael Weller</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Loading */}
+                                    {phase === 'sent' && (
+                                        <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 flex items-center gap-2">
+                                            <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
+                                            <span className="text-[10px] text-muted-foreground">Waiting for WIG response…</span>
+                                        </div>
+                                    )}
+
+                                    {/* Michael's response */}
+                                    {phase === 'received' && (
+                                        <div className="rounded-xl border border-success/30 bg-success/5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-400">
+                                            <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-success/20">
+                                                <div className="h-7 w-7 rounded-full bg-success/20 flex items-center justify-center shrink-0">
+                                                    <span className="text-[9px] font-black text-success">MW</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[11px] font-bold text-foreground">Michael Weller · WIG Install → Lauren DeMarco</p>
+                                                    <p className="text-[9px] text-muted-foreground">May 6, 2026 · 3:15 PM · RE: Labor Quote Request · DOE-2847</p>
+                                                </div>
+                                                <span className="text-[8px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded shrink-0">Received</span>
+                                            </div>
+                                            <div className="px-4 py-3 space-y-2.5">
+                                                <p className="text-[12px] text-foreground leading-relaxed">
+                                                    Hi Lauren, labor quote compiled for{' '}
+                                                    <span className="font-semibold">DOE-2847</span> — 30 Court Street installation.
+                                                    Scope reviewed, crew availability confirmed for the delivery window.
+                                                </p>
+                                                {/* Labor table */}
+                                                <div className="rounded-xl border border-border overflow-hidden">
+                                                    <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
+                                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Labor Quote · DOE-2847</p>
+                                                        <span className="text-[9px] font-bold text-muted-foreground">Ref: WIG-2026-0412</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-[1fr_3.5rem_4rem_5rem] px-3 py-1.5 bg-muted/20 border-b border-border/50">
+                                                        {['Role', 'Hours', 'Rate', 'Subtotal'].map(h => (
+                                                            <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
+                                                        ))}
+                                                    </div>
+                                                    {LQ_LABOR.map(l => (
+                                                        <div key={l.role} className="grid grid-cols-[1fr_3.5rem_4rem_5rem] px-3 py-2.5 border-b border-border/30 last:border-0 items-center">
+                                                            <span className="text-[10px] font-medium text-foreground">{l.role}</span>
+                                                            <span className="text-[10px] font-mono text-muted-foreground text-right">{l.hours}h</span>
+                                                            <span className="text-[10px] font-mono text-muted-foreground text-right">{l.rate}</span>
+                                                            <span className="text-[10px] font-mono font-semibold text-foreground text-right">{l.subtotal}</span>
+                                                        </div>
+                                                    ))}
+                                                    <div className="px-3 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Total Labor Quote</span>
+                                                        <span className="text-[13px] font-black font-mono text-foreground">$9,262</span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    Delivery window: <span className="font-semibold">May 14–21, 2026</span>.
+                                                    Please confirm and we will schedule the crew.
+                                                </p>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    — Michael Weller<br />
+                                                    WIG Installation · Lead Estimator
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            {phase === 'draft' && (
+                                <div className="px-5 py-3.5 border-t border-border bg-card shrink-0">
+                                    <button onClick={handleSend}
+                                        className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
+                                        <Send className="h-3.5 w-3.5" />
+                                        Send Request to WIG →
+                                    </button>
+                                </div>
+                            )}
+                            {phase === 'received' && (
+                                <div className="px-5 py-3.5 border-t border-border bg-card shrink-0">
+                                    <button onClick={onComplete}
+                                        className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
+                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                        Labor Quote Received · Continue →
+                                    </button>
+                                </div>
+                            )}
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </Transition>
+    )
+}
+
 function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
     const fmt2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
 
     const [compOpen,  setCompOpen]  = useState(false)
-    const [emailPhase, setEmailPhase] = useState<'draft' | 'sent' | 'received'>('draft')
     const [showEmail, setShowEmail] = useState(false)
 
-    const handleSend = () => {
-        setEmailPhase('sent')
-        setTimeout(() => setEmailPhase('received'), 1400)
-    }
-
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0 relative">
+        <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
             {/* Header */}
             <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
                 <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">QUOTE TOOL VALIDATION</h4>
@@ -1844,113 +2051,11 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                 </button>
             </div>
 
-            {/* ── Email send modal overlay ── */}
-            {showEmail && (
-                <div className="absolute inset-0 bg-background/95 backdrop-blur-sm flex flex-col z-10 overflow-y-auto">
-                    <div className="flex items-center gap-3 px-5 py-3 border-b border-border shrink-0">
-                        <button onClick={() => { setShowEmail(false); setEmailPhase('draft') }} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
-                            <X className="h-4 w-4" />
-                        </button>
-                        <div>
-                            <p className="text-[12px] font-bold text-foreground">Labor Quote Request · WIG</p>
-                            <p className="text-[10px] text-muted-foreground">DOE-2847 · Workplace Installation Group</p>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 px-5 py-4 space-y-3">
-                        {/* Lauren's outgoing email */}
-                        <div className={`rounded-xl border overflow-hidden transition-all ${emailPhase !== 'draft' ? 'border-success/30 bg-success/5' : 'border-border bg-card'}`}>
-                            <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-border/60">
-                                <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                                    <span className="text-[8px] font-black text-foreground">LD</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-bold text-foreground">Lauren DeMarco → m.weller@wiginstall.com</p>
-                                    <p className="text-[9px] text-muted-foreground">May 6, 2026 · 2:47 PM · Labor Quote Request · DOE-2847</p>
-                                </div>
-                                {emailPhase !== 'draft' && <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />}
-                            </div>
-                            <div className="px-4 py-3 space-y-2.5">
-                                <p className="text-[11px] text-foreground leading-relaxed">
-                                    Hi Michael, please provide a labor quote for{' '}
-                                    <span className="font-semibold">DOE-2847</span> — 30 Court Street installation, NYC Dept. of Education.
-                                    Quote Tool pricing validated against CoNY Contract ANT122.
-                                </p>
-                                <div className="rounded-lg border border-border overflow-hidden">
-                                    {LQ_SCOPE.map(l => (
-                                        <div key={l.code} className="flex items-center gap-2 px-3 py-1.5 border-b border-border/40 last:border-0 text-[10px]">
-                                            <span className="font-mono text-muted-foreground">{l.code}</span>
-                                            <span className="text-foreground flex-1">{l.desc}</span>
-                                            <span className="font-mono text-foreground">{l.qty}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <p className="text-[10px] text-muted-foreground">Please confirm crew availability and delivery window. — Lauren DeMarco · BFI</p>
-                            </div>
-                            {emailPhase === 'draft' && (
-                                <div className="px-4 py-3 border-t border-border">
-                                    <button onClick={handleSend}
-                                        className="w-full flex items-center justify-center gap-2 rounded-full py-2 text-[11px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
-                                        <Send className="h-3.5 w-3.5" />
-                                        Send Request to WIG →
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* WIG response */}
-                        {emailPhase === 'sent' && (
-                            <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 flex items-center gap-2">
-                                <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
-                                <span className="text-[10px] text-muted-foreground">Waiting for WIG response…</span>
-                            </div>
-                        )}
-
-                        {emailPhase === 'received' && (
-                            <div className="rounded-xl border border-success/30 bg-success/5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-success/20">
-                                    <div className="h-6 w-6 rounded-full bg-success/20 flex items-center justify-center shrink-0">
-                                        <span className="text-[8px] font-black text-success">MW</span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] font-bold text-foreground">Michael Weller · WIG Install → Lauren DeMarco</p>
-                                        <p className="text-[9px] text-muted-foreground">May 6, 2026 · 3:15 PM · RE: Labor Quote Request · DOE-2847</p>
-                                    </div>
-                                    <span className="text-[8px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded shrink-0">Received</span>
-                                </div>
-                                <div className="px-4 py-3 space-y-2.5">
-                                    <p className="text-[11px] text-foreground">Hi Lauren, labor quote compiled for DOE-2847. Crew availability confirmed — delivery window May 14–21.</p>
-                                    <div className="rounded-lg border border-border overflow-hidden">
-                                        <div className="grid grid-cols-[1fr_3rem_4rem_5rem] px-3 py-1.5 bg-muted/30 border-b border-border text-[8px] font-bold text-muted-foreground uppercase tracking-wide">
-                                            {['Role', 'Hrs', 'Rate', 'Subtotal'].map(h => <span key={h} className="text-right first:text-left">{h}</span>)}
-                                        </div>
-                                        {LQ_LABOR.map(l => (
-                                            <div key={l.role} className="grid grid-cols-[1fr_3rem_4rem_5rem] px-3 py-2 border-b border-border/30 last:border-0 items-center text-[10px]">
-                                                <span className="text-foreground">{l.role}</span>
-                                                <span className="font-mono text-muted-foreground text-right">{l.hours}h</span>
-                                                <span className="font-mono text-muted-foreground text-right">{l.rate}</span>
-                                                <span className="font-mono font-semibold text-foreground text-right">{l.subtotal}</span>
-                                            </div>
-                                        ))}
-                                        <div className="flex items-center justify-between px-3 py-2 bg-muted/20 border-t border-border">
-                                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Total · Ref WIG-2026-0412</span>
-                                            <span className="text-[12px] font-black font-mono text-foreground">$9,262</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground">— Michael Weller · WIG Installation · Lead Estimator</p>
-                                </div>
-                                <div className="px-4 py-3 border-t border-success/20">
-                                    <button onClick={() => { setShowEmail(false); onValidate?.() }}
-                                        className="w-full flex items-center justify-center gap-2 rounded-full py-2 text-[11px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm">
-                                        <CheckCircle2 className="h-3.5 w-3.5" />
-                                        Labor Quote Received · Continue →
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+        <LaborQuoteDialog
+            isOpen={showEmail}
+            onComplete={() => { setShowEmail(false); onValidate?.() }}
+            onClose={() => setShowEmail(false)}
+        />
         </div>
     )
 }

@@ -71,15 +71,6 @@ export const BFI_STEPS: DemoStep[] = [
         role: 'Account Manager',
     },
     {
-        id: 'a1.2b2',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Labor Quote · WIG Request',
-        description: 'Lauren sends a labor quote request to WIG (Workplace Installation Group) for the DOE-2847 installation. Michael Weller compiles the labor figures and returns the quote. Strata captures the response and prepares data for CORE entry.',
-        app: 'bfi-agency-fee',
-        role: 'Account Manager',
-    },
-    {
         id: 'a1.2c',
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
@@ -161,7 +152,6 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · CPR flag on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges the update · loop closed' },
     'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 correction $8,100 → $7,560 · verify service fee 3.75% (Grand Total $8,833.50) · approve to request labor quote from WIG' },
-    'a1.2b2': { mode: 'interactive', userAction: 'Send labor quote request to WIG · review Michael Weller\'s response with labor figures ($9,262) · continue to CORE entry' },
     'a1.2c': { mode: 'interactive', userAction: 'Review PO from NYC DoE + labor quote from Workplace · confirm 30-day delivery window · confirm in CORE · watch EDI transmit to OVNIQ' },
     'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
     'a1.2e': { mode: 'interactive', userAction: 'Review Lena\'s missing-carton notification · expand order · attach proof of shipment · send shortage claim to Herman Miller' },
@@ -198,12 +188,6 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Comparing Requested vs Response against CoNY Contract ANT122',
         'HMI-FU-300 ×6 corrected — List Ext $8,100 → $7,560 (CoNY contract rate)',
         'Herman Miller service fees applied (3.75%) · Grand Total $8,833.50',
-    ],
-    'a1.2b2': [
-        'Generating labor quote request for DOE-2847 · 30 Court St, Brooklyn',
-        'Sending request to WIG (Workplace Installation Group)',
-        'Michael Weller reviewing installation scope · Teamsters · Carpenters · OT',
-        'Labor quote received · Ref WIG-2026-0412 · $9,262 · ready for CORE entry',
     ],
     'a1.2c': [
         'Purchase Order received from NYC Dept. of Education',
