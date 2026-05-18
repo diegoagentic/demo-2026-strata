@@ -439,12 +439,9 @@ const FIELDS_EXTRACT: ReviewField[] = [
     { id: 'fh2', name: 'Contract',   category: 'header', extractedValue: 'CoNY · City of New York', status: 'valid' },
     { id: 'fh3', name: 'Agency',     category: 'header', extractedValue: 'NYC Dept. of Education',  status: 'valid' },
     { id: 'fh4', name: 'Date',       category: 'header', extractedValue: 'May 6, 2026',             status: 'valid' },
-    { id: 'f1', name: 'Carpenters labor', category: 'labor', extractedValue: '45h', status: 'valid' },
-    { id: 'f2', name: 'Overtime labor',   category: 'labor', extractedValue: '6h',  status: 'valid' },
-    { id: 'f3', name: 'Zone A workstations', category: 'items', extractedValue: '24 units', status: 'valid' },
-    { id: 'f4', name: 'Zone B chairs',       category: 'items', extractedValue: '48 units', status: 'valid' },
-    { id: 'f5', name: 'Installation',        category: 'logistics', extractedValue: '$12,400', status: 'valid' },
-    { id: 'f6', name: 'Delivery window',     category: 'logistics', extractedValue: 'May 14–21', status: 'valid' },
+    { id: 'f1', name: 'HMI-FU-300 · Filing Unit',            category: 'items', extractedValue: '×6',  status: 'valid' },
+    { id: 'f2', name: 'HMI-WS-2400 · Ethospace Workstation', category: 'items', extractedValue: '×24', status: 'valid' },
+    { id: 'f3', name: 'HMI-LS-500 · Aeron Seating',          category: 'items', extractedValue: '×12', status: 'valid' },
 ]
 
 const FIELDS_LABOR: ReviewField[] = [
@@ -2387,7 +2384,7 @@ function FunnelStepper({ step }: { step: BFIReviewStep }) {
     )
 }
 
-// ─── Extract Review Panel (tabs: SIF · Quote · Zones) ────────────────────────
+// ─── Extract Review Panel (tabs: SIF Fields · Quote · Floor Plan) ───────────
 
 interface ExtractQuoteLine { code: string; name: string; qty: string; sif: string; net: string; corrected: boolean }
 
