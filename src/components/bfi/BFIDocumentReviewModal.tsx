@@ -92,104 +92,238 @@ export function FloorPlanSVG() {
     )
 }
 
-// ─── Quote Document Tab ───────────────────────────────────────────────────────
+// ─── Quote Document Tab (Quote Tool Comparison) ────────────────────────────────
 
+type QTField = { k: string; reqVal: string; resVal: string; changed?: boolean }
+
+const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolean; fields: QTField[] }[] = [
+    {
+        code: 'HMI-FU-300', desc: 'Filing Unit', lineNum: 1, corrected: true,
+        fields: [
+            { k: 'Qty',         reqVal: '×6',       resVal: '×6'       },
+            { k: 'List Unit $', reqVal: '1,350.00',  resVal: '1,260.00', changed: true },
+            { k: 'List Ext $',  reqVal: '8,100.00',  resVal: '7,560.00', changed: true },
+            { k: 'Sell %',      reqVal: '18%',        resVal: '18%'       },
+            { k: 'Sell Unit $', reqVal: '243.00',     resVal: '226.80',   changed: true },
+            { k: 'Sell Ext $',  reqVal: '1,458.00',   resVal: '1,360.80', changed: true },
+            { k: 'Lead Time',   reqVal: 'Assigned',   resVal: '20 Day'   },
+            { k: 'Disc. Code',  reqVal: 'IV',         resVal: 'IV'        },
+        ],
+    },
+    {
+        code: 'HMI-WS-2400', desc: 'Ethospace Workstation', lineNum: 2, corrected: false,
+        fields: [
+            { k: 'Qty',         reqVal: '×24',          resVal: '×24'          },
+            { k: 'List Ext $',  reqVal: '144,000.00',   resVal: '144,000.00'   },
+            { k: 'Sell %',      reqVal: '18%',           resVal: '18%'          },
+            { k: 'Lead Time',   reqVal: '20 Day',       resVal: '20 Day'       },
+            { k: 'Disc. Code',  reqVal: 'IV',            resVal: 'IV'           },
+        ],
+    },
+    {
+        code: 'HMI-LS-500', desc: 'Aeron Seating', lineNum: 3, corrected: false,
+        fields: [
+            { k: 'Qty',         reqVal: '×12',         resVal: '×12'         },
+            { k: 'List Ext $',  reqVal: '84,000.00',   resVal: '84,000.00'   },
+            { k: 'Sell %',      reqVal: '18%',          resVal: '18%'         },
+            { k: 'Lead Time',   reqVal: '20 Day',      resVal: '20 Day'      },
+            { k: 'Disc. Code',  reqVal: 'IV',           resVal: 'IV'          },
+        ],
+    },
+]
 
 function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?: boolean }) {
-    const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
-    const fmt = (n: number) => '$' + n.toLocaleString('en-US')
-    const sifTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.sifPrice), 0)
-    const adjTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.ovniq), 0)
-    const discountAmt = Math.round(adjTotal * 0.375)
+    if (isPO) {
+        const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
+        const fmt = (n: number) => '$' + n.toLocaleString('en-US')
+        const sifTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.sifPrice), 0)
+        const adjTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.ovniq), 0)
+        const discountAmt = Math.round(adjTotal * 0.375)
+        return (
+            <div className="flex flex-col h-full">
+                <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
+                    <div className="mx-auto w-full bg-white dark:bg-zinc-900 rounded-xl shadow border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                        <div className="h-1.5 bg-gradient-to-r from-primary to-[#C3E433]" />
+                        <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
+                            <div>
+                                <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Purchase Order</span>
+                                <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">DOE-2847</p>
+                                <p className="text-xs font-mono text-zinc-400 mt-0.5">NYC Dept. of Education · Herman Miller</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">NYC DOE</div>
+                                <div className="text-xs text-zinc-400 mt-0.5">Procurement Office · May 6, 2026</div>
+                            </div>
+                        </div>
+                        <div className="bg-zinc-800 dark:bg-zinc-700 px-6 py-1.5 flex items-center justify-between">
+                            <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
+                            <span className="text-[8px] font-bold text-primary tracking-widest">PO DOE-2847 · Quote Tool Validated ✓</span>
+                        </div>
+                        <div className="px-6 pt-3 pb-1 grid grid-cols-6 gap-2">
+                            {['Code', 'Product', 'Qty', 'T-Code', 'SIF Price', 'Net'].map(h => (
+                                <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
+                            ))}
+                        </div>
+                        <div className="px-6 pb-4 space-y-0">
+                            {ovniqLines.map((line) => {
+                                const corrected = line.sifPrice !== line.ovniq
+                                return (
+                                    <div key={line.code ?? line.product} className={`grid grid-cols-6 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                        <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
+                                        <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
+                                        <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
+                                        <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
+                                        <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{line.sifPrice}</span>
+                                        <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
+                                            {line.ovniq}
+                                            {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+                            {[
+                                { label: 'SIF Total',               value: fmt(sifTotal),         muted: true  },
+                                { label: 'Adjusted Total',          value: fmt(adjTotal),         bold: true   },
+                                { label: 'Discount (−37.5% CoNY)', value: `−${fmt(discountAmt)}`, accent: true },
+                            ].map(row => (
+                                <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${row.bold ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''}`}>
+                                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{row.label}</span>
+                                    <span className={`text-[11px] font-mono font-semibold ${row.accent ? 'text-success' : row.muted ? 'text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{row.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="text-[9px] text-zinc-400 dark:text-zinc-500 text-center py-3 border-t border-zinc-100 dark:border-zinc-800">
+                            Purchase Order DOE-2847 · Quote Tool validated · CoNY contract · 1 correction applied
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
+    // step='quote': Quote Tool comparison — REQUESTED vs RESPONSE
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
                 <div className="mx-auto w-full bg-white dark:bg-zinc-900 rounded-xl shadow border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                    {/* Brand bar */}
-                    <div className="h-1.5 bg-gradient-to-r from-primary to-[#C3E433]" />
-
-                    {/* Doc header */}
+                    <div className="h-1.5 bg-gradient-to-r from-zinc-800 to-zinc-600" />
                     <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
-                        {isPO ? (
-                            <>
-                                <div>
-                                    <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Purchase Order</span>
-                                    <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">DOE-2847</p>
-                                    <p className="text-xs font-mono text-zinc-400 mt-0.5">NYC Dept. of Education · Herman Miller</p>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">NYC DOE</div>
-                                    <div className="text-xs text-zinc-400 mt-0.5">Procurement Office · May 6, 2026</div>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div>
-                                    <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Quote · OmniQuote</span>
-                                    <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Q-2026-0089</p>
-                                    <p className="text-xs font-mono text-zinc-400 mt-0.5">DOE-2847 · NYC Dept. of Education</p>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">MILLER KNOLL</div>
-                                    <div className="text-xs text-zinc-400 mt-0.5">Robert Chen · Rep · May 6, 2026</div>
-                                </div>
-                            </>
-                        )}
+                        <div>
+                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Quote Tool Comparison</span>
+                            <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Q-2026-0089</p>
+                            <p className="text-xs font-mono text-zinc-400 mt-0.5">DOE-2847 · NYC Dept. of Education · CoNY Contract ANT122</p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">MILLER KNOLL</div>
+                            <div className="text-xs text-zinc-400 mt-0.5">Robert Chen · May 6, 2026</div>
+                        </div>
                     </div>
-
-                    {/* Band */}
                     <div className="bg-zinc-800 dark:bg-zinc-700 px-6 py-1.5 flex items-center justify-between">
-                        <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
-                        <span className="text-[8px] font-bold text-primary tracking-widest">{isPO ? 'PO DOE-2847 · OmniQuote Validated ✓' : 'OmniQuote VALIDATED ✓'}</span>
+                        <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">REQUESTED vs RESPONSE · 1 CORRECTION APPLIED</span>
+                        <span className="text-[8px] font-bold text-destructive/80 tracking-widest">1 PRICE CHANGED ↓</span>
                     </div>
-
-                    {/* Column headers */}
-                    <div className="px-6 pt-3 pb-1 grid grid-cols-6 gap-2">
-                        {['Code', 'Product', 'Qty', 'T-Code', 'SIF Price', 'Net'].map(h => (
-                            <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
-                        ))}
-                    </div>
-
-                    {/* Quote rows — driven by live ovniqLines */}
-                    <div className="px-6 pb-4 space-y-0">
-                        {ovniqLines.map((line) => {
-                            const corrected = line.sifPrice !== line.ovniq
-                            return (
-                                <div key={line.code ?? line.product} className={`grid grid-cols-6 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
-                                    <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
-                                    <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
-                                    <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
-                                    <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
-                                    <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{line.sifPrice}</span>
-                                    <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
-                                        {line.ovniq}
-                                        {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
-                                    </span>
+                    <div className="px-6 py-4 space-y-5">
+                        {QT_LINES.map(line => (
+                            <div key={line.code}>
+                                <div className="flex items-center gap-2 mb-2.5">
+                                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">Line #{line.lineNum}</span>
+                                    <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">{line.code}</span>
+                                    <span className="text-[10px] text-zinc-500">· {line.desc}</span>
+                                    {line.corrected
+                                        ? <span className="ml-auto text-[8px] font-black px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">CORRECTED</span>
+                                        : <span className="ml-auto text-[8px] font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-400">NO CHANGE</span>
+                                    }
                                 </div>
-                            )
-                        })}
-                    </div>
-
-                    {/* Totals */}
-                    <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
-                        {[
-                            { label: 'SIF Total',               value: fmt(sifTotal),     muted: true  },
-                            { label: 'Adjusted Total',          value: fmt(adjTotal),     bold: true   },
-                            { label: 'Discount (−37.5% CoNY)', value: `−${fmt(discountAmt)}`, accent: true },
-                        ].map(row => (
-                            <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${row.bold ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''}`}>
-                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{row.label}</span>
-                                <span className={`text-[11px] font-mono font-semibold ${row.accent ? 'text-success' : row.muted ? 'text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{row.value}</span>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {(['REQUESTED', 'RESPONSE'] as const).map(col => (
+                                        <div key={col} className={`rounded-lg border px-3 py-2.5 ${col === 'RESPONSE' && line.corrected ? 'border-destructive/30 bg-destructive/5' : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40'}`}>
+                                            <p className={`text-[8px] font-bold uppercase tracking-widest mb-2 ${col === 'RESPONSE' && line.corrected ? 'text-destructive' : 'text-zinc-400'}`}>{col}</p>
+                                            <div className="space-y-1">
+                                                {line.fields.map(f => (
+                                                    <div key={f.k} className="flex items-center justify-between font-mono text-[9px]">
+                                                        <span className="text-zinc-400">{f.k}</span>
+                                                        <span className={col === 'RESPONSE' && f.changed ? 'text-destructive font-semibold' : 'text-zinc-700 dark:text-zinc-300'}>
+                                                            {col === 'REQUESTED' ? f.reqVal : f.resVal}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>
-
-                    {/* Footer */}
                     <div className="text-[9px] text-zinc-400 dark:text-zinc-500 text-center py-3 border-t border-zinc-100 dark:border-zinc-800">
-                        {isPO
-                            ? 'Purchase Order DOE-2847 · OmniQuote validated · CoNY contract · 1 correction applied'
-                            : 'Generated by OmniQuote · 1 correction applied · Validated against CoNY contract'}
+                        Quote Tool · CoNY Contract ANT122 · Discount Code IV · 1 correction applied
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ─── Service Fees Document Tab ────────────────────────────────────────────────
+
+const SF_LINES = [
+    { lineNum: '00001', product: 'HMI-FU-300',  svcPct: 3.75, listExt: 7560,    svcExt: 283.50   },
+    { lineNum: '00002', product: 'HMI-WS-2400', svcPct: 3.75, listExt: 144000,  svcExt: 5400.00  },
+    { lineNum: '00003', product: 'HMI-LS-500',  svcPct: 3.75, listExt: 84000,   svcExt: 3150.00  },
+]
+
+function ServiceFeesDocumentTab() {
+    const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
+    const fmt2 = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return (
+        <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
+                <div className="mx-auto w-full bg-white dark:bg-zinc-900 rounded-xl shadow border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                    <div className="h-1.5 bg-gradient-to-r from-zinc-800 to-zinc-600" />
+                    <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
+                        <div>
+                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Herman Miller</span>
+                            <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Estimated Service Fees</p>
+                            <p className="text-xs font-mono text-zinc-400 mt-0.5">Quote # Q-2026-0089 · Order: DOE-2847</p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">MILLER KNOLL</div>
+                            <div className="text-xs text-zinc-400 mt-0.5">Order Receipt: May 6, 2026</div>
+                        </div>
+                    </div>
+                    <div className="bg-zinc-800 dark:bg-zinc-700 px-6 py-1.5 flex items-center justify-between">
+                        <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">PL: IV · EXPEDITED SERVICE CHARGE (W)</span>
+                        <span className="text-[8px] font-bold text-zinc-200 tracking-widest">Svc % 3.75</span>
+                    </div>
+                    <div className="px-6 pt-3 pb-1 grid grid-cols-[3rem_1fr_3.5rem_6rem_5.5rem] gap-2">
+                        {['Line #', 'Product', 'Svc %', 'List Ext $', 'Svc Ext $'].map(h => (
+                            <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide text-right first:text-left">{h}</span>
+                        ))}
+                    </div>
+                    <div className="px-6 pb-4 space-y-0">
+                        {SF_LINES.map(line => (
+                            <div key={line.lineNum} className="grid grid-cols-[3rem_1fr_3.5rem_6rem_5.5rem] gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                                <span className="text-[9px] font-mono text-zinc-500">{line.lineNum}</span>
+                                <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100">{line.product}</span>
+                                <span className="text-[10px] font-mono text-zinc-500 text-right">{line.svcPct}</span>
+                                <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300 text-right">{fmt2(line.listExt)}</span>
+                                <span className="text-[10px] font-mono font-semibold text-zinc-800 dark:text-zinc-100 text-right">{fmt2(line.svcExt)}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800">
+                            <span className="text-[9px] text-zinc-500">Total for IV – EXPEDITED SERVICE CHARGE (W)</span>
+                            <span className="text-[11px] font-mono font-semibold text-zinc-700 dark:text-zinc-300">${fmt2(grandTotal)}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-4 py-3 bg-zinc-800 dark:bg-zinc-700">
+                            <span className="text-[10px] font-bold text-zinc-100 uppercase tracking-wide">Grand Total Estimated Service Fees</span>
+                            <span className="text-[13px] font-black font-mono text-white">${fmt2(grandTotal)}</span>
+                        </div>
+                    </div>
+                    <div className="text-[9px] text-zinc-400 dark:text-zinc-500 text-center py-3 border-t border-zinc-100 dark:border-zinc-800">
+                        Dealer: CND018253 · Contract Volume $: 1,000.00 · Discount Code: IV
                     </div>
                 </div>
             </div>
@@ -1579,307 +1713,64 @@ const INITIAL_OVNIQ_LINES: OvniqLine[] = [
 ]
 
 
-function QuoteReviewPanel({
-    onValidate,
-    ovniqLines,
-    onUpdateLine,
-    acceptedRows,
-    onSetAccepted,
-}: {
-    onValidate?: () => void
-    ovniqLines: OvniqLine[]
-    onUpdateLine: (i: number, field: keyof OvniqLine, val: string) => void
-    acceptedRows: Set<number>
-    onSetAccepted: (next: Set<number>) => void
-}) {
-    const [activeTab, setActiveTab]         = useState<'ovniq' | 'discount'>('ovniq')
-    const [contract, setContract]           = useState<'city' | 'state'>('city')
-    const [copiedToCore, setCopiedToCore]   = useState(false)
-    const [editingIdx, setEditingIdx]       = useState<number | null>(null)
-    const [isEditingDiscount, setEditingDiscount] = useState(false)
-
-    const [sellPrice, setSellPrice] = useState('$7,560')
-    const [listPrice, setListPrice] = useState('$12,000')
-
-    const computeDiscount = () => {
-        const sell = parseFloat(sellPrice.replace(/[^0-9.]/g, ''))
-        const list = parseFloat(listPrice.replace(/[^0-9.]/g, ''))
-        if (!list) return '—'
-        const disc = ((sell / list) - 1) * 100
-        return `${disc >= 0 ? '+' : ''}${disc.toFixed(1)}%`
-    }
-
-    const toggleAccept = (i: number) => {
-        const next = new Set(acceptedRows)
-        if (next.has(i)) { next.delete(i) } else { next.add(i) }
-        onSetAccepted(next)
-    }
-
-    const totalCorrections = ovniqLines.filter(l => l.corrected).length
-    const acceptedCount    = ovniqLines.filter((l, i) => l.corrected && acceptedRows.has(i)).length
-    const allAccepted      = acceptedCount === totalCorrections
+function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
+    const fmt2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
             {/* Header */}
             <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
-                <div className="flex items-center justify-between gap-3">
-                    <div>
-                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">QUOTE REVIEW</h4>
-                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">OmniQuote · DOE-2847 · Q-2026-0089</p>
-                    </div>
-                    {/* Contract toggle */}
-                    <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg border border-border shrink-0 ml-auto">
-                        {(['city', 'state'] as const).map(c => (
-                            <button
-                                key={c}
-                                onClick={() => setContract(c)}
-                                className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase transition-all ${
-                                    contract === c
-                                        ? 'bg-card text-foreground shadow-sm border border-border'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {c === 'city' ? '● City' : '○ State'}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Tab bar */}
-                <div className="flex gap-0 mt-3 border-b border-border -mx-5 px-5">
-                    {([
-                        { id: 'ovniq'    as const, label: 'OmniQuote Comparison' },
-                        { id: 'discount' as const, label: 'Discount Calc' },
-                    ]).map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-3 py-1.5 text-[10px] font-bold border-b-2 transition-all mr-1 ${
-                                activeTab === tab.id
-                                    ? 'border-primary text-foreground'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+                <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">QUOTE TOOL VALIDATION</h4>
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">CoNY Contract ANT122 · DOE-2847 · Q-2026-0089</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-                {activeTab === 'ovniq' ? (
-                    <div className="px-5 mt-4 space-y-4">
-                        {/* OmniQuote + CORE comparison table */}
-                        <div className="rounded-xl border border-border overflow-hidden">
-                            {/* Header — col template: product | sif | ovniq | core | actions */}
-                            <div className="grid grid-cols-[1fr_5rem_5.5rem_6.5rem_2.5rem] px-4 py-2 bg-muted/40 border-b border-border">
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Product</span>
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">SIF Price</span>
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">OmniQuote</span>
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right pr-1">CORE</span>
-                                <span />
-                            </div>
-
-                            {ovniqLines.map((line, i) => {
-                                const isRowEditing = editingIdx === i
-                                const isAccepted   = acceptedRows.has(i)
-                                return (
-                                    <div key={i} className={`grid grid-cols-[1fr_5rem_5.5rem_6.5rem_2.5rem] items-center px-4 py-3 border-b border-border/50 last:border-0 transition-colors ${
-                                        isRowEditing        ? 'bg-primary/5'  :
-                                        line.corrected && !isAccepted ? 'bg-warning/5' :
-                                        line.corrected &&  isAccepted ? 'bg-success/5' : ''
-                                    }`}>
-
-                                        {/* Product */}
-                                        <div className="min-w-0 pr-2">
-                                            {isRowEditing ? (
-                                                <input value={line.product} onChange={e => onUpdateLine(i, 'product', e.target.value)}
-                                                    className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-medium text-foreground transition-colors" />
-                                            ) : (
-                                                <span className="text-[11px] font-medium text-foreground truncate block">{line.product}</span>
-                                            )}
-                                        </div>
-
-                                        {/* SIF Price — right-aligned */}
-                                        <div className="text-right">
-                                            {isRowEditing ? (
-                                                <input value={line.sifPrice} onChange={e => onUpdateLine(i, 'sifPrice', e.target.value)}
-                                                    className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono text-right transition-colors text-muted-foreground" />
-                                            ) : (
-                                                <span className={`text-[11px] font-mono tabular-nums ${line.corrected && !isAccepted ? 'text-warning line-through' : 'text-muted-foreground'}`}>
-                                                    {line.sifPrice}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* OmniQuote — right-aligned */}
-                                        <div className="text-right">
-                                            {isRowEditing ? (
-                                                <input value={line.ovniq} onChange={e => onUpdateLine(i, 'ovniq', e.target.value)}
-                                                    className="w-full bg-card border border-border rounded px-1.5 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none text-[11px] font-mono font-semibold text-right transition-colors" />
-                                            ) : (
-                                                <span className={`text-[11px] font-mono font-semibold tabular-nums ${
-                                                    line.corrected ? (isAccepted ? 'text-success' : 'text-warning') : 'text-foreground'
-                                                }`}>{line.ovniq}</span>
-                                            )}
-                                        </div>
-
-                                        {/* CORE — right-aligned value + status icon */}
-                                        <div className="flex items-center justify-end gap-1.5">
-                                            <span className={`text-[11px] font-mono tabular-nums ${isAccepted ? 'text-foreground font-semibold' : 'text-muted-foreground/40'}`}>
-                                                {line.ovniq}
-                                            </span>
-                                            {isAccepted ? (
-                                                <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
-                                            ) : (
-                                                <div className="h-3 w-3 rounded-full border border-border/50 shrink-0" />
-                                            )}
-                                        </div>
-
-                                        {/* Actions — edit icon + accept/undo */}
-                                        <div className="flex items-center justify-center">
-                                            {isRowEditing ? (
-                                                <button onClick={() => setEditingIdx(null)}
-                                                    className="p-0.5 rounded text-primary transition-colors" title="Done">
-                                                    <CheckCircle2 className="h-3.5 w-3.5" />
-                                                </button>
-                                            ) : (
-                                                <button onClick={() => setEditingIdx(i)}
-                                                    className="p-0.5 rounded text-muted-foreground/30 hover:text-muted-foreground transition-colors" title="Edit row">
-                                                    <Edit2 className="h-3 w-3" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )
-                            })}
-
-                            {/* Accept row — shown below table when there are pending corrections */}
-                            {ovniqLines.some((l, i) => l.corrected && !acceptedRows.has(i)) && (
-                                <div className="px-4 py-2.5 bg-warning/5 border-t border-warning/20 flex items-center justify-between">
-                                    <span className="text-[10px] text-warning font-medium">
-                                        {ovniqLines.filter((l, i) => l.corrected && !acceptedRows.has(i)).map(l => `${l.product}: ${l.sifPrice} → ${l.ovniq}`).join(' · ')}
-                                    </span>
-                                    <button onClick={() => ovniqLines.forEach((l, i) => { if (l.corrected && !acceptedRows.has(i)) toggleAccept(i) })}
-                                        className="text-[9px] font-bold px-2.5 py-1 rounded-lg bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-all shrink-0 ml-3">
-                                        Accept ✓
-                                    </button>
-                                </div>
-                            )}
-                            {ovniqLines.some((l, i) => l.corrected && acceptedRows.has(i)) && (
-                                <div className="px-4 py-2 bg-success/5 border-t border-success/20 flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
-                                        <span className="text-[10px] text-success font-medium">
-                                            {ovniqLines.filter((l, i) => l.corrected && acceptedRows.has(i)).map(l => `${l.sifPrice} → ${l.ovniq}`).join(' · ')} · accepted
-                                        </span>
-                                    </div>
-                                    <button onClick={() => { const next = new Set(acceptedRows); ovniqLines.forEach((l, i) => { if (l.corrected) next.delete(i) }); onSetAccepted(next) }}
-                                        className="text-[9px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border hover:text-foreground transition-all shrink-0 ml-3">
-                                        Undo all
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                {/* Correction callout */}
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 flex items-start gap-2.5">
+                    <div className="h-5 w-5 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="text-[9px] font-black text-destructive">1</span>
                     </div>
-                ) : (
-                    <div className="px-5 mt-4 space-y-4">
-                        {/* Discount Calc */}
-                        <div className={`rounded-xl border overflow-hidden transition-colors ${isEditingDiscount ? 'border-primary/40' : 'border-border'}`}>
-                            <div className={`px-4 py-3 border-b flex items-center justify-between transition-colors ${isEditingDiscount ? 'bg-primary/5 border-primary/20' : 'bg-muted/30 border-border'}`}>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Formula · {contract === 'city' ? 'City' : 'State'} Contract</p>
-                                <button
-                                    onClick={() => setEditingDiscount(e => !e)}
-                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                                        isEditingDiscount
-                                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                                            : 'text-muted-foreground border-border hover:text-foreground hover:border-foreground/30'
-                                    }`}
-                                >
-                                    {isEditingDiscount ? <CheckCircle2 className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
-                                    {isEditingDiscount ? 'Done' : 'Edit'}
-                                </button>
-                            </div>
-                            <div className="px-4 py-4 space-y-3">
-                                <div className="font-mono text-[12px] text-muted-foreground">
-                                    sell ÷ list − 1 = discount%
-                                </div>
-                                <div className="font-mono text-[14px] font-bold text-foreground">
-                                    {sellPrice} ÷ {listPrice} − 1 = <span className="text-warning">{computeDiscount()}</span>
-                                </div>
-                                <div className="h-px bg-border" />
-                                <div className="grid grid-cols-3 gap-2">
-                                    {/* Sell Price */}
-                                    <div className={`rounded-lg px-3 py-2 transition-colors ${isEditingDiscount ? 'bg-primary/5 border border-primary/30 ring-1 ring-primary/10' : 'bg-muted/30'}`}>
-                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">Sell Price</p>
-                                        {isEditingDiscount ? (
-                                            <input
-                                                type="text"
-                                                value={sellPrice}
-                                                onChange={e => setSellPrice(e.target.value)}
-                                                autoFocus
-                                                className="w-full bg-transparent text-[13px] font-black font-mono text-foreground focus:outline-none border-b-2 border-primary"
-                                            />
-                                        ) : (
-                                            <p className="text-[13px] font-black font-mono text-foreground">{sellPrice}</p>
-                                        )}
-                                    </div>
-                                    {/* List Price */}
-                                    <div className={`rounded-lg px-3 py-2 transition-colors ${isEditingDiscount ? 'bg-primary/5 border border-primary/30 ring-1 ring-primary/10' : 'bg-muted/30'}`}>
-                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">List Price</p>
-                                        {isEditingDiscount ? (
-                                            <input
-                                                type="text"
-                                                value={listPrice}
-                                                onChange={e => setListPrice(e.target.value)}
-                                                className="w-full bg-transparent text-[13px] font-black font-mono text-muted-foreground focus:outline-none border-b-2 border-primary"
-                                            />
-                                        ) : (
-                                            <p className="text-[13px] font-black font-mono text-muted-foreground">{listPrice}</p>
-                                        )}
-                                    </div>
-                                    {/* Discount — always read-only */}
-                                    <div className="bg-muted/30 rounded-lg px-3 py-2">
-                                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">Discount</p>
-                                        <p className="text-[13px] font-black font-mono text-warning">{computeDiscount()}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setCopiedToCore(true)}
-                            className={`w-full py-2 text-[10px] font-black rounded-xl transition-all uppercase tracking-widest ${
-                                copiedToCore
-                                    ? 'bg-success/10 text-success border border-success/20'
-                                    : 'bg-muted/50 text-foreground border border-border hover:bg-muted/70'
-                            }`}
-                        >
-                            {copiedToCore ? '✓ Copied to CORE' : 'Copy to CORE'}
-                        </button>
+                    <div>
+                        <p className="text-[11px] font-bold text-foreground">1 price correction applied</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">HMI-FU-300 · List Ext $8,100 → $7,560 · CoNY contract rate applied</p>
                     </div>
-                )}
+                </div>
 
-                <div className="h-4" />
+                {/* Estimated Service Fees */}
+                <div className="rounded-xl border border-border overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/40 border-b border-border">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Estimated Service Fees · 3.75%</p>
+                    </div>
+                    <div className="grid grid-cols-[1fr_5.5rem_4rem_5.5rem] px-4 py-2 bg-muted/20 border-b border-border/50">
+                        {['Product', 'List Ext $', 'Svc %', 'Service $'].map(h => (
+                            <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
+                        ))}
+                    </div>
+                    {SF_LINES.map(line => (
+                        <div key={line.product} className="grid grid-cols-[1fr_5.5rem_4rem_5.5rem] px-4 py-2.5 border-b border-border/30 last:border-0 items-center">
+                            <span className="text-[11px] font-medium text-foreground">{line.product}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground text-right">{fmt2(line.listExt)}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground text-right">3.75%</span>
+                            <span className="text-[11px] font-mono font-semibold text-foreground text-right">{fmt2(line.svcExt)}</span>
+                        </div>
+                    ))}
+                    <div className="px-4 py-3 bg-muted/30 border-t border-border flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Grand Total</span>
+                        <span className="text-[14px] font-black font-mono text-foreground">{fmt2(grandTotal)}</span>
+                    </div>
+                </div>
+
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
             </div>
 
             {/* Footer */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
-                <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
-                    {acceptedCount}/{totalCorrections} correction{totalCorrections !== 1 ? 's' : ''} accepted
-                </div>
                 <button
-                    onClick={() => allAccepted && onValidate?.()}
-                    disabled={!allAccepted}
-                    className={`w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
-                        allAccepted
-                            ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-sm'
-                            : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                    }`}
+                    onClick={() => onValidate?.()}
+                    className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm"
                 >
-                    Validate →
+                    Approve & Request Labor Quote →
                 </button>
             </div>
         </div>
@@ -2150,7 +2041,7 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
     onSetAccepted: (next: Set<number>) => void
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
-    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
+    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
     if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} onCustomValue={onCustomValue} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
@@ -2781,7 +2672,7 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
 export default function BFIDocumentReviewModal({
     isOpen, onClose, step, onValidate, scenario, michaelMode, invoiceUpload
 }: BFIDocumentReviewModalProps) {
-    const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
+    const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'fees' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
     // quote/fee/labor + cpr(michaelMode/invoiceUpload): start with f1+f2 resolved (already reconciled)
     // cpr regular (paso 1.9): start empty so approvals drive the SIF doc live
@@ -2810,7 +2701,7 @@ export default function BFIDocumentReviewModal({
 
     const STEP_LABELS: Record<BFIReviewStep, string> = {
         extract:     'Extracting fields',
-        quote:       'Quote · OmniQuote Comparison',
+        quote:       'Quote Tool Validation',
         'val-sif':   'Validating SIF',
         'val-ovniq': 'Validating OmniQuote',
         labor:       'PO & Labor Review',
@@ -2877,7 +2768,7 @@ export default function BFIDocumentReviewModal({
                                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                                     <p className="text-[11px] text-ai font-medium">
                                         {step === 'quote'
-                                            ? <><span className="font-bold">OmniQuote</span> comparison · Filing Units $8,100 → $7,560 · 1 correction to accept · Discount: −37.0%</>
+                                            ? <><span className="font-bold">Quote Tool</span> · 1 correction applied · HMI-FU-300 $8,100 → $7,560 (CoNY rate) · Service Fees 3.75% · Grand Total $8,833.50</>
                                             : step === 'cpr'
                                                 ? <><span className="font-bold">CPR</span> reconciliation · Carpenters −5h · OT −2h · Impact: −$2,340 · 2 lines to approve</>
                                                 : step === 'fee'
@@ -2899,10 +2790,11 @@ export default function BFIDocumentReviewModal({
                                         {/* Tab bar */}
                                         <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2">
                                             {([
-                                                { id: 'sif' as const,      icon: FileText, label: 'SIF · DOE-2847' },
-                                                { id: 'specs' as const,    icon: FileText, label: (step === 'labor' || step === 'cpr' || step === 'fee') ? 'DOE-2847 · Purchase Order' : 'Q-2026-0089 · Quote' },
-                                                { id: 'floorplan' as const, icon: MapPin,   label: 'Floor Plan' },
-                                            ]).map(tab => (
+                                                { id: 'sif' as const,      icon: FileText, label: 'SIF · DOE-2847', show: true },
+                                                { id: 'specs' as const,    icon: FileText, label: (step === 'labor' || step === 'cpr' || step === 'fee') ? 'DOE-2847 · Purchase Order' : 'Quote Comparison', show: true },
+                                                { id: 'fees' as const,     icon: FileText, label: 'Service Fees', show: step === 'quote' },
+                                                { id: 'floorplan' as const, icon: MapPin,   label: 'Floor Plan', show: true },
+                                            ]).filter(t => t.show).map(tab => (
                                                 <button
                                                     key={tab.id}
                                                     onClick={() => setActiveTab(tab.id)}
@@ -2917,7 +2809,7 @@ export default function BFIDocumentReviewModal({
                                                 </button>
                                             ))}
                                             {/* Download button — only for SIF and Specs tabs */}
-                                            {(activeTab === 'sif' || activeTab === 'specs') && (
+                                            {(activeTab === 'sif' || activeTab === 'specs' || activeTab === 'fees') && (
                                                 <div className="ml-auto pb-1.5 shrink-0">
                                                     {downloadConfirm ? (
                                                         <span className="flex items-center gap-1 text-[10px] text-success font-semibold px-2">
@@ -2930,7 +2822,7 @@ export default function BFIDocumentReviewModal({
                                                             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
                                                         >
                                                             <Download className="h-3 w-3" />
-                                                            {activeTab === 'sif' ? 'Download SIF' : (step === 'labor' || step === 'cpr' || step === 'fee') ? 'Download PO' : 'Download Quote'}
+                                                            {activeTab === 'sif' ? 'Download SIF' : activeTab === 'fees' ? 'Download Service Fees' : (step === 'labor' || step === 'cpr' || step === 'fee') ? 'Download PO' : 'Download Quote'}
                                                         </button>
                                                     )}
                                                 </div>
@@ -2941,6 +2833,8 @@ export default function BFIDocumentReviewModal({
                                         <div className="flex-1 min-h-0 overflow-hidden">
                                             {activeTab === 'sif' ? (
                                                 <SIFDocumentPreview resolvedIds={resolvedIds} step={step} customValues={customValues} />
+                                            ) : activeTab === 'fees' ? (
+                                                <ServiceFeesDocumentTab />
                                             ) : activeTab === 'specs' ? (
                                                 <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'labor' || step === 'cpr' || step === 'fee'} />
                                             ) : (
