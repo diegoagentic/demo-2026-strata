@@ -12,7 +12,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
-    X, FileText, Truck, Package,
+    X, FileText,
     ChevronDown, ChevronUp, CheckCircle2, Sparkles,
     Edit, Edit2, Edit3, Zap, Info, MapPin, Send, AlertCircle,
     Download, Mail, Upload, Loader2, Paperclip
@@ -199,113 +199,73 @@ function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?
 
 // ─── SIF Document Mock Preview ───────────────────────────────────────────────
 
-interface SifField { name: string; value: string; status: 'valid' | 'inconsistent' | 'missing'; fieldId?: string; resolvedValue?: string }
-interface SifGroup { id: string; label: string; icon: typeof FileText; fields: SifField[] }
-
-const SIF_GROUPS: SifGroup[] = [
-    {
-        id: 'header', label: 'Document Header', icon: FileText,
-        fields: [
-            { name: 'Quote #',    value: 'Q-2026-0089',            status: 'valid' },
-            { name: 'Contract',   value: 'CoNY · City of New York', status: 'valid' },
-            { name: 'Agency',     value: 'NYC Dept. of Education',  status: 'valid' },
-            { name: 'Date',       value: 'May 6, 2026',            status: 'valid' },
-        ]
-    },
-    {
-        id: 'labor', label: 'Labor (from SIF)', icon: Package,
-        fields: [
-            { name: 'Carpenters labor', value: '45h', status: 'valid' },
-            { name: 'Overtime labor',   value: '6h',  status: 'valid' },
-            { name: 'Zone A workstations', value: '24 units', status: 'valid' },
-            { name: 'Zone B chairs',       value: '48 units', status: 'valid' },
-        ]
-    },
-    {
-        id: 'logistics', label: 'Pricing & Delivery', icon: Truck,
-        fields: [
-            { name: 'Installation',    value: '$12,400',   status: 'valid' },
-            { name: 'Delivery window', value: 'May 14–21', status: 'valid' },
-            { name: 'Total value',     value: '$48,200',   status: 'valid' },
-        ]
-    },
-]
-
-function SIFDocumentPreview({ resolvedIds = new Set<string>(), step, customValues = {} }: { resolvedIds?: Set<string>; step?: BFIReviewStep; customValues?: Record<string, string> }) {
+function SIFDocumentPreview({ step }: { resolvedIds?: Set<string>; step?: BFIReviewStep; customValues?: Record<string, string> }) {
     const isLabor = step === 'labor' || step === 'cpr' || step === 'fee'
+    const K = (s: string) => <span className="text-sky-400">"{s}"</span>
+    const S = (s: string) => <span className="text-emerald-400">"{s}"</span>
+    const N = (n: number) => <span className="text-amber-400">{n}</span>
+    const P = (s: string) => <span className="text-zinc-500">{s}</span>
+    const L = (n: number, pd: number, content: JSX.Element) => (
+        <div key={n} className="flex gap-2.5 leading-[1.6]">
+            <span className="text-zinc-600 select-none w-5 text-right shrink-0 font-mono text-[10px] mt-px">{n}</span>
+            <span className="font-mono text-[11px]" style={{ paddingLeft: pd * 14 }}>{content}</span>
+        </div>
+    )
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
-                <div className="mx-auto bg-white dark:bg-zinc-900 rounded-xl shadow border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                    {/* Brand bar */}
-                    <div className="h-1.5 bg-gradient-to-r from-primary to-[#C3E433]" />
-
-                    {/* Doc header */}
-                    <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
-                        <div>
-                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">
-                                {isLabor ? 'Purchase Order' : 'SIF Document'}
-                            </span>
-                            <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">DOE-2847</p>
-                            <p className="text-xs font-mono text-zinc-400 mt-0.5">NYC Dept. of Education · Herman Miller</p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-xl font-extrabold text-zinc-900 dark:text-white">
-                                {isLabor ? 'DOE-2847' : 'Q-2026-0089'}
-                            </div>
-                            <div className="text-xs text-zinc-400 mt-0.5">May 6, 2026</div>
-                        </div>
+                <div className="rounded-xl overflow-hidden shadow-lg">
+                    {/* Editor title bar */}
+                    <div className="flex items-center gap-1.5 px-3 py-2 bg-zinc-800">
+                        <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
+                        <span className="ml-2 text-[10px] font-mono text-zinc-400">
+                            {isLabor ? 'DOE-2847_po.json' : 'DOE-2847_sif.json'}
+                        </span>
+                        <span className="ml-auto text-[9px] font-mono text-zinc-500 uppercase tracking-wide">JSON</span>
                     </div>
-
-
-                    {/* Field groups */}
-                    <div className="px-6 py-4 space-y-4">
-                        {SIF_GROUPS.map(group => (
-                            <div key={group.id}>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-1 h-3 bg-primary rounded-full" />
-                                    <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">{group.label}</p>
-                                    <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
-                                </div>
-                                <div className="rounded-lg overflow-hidden border border-zinc-100 dark:border-zinc-800">
-                                    {group.fields.map((field, i) => {
-                                        const isFieldResolved = field.fieldId ? resolvedIds.has(field.fieldId) : false
-                                        const displayValue = isFieldResolved
-                                            ? (field.fieldId && customValues[field.fieldId] ? customValues[field.fieldId] : (field.resolvedValue ?? field.value))
-                                            : field.value
-                                        const isInconsistent = field.status === 'inconsistent' && !isFieldResolved
-                                        return (
-                                        <div key={i} className={`flex items-center justify-between py-1.5 px-3 text-[11px] transition-colors duration-300 ${
-                                            i % 2 === 0 ? '' : 'bg-muted/30'
-                                        } ${isInconsistent ? '!bg-warning/10' : ''} ${isFieldResolved ? '!bg-success/5' : ''}`}>
-                                            <div className="flex items-center gap-2">
-                                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-300 ${
-                                                    isFieldResolved || field.status === 'valid' ? 'bg-success' : 'bg-warning'
-                                                }`} />
-                                                <span className="text-muted-foreground">
-                                                    {isLabor && field.name === 'Quote #' ? 'PO #' : field.name}
-                                                </span>
-                                            </div>
-                                            <span className={`font-semibold transition-colors duration-300 ${
-                                                isInconsistent ? 'text-warning' : 'text-foreground'
-                                            }`}>{isLabor && field.name === 'Quote #' ? 'DOE-2847' : displayValue}</span>
-                                        </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="mx-6 mb-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                            <div className="h-4 w-4 bg-zinc-900 dark:bg-white rounded flex items-center justify-center">
-                                <span className="text-[8px] font-extrabold text-primary">S</span>
-                            </div>
-                            <span className="text-[9px] text-zinc-400">Strata AI · OCR Extraction</span>
-                        </div>
-                        <span className="text-[9px] text-zinc-300 dark:text-zinc-600">Confidential</span>
+                    {/* JSON content */}
+                    <div className="bg-zinc-950 px-3 py-4 space-y-0">
+                        {L(1,  0, <><P>{'{'}</P></>)}
+                        {L(2,  1, <>{K('doc_type')}{P(': ')}{S(isLabor ? 'PO' : 'SIF')}{P(',')}</>)}
+                        {isLabor
+                            ? L(3, 1, <>{K('po_number')}{P(': ')}{S('DOE-2847')}{P(',')}</>)
+                            : L(3, 1, <>{K('quote')}{P(': ')}{S('Q-2026-0089')}{P(',')}</>)
+                        }
+                        {L(4,  1, <>{K('contract')}{P(': ')}{S('CoNY · City of New York')}{P(',')}</>)}
+                        {L(5,  1, <>{K('agency')}{P(': ')}{S('NYC Dept. of Education')}{P(',')}</>)}
+                        {L(6,  1, <>{K('date')}{P(': ')}{S('May 6, 2026')}{P(',')}</>)}
+                        {L(7,  1, <>{K('line_items')}{P(': [')} </>)}
+                        {L(8,  2, <><P>{'{'}</P></>)}
+                        {L(9,  3, <>{K('code')}{P(': ')}{S('HMI-FU-300')}{P(',')}</>)}
+                        {L(10, 3, <>{K('product')}{P(': ')}{S('Lateral Filing Unit 3-Drawer')}{P(',')}</>)}
+                        {L(11, 3, <>{K('qty')}{P(': ')}{N(6)}{P(',')}</>)}
+                        {L(12, 3, <>{K('unit_price')}{P(': ')}{N(1350)}{P(',')}</>)}
+                        {L(13, 3, <>{K('total')}{P(': ')}{N(8100)}</>)}
+                        {L(14, 2, <><P>{'}'}{','}</P></>)}
+                        {L(15, 2, <><P>{'{'}</P></>)}
+                        {L(16, 3, <>{K('code')}{P(': ')}{S('HMI-WS-2400')}{P(',')}</>)}
+                        {L(17, 3, <>{K('product')}{P(': ')}{S('Locale Open-Plan Workstation')}{P(',')}</>)}
+                        {L(18, 3, <>{K('qty')}{P(': ')}{N(24)}{P(',')}</>)}
+                        {L(19, 3, <>{K('unit_price')}{P(': ')}{N(6000)}{P(',')}</>)}
+                        {L(20, 3, <>{K('total')}{P(': ')}{N(144000)}</>)}
+                        {L(21, 2, <><P>{'}'}{','}</P></>)}
+                        {L(22, 2, <><P>{'{'}</P></>)}
+                        {L(23, 3, <>{K('code')}{P(': ')}{S('HMI-LS-500')}{P(',')}</>)}
+                        {L(24, 3, <>{K('product')}{P(': ')}{S('Brody WorkLounge')}{P(',')}</>)}
+                        {L(25, 3, <>{K('qty')}{P(': ')}{N(12)}{P(',')}</>)}
+                        {L(26, 3, <>{K('unit_price')}{P(': ')}{N(7000)}{P(',')}</>)}
+                        {L(27, 3, <>{K('total')}{P(': ')}{N(84000)}</>)}
+                        {L(28, 2, <><P>{'}'}</P></>)}
+                        {L(29, 1, <><P>{'],'}</P></>)}
+                        {isLabor
+                            ? L(30, 1, <>{K('po_amount')}{P(': ')}{N(235560)}{P(',')}</>)
+                            : L(30, 1, <>{K('total')}{P(': ')}{N(236100)}{P(',')}</>)
+                        }
+                        {L(31, 1, <>{K('extracted_by')}{P(': ')}{S('Strata AI · OCR')}{P(',')}</>)}
+                        {L(32, 1, <>{K('status')}{P(': ')}{S('valid')}</>)}
+                        {L(33, 0, <><P>{'}'}</P></>)}
                     </div>
                 </div>
             </div>
@@ -2243,13 +2203,20 @@ const EXTRACT_QUOTE_LINES: ExtractQuoteLine[] = [
     { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', sif: '$84,000',  net: '$84,000',  corrected: false },
 ]
 
+const EXTRACT_ZONES = [
+    { id: 'A', label: 'Zone A · Workstations ×24', qty: '24 units', chip: 'bg-info/10 text-info border-info/20',          dot: 'bg-info'    },
+    { id: 'B', label: 'Zone B · Lounge ×12',        qty: '12 units', chip: 'bg-ai/10 text-ai border-ai/20',                dot: 'bg-ai'      },
+    { id: 'C', label: 'Zone C · Filing ×6',         qty: '6 units',  chip: 'bg-success/10 text-success border-success/20', dot: 'bg-success' },
+]
+
 function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { onValidate?: () => void; onResolveChange?: (ids: Set<string>) => void; onCustomValue?: (fieldId: string, value: string) => void }) {
-    const [tab, setTab] = useState<'sif' | 'quote'>('sif')
+    const [tab, setTab] = useState<'sif' | 'quote' | 'floorplan'>('sif')
     const [quoteLines] = useState<ExtractQuoteLine[]>(EXTRACT_QUOTE_LINES)
 
     const TABS = [
-        { id: 'sif'   as const, label: 'SIF Fields' },
-        { id: 'quote' as const, label: 'Quote'       },
+        { id: 'sif'       as const, label: 'SIF Fields' },
+        { id: 'quote'     as const, label: 'Quote'       },
+        { id: 'floorplan' as const, label: 'Floor Plan'  },
     ]
 
     const SIF_GROUPS_DISPLAY = [
@@ -2348,6 +2315,30 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                 </div>
             )}
 
+
+            {tab === 'floorplan' && (
+                <div className="flex flex-col h-full min-h-0">
+                    <div className="bg-background px-5 py-3 border-b border-border shrink-0">
+                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">Floor Plan</h4>
+                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">30 Court St · Brooklyn · Floor 12</p>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                        <FloorPlanSVG />
+                        <div className="space-y-2">
+                            {EXTRACT_ZONES.map(zone => (
+                                <div key={zone.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${zone.chip}`}>
+                                    <span className={`h-2 w-2 rounded-full shrink-0 ${zone.dot}`} />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[11px] font-semibold">{zone.label}</p>
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold">{zone.qty}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+                    </div>
+                </div>
+            )}
 
             {/* Shared footer — always visible */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
