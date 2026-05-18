@@ -201,91 +201,91 @@ function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?
 
 function SIFDocumentPreview({ step }: { resolvedIds?: Set<string>; step?: BFIReviewStep; customValues?: Record<string, string> }) {
     const isLabor = step === 'labor' || step === 'cpr' || step === 'fee'
-    // fk = field key (sky), sv = string value (emerald), nv = numeric value (amber), eq = equals sign
-    const fk  = (s: string) => <span className="text-sky-400">{s}</span>
-    const sv  = (s: string) => <span className="text-emerald-300">{s}</span>
-    const nv  = (s: string) => <span className="text-amber-400">{s}</span>
-    const eq  = () => <span className="text-zinc-600">=</span>
-    const R = (n: number, field: string, val: string, num = false) => (
-        <div className="flex gap-2.5 leading-[1.7]">
-            <span className="text-zinc-600 select-none w-6 text-right shrink-0 font-mono text-[10px] mt-px">{n}</span>
-            <span className="font-mono text-[11px]">{fk(field)}{eq()}{num ? nv(val) : sv(val)}</span>
+    const Row = ({ field, val, num }: { field: string; val: string; num?: boolean }) => (
+        <div className="flex font-mono text-[11px] leading-[1.75]">
+            <span className="text-muted-foreground w-8 shrink-0">{field}</span>
+            <span className="text-muted-foreground/60 shrink-0">=</span>
+            <span className={num ? 'text-foreground font-medium' : 'text-foreground'}>{val}</span>
         </div>
     )
-    const B = () => <div className="h-3" />
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
-                <div className="rounded-xl overflow-hidden shadow-lg">
-                    {/* Editor title bar */}
-                    <div className="flex items-center gap-1.5 px-3 py-2 bg-zinc-800">
-                        <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
-                        <span className="ml-2 text-[10px] font-mono text-zinc-400">
+                <div className="bg-white dark:bg-zinc-900 rounded-xl shadow border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                    {/* Document header */}
+                    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-[11px] font-mono text-foreground font-medium">
                             {isLabor ? 'DOE-2847.po' : 'DOE-2847.sif'}
                         </span>
-                        <span className="ml-auto text-[9px] font-mono text-zinc-500 uppercase tracking-wide">SIF</span>
+                        <span className="ml-auto text-[9px] font-mono text-muted-foreground uppercase tracking-widest">SIF</span>
                     </div>
                     {/* SIF content */}
-                    <div className="bg-zinc-950 px-3 py-4">
-                        {R(1,  'SF', isLabor ? 'S:\\PO\\doe-2847-purchase-order.pdf' : 'S:\\Quotes\\doe-2847-q-2026-0089.pdf')}
-                        {R(2,  'ST', 'Special T')}
-                        {R(3,  'H2', 'CoNY')}
-                        <B />
-                        {R(4,  'PN', 'HMI-FU-300')}
-                        {R(5,  'PD', 'Lateral Filing Unit 3-Drawer')}
-                        {R(6,  'MC', '')}
-                        {R(7,  'QT', '6.00', true)}
-                        {R(8,  'PL', '8100.00', true)}
-                        {R(9,  'PS', '0.00', true)}
-                        {R(10, 'BP', '1350.00', true)}
-                        {R(11, 'WT', '0', true)}
-                        {R(12, 'S-', '  0.000', true)}
-                        {R(13, 'P%', '  0.000', true)}
-                        {R(14, 'ON', 'FINISH')}
-                        {R(15, 'OD', 'Studio White')}
-                        {R(16, 'ON', 'HANDLE')}
-                        {R(17, 'OD', 'Chrome Pull')}
-                        {R(18, 'UNC', '56110000', true)}
-                        {R(19, 'UND', 'Furniture and Furnishings')}
-                        {R(20, 'UNM', 'N')}
-                        <B />
-                        {R(21, 'PN', 'HMI-WS-2400')}
-                        {R(22, 'PD', 'Locale Open-Plan Workstation')}
-                        {R(23, 'MC', '')}
-                        {R(24, 'QT', '24.00', true)}
-                        {R(25, 'PL', '144000.00', true)}
-                        {R(26, 'PS', '0.00', true)}
-                        {R(27, 'BP', '6000.00', true)}
-                        {R(28, 'WT', '0', true)}
-                        {R(29, 'S-', '  0.000', true)}
-                        {R(30, 'P%', '  0.000', true)}
-                        {R(31, 'ON', 'PANEL')}
-                        {R(32, 'OD', 'Glass')}
-                        {R(33, 'ON', 'FINISH')}
-                        {R(34, 'OD', 'Studio White')}
-                        {R(35, 'UNC', '56110000', true)}
-                        {R(36, 'UND', 'Furniture and Furnishings')}
-                        {R(37, 'UNM', 'N')}
-                        <B />
-                        {R(38, 'PN', 'HMI-LS-500')}
-                        {R(39, 'PD', 'Brody WorkLounge')}
-                        {R(40, 'MC', '')}
-                        {R(41, 'QT', '12.00', true)}
-                        {R(42, 'PL', '84000.00', true)}
-                        {R(43, 'PS', '0.00', true)}
-                        {R(44, 'BP', '7000.00', true)}
-                        {R(45, 'WT', '0', true)}
-                        {R(46, 'S-', '  0.000', true)}
-                        {R(47, 'P%', '  0.000', true)}
-                        {R(48, 'ON', 'FABRIC')}
-                        {R(49, 'OD', 'Momentum Keylargo')}
-                        {R(50, 'ON', 'FINISH')}
-                        {R(51, 'OD', 'Graphite')}
-                        {R(52, 'UNC', '56110000', true)}
-                        {R(53, 'UND', 'Furniture and Furnishings')}
-                        {R(54, 'UNM', 'N')}
+                    <div className="px-5 py-4 space-y-0">
+                        <Row field="SF" val={isLabor ? 'S:\\PO\\doe-2847-purchase-order.pdf' : 'S:\\Quotes\\doe-2847-q-2026-0089.pdf'} />
+                        <Row field="ST" val="Special T" />
+                        <Row field="H2" val="CoNY" />
+                        <div className="h-3" />
+                        <Row field="PN" val="HMI-FU-300" />
+                        <Row field="PD" val="Lateral Filing Unit 3-Drawer" />
+                        <Row field="MC" val="" />
+                        <Row field="QT" val="6.00" num />
+                        <Row field="PL" val="8100.00" num />
+                        <Row field="PS" val="0.00" num />
+                        <Row field="BP" val="1350.00" num />
+                        <Row field="WT" val="0" num />
+                        <Row field="S-" val="  0.000" num />
+                        <Row field="P%" val="  0.000" num />
+                        <Row field="ON" val="FINISH" />
+                        <Row field="OD" val="Studio White" />
+                        <Row field="ON" val="HANDLE" />
+                        <Row field="OD" val="Chrome Pull" />
+                        <Row field="UNC" val="56110000" num />
+                        <Row field="UND" val="Furniture and Furnishings" />
+                        <Row field="UNM" val="N" />
+                        <div className="h-3" />
+                        <Row field="PN" val="HMI-WS-2400" />
+                        <Row field="PD" val="Locale Open-Plan Workstation" />
+                        <Row field="MC" val="" />
+                        <Row field="QT" val="24.00" num />
+                        <Row field="PL" val="144000.00" num />
+                        <Row field="PS" val="0.00" num />
+                        <Row field="BP" val="6000.00" num />
+                        <Row field="WT" val="0" num />
+                        <Row field="S-" val="  0.000" num />
+                        <Row field="P%" val="  0.000" num />
+                        <Row field="ON" val="PANEL" />
+                        <Row field="OD" val="Glass" />
+                        <Row field="ON" val="FINISH" />
+                        <Row field="OD" val="Studio White" />
+                        <Row field="UNC" val="56110000" num />
+                        <Row field="UND" val="Furniture and Furnishings" />
+                        <Row field="UNM" val="N" />
+                        <div className="h-3" />
+                        <Row field="PN" val="HMI-LS-500" />
+                        <Row field="PD" val="Brody WorkLounge" />
+                        <Row field="MC" val="" />
+                        <Row field="QT" val="12.00" num />
+                        <Row field="PL" val="84000.00" num />
+                        <Row field="PS" val="0.00" num />
+                        <Row field="BP" val="7000.00" num />
+                        <Row field="WT" val="0" num />
+                        <Row field="S-" val="  0.000" num />
+                        <Row field="P%" val="  0.000" num />
+                        <Row field="ON" val="FABRIC" />
+                        <Row field="OD" val="Momentum Keylargo" />
+                        <Row field="ON" val="FINISH" />
+                        <Row field="OD" val="Graphite" />
+                        <Row field="UNC" val="56110000" num />
+                        <Row field="UND" val="Furniture and Furnishings" />
+                        <Row field="UNM" val="N" />
+                    </div>
+                    {/* Footer */}
+                    <div className="px-5 py-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-1.5">
+                        <div className="h-3.5 w-3.5 bg-zinc-900 dark:bg-white rounded flex items-center justify-center">
+                            <span className="text-[7px] font-extrabold text-primary">S</span>
+                        </div>
+                        <span className="text-[9px] text-muted-foreground">Strata AI · OCR Extraction</span>
                     </div>
                 </div>
             </div>
