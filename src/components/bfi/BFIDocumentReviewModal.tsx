@@ -201,16 +201,18 @@ function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?
 
 function SIFDocumentPreview({ step }: { resolvedIds?: Set<string>; step?: BFIReviewStep; customValues?: Record<string, string> }) {
     const isLabor = step === 'labor' || step === 'cpr' || step === 'fee'
-    const K = (s: string) => <span className="text-sky-400">"{s}"</span>
-    const S = (s: string) => <span className="text-emerald-400">"{s}"</span>
-    const N = (n: number) => <span className="text-amber-400">{n}</span>
-    const P = (s: string) => <span className="text-zinc-500">{s}</span>
-    const L = (n: number, pd: number, content: JSX.Element) => (
-        <div key={n} className="flex gap-2.5 leading-[1.6]">
-            <span className="text-zinc-600 select-none w-5 text-right shrink-0 font-mono text-[10px] mt-px">{n}</span>
-            <span className="font-mono text-[11px]" style={{ paddingLeft: pd * 14 }}>{content}</span>
+    // fk = field key (sky), sv = string value (emerald), nv = numeric value (amber), eq = equals sign
+    const fk  = (s: string) => <span className="text-sky-400">{s}</span>
+    const sv  = (s: string) => <span className="text-emerald-300">{s}</span>
+    const nv  = (s: string) => <span className="text-amber-400">{s}</span>
+    const eq  = () => <span className="text-zinc-600">=</span>
+    const R = (n: number, field: string, val: string, num = false) => (
+        <div className="flex gap-2.5 leading-[1.7]">
+            <span className="text-zinc-600 select-none w-6 text-right shrink-0 font-mono text-[10px] mt-px">{n}</span>
+            <span className="font-mono text-[11px]">{fk(field)}{eq()}{num ? nv(val) : sv(val)}</span>
         </div>
     )
+    const B = () => <div className="h-3" />
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
@@ -221,51 +223,69 @@ function SIFDocumentPreview({ step }: { resolvedIds?: Set<string>; step?: BFIRev
                         <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
                         <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
                         <span className="ml-2 text-[10px] font-mono text-zinc-400">
-                            {isLabor ? 'DOE-2847_po.json' : 'DOE-2847_sif.json'}
+                            {isLabor ? 'DOE-2847.po' : 'DOE-2847.sif'}
                         </span>
-                        <span className="ml-auto text-[9px] font-mono text-zinc-500 uppercase tracking-wide">JSON</span>
+                        <span className="ml-auto text-[9px] font-mono text-zinc-500 uppercase tracking-wide">SIF</span>
                     </div>
-                    {/* JSON content */}
-                    <div className="bg-zinc-950 px-3 py-4 space-y-0">
-                        {L(1,  0, <>{P('{')}</>)}
-                        {L(2,  1, <>{K('doc_type')}{P(': ')}{S(isLabor ? 'PO' : 'SIF')}{P(',')}</>)}
-                        {isLabor
-                            ? L(3, 1, <>{K('po_number')}{P(': ')}{S('DOE-2847')}{P(',')}</>)
-                            : L(3, 1, <>{K('quote')}{P(': ')}{S('Q-2026-0089')}{P(',')}</>)
-                        }
-                        {L(4,  1, <>{K('contract')}{P(': ')}{S('CoNY · City of New York')}{P(',')}</>)}
-                        {L(5,  1, <>{K('agency')}{P(': ')}{S('NYC Dept. of Education')}{P(',')}</>)}
-                        {L(6,  1, <>{K('date')}{P(': ')}{S('May 6, 2026')}{P(',')}</>)}
-                        {L(7,  1, <>{K('line_items')}{P(': [')}</>)}
-                        {L(8,  2, <>{P('{')}</>)}
-                        {L(9,  3, <>{K('code')}{P(': ')}{S('HMI-FU-300')}{P(',')}</>)}
-                        {L(10, 3, <>{K('product')}{P(': ')}{S('Lateral Filing Unit 3-Drawer')}{P(',')}</>)}
-                        {L(11, 3, <>{K('qty')}{P(': ')}{N(6)}{P(',')}</>)}
-                        {L(12, 3, <>{K('unit_price')}{P(': ')}{N(1350)}{P(',')}</>)}
-                        {L(13, 3, <>{K('total')}{P(': ')}{N(8100)}</>)}
-                        {L(14, 2, <>{P('},')} </>)}
-                        {L(15, 2, <>{P('{')}</>)}
-                        {L(16, 3, <>{K('code')}{P(': ')}{S('HMI-WS-2400')}{P(',')}</>)}
-                        {L(17, 3, <>{K('product')}{P(': ')}{S('Locale Open-Plan Workstation')}{P(',')}</>)}
-                        {L(18, 3, <>{K('qty')}{P(': ')}{N(24)}{P(',')}</>)}
-                        {L(19, 3, <>{K('unit_price')}{P(': ')}{N(6000)}{P(',')}</>)}
-                        {L(20, 3, <>{K('total')}{P(': ')}{N(144000)}</>)}
-                        {L(21, 2, <>{P('},')} </>)}
-                        {L(22, 2, <>{P('{')}</>)}
-                        {L(23, 3, <>{K('code')}{P(': ')}{S('HMI-LS-500')}{P(',')}</>)}
-                        {L(24, 3, <>{K('product')}{P(': ')}{S('Brody WorkLounge')}{P(',')}</>)}
-                        {L(25, 3, <>{K('qty')}{P(': ')}{N(12)}{P(',')}</>)}
-                        {L(26, 3, <>{K('unit_price')}{P(': ')}{N(7000)}{P(',')}</>)}
-                        {L(27, 3, <>{K('total')}{P(': ')}{N(84000)}</>)}
-                        {L(28, 2, <>{P('}')}</>)}
-                        {L(29, 1, <>{P('],')}</>)}
-                        {isLabor
-                            ? L(30, 1, <>{K('po_amount')}{P(': ')}{N(235560)}{P(',')}</>)
-                            : L(30, 1, <>{K('total')}{P(': ')}{N(236100)}{P(',')}</>)
-                        }
-                        {L(31, 1, <>{K('extracted_by')}{P(': ')}{S('Strata AI · OCR')}{P(',')}</>)}
-                        {L(32, 1, <>{K('status')}{P(': ')}{S('valid')}</>)}
-                        {L(33, 0, <>{P('}')}</>)}
+                    {/* SIF content */}
+                    <div className="bg-zinc-950 px-3 py-4">
+                        {R(1,  'SF', isLabor ? 'S:\\PO\\doe-2847-purchase-order.pdf' : 'S:\\Quotes\\doe-2847-q-2026-0089.pdf')}
+                        {R(2,  'ST', 'Special T')}
+                        {R(3,  'H2', 'CoNY')}
+                        <B />
+                        {R(4,  'PN', 'HMI-FU-300')}
+                        {R(5,  'PD', 'Lateral Filing Unit 3-Drawer')}
+                        {R(6,  'MC', '')}
+                        {R(7,  'QT', '6.00', true)}
+                        {R(8,  'PL', '8100.00', true)}
+                        {R(9,  'PS', '0.00', true)}
+                        {R(10, 'BP', '1350.00', true)}
+                        {R(11, 'WT', '0', true)}
+                        {R(12, 'S-', '  0.000', true)}
+                        {R(13, 'P%', '  0.000', true)}
+                        {R(14, 'ON', 'FINISH')}
+                        {R(15, 'OD', 'Studio White')}
+                        {R(16, 'ON', 'HANDLE')}
+                        {R(17, 'OD', 'Chrome Pull')}
+                        {R(18, 'UNC', '56110000', true)}
+                        {R(19, 'UND', 'Furniture and Furnishings')}
+                        {R(20, 'UNM', 'N')}
+                        <B />
+                        {R(21, 'PN', 'HMI-WS-2400')}
+                        {R(22, 'PD', 'Locale Open-Plan Workstation')}
+                        {R(23, 'MC', '')}
+                        {R(24, 'QT', '24.00', true)}
+                        {R(25, 'PL', '144000.00', true)}
+                        {R(26, 'PS', '0.00', true)}
+                        {R(27, 'BP', '6000.00', true)}
+                        {R(28, 'WT', '0', true)}
+                        {R(29, 'S-', '  0.000', true)}
+                        {R(30, 'P%', '  0.000', true)}
+                        {R(31, 'ON', 'PANEL')}
+                        {R(32, 'OD', 'Glass')}
+                        {R(33, 'ON', 'FINISH')}
+                        {R(34, 'OD', 'Studio White')}
+                        {R(35, 'UNC', '56110000', true)}
+                        {R(36, 'UND', 'Furniture and Furnishings')}
+                        {R(37, 'UNM', 'N')}
+                        <B />
+                        {R(38, 'PN', 'HMI-LS-500')}
+                        {R(39, 'PD', 'Brody WorkLounge')}
+                        {R(40, 'MC', '')}
+                        {R(41, 'QT', '12.00', true)}
+                        {R(42, 'PL', '84000.00', true)}
+                        {R(43, 'PS', '0.00', true)}
+                        {R(44, 'BP', '7000.00', true)}
+                        {R(45, 'WT', '0', true)}
+                        {R(46, 'S-', '  0.000', true)}
+                        {R(47, 'P%', '  0.000', true)}
+                        {R(48, 'ON', 'FABRIC')}
+                        {R(49, 'OD', 'Momentum Keylargo')}
+                        {R(50, 'ON', 'FINISH')}
+                        {R(51, 'OD', 'Graphite')}
+                        {R(52, 'UNC', '56110000', true)}
+                        {R(53, 'UND', 'Furniture and Furnishings')}
+                        {R(54, 'UNM', 'N')}
                     </div>
                 </div>
             </div>
