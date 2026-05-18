@@ -2243,20 +2243,13 @@ const EXTRACT_QUOTE_LINES: ExtractQuoteLine[] = [
     { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', sif: '$84,000',  net: '$84,000',  corrected: false },
 ]
 
-const EXTRACT_ZONES = [
-    { id: 'A', label: 'Zone A · Workstations ×24', qty: '24 units', chip: 'bg-info/10 text-info border-info/20',             dot: 'bg-info'    },
-    { id: 'B', label: 'Zone B · Lounge ×12',        qty: '12 units', chip: 'bg-ai/10 text-ai border-ai/20',                   dot: 'bg-ai'      },
-    { id: 'C', label: 'Zone C · Filing ×6',         qty: '6 units',  chip: 'bg-success/10 text-success border-success/20',    dot: 'bg-success' },
-]
-
 function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { onValidate?: () => void; onResolveChange?: (ids: Set<string>) => void; onCustomValue?: (fieldId: string, value: string) => void }) {
-    const [tab, setTab] = useState<'sif' | 'quote' | 'zones'>('sif')
+    const [tab, setTab] = useState<'sif' | 'quote'>('sif')
     const [quoteLines] = useState<ExtractQuoteLine[]>(EXTRACT_QUOTE_LINES)
 
     const TABS = [
-        { id: 'sif'   as const, label: 'SIF Fields'   },
-        { id: 'quote' as const, label: 'Quote'         },
-        { id: 'zones' as const, label: 'Zones'         },
+        { id: 'sif'   as const, label: 'SIF Fields' },
+        { id: 'quote' as const, label: 'Quote'       },
     ]
 
     const SIF_GROUPS_DISPLAY = [
@@ -2355,43 +2348,6 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                 </div>
             )}
 
-            {tab === 'zones' && (
-                <div className="flex flex-col h-full min-h-0">
-                    <div className="bg-background px-5 py-3 border-b border-border shrink-0">
-                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">FLOOR PLAN ZONES</h4>
-                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">30 Court St · Brooklyn · Floor 12</p>
-                    </div>
-                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                        <FloorPlanSVG />
-                        <div className="space-y-2">
-                            {EXTRACT_ZONES.map(zone => (
-                                <div key={zone.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${zone.chip}`}>
-                                    <span className={`h-2 w-2 rounded-full shrink-0 ${zone.dot}`} />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[11px] font-semibold">{zone.label}</p>
-                                    </div>
-                                    <span className="text-[10px] font-mono font-bold">{zone.qty}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-1.5">
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Install Details</p>
-                            {[
-                                { label: 'Window',    value: 'May 14–21, 2026'       },
-                                { label: 'Crew',      value: '3 technicians'         },
-                                { label: 'Carpenters', value: '45h (reconciled)'     },
-                                { label: 'Location',  value: '30 Court St, Brooklyn' },
-                            ].map(r => (
-                                <div key={r.label} className="flex gap-2 text-[10px]">
-                                    <span className="text-muted-foreground w-20 shrink-0">{r.label}</span>
-                                    <span className="font-semibold text-foreground">{r.value}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
-                    </div>
-                </div>
-            )}
 
             {/* Shared footer — always visible */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
