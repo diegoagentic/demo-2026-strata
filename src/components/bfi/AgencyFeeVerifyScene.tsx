@@ -69,7 +69,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 activeCol={kanbanCol}
                 showDoe={true}
                 doeSubtitle={kanbanCol === 3
-                    ? 'OmniQuote invoice attached · fee verification pending'
+                    ? 'Quote Tool invoice attached · fee verification pending'
                     : (scenario === 'match' ? 'Agency fee verified · Patricia Hayes' : 'Fee gap · −$315 · Flag pending')
                 }
                 onReviewDoe={!verified ? handleOpenModal : undefined}

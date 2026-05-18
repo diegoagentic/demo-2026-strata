@@ -17,7 +17,7 @@ interface OrderTrackerSceneProps {
 
 const TRACKER_ROWS = [
     { system: 'CORE',       status: 'PO received · order entered', icon: 'check',   date: 'May 2, 2026'  },
-    { system: 'OmniQuote',  status: 'EDI acknowledged · order confirmed', icon: 'check',   date: 'May 2, 2026'  },
+    { system: 'Quote Tool', status: 'EDI acknowledged · order confirmed', icon: 'check',   date: 'May 2, 2026'  },
     { system: 'R Drive',    status: 'Tracking sheet updated · delivery May 14', icon: 'check',   date: 'May 3, 2026'  },
     { system: 'WIG',        status: 'Order in transit · receiving not started', icon: 'clock',   date: 'Pending'      },
 ]
@@ -69,7 +69,7 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">Order Tracker · DOE-2847</div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Strata consolidated CORE, OmniQuote, and the R Drive tracking sheet into a single live view.
+                        Strata consolidated CORE, Quote Tool, and the R Drive tracking sheet into a single live view.
                     </div>
                 </div>
             </div>

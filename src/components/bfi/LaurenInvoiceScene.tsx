@@ -1,6 +1,6 @@
 /**
  * COMPONENT: LaurenInvoiceScene (a1.3c)
- * PURPOSE: Lauren uploads the OmniQuote approved invoice to the CPR attachments.
+ * PURPOSE: Lauren uploads the Quote Tool approved invoice to the CPR attachments.
  *          Strata AI detects it's the approved invoice → prominent detection banner.
  *          Lauren forwards it to Patricia (Finance/AR) to initiate fee verification.
  *

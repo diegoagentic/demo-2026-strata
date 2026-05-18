@@ -4,7 +4,7 @@
  * for the BFI Agency Fee demo (DOE-2847 / Q-2026-0089).
  *
  * Left panel (3/5): Tabs — SIF document preview | Floor Plan
- * Right panel (2/5): Field review with OVNIQ-based discrepancy resolution
+ * Right panel (2/5): Field review with Quote Tool-based discrepancy resolution
  *
  * step prop controls which fields and funnel position are shown.
  */
@@ -453,7 +453,7 @@ const FIELDS_LABOR: ReviewField[] = [
     { id: 'lh2', name: 'Contract',   category: 'header', extractedValue: 'CoNY · City of New York', status: 'valid' },
     { id: 'lh3', name: 'Agency',     category: 'header', extractedValue: 'NYC Dept. of Education',  status: 'valid' },
     { id: 'lh4', name: 'PO Date',    category: 'header', extractedValue: 'May 6, 2026',             status: 'valid' },
-    // ── Labor (from SIF) — already reconciled in Quote step, show corrected OmniQuote values
+    // ── Labor (from SIF) — already reconciled in Quote step, show corrected Quote Tool values
     { id: 'f1', name: 'Carpenters labor', category: 'labor', extractedValue: '45h', status: 'valid' },
     { id: 'f2', name: 'Overtime labor',   category: 'labor', extractedValue: '6h',  status: 'valid' },
     { id: 'l3', name: 'Teamsters',            category: 'labor', extractedValue: '24h', status: 'valid' },
@@ -468,13 +468,13 @@ const FIELDS_CPR: ReviewField[] = [
         id: 'c1', name: 'Carpenters (CPR)', category: 'labor',
         extractedValue: '45h', expectedValue: '50h', ovniqSuggestion: '45h',
         status: 'inconsistent',
-        reason: 'CPR muestra 45h reales vs 50h citados. OmniQuote confirma 45h — aceptar CPR.',
+        reason: 'CPR muestra 45h reales vs 50h citados. Quote Tool confirma 45h — aceptar CPR.',
     },
     {
         id: 'c2', name: 'OT Carpenters (CPR)', category: 'labor',
         extractedValue: '6h', expectedValue: '8h', ovniqSuggestion: '6h',
         status: 'inconsistent',
-        reason: 'CPR muestra 6h OT vs 8h citados. OmniQuote confirma 6h — aceptar CPR.',
+        reason: 'CPR muestra 6h OT vs 8h citados. Quote Tool confirma 6h — aceptar CPR.',
     },
     { id: 'c3', name: 'Equipment rental', category: 'items',    extractedValue: '$1,200', status: 'valid' },
     { id: 'c4', name: 'Delivery (actual)', category: 'logistics', extractedValue: 'May 15, 2026', status: 'valid' },
@@ -525,13 +525,13 @@ const CATEGORY_COLORS: Record<string, string> = {
 const PATRICIA_MESSAGE =
 `Hi Patricia,
 
-The OmniQuote approved invoice for DOE-2847 (NYC Dept. of Education) has been received and attached.
+The Quote Tool approved invoice for DOE-2847 (NYC Dept. of Education) has been received and attached.
 
 Invoice details:
   · Vendor: Herman Miller
   · Order: Q-2026-0089
   · Amount: $6,920 (CPR reconciliation approved)
-  · OmniQuote status: Approved · May 6, 2026
+  · Quote Tool status: Approved · May 6, 2026
 
 Please proceed with agency fee verification at your earliest convenience.
 
@@ -553,7 +553,7 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
         { label: 'From', editable: true },
         { label: 'To',   value: 'patricia.hayes@bfifurniture.com · Finance / AR' },
         { label: 'CC',   value: 'michael.chen@bfifurniture.com', muted: true },
-        { label: 'Subj', value: 'OmniQuote Approved Invoice · DOE-2847 · Fee Verification' },
+        { label: 'Subj', value: 'Quote Tool Approved Invoice · DOE-2847 · Fee Verification' },
     ]
 
     return (
@@ -578,7 +578,7 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[13px] font-bold text-foreground">Fee Verification · DOE-2847</p>
-                                    <p className="text-[10px] text-muted-foreground">OmniQuote invoice attached · Strata AI</p>
+                                    <p className="text-[10px] text-muted-foreground">Quote Tool invoice attached · Strata AI</p>
                                 </div>
                                 <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                             </div>
@@ -588,7 +588,7 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                 <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-success/30 bg-success/5">
                                     <Paperclip className="h-3.5 w-3.5 text-success shrink-0" />
                                     <span className="text-[11px] font-semibold text-foreground flex-1">invoice-OQ-DOE2847.pdf</span>
-                                    <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded">OmniQuote Approved</span>
+                                    <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded">Quote Tool Approved</span>
                                     <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
                                 </div>
 
@@ -721,14 +721,14 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
                                 className="w-full border-2 border-dashed border-ai/30 rounded-2xl p-5 flex flex-col items-center gap-2 hover:border-ai/60 hover:bg-ai/5 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-500"
                             >
                                 <Upload className="h-6 w-6 text-ai/60 group-hover:text-ai transition-colors" />
-                                <p className="text-[12px] font-bold text-foreground">OmniQuote Approved Invoice</p>
-                                <p className="text-[10px] text-muted-foreground">Attach the OmniQuote invoice PDF for Purchase Order DOE-2847</p>
+                                <p className="text-[12px] font-bold text-foreground">Quote Tool Approved Invoice</p>
+                                <p className="text-[10px] text-muted-foreground">Attach the Quote Tool invoice PDF for Purchase Order DOE-2847</p>
                                 <p className="text-[9px] text-muted-foreground/60">Accepted: PDF · Max 10MB</p>
                             </button>
                         ) : (
                             <div className="w-full border-2 border-dashed border-border/40 rounded-2xl p-5 flex flex-col items-center gap-2 opacity-40 cursor-not-allowed bg-muted/10">
                                 <Upload className="h-6 w-6 text-muted-foreground" />
-                                <p className="text-[12px] font-bold text-muted-foreground">OmniQuote Invoice Upload</p>
+                                <p className="text-[12px] font-bold text-muted-foreground">Quote Tool Invoice Upload</p>
                                 <p className="text-[10px] text-muted-foreground">Available after manager approval</p>
                             </div>
                         )
@@ -738,7 +738,7 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
                             <div className="rounded-2xl border border-border bg-card px-4 py-4 space-y-3">
                                 <div className="flex items-center gap-2">
                                     <Loader2 className="h-3.5 w-3.5 text-ai animate-spin shrink-0" />
-                                    <span className="text-[11px] font-bold text-foreground">Uploading OmniQuote invoice…</span>
+                                    <span className="text-[11px] font-bold text-foreground">Uploading Quote Tool invoice…</span>
                                     <span className="ml-auto text-[10px] font-mono text-muted-foreground">{progress}%</span>
                                 </div>
                                 <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -760,7 +760,7 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
                                 {/* Detection detail */}
                                 <div className="bg-white dark:bg-zinc-900 rounded-xl border border-ai/20 px-3 py-3 space-y-1.5">
                                     {[
-                                        ['Document type', 'OmniQuote Invoice · APPROVED'],
+                                        ['Document type', 'Quote Tool Invoice · APPROVED'],
                                         ['Purchase Order', 'DOE-2847 · NYC Dept. of Education'],
                                         ['Vendor',        'Herman Miller'],
                                         ['Amount',        '$6,920 · Matches CPR reconciliation ✓'],
@@ -1343,7 +1343,7 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
                                         </div>
                                     ))}
                                     <textarea
-                                        defaultValue={`Hi Lauren,\n\nReturning DOE-2847 for review before I sign off on the final quote.\n\nPlease double-check the adjusted labor hours against the OmniQuote invoice and confirm before I forward to the client.\n\n— Michael C.\n  BFI Furniture · Account Manager`}
+                                        defaultValue={`Hi Lauren,\n\nReturning DOE-2847 for review before I sign off on the final quote.\n\nPlease double-check the adjusted labor hours against the Quote Tool invoice and confirm before I forward to the client.\n\n— Michael C.\n  BFI Furniture · Account Manager`}
                                         rows={7}
                                         className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     />
@@ -2138,20 +2138,20 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
                     <div>
                         <p className="text-[13px] font-bold text-success">All fields validated</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                            PO, pricing, and labor figures are reconciled with OmniQuote. Ready to update CORE and notify stakeholders.
+                            PO, pricing, and labor figures are reconciled with Quote Tool. Ready to update CORE and notify stakeholders.
                         </p>
                     </div>
                 </div>
 
-                {/* OmniQuote Validated — pricing from paso 1.4, editable */}
+                {/* Quote Tool Validated — pricing from paso 1.4, editable */}
                 <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">PO DOE-2847 · OmniQuote Validated</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">PO DOE-2847 · Quote Tool Validated</p>
                     <div className="rounded-xl border border-border overflow-hidden">
                         {/* Column headers */}
                         <div className="grid grid-cols-[1fr_5rem_5.5rem_2rem] px-4 py-2 bg-muted/40 border-b border-border">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Product</span>
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">SIF Price</span>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">OmniQuote</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide text-right">Quote Tool</span>
                             <span />
                         </div>
                         {ovniqLines.map((line, i) => {
@@ -2172,7 +2172,7 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-[9px] text-muted-foreground uppercase tracking-wide font-bold">OmniQuote</label>
+                                            <label className="text-[9px] text-muted-foreground uppercase tracking-wide font-bold">Quote Tool</label>
                                             <input
                                                 value={ovniqEditVals.ovniq}
                                                 onChange={e => setOvniqEditVals(v => ({ ...v, ovniq: e.target.value }))}
@@ -2463,7 +2463,7 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                 <div className="flex flex-col h-full min-h-0">
                     <div className="bg-background px-5 py-3 border-b border-border shrink-0">
                         <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">QUOTE REVIEW</h4>
-                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">Q-2026-0089 · OmniQuote validated</p>
+                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">Q-2026-0089 · Quote Tool validated</p>
                     </div>
                     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
                         {/* Column headers */}
@@ -2612,9 +2612,9 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
         })
     }
 
-    const resolveLabel = step === 'fee' ? 'APPLY CORRECTION' : 'APPLY OmniQuote'
+    const resolveLabel = step === 'fee' ? 'APPLY CORRECTION' : 'APPLY QUOTE TOOL'
     const actionLabel  = step === 'cpr' ? 'Accept CPR'    :
-                         step === 'fee' ? 'Confirm value'  : 'Accept OmniQuote'
+                         step === 'fee' ? 'Confirm value'  : 'Accept Quote Tool'
     const altLabel     = step === 'cpr' ? 'Edit'           :
                          step === 'fee' ? 'Flag gap'       : 'Keep SIF'
 
@@ -2622,13 +2622,13 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
         extract:     'SIF EXTRACTION',
         labor:       'PO & LABOR REVIEW',
         'val-sif':   'SIF VALIDATION',
-        'val-ovniq': 'OMNIQUOTE VALIDATION',
+        'val-ovniq': 'QUOTE TOOL VALIDATION',
     }
     const PANEL_SUBTITLE: Partial<Record<BFIReviewStep, string>> = {
         extract:     'DOE-2847 · Validate extracted SIF fields',
-        labor:       'DOE-2847 · Validate PO & labor figures vs OmniQuote',
+        labor:       'DOE-2847 · Validate PO & labor figures vs Quote Tool',
         'val-sif':   'DOE-2847 · SIF field validation',
-        'val-ovniq': 'DOE-2847 · OmniQuote vs CoNY contract',
+        'val-ovniq': 'DOE-2847 · Quote Tool vs CoNY contract',
     }
     const VALIDATE_LABEL: Partial<Record<BFIReviewStep, string>> = {
         extract: 'Validate Extraction →',
@@ -2745,7 +2745,7 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
                                             </span>
                                             <span className="text-[12px] font-bold text-foreground truncate">{field.name}</span>
                                             {field.status === 'inconsistent' && !isResolved && (
-                                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-warning text-white uppercase tracking-tighter shrink-0">OmniQuote</span>
+                                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-warning text-white uppercase tracking-tighter shrink-0">Quote Tool</span>
                                             )}
                                             {isResolved && (
                                                 <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-success text-white uppercase tracking-tighter shrink-0">RESOLVED</span>
@@ -2850,7 +2850,7 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
 
                                         {field.ovniqSuggestion && manualEditId !== field.id && (
                                             <div className="space-y-1.5">
-                                                <p className="text-[12px] font-semibold text-foreground">OmniQuote suggests</p>
+                                                <p className="text-[12px] font-semibold text-foreground">Quote Tool suggests</p>
                                                 <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2">
                                                     <span className="text-[13px] font-mono font-bold text-warning">{field.ovniqSuggestion}</span>
                                                 </div>
@@ -2986,7 +2986,7 @@ export default function BFIDocumentReviewModal({
         extract:     'Extracting fields',
         quote:       'Quote Tool Validation',
         'val-sif':   'Validating SIF',
-        'val-ovniq': 'Validating OmniQuote',
+        'val-ovniq': 'Validating Quote Tool',
         labor:       'PO & Labor Review',
         cpr:         'CPR Reconciliation',
         fee:         'Agency Fee Verification',
@@ -3060,7 +3060,7 @@ export default function BFIDocumentReviewModal({
                                                         : <><span className="font-bold">Agency fee</span> verified · MK Invoice matches T-code calculation</>
                                                     : step === 'labor'
                                                         ? <><span className="font-bold">Strata AI</span> · Purchase Order received · DOE-2847 · confirm receipt</>
-                                                        : <><span className="font-bold">OmniQuote</span> detectó cambios en el contrato CoNY · T-codes actualizados · 2 discrepancias a resolver</>
+                                                        : <><span className="font-bold">Quote Tool</span> detectó cambios en el contrato CoNY · T-codes actualizados · 2 discrepancias a resolver</>
                                         }
                                     </p>
                                 </div>

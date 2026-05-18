@@ -106,7 +106,7 @@ const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
     'a1.3c': {
         badge: '1 new', badgeColor: 'ai',
         title: 'Final Labor Quote ready · DOE-2847 · Invoice upload requested',
-        desc: 'CPR-adjusted quote ($6,920) has been approved. Please upload the OmniQuote approved invoice to complete the fee verification process.',
+        desc: 'CPR-adjusted quote ($6,920) has been approved. Please upload the Quote Tool approved invoice to complete the fee verification process.',
         sender: 'Michael Chen · Account Manager',
         cta: 'Upload invoice →',
         event: 'bfi:invoice-open',
@@ -114,8 +114,8 @@ const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
     },
     'a1.4': {
         badge: '1 new', badgeColor: 'success',
-        title: 'OmniQuote invoice forwarded · DOE-2847 · Fee verification requested',
-        desc: 'The OmniQuote approved invoice ($6,920) for Purchase Order DOE-2847 is attached. CPR reconciliation is complete — please review and confirm the agency fee.',
+        title: 'Quote Tool invoice forwarded · DOE-2847 · Fee verification requested',
+        desc: 'The Quote Tool approved invoice ($6,920) for Purchase Order DOE-2847 is attached. CPR reconciliation is complete — please review and confirm the agency fee.',
         sender: 'Lauren DeMarco · Account Manager · BFI',
         cta: 'Review fee →',
         event: 'bfi:fee-open',

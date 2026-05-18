@@ -126,5 +126,5 @@ export const SOURCES = {
     SIF_FILE:       { name: 'SIF (CET export)',   type: 'file'          as SourceType, note: 'Standard Interchange Format — XML export from the designer\'s CET tool. 24 fields.' },
     CRM:            { name: 'CRM',                type: 'external'      as SourceType, note: 'MBI\'s CRM. Budget requests originate from approved opportunities here.' },
     INVOICE_HISTORY:{ name: 'Invoice History',    type: 'erp'           as SourceType, note: 'Historical vendor invoices in CORE. Strata cross-references prior bills to detect partial shipment and backorder patterns per vendor and SKU.' },
-    OVNIQ:          { name: 'OmniQuote',          type: 'external'      as SourceType, note: 'Herman Miller\'s validation platform. Checks SIF against the CoNY contract and auto-applies T-code rates.' },
+    OVNIQ:          { name: 'Quote Tool',          type: 'external'      as SourceType, note: 'Herman Miller\'s validation platform. Checks SIF against the CoNY contract and auto-applies T-code rates.' },
 } satisfies Record<string, DataSource>

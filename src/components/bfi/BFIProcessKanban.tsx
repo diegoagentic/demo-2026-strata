@@ -65,7 +65,7 @@ function getNewCardColors(name: string): { avatarBg: string; avatarColor: string
 
 const DOE_BADGE: Record<number, { label: string; className: string }> = {
     0: { label: '! CPR',       className: 'bg-warning/10 text-warning border border-warning/20' },
-    1: { label: 'OmniQuote',   className: 'bg-info/10 text-info border border-info/20'          },
+    1: { label: 'Quote Tool',  className: 'bg-info/10 text-info border border-info/20'          },
     2: { label: 'PO received', className: 'bg-warning/10 text-warning border border-warning/20' },
     3: { label: '2 pending',   className: 'bg-warning/10 text-warning border border-warning/20' },
     4: { label: 'Verified',    className: 'bg-success/10 text-success border border-success/20' },
@@ -73,7 +73,7 @@ const DOE_BADGE: Record<number, { label: string; className: string }> = {
 
 const DOE_SUBTITLE: Record<number, string> = {
     0: 'SIF received · CPR discrepancy flagged',
-    1: 'OmniQuote validation · 1 price corrected',
+    1: 'Quote Tool validation · 1 price corrected',
     2: 'PO received · WIG labor quote compiled',
     3: 'CPR reconciliation · 2 lines to approve',
     4: 'Agency fee verification · Patricia Reyes',

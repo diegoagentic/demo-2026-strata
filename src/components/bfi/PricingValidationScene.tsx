@@ -10,7 +10,7 @@
  *   4. After restriction notice sent → "Apply & continue" CTA unlocks
  *
  * Real process replaced:
- *   Price mismatch: OmniQuote upload→wait→download cycle (~45 min)
+ *   Price mismatch: Quote Tool upload→wait→download cycle (~45 min)
  *   Restricted item: screenshot + manual email → wait 1-3 days (MK resolution)
  *
  * DS TOKENS: bg-card · bg-ai/5 · text-success · border-amber-*
@@ -147,7 +147,7 @@ export default function PricingValidationScene() {
                 {/* AS-IS + CTA */}
                 <div className="border border-border rounded-xl p-3.5 bg-card space-y-3">
                     <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
-                        Before Strata: Lauren uploaded the SIF to OmniQuote, waited for validation, then downloaded the result — ~45 min per order.
+                        Before Strata: Lauren uploaded the SIF to Quote Tool, waited for validation, then downloaded the result — ~45 min per order.
                     </div>
                     <button
                         onClick={() => setSceneState('validating')}
@@ -290,7 +290,7 @@ export default function PricingValidationScene() {
                         Filing Units corrected $8,100 → $7,560 · Formula: (Sale ÷ List) − 1 · $0 GP
                     </div>
                     <div className="text-[10px] text-muted-foreground/70 pt-0.5 border-t border-border">
-                        Before: upload SIF → wait OmniQuote email → download → re-upload → manual calc · ~65 min. Now: 0 min.
+                        Before: upload SIF → wait Quote Tool email → download → re-upload → manual calc · ~65 min. Now: 0 min.
                     </div>
                 </div>
             )}

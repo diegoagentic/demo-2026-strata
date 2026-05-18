@@ -152,7 +152,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · CPR flag on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges the update · loop closed' },
     'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 correction $8,100 → $7,560 · verify service fee 3.75% (Grand Total $8,833.50) · approve to request labor quote from WIG' },
-    'a1.2c': { mode: 'interactive', userAction: 'Review PO from NYC DoE + labor quote from Workplace · confirm 30-day delivery window · confirm in CORE · watch EDI transmit to OVNIQ' },
+    'a1.2c': { mode: 'interactive', userAction: 'Review PO from NYC DoE + labor quote from Workplace · confirm 30-day delivery window · confirm in CORE · watch EDI transmit to Quote Tool' },
     'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
     'a1.2e': { mode: 'interactive', userAction: 'Review Lena\'s missing-carton notification · expand order · attach proof of shipment · send shortage claim to Herman Miller' },
     'a1.2f': { mode: 'interactive', userAction: 'Receive claim-resolved notification · review floor plan + work order · download/print · notify Walter to approve scheduling' },
@@ -181,7 +181,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Order Q-2026-0089 confirmed · notification sent to Robert Chen',
         'Robert Chen (Miller Knoll) received email confirmation',
         'Spec sheet NYC-DOE-2847-specs.pdf attached',
-        'Order acknowledged · loop closed · BFI proceeds to OmniQuote validation',
+        'Order acknowledged · loop closed · BFI proceeds to Quote Tool validation',
     ],
     'a1.2b': [
         'Uploading SIF to Quote Tool · DOE-2847 · Q-2026-0089',
@@ -193,7 +193,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Purchase Order received from NYC Dept. of Education',
         'Workplace labor quote received — Michael\'s figures compiled',
         'Both documents captured — ready for review and CORE entry',
-        'CORE entry confirmed · EDI transmission to OVNIQ initiated',
+        'CORE entry confirmed · EDI transmission to Quote Tool initiated',
     ],
     'a1.3': [
         'Loading CPR document for DOE-2847',
@@ -208,9 +208,9 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Drafting invoice request to Nancy Rodriguez · Herman Miller',
     ],
     'a1.3c': [
-        'OmniQuote invoice received · invoice-OQ-DOE2847.pdf',
+        'Quote Tool invoice received · invoice-QT-DOE2847.pdf',
         'Scanning document · OCR extraction in progress',
-        'Invoice type: OmniQuote · Status: APPROVED · Amount: $6,920',
+        'Invoice type: Quote Tool · Status: APPROVED · Amount: $6,920',
         'Invoice matches CPR reconciliation · ready to forward to Patricia',
     ],
     'a1.4': [

@@ -93,14 +93,14 @@ function ProposalDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: 
                                         <p>
                                             Please find attached our formal proposal for Purchase Order{' '}
                                             <span className="font-semibold">DOE-2847</span>. Pricing has been
-                                            validated against the CoNY contract through OmniQuote (one correction
+                                            validated against the CoNY contract through Quote Tool (one correction
                                             applied: Filing Units $8,100 → $7,560 per T-code) and the Workplace
                                             labor schedule has been reviewed and confirmed.
                                         </p>
 
                                         {/* Order summary */}
                                         <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-[11px]">
-                                            <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">PO Request · OmniQuote Validated</p>
+                                            <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">PO Request · Quote Tool Validated</p>
                                             {[
                                                 { label: 'Contract',        value: 'CoNY · City of New York' },
                                                 { label: 'Price corrected', value: 'Filing Units $8,100 → $7,560 per T-code' },
@@ -118,7 +118,7 @@ function ProposalDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: 
                                         </div>
 
                                         <p>
-                                            The updated SIF and OmniQuote validation are attached for your records.
+                                            The updated SIF and Quote Tool validation are attached for your records.
                                             Kindly confirm the Purchase Order at your earliest convenience so we can
                                             finalize the delivery schedule and coordinate installation.
                                         </p>
@@ -131,7 +131,7 @@ function ProposalDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: 
                                     <div className="flex flex-col gap-1.5">
                                         {[
                                             { name: 'DOE-2847-SIF-updated.pdf',  label: 'Updated SIF' },
-                                            { name: 'OmniQuote-DOE-2847.pdf', label: 'OmniQuote'  },
+                                            { name: 'QuoteTool-DOE-2847.pdf', label: 'Quote Tool' },
                                         ].map(a => (
                                             <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
                                                 <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

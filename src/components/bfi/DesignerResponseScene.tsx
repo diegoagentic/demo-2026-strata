@@ -81,7 +81,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                         </p>
                         <p>
                             Quote <span className="font-semibold">Q-2026-0089</span> is now being validated
-                            against the CoNY contract through OmniQuote. We'll follow up once pricing is confirmed
+                            against the CoNY contract through Quote Tool. We'll follow up once pricing is confirmed
                             and the order is ready to move forward.
                         </p>
                         <p className="text-muted-foreground">
@@ -111,7 +111,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                         <div className="text-xs">
                             <div className="font-bold text-foreground">Receipt acknowledged · Q-2026-0089 · May 6 · 9:25 AM</div>
-                            <div className="text-muted-foreground mt-0.5">Documents logged in Strata · BFI proceeding to OmniQuote validation</div>
+                            <div className="text-muted-foreground mt-0.5">Documents logged in Strata · BFI proceeding to Quote Tool validation</div>
                         </div>
                     </div>
                 )}

@@ -53,7 +53,7 @@ export default function FedExGapScene({ onSend }: FedExGapSceneProps) {
                 <div className="text-xs flex-1">
                     <div className="font-bold text-foreground">FedEx Gap Detection · DCAS-1182</div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Strata detected 3 items shipped via FedEx small parcel without WIG confirmation — by cross-referencing OmniQuote against the WIG receiving log. POD request pre-filled.
+                        Strata detected 3 items shipped via FedEx small parcel without WIG confirmation — by cross-referencing Quote Tool against the WIG receiving log. POD request pre-filled.
                     </div>
                 </div>
             </div>

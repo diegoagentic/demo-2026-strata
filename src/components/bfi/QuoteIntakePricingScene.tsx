@@ -37,7 +37,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
             />
 
             <p className="text-[11px] text-muted-foreground text-center">
-                4 active orders · validating DOE-2847 vs OmniQuote…
+                4 active orders · validating DOE-2847 vs Quote Tool…
             </p>
 
             <BFIDocumentReviewModal
