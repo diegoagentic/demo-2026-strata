@@ -90,10 +90,7 @@ export default function DesignerRFQScene({ onSend }: DesignerRFQSceneProps) {
                             Scope includes Filing Units ×6, Aeron seating ×12, and Ethospace workstations ×8.
                             All supporting documents are attached for your review.
                         </p>
-                        <p>
-                            Please confirm receipt and let us know if you need anything additional to get started.
-                            We're targeting the <span className="font-semibold">May 14</span> install window.
-                        </p>
+
                         <p className="text-muted-foreground">
                             — Robert Chen<br />
                             Miller Knoll · NYC Government Accounts
