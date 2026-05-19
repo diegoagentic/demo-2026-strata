@@ -15,6 +15,7 @@ import WIGBingoCheckScene from './WIGBingoCheckScene'
 import CoNYMorningQueue from './CoNYMorningQueue'
 import QuoteIntakePricingScene from './QuoteIntakePricingScene'
 import LaborQuoteRequestScene from './LaborQuoteRequestScene'
+import SendProposalScene from './SendProposalScene'
 import CPRScene from './CPRScene'
 import AgencyFeeVerifyScene from './AgencyFeeVerifyScene'
 import DesignerResponseScene from './DesignerResponseScene'
@@ -30,6 +31,7 @@ const STEP_TITLES: Record<string, string> = {
     'a1.2': 'Agency Fee',
     'a1.2b':  'Agency Fee',
     'a1.2b2': 'Agency Fee',
+    'a1.2b3': 'Agency Fee',
     'a1.2c':  'Agency Fee',
     'a1.2d': 'Product Receiving',
     'a1.2e': 'Product Receiving',
@@ -80,6 +82,7 @@ export default function BFIPage() {
                 {stepId === 'a1.1' && <CoNYMorningQueue onSelectOrder={nextStep} />}
                 {stepId === 'a1.2b'  && <QuoteIntakePricingScene onApply={nextStep} />}
                 {stepId === 'a1.2b2' && <LaborQuoteRequestScene onContinue={nextStep} />}
+                {stepId === 'a1.2b3' && <SendProposalScene />}
                 {stepId === 'a1.2c'  && <POLaborScene />}
                 {stepId === 'a1.2d' && (
                     <WIGBingoCheckScene
