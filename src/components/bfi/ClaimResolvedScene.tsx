@@ -177,8 +177,16 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
     const [sent,      setSent]      = useState(false)
     const [message,   setMessage]   = useState(WALTER_MESSAGE)
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('walter.goley@bfifurniture.com · BFI PM')
+    const [ccEmail,   setCcEmail]   = useState('nycdoe-procurement@schools.nyc.gov')
+    const [dateText,  setDateText]  = useState('May 11, 2026 · 10:15 AM')
+    const [subject,   setSubject]   = useState('DOE-2847 · Claim resolved · Ready for install scheduling')
+    const [attachments, setAttachments] = useState(['DOE-2847-WorkOrder.pdf', 'DOE-2847-FloorPlan.pdf'])
 
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
+    const removeAttachment = (name: string) => setAttachments(prev => prev.filter(a => a !== name))
+
+    const inputCls = 'flex-1 bg-transparent outline-none font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0'
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -216,25 +224,25 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
                             {/* Scrollable body */}
                             <div className="flex-1 overflow-y-auto">
                                 <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
-                                    <div className="text-[13px] font-bold text-foreground leading-snug">
-                                        DOE-2847 · Claim resolved · Ready for install scheduling
-                                    </div>
+                                    <input value={subject} onChange={e => setSubject(e.target.value)} disabled={sent}
+                                        className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60" />
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2 text-[10px]">
                                             <span className="text-muted-foreground w-7 shrink-0">From:</span>
-                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent}
-                                                className="flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0" />
+                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
                                         </div>
-                                        {[
-                                            { label: 'To',   value: 'walter@bfifurniture.com · BFI PM', style: 'text-foreground' },
-                                            { label: 'CC',   value: 'nycdoe-procurement@schools.nyc.gov', style: 'text-muted-foreground italic' },
-                                            { label: 'Date', value: 'May 11, 2026 · 10:15 AM', style: 'text-foreground' },
-                                        ].map(r => (
-                                            <div key={r.label} className="flex items-center gap-2 text-[10px]">
-                                                <span className="text-muted-foreground w-7 shrink-0">{r.label}:</span>
-                                                <span className={`font-medium truncate ${r.style}`}>{r.value}</span>
-                                            </div>
-                                        ))}
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">To:</span>
+                                            <input value={toEmail} onChange={e => setToEmail(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">CC:</span>
+                                            <input value={ccEmail} onChange={e => setCcEmail(e.target.value)} disabled={sent} className={`${inputCls} text-muted-foreground italic`} />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">Date:</span>
+                                            <input value={dateText} onChange={e => setDateText(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -265,14 +273,19 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
                                             className="w-full text-[11px] text-foreground bg-muted/30 border border-border rounded-xl px-3.5 py-2.5 leading-relaxed resize-none outline-none focus:border-primary/50 transition-colors disabled:opacity-60" />
                                     </div>
 
-                                    {/* Attachments */}
+                                    {/* Attachments — removable */}
                                     <div className="space-y-1.5">
                                         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Attachments</span>
                                         <div className="flex flex-wrap gap-2">
-                                            {['DOE-2847-WorkOrder.pdf', 'DOE-2847-ZoneLayout.pdf'].map(f => (
+                                            {attachments.map(f => (
                                                 <div key={f} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border text-[10px] text-foreground font-medium">
                                                     <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
                                                     {f}
+                                                    {!sent && (
+                                                        <button onClick={() => removeAttachment(f)} className="p-0.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0" aria-label={`Remove ${f}`}>
+                                                            <X className="h-2.5 w-2.5" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
