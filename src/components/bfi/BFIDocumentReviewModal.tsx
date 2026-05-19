@@ -543,7 +543,13 @@ Please proceed with agency fee verification at your earliest convenience.
 
 function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => void }) {
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('patricia.hilger@bfifurniture.com · Finance / AR')
+    const [ccEmail,   setCcEmail]   = useState('michael.boyle@bfifurniture.com')
+    const [subject,   setSubject]   = useState('Quote Tool Approved Invoice · DOE-2847 · Fee Verification')
     const [message,   setMessage]   = useState(PATRICIA_MESSAGE)
+    const [attachments, setAttachments] = useState([
+        { name: 'invoice-OQ-DOE2847.pdf', badge: 'Quote Tool Approved' },
+    ])
     const [sending,   setSending]   = useState(false)
     const [sent,      setSent]      = useState(false)
 
@@ -552,11 +558,14 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
         setTimeout(() => { setSending(false); setSent(true); setTimeout(() => onSent(), 900) }, 800)
     }
 
+    const removeAttachment = (name: string) =>
+        setAttachments(prev => prev.filter(a => a.name !== name))
+
     const META_ROWS = [
-        { label: 'From', editable: true },
-        { label: 'To',   value: 'patricia.hayes@bfifurniture.com · Finance / AR' },
-        { label: 'CC',   value: 'michael.boyle@bfifurniture.com', muted: true },
-        { label: 'Subj', value: 'Quote Tool Approved Invoice · DOE-2847 · Fee Verification' },
+        { label: 'From', value: fromEmail, setter: setFromEmail },
+        { label: 'To',   value: toEmail,   setter: setToEmail   },
+        { label: 'CC',   value: ccEmail,   setter: setCcEmail, muted: true },
+        { label: 'Subj', value: subject,   setter: setSubject   },
     ]
 
     return (
@@ -587,32 +596,35 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                             </div>
 
                             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                                {/* Invoice verified chip */}
-                                <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-success/30 bg-success/5">
-                                    <Paperclip className="h-3.5 w-3.5 text-success shrink-0" />
-                                    <span className="text-[11px] font-semibold text-foreground flex-1">invoice-OQ-DOE2847.pdf</span>
-                                    <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded">Quote Tool Approved</span>
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                                </div>
+                                {/* Invoice attachments — removable */}
+                                {attachments.map(a => (
+                                    <div key={a.name} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-success/30 bg-success/5">
+                                        <Paperclip className="h-3.5 w-3.5 text-success shrink-0" />
+                                        <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{a.name}</span>
+                                        <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded">{a.badge}</span>
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                        {!sent && (
+                                            <button onClick={() => removeAttachment(a.name)} className="p-0.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0" aria-label={`Remove ${a.name}`}>
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
 
-                                {/* Email metadata */}
+                                {/* Email metadata — all fields editable */}
                                 <div className="rounded-xl border border-border overflow-hidden text-[11px]">
                                     {META_ROWS.map((row, i) => (
                                         <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
                                             <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
-                                            {row.editable ? (
-                                                <input value={fromEmail} onChange={e => setFromEmail(e.target.value)}
-                                                    className="flex-1 bg-transparent outline-none text-foreground border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors" />
-                                            ) : (
-                                                <span className={row.muted ? 'text-muted-foreground italic' : 'text-foreground'}>{row.value}</span>
-                                            )}
+                                            <input value={row.value} onChange={e => row.setter(e.target.value)} disabled={sent}
+                                                className={`flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`} />
                                         </div>
                                     ))}
                                 </div>
 
                                 {/* Editable message */}
-                                <textarea value={message} onChange={e => setMessage(e.target.value)} rows={12}
-                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono" />
+                                <textarea value={message} onChange={e => setMessage(e.target.value)} rows={12} disabled={sent}
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono disabled:opacity-60" />
 
                                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.OVNIQ] }]} />
                             </div>
@@ -903,6 +915,9 @@ const CPR_LINES = [
 
 function CPRNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () => void; onClose?: () => void }) {
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('michael.boyle@bfifurniture.com · Nancy Bos')
+    const [ccEmail,   setCcEmail]   = useState('walter@conyny.gov · lena.watts@bfi-warehouse.com')
+    const [dateText,  setDateText]  = useState('May 6, 2026 · 11:30 AM')
     const [message, setMessage]     = useState(
 `Hi Michael, Nancy,
 
@@ -930,10 +945,10 @@ Please confirm so we can proceed to agency fee verification.
     }
 
     const META_ROWS = [
-        { label: 'From', editable: true },
-        { label: 'To',   value: 'michael.boyle@bfifurniture.com · Nancy Bos' },
-        { label: 'CC',   value: 'walter@conyny.gov · lena.watts@bfi-warehouse.com', muted: true },
-        { label: 'Date', value: 'May 6, 2026 · 11:30 AM' },
+        { label: 'From', value: fromEmail, setter: setFromEmail },
+        { label: 'To',   value: toEmail,   setter: setToEmail   },
+        { label: 'CC',   value: ccEmail,   setter: setCcEmail, muted: true },
+        { label: 'Date', value: dateText,  setter: setDateText  },
     ]
 
     return (
@@ -988,22 +1003,17 @@ Please confirm so we can proceed to agency fee verification.
                                     </div>
                                 </div>
 
-                                {/* Section B — Email metadata */}
+                                {/* Section B — Email metadata · all fields editable */}
                                 <div className="rounded-xl border border-border overflow-hidden text-[11px]">
                                     {META_ROWS.map((row, i) => (
                                         <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
                                             <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
-                                            {row.editable ? (
-                                                <input
-                                                    value={fromEmail}
-                                                    onChange={e => setFromEmail(e.target.value)}
-                                                    className="flex-1 bg-transparent outline-none text-foreground border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors"
-                                                />
-                                            ) : (
-                                                <span className={row.muted ? 'text-muted-foreground italic' : 'text-foreground'}>
-                                                    {row.value}
-                                                </span>
-                                            )}
+                                            <input
+                                                value={row.value}
+                                                onChange={e => row.setter(e.target.value)}
+                                                disabled={sent}
+                                                className={`flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`}
+                                            />
                                         </div>
                                     ))}
                                 </div>
@@ -1013,7 +1023,8 @@ Please confirm so we can proceed to agency fee verification.
                                     value={message}
                                     onChange={e => setMessage(e.target.value)}
                                     rows={12}
-                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono"
+                                    disabled={sent}
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono disabled:opacity-60"
                                 />
 
                                 {/* DataSources */}
@@ -1388,6 +1399,8 @@ Let me know once confirmed and I'll approve.
   BFI Furniture · Finance & AR`
 
 function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    const [fromEmail, setFromEmail] = useState('patricia.hilger@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('lauren.demarco@bfifurniture.com · Account Manager')
     const [message, setMessage] = useState(ASK_LAUREN_MESSAGE)
     const [sending, setSending] = useState(false)
     const [sent,    setSent]    = useState(false)
@@ -1400,6 +1413,11 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
             setTimeout(onClose, 900)
         }, 800)
     }
+
+    const META_ROWS = [
+        { label: 'From', value: fromEmail, setter: setFromEmail },
+        { label: 'To',   value: toEmail,   setter: setToEmail   },
+    ]
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -1434,13 +1452,11 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                             </div>
 
                             <div className="px-5 pt-4 pb-2 space-y-2.5">
-                                {[
-                                    { label: 'From', value: 'patricia.hayes@bfifurniture.com' },
-                                    { label: 'To',   value: 'lauren.demarco@bfifurniture.com · Account Manager' },
-                                ].map(row => (
+                                {META_ROWS.map(row => (
                                     <div key={row.label} className="flex items-start gap-2 text-[11px]">
                                         <span className="text-muted-foreground w-10 shrink-0 pt-0.5">{row.label}</span>
-                                        <span className="font-medium text-foreground">{row.value}</span>
+                                        <input value={row.value} onChange={e => row.setter(e.target.value)} disabled={sent}
+                                            className="flex-1 font-medium text-foreground bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0" />
                                     </div>
                                 ))}
 
@@ -1448,7 +1464,8 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                                     value={message}
                                     onChange={e => setMessage(e.target.value)}
                                     rows={9}
-                                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    disabled={sent}
+                                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-60"
                                 />
                             </div>
 
@@ -1740,6 +1757,22 @@ function LaborQuoteDialog({ isOpen, onComplete, onClose }: {
     onClose: () => void
 }) {
     const [phase, setPhase] = useState<'draft' | 'sent' | 'received'>('draft')
+    const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('michael.boyle@wiginstall.com (WIG Installation)')
+    const [dateText,  setDateText]  = useState('May 6, 2026 · 2:47 PM')
+    const [subject,   setSubject]   = useState('Labor Quote Request · DOE-2847 · NYC Dept. of Education')
+    const [bodyText,  setBodyText]  = useState(
+`Hi Michael,
+
+Please provide a labor quote for the following installation at 30 Court Street, Brooklyn, NY 11201 (NYC Dept. of Education · Order DOE-2847).
+
+Pricing has been validated through Quote Tool against CoNY Contract ANT122. Please quote for the crew and the installation scope below.
+
+Please confirm crew availability and delivery window. Quote needed ASAP to proceed with the NYC DOE purchase order.
+
+— Lauren DeMarco
+BFI Furniture · Account Manager`
+    )
 
     useEffect(() => { if (!isOpen) setPhase('draft') }, [isOpen])
 
@@ -1747,6 +1780,9 @@ function LaborQuoteDialog({ isOpen, onComplete, onClose }: {
         setPhase('sent')
         setTimeout(() => setPhase('received'), 1400)
     }
+
+    const inputCls = 'flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0'
+    const sentLocked = phase !== 'draft'
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -1783,61 +1819,45 @@ function LaborQuoteDialog({ isOpen, onComplete, onClose }: {
 
                             {/* Scrollable body */}
                             <div className="flex-1 overflow-y-auto">
-                                {/* Email metadata */}
+                                {/* Email metadata — editable */}
                                 <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
-                                    <div className="text-[13px] font-bold text-foreground leading-snug">
-                                        Labor Quote Request · DOE-2847 · NYC Dept. of Education
-                                    </div>
+                                    <input value={subject} onChange={e => setSubject(e.target.value)} disabled={sentLocked}
+                                        className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60" />
                                     <div className="space-y-0.5">
-                                        {[
-                                            { label: 'From', value: 'lauren.demarco@bfifurniture.com' },
-                                            { label: 'To',   value: 'm.weller@wiginstall.com (WIG Installation)' },
-                                            { label: 'Date', value: 'May 6, 2026 · 2:47 PM' },
-                                        ].map(r => (
-                                            <div key={r.label} className="flex items-center gap-2 text-[10px]">
-                                                <span className="text-muted-foreground w-7 shrink-0">{r.label}:</span>
-                                                <span className="text-foreground font-medium truncate">{r.value}</span>
-                                            </div>
-                                        ))}
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">From:</span>
+                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sentLocked} className={inputCls} />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">To:</span>
+                                            <input value={toEmail} onChange={e => setToEmail(e.target.value)} disabled={sentLocked} className={inputCls} />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">Date:</span>
+                                            <input value={dateText} onChange={e => setDateText(e.target.value)} disabled={sentLocked} className={inputCls} />
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="px-5 py-4 space-y-3">
-                                    {/* Email body */}
-                                    <div className="space-y-2.5">
-                                        <p className="text-[12px] text-foreground leading-relaxed">
-                                            Hi Michael,
-                                        </p>
-                                        <p className="text-[12px] text-foreground leading-relaxed">
-                                            Please provide a labor quote for the following installation at{' '}
-                                            <span className="font-semibold">30 Court Street, Brooklyn, NY 11201</span>{' '}
-                                            (NYC Dept. of Education · Order DOE-2847).
-                                        </p>
-                                        <p className="text-[12px] text-foreground leading-relaxed">
-                                            Pricing has been validated through Quote Tool against CoNY Contract ANT122.
-                                            Please quote for crew and installation scope below:
-                                        </p>
-                                        {/* Scope table */}
-                                        <div className="rounded-xl border border-border overflow-hidden">
-                                            <div className="px-3 py-2 bg-muted/40 border-b border-border">
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Installation Scope · DOE-2847</p>
-                                            </div>
-                                            {LQ_SCOPE.map(l => (
-                                                <div key={l.code} className="flex items-center gap-3 px-3 py-2 border-b border-border/40 last:border-0">
-                                                    <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
-                                                    <span className="text-[10px] font-mono text-muted-foreground">{l.code}</span>
-                                                    <span className="text-[10px] font-medium text-foreground flex-1">{l.desc}</span>
-                                                    <span className="text-[10px] font-mono text-foreground">{l.qty}</span>
-                                                </div>
-                                            ))}
+                                    {/* Email body — editable textarea */}
+                                    <textarea value={bodyText} onChange={e => setBodyText(e.target.value)} disabled={sentLocked}
+                                        rows={9}
+                                        className="w-full text-[12px] text-foreground leading-relaxed bg-transparent outline-none border border-transparent hover:border-border/60 focus:border-primary/50 rounded-lg px-2 py-1.5 -mx-2 transition-colors disabled:opacity-60 resize-y" />
+
+                                    {/* Scope table (data structure, not editable as inline list — values come from upstream order) */}
+                                    <div className="rounded-xl border border-border overflow-hidden">
+                                        <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Installation Scope · DOE-2847</p>
                                         </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            Please confirm crew availability and delivery window. Quote needed ASAP to proceed with the NYC DOE purchase order.
-                                        </p>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            — Lauren DeMarco<br />
-                                            BFI Furniture · Account Manager
-                                        </p>
+                                        {LQ_SCOPE.map(l => (
+                                            <div key={l.code} className="flex items-center gap-3 px-3 py-2 border-b border-border/40 last:border-0">
+                                                <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                                                <span className="text-[10px] font-mono text-muted-foreground">{l.code}</span>
+                                                <span className="text-[10px] font-medium text-foreground flex-1">{l.desc}</span>
+                                                <span className="text-[10px] font-mono text-foreground">{l.qty}</span>
+                                            </div>
+                                        ))}
                                     </div>
 
                                     {/* Sent confirmation */}
