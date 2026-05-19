@@ -209,8 +209,18 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
     const [sent,      setSent]      = useState(false)
     const [message,   setMessage]   = useState(CLAIM_MESSAGE)
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('claims@hermanmiller.com')
+    const [ccEmail,   setCcEmail]   = useState('walter.goley@conyny.gov · CoNY PM')
+    const [dateText,  setDateText]  = useState('May 11, 2026 · 9:05 AM')
+    const [subject,   setSubject]   = useState('Incomplete Shipment · DOE-2847 · Monitor Arm')
+    const [attachments, setAttachments] = useState([
+        { name: 'RR-37577_BingoSheet_May11.pdf', meta: '2 pages' },
+    ])
 
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
+    const removeAttachment = (name: string) => setAttachments(prev => prev.filter(a => a.name !== name))
+
+    const inputCls = 'flex-1 bg-transparent outline-none font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0'
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -248,25 +258,25 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                             {/* Scrollable body */}
                             <div className="flex-1 overflow-y-auto">
                                 <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
-                                    <div className="text-[13px] font-bold text-foreground leading-snug">
-                                        Incomplete Shipment · DOE-2847 · Monitor Arm
-                                    </div>
+                                    <input value={subject} onChange={e => setSubject(e.target.value)} disabled={sent}
+                                        className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60" />
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2 text-[10px]">
                                             <span className="text-muted-foreground w-7 shrink-0">From:</span>
-                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent}
-                                                className="flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0" />
+                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
                                         </div>
-                                        {[
-                                            { label: 'To',   value: 'claims@hermanmiller.com' },
-                                            { label: 'CC',   value: 'walter@conyny.gov · CoNY PM' },
-                                            { label: 'Date', value: 'May 11, 2026 · 9:05 AM' },
-                                        ].map(r => (
-                                            <div key={r.label} className="flex items-center gap-2 text-[10px]">
-                                                <span className="text-muted-foreground w-7 shrink-0">{r.label}:</span>
-                                                <span className={`font-medium truncate ${r.label === 'CC' ? 'text-muted-foreground italic' : 'text-foreground'}`}>{r.value}</span>
-                                            </div>
-                                        ))}
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">To:</span>
+                                            <input value={toEmail} onChange={e => setToEmail(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">CC:</span>
+                                            <input value={ccEmail} onChange={e => setCcEmail(e.target.value)} disabled={sent} className={`${inputCls} text-muted-foreground italic`} />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <span className="text-muted-foreground w-7 shrink-0">Date:</span>
+                                            <input value={dateText} onChange={e => setDateText(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -302,11 +312,20 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                         />
                                     </div>
 
-                                    {/* Attachment chip */}
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium w-fit">
-                                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                        RR-37577_BingoSheet_May11.pdf
-                                        <span className="text-[9px] text-muted-foreground ml-1">· 2 pages</span>
+                                    {/* Attachments — removable */}
+                                    <div className="flex flex-col gap-1.5">
+                                        {attachments.map(a => (
+                                            <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
+                                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                <span className="flex-1 truncate">{a.name}</span>
+                                                <span className="text-[9px] text-muted-foreground">· {a.meta}</span>
+                                                {!sent && (
+                                                    <button onClick={() => removeAttachment(a.name)} className="p-0.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0" aria-label={`Remove ${a.name}`}>
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
 
                                     {sent && (
