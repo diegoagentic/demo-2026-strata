@@ -2414,9 +2414,9 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
     const [quoteLines] = useState<ExtractQuoteLine[]>(EXTRACT_QUOTE_LINES)
 
     const TABS = [
-        { id: 'sif'       as const, label: 'SIF Fields' },
-        { id: 'quote'     as const, label: 'Quote'       },
-        { id: 'floorplan' as const, label: 'Floor Plan'  },
+        { id: 'sif'       as const, label: 'SIF'          },
+        { id: 'quote'     as const, label: 'Product List' },
+        { id: 'floorplan' as const, label: 'Floor Plan'   },
     ]
 
     const SIF_GROUPS_DISPLAY = [
@@ -2468,7 +2468,7 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
             {tab === 'quote' && (
                 <div className="flex flex-col h-full min-h-0">
                     <div className="bg-background px-5 py-3 border-b border-border shrink-0">
-                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">PRICING (FROM SIF)</h4>
+                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">PRODUCT LIST (FROM SIF)</h4>
                         <p className="text-[11px] text-muted-foreground/70 mt-0.5">Q-2026-0089 · Pending Quote Tool validation</p>
                     </div>
                     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
