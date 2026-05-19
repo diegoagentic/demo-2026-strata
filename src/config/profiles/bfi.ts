@@ -4,7 +4,7 @@
 // CLIENT: BFI Furniture (Elizabeth, NJ · ~50 employees · Women Owned
 //         Government/Municipal furniture dealer · CoNY primary customer)
 //
-// DEMO STRUCTURE: 1 flow · 14 steps (post-Wendy revisions May 2026)
+// DEMO STRUCTURE: 1 flow · 13 steps (post-Wendy revisions May 2026)
 //
 //   Dashboard — navbar tab permanente (no es un paso del demo)
 //
@@ -13,8 +13,8 @@
 //     a1.1:   CoNY Order Queue       — Lauren morning triage · DOE-2847 surfaced
 //     a1.2:   Order Confirmation     — Lauren confirms receipt to Robert Chen
 //     a1.2b:  Quote Tool Validation  — SIF → Quote Tool · price correction + fee 3.75%
-//     a1.2b2: Labor Quote Request    — Lauren → WIG email · Michael compiles labor figures
-//     a1.2b3: Send Proposal          — Lauren sends formal proposal (product + labor) to NYC DOE
+//                                      · ends with LaborQuoteDialog: email to WIG → Michael Boyle compiles labor figures
+//     a1.2b3: Send Proposal          — Dialog overlay on kanban · Lauren sends proposal (product + labor) to NYC DOE
 //     a1.2c:  PO Received · CORE     — NYC DOE issues PO · Lauren confirms in CORE
 //
 //   FLOW 1 — Agency Fee · post-delivery sequence (a1.2d → a1.4)
@@ -71,16 +71,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Quote Tool Validation',
-        description: 'Strata uploads the SIF to Quote Tool, which corrects the Filing Unit price against the CoNY contract. Lauren reviews the Quote Comparison and Herman Miller\'s Estimated Service Fees (3.75%), then approves to request the labor quote from WIG.',
-        app: 'bfi-agency-fee',
-        role: 'Account Manager',
-    },
-    {
-        id: 'a1.2b2',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Labor Quote Request',
-        description: 'After Quote Tool approves the product pricing, the BFI account manager sends a labor quote request to WIG (Workplace Installation Group). WIG returns the labor quote; Michael Boyle (BFI Director of Strategic Accounts) reviews and compiles the figures before passing them back to Lauren.',
+        description: 'Strata uploads the SIF to Quote Tool, which corrects the Filing Unit price against the CoNY contract. Lauren reviews the Quote Comparison and Herman Miller\'s Estimated Service Fees (3.75%), then triggers the labor quote request to WIG — Michael Boyle (BFI Director of Strategic Accounts) reviews WIG\'s response and forwards the compiled figures, all within the same step.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -174,8 +165,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'The Miller Knoll rep sends the RFQ to BFI with SIF, spec sheet, and floor plan attached' },
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · new SIF on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges receipt · BFI proceeds to validate pricing' },
-    'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 unit price correction $1,350 → $1,260 (Ext. Sell $7,560) · verify service fee 3.75% (Grand Total $8,833.50) · approve to request labor quote from WIG' },
-    'a1.2b2': { mode: 'interactive', userAction: 'Send labor quote request to WIG · review scope · WIG returns labor quote · Michael Boyle (BFI) compiles and forwards to Lauren' },
+    'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 unit price correction $1,350 → $1,260 (Ext. Sell $7,560) · verify service fee 3.75% · approve to request labor quote from WIG → email dialog · Michael Boyle compiles WIG labor figures' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the formal proposal (product + labor) · send to NYC DoE procurement · await client review and PO issuance' },
     'a1.2c': { mode: 'interactive', userAction: 'PO arrives from NYC DoE · review PO against the proposal sent · confirm 30-day delivery window · confirm in CORE' },
     'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
@@ -214,11 +204,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'HMI-FU-300 unit price corrected — $1,350 → $1,260 (CoNY contract rate) · Ext. Sell $7,560',
         'Restricted Products Check (OCR’d from Quote Comparison Download) · 0 flagged',
         'Herman Miller service fees applied (3.75%) · Grand Total $8,833.50',
-    ],
-    'a1.2b2': [
-        'Drafting labor quote request to WIG · DOE-2847',
-        'Scope attached: 3 product lines · 30 Court St, Brooklyn',
-        'Email sent to WIG · awaiting Michael Boyle (BFI) to compile figures',
+        'Labor quote request drafted to WIG · awaiting Michael Boyle (BFI) to compile figures',
         'Labor quote received · Teamsters 24h · Carpenters 50h · OT 8h',
     ],
     'a1.2b3': [
@@ -262,5 +248,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const BFI_SELF_INDICATED: string[] = [
-    'a1.0', 'a1.1', 'a1.2', 'a1.2b', 'a1.2b2', 'a1.2b3', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
+    'a1.0', 'a1.1', 'a1.2', 'a1.2b', 'a1.2b3', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
 ];
