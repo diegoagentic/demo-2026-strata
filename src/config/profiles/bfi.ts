@@ -19,7 +19,7 @@
 //     r1.3: AI Analysis        — progress bar → bingo grid · #34 missing
 //     r1.4: Alert & Claim      — notify Andy (HM) · open Omni claim
 //     r1.5: Core Entry         — 34/35 confirmed · confirm in CORE
-//     r1.6: Notify Walter      — CoNY PM sees status before paper arrives (mobile)
+//     r1.6: Notify Walter      — BFI PM sees status before paper arrives (mobile)
 //
 // PRESENTATION DATE: May 14, 2026
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -48,7 +48,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'CoNY Order Queue',
-        description: 'The BFI account manager reviews active CoNY orders for the day. Strata surfaces what needs attention — DOE-2847 has a CPR flag that requires review.',
+        description: 'The BFI account manager reviews active CoNY orders for the day. Strata surfaces what needs attention — DOE-2847 is flagged for follow-up.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -57,7 +57,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Order Confirmation',
-        description: 'The BFI account manager extracts and validates the SIF for DOE-2847. Strata reads the document, confirms the line items, and sends the Miller Knoll rep an order confirmation directly.',
+        description: 'Robert Chen (Miller Knoll) receives Lauren\'s order confirmation for DOE-2847 and acknowledges receipt. Quote Q-2026-0089 is confirmed — BFI will proceed to Quote Tool validation.',
         app: 'bfi-agency-fee',
         role: 'Designer',
     },
@@ -102,7 +102,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Work Order Ready',
-        description: 'Herman Miller confirms the replacement shipment for carton #34. The BFI account manager reviews the updated work order and floor plan, then notifies the CoNY project manager to schedule the install.',
+        description: 'Herman Miller confirms the replacement shipment for carton #34. The BFI account manager reviews the updated work order and floor plan, then notifies the BFI project manager to schedule the install.',
         app: 'bfi-receiving',
         role: 'Account Manager',
     },

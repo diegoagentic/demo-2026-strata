@@ -1,7 +1,7 @@
 /**
  * COMPONENT: ClaimResolvedScene (a1.2f)
  * PURPOSE: Lauren receives claim-resolved notification, reviews floor plan + CORE work order,
- *          downloads/prints documents, then notifies Walter (CoNY PM) to approve scheduling.
+ *          downloads/prints documents, then notifies Walter (BFI PM) to approve scheduling.
  *
  * FLOW:
  *   dashboard → notification "Claim resolved · HM confirmed"
@@ -205,8 +205,8 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
                                     <span className="text-[10px] font-black text-info">WM</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-[12px] font-bold text-foreground">Walter · CoNY PM</div>
-                                    <div className="text-[10px] text-muted-foreground">walter@conyny.gov · Scheduling approval</div>
+                                    <div className="text-[12px] font-bold text-foreground">Walter · BFI PM</div>
+                                    <div className="text-[10px] text-muted-foreground">walter@bfifurniture.com · Scheduling approval</div>
                                 </div>
                                 <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
                                     <X className="h-4 w-4" />
@@ -226,7 +226,7 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
                                                 className="flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0" />
                                         </div>
                                         {[
-                                            { label: 'To',   value: 'walter@conyny.gov · CoNY PM', style: 'text-foreground' },
+                                            { label: 'To',   value: 'walter@bfifurniture.com · BFI PM', style: 'text-foreground' },
                                             { label: 'CC',   value: 'nycdoe-procurement@schools.nyc.gov', style: 'text-muted-foreground italic' },
                                             { label: 'Date', value: 'May 11, 2026 · 10:15 AM', style: 'text-foreground' },
                                         ].map(r => (
@@ -415,7 +415,7 @@ export default function ClaimResolvedScene() {
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-foreground text-background hover:opacity-80 transition-all shadow-sm mt-auto"
                     >
                         <Send className="h-4 w-4" />
-                        Notify CoNY PM →
+                        Notify Walter (BFI PM) →
                     </button>
                 </div>
             </div>
