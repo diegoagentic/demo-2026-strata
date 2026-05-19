@@ -281,7 +281,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                             { label: 'Order',    value: 'DOE-2847' },
                                             { label: 'Item',     value: 'Monitor Arm Dual Adjustable' },
                                             { label: 'PO line',  value: 'L7 · 1 of 2 units' },
-                                            { label: 'Carton',   value: '#34 of 35 · Zone C' },
+                                            { label: 'Carton',   value: '#34 of 35 · Storage Room' },
                                         ].map(r => (
                                             <div key={r.label} className="flex items-start gap-2">
                                                 <span className="text-muted-foreground w-14 shrink-0">{r.label}:</span>

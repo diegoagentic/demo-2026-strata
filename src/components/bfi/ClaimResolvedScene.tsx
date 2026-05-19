@@ -32,7 +32,7 @@ const WALTER_MESSAGE =
 
 The shortage claim for DOE-2847 has been resolved. Herman Miller confirmed a replacement shipment for Carton #34 (Monitor Arm Dual Adjustable) — ETA May 18, 2026.
 
-The CORE work order (WO-2026-0089) has been updated. All items are now cleared for the May 14–21 delivery window. The install crew (Zone A·B·C, 3 technicians) is confirmed.
+The CORE work order (WO-2026-0089) has been updated. All items are now cleared for the May 14–21 delivery window. The install crew is confirmed for the three areas (Open Area, Lounge, Storage Room).
 
 Please approve the scheduling so we can coordinate with the Workplace labor team.
 
@@ -363,8 +363,8 @@ export default function ClaimResolvedScene() {
                     <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border">
                         <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-foreground truncate">DOE-2847 · Zone A·B·C Layout</div>
-                            <div className="text-[9px] text-muted-foreground">Floor plan · 3 zones · May 14–21</div>
+                            <div className="text-[10px] font-bold text-foreground truncate">DOE-2847 · Floor 12 Layout</div>
+                            <div className="text-[9px] text-muted-foreground">Floor plan · 3 areas · May 14–21</div>
                         </div>
                         <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">Confirmed</span>
                     </div>
@@ -377,9 +377,9 @@ export default function ClaimResolvedScene() {
                             <FloorPlanSVG />
                             <div className="flex gap-3 mt-2 px-1 flex-wrap">
                                 {[
-                                    { color: 'bg-[#e4e4e7]', label: 'Zone A ×24' },
-                                    { color: 'bg-[#e4e4e7]', label: 'Zone B ×12' },
-                                    { color: 'bg-[#e4e4e7]', label: 'Zone C ×6' },
+                                    { color: 'bg-[#e4e4e7]', label: 'Open Area' },
+                                    { color: 'bg-[#e4e4e7]', label: 'Lounge' },
+                                    { color: 'bg-[#e4e4e7]', label: 'Storage Room' },
                                 ].map(l => (
                                     <div key={l.label} className="flex items-center gap-1 text-[8px] text-muted-foreground">
                                         <div className={`h-2 w-2 rounded-sm ${l.color} border border-zinc-400`} />

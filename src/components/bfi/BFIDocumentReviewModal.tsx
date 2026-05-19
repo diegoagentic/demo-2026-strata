@@ -56,7 +56,7 @@ export function FloorPlanSVG() {
             <line x1="188" y1="73" x2="299.5" y2="73" stroke="#52525b" strokeWidth="1.5"/>
             <line x1="8" y1="65" x2="185" y2="65" stroke="#a1a1aa" strokeWidth="0.4" strokeDasharray="4,3"/>
             <line x1="93" y1="14" x2="93" y2="140" stroke="#a1a1aa" strokeWidth="0.4" strokeDasharray="4,3"/>
-            <text x="6" y="11" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">ZONE A · WORKSTATIONS ×24</text>
+            <text x="6" y="11" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">OPEN AREA</text>
             {([[8,18],[100,18],[8,78],[100,78]] as [number,number][]).map(([px,py],pi) => (
                 <g key={pi}>
                     {[0,1,2].map(i => (
@@ -69,7 +69,7 @@ export function FloorPlanSVG() {
                     ))}
                 </g>
             ))}
-            <text x="193" y="11" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">ZONE B · LOUNGE ×12</text>
+            <text x="193" y="11" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">LOUNGE</text>
             <rect x="192" y="17" width="50" height="20" rx="3" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.8"/>
             <rect x="192" y="17" width="7" height="20" rx="2" fill="#d4d4d8" stroke="#71717a" strokeWidth="0.5"/>
             <rect x="235" y="17" width="7" height="20" rx="2" fill="#d4d4d8" stroke="#71717a" strokeWidth="0.5"/>
@@ -79,7 +79,7 @@ export function FloorPlanSVG() {
             <rect x="242" y="42" width="10" height="13" rx="2" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
             <rect x="204" y="58" width="11" height="8" rx="2" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
             <rect x="219" y="58" width="11" height="8" rx="2" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7"/>
-            <text x="193" y="82" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">ZONE C · FILING ×6</text>
+            <text x="193" y="82" fontSize="5" fill="#71717a" fontFamily="monospace" fontWeight="bold" letterSpacing="0.5">STORAGE ROOM</text>
             {[0,1,2,3,4,5].map(i => (
                 <g key={i}>
                     <rect x={193+i*18} y={89} width={15} height={22} fill="#e4e4e7" stroke="#71717a" strokeWidth="0.7" rx="0.5"/>
@@ -132,7 +132,7 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
     },
 ]
 
-function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?: boolean }) {
+function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean }) {
     if (isPO) {
         const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
         const fmt = (n: number) => '$' + n.toLocaleString('en-US')
@@ -205,8 +205,11 @@ function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?
 
     // step='quote': simple Quote document (same structure as isPO but with Quote Tool branding)
     const fmtQ = (n: number) => '$' + n.toLocaleString('en-US')
-    const sifTotal = ovniqLines.reduce((sum, l) => sum + (parseFloat(l.sifPrice.replace(/[^0-9.]/g, '')) || 0), 0)
-    const adjTotal = ovniqLines.reduce((sum, l) => sum + (parseFloat(l.ovniq.replace(/[^0-9.]/g, '')) || 0), 0)
+    const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
+    const parseQty = (q?: string) => parseInt((q ?? '').replace(/[^0-9]/g, ''), 10) || 1
+    const fmtUnit  = (n: number) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    const sifTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.sifPrice), 0)
+    const adjTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.ovniq), 0)
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
@@ -214,7 +217,7 @@ function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?
                     <div className="h-1.5 bg-gradient-to-r from-primary to-[#C3E433]" />
                     <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
                         <div>
-                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Quote · Quote Tool</span>
+                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">{validated ? 'Quote · Quote Tool' : 'Quote · From SIF'}</span>
                             <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Q-2026-0089</p>
                             <p className="text-xs font-mono text-zinc-400 mt-0.5">DOE-2847 · NYC Dept. of Education</p>
                         </div>
@@ -225,27 +228,33 @@ function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?
                     </div>
                     <div className="bg-zinc-800 dark:bg-zinc-700 px-6 py-1.5 flex items-center justify-between">
                         <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
-                        <span className="text-[8px] font-bold text-primary tracking-widest">Quote Tool VALIDATED ✓</span>
+                        <span className={`text-[8px] font-bold tracking-widest ${validated ? 'text-primary' : 'text-zinc-400'}`}>{validated ? 'Quote Tool VALIDATED ✓' : 'PENDING QUOTE TOOL VALIDATION'}</span>
                     </div>
-                    <div className="px-6 pt-3 pb-1 grid grid-cols-6 gap-2">
-                        {['Code', 'Product', 'Qty', 'T-Code', 'SIF Price', 'Net'].map(h => (
+                    <div className="px-6 pt-3 pb-1 grid grid-cols-7 gap-2">
+                        {['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell'].map(h => (
                             <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
                         ))}
                     </div>
                     <div className="px-6 pb-4 space-y-0">
                         {ovniqLines.map((line) => {
+                            const qty       = parseQty(line.qty)
+                            const sifExt    = parseAmt(line.sifPrice)
+                            const sellExt   = parseAmt(line.ovniq)
+                            const sifUnit   = sifExt / qty
+                            const unitSell  = sellExt / qty
                             const corrected = line.sifPrice !== line.ovniq
                             return (
-                                <div key={line.code ?? line.product} className={`grid grid-cols-6 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                <div key={line.code ?? line.product} className={`grid grid-cols-7 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
                                     <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
                                     <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
-                                    <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{line.sifPrice}</span>
+                                    <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{fmtUnit(sifUnit)}</span>
                                     <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
-                                        {line.ovniq}
+                                        {fmtUnit(unitSell)}
                                         {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
                                     </span>
+                                    <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
                                 </div>
                             )
                         })}
@@ -262,7 +271,7 @@ function QuoteDocumentTab({ ovniqLines, isPO }: { ovniqLines: OvniqLine[]; isPO?
                         ))}
                     </div>
                     <div className="text-[9px] text-zinc-400 dark:text-zinc-500 text-center py-3 border-t border-zinc-100 dark:border-zinc-800">
-                        Quote Tool validated · 1 correction applied · CoNY Contract ANT122
+                        {validated ? 'Quote Tool validated · 1 correction applied · CoNY Contract ANT122' : 'SIF pricing · Awaiting Quote Tool validation against CoNY contract'}
                     </div>
                 </div>
             </div>
@@ -478,15 +487,15 @@ const FIELDS_CPR: ReviewField[] = [
 ]
 
 const FIELDS_FEE_MATCH: ReviewField[] = [
-    { id: 'fe1', name: 'Zone A workstations', category: 'fee', extractedValue: '$18,400', status: 'valid' },
-    { id: 'fe2', name: 'Zone B chairs',       category: 'fee', extractedValue: '$9,600',  status: 'valid' },
+    { id: 'fe1', name: 'Open Area workstations', category: 'fee', extractedValue: '$18,400', status: 'valid' },
+    { id: 'fe2', name: 'Lounge chairs',          category: 'fee', extractedValue: '$9,600',  status: 'valid' },
     { id: 'fe3', name: 'Installation',        category: 'fee', extractedValue: '$12,400', status: 'valid' },
     { id: 'fe4', name: 'Agency fee total',    category: 'fee', extractedValue: '$4,820',  status: 'valid' },
 ]
 
 const FIELDS_FEE_GAP: ReviewField[] = [
-    { id: 'fe1', name: 'Zone A workstations', category: 'fee', extractedValue: '$18,400', status: 'valid' },
-    { id: 'fe2', name: 'Zone B chairs',       category: 'fee', extractedValue: '$9,600',  status: 'valid' },
+    { id: 'fe1', name: 'Open Area workstations', category: 'fee', extractedValue: '$18,400', status: 'valid' },
+    { id: 'fe2', name: 'Lounge chairs',          category: 'fee', extractedValue: '$9,600',  status: 'valid' },
     { id: 'fe3', name: 'Installation',        category: 'fee', extractedValue: '$12,400', status: 'valid' },
     {
         id: 'fe4', name: 'Agency fee total', category: 'fee',
@@ -2389,15 +2398,15 @@ function FunnelStepper({ step }: { step: BFIReviewStep }) {
 interface ExtractQuoteLine { code: string; name: string; qty: string; sif: string; net: string; corrected: boolean }
 
 const EXTRACT_QUOTE_LINES: ExtractQuoteLine[] = [
-    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  sif: '$8,100',   net: '$7,560',   corrected: true  },
+    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  sif: '$8,100',   net: '$8,100',   corrected: false },
     { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', sif: '$144,000', net: '$144,000', corrected: false },
     { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', sif: '$84,000',  net: '$84,000',  corrected: false },
 ]
 
 const EXTRACT_ZONES = [
-    { id: 'A', label: 'Zone A · Workstations ×24', qty: '24 units', chip: 'bg-info/10 text-info border-info/20',          dot: 'bg-info'    },
-    { id: 'B', label: 'Zone B · Lounge ×12',        qty: '12 units', chip: 'bg-ai/10 text-ai border-ai/20',                dot: 'bg-ai'      },
-    { id: 'C', label: 'Zone C · Filing ×6',         qty: '6 units',  chip: 'bg-success/10 text-success border-success/20', dot: 'bg-success' },
+    { id: 'A', label: 'Open Area',   qty: '', chip: 'bg-info/10 text-info border-info/20',          dot: 'bg-info'    },
+    { id: 'B', label: 'Lounge',      qty: '', chip: 'bg-ai/10 text-ai border-ai/20',                dot: 'bg-ai'      },
+    { id: 'C', label: 'Storage Room', qty: '', chip: 'bg-success/10 text-success border-success/20', dot: 'bg-success' },
 ]
 
 function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { onValidate?: () => void; onResolveChange?: (ids: Set<string>) => void; onCustomValue?: (fieldId: string, value: string) => void }) {
@@ -2459,8 +2468,8 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
             {tab === 'quote' && (
                 <div className="flex flex-col h-full min-h-0">
                     <div className="bg-background px-5 py-3 border-b border-border shrink-0">
-                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">QUOTE REVIEW</h4>
-                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">Q-2026-0089 · Quote Tool validated</p>
+                        <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">PRICING (FROM SIF)</h4>
+                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">Q-2026-0089 · Pending Quote Tool validation</p>
                     </div>
                     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
                         {/* Column headers */}
@@ -2488,12 +2497,11 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                                 )}
                             </div>
                         ))}
-                        {/* Totals */}
+                        {/* Totals — raw from SIF, pending Quote Tool validation */}
                         <div className="rounded-xl border border-border overflow-hidden">
                             {[
-                                { label: 'SIF Total',         value: '$236,100', muted: true  },
-                                { label: 'Adjusted Total',    value: '$235,560', bold: true   },
-                                { label: 'Discount (−37.5%)', value: '−$88,335', accent: true },
+                                { label: 'SIF Total', value: '$236,100', bold: true  },
+                                { label: 'Line items',     value: '3 lines',  muted: true },
                             ].map(row => (
                                 <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-border/50 last:border-0 text-[11px] ${row.bold ? 'bg-muted/20' : ''}`}>
                                     <span className="text-muted-foreground">{row.label}</span>
@@ -2522,7 +2530,7 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[11px] font-semibold">{zone.label}</p>
                                     </div>
-                                    <span className="text-[10px] font-mono font-bold">{zone.qty}</span>
+                                    {zone.qty && <span className="text-[10px] font-mono font-bold">{zone.qty}</span>}
                                 </div>
                             ))}
                         </div>
@@ -3057,7 +3065,7 @@ export default function BFIDocumentReviewModal({
                                                         : <><span className="font-bold">Agency fee</span> verified · MK Invoice matches T-code calculation</>
                                                     : step === 'labor'
                                                         ? <><span className="font-bold">Strata AI</span> · Purchase Order received · DOE-2847 · confirm receipt</>
-                                                        : <><span className="font-bold">Quote Tool</span> detectó cambios en el contrato CoNY · T-codes actualizados · 2 discrepancias a resolver</>
+                                                        : <><span className="font-bold">Strata AI</span> · SIF ingested · DOE-2847 fields extracted · ready for intake review</>
                                         }
                                     </p>
                                 </div>
@@ -3113,7 +3121,7 @@ export default function BFIDocumentReviewModal({
                                             {activeTab === 'sif' ? (
                                                 <SIFDocumentPreview resolvedIds={resolvedIds} step={step} customValues={customValues} />
                                             ) : activeTab === 'specs' ? (
-                                                <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'labor' || step === 'cpr' || step === 'fee'} />
+                                                <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'labor' || step === 'cpr' || step === 'fee'} validated={step !== 'extract'} />
                                             ) : (
                                                 <div className="h-full overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950">
                                                     <div className="border border-border rounded-xl overflow-hidden bg-card">

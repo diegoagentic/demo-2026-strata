@@ -149,7 +149,7 @@ export const BFI_STEPS: DemoStep[] = [
 
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'The Miller Knoll rep sends the RFQ to BFI with SIF, spec sheet, and floor plan attached' },
-    'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · CPR flag on DOE-2847 · click to investigate' },
+    'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · new SIF on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges the update · loop closed' },
     'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 correction $8,100 → $7,560 · verify service fee 3.75% (Grand Total $8,833.50) · approve to request labor quote from WIG' },
     'a1.2c': { mode: 'interactive', userAction: 'Review PO from NYC DoE + labor quote from Workplace · confirm 30-day delivery window · confirm in CORE · watch EDI transmit to Quote Tool' },
@@ -173,9 +173,9 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'a1.1': [
         'Fetching active CoNY orders from CORE',
-        'Scanning CPR packages for hour discrepancies',
+        'Parsing incoming SIFs and attachments',
         'Checking pricing SIFs against CoNY contract',
-        'Orders ranked by urgency · DOE-2847 flagged · CPR discrepancy detected',
+        'Orders ranked by urgency · DOE-2847 received · ready for intake review',
     ],
     'a1.2': [
         'Order Q-2026-0089 confirmed · notification sent to Robert Chen',

@@ -260,9 +260,9 @@ export default function ActionCenter() {
     ];
 
     const A11_INGEST_LINES = [
-        { text: 'DOE-2847.sif parsed · 6 line items extracted',                  isWarning: false },
-        { text: 'NYC-DOE-2847-specs.pdf · floor plan detected · Zone A·B·C',    isWarning: false },
-        { text: 'CPR discrepancy detected · Carpenters −5h · OT −2h · −$2,340', isWarning: true  },
+        { text: 'DOE-2847.sif parsed · 6 line items extracted', isWarning: false },
+        { text: 'NYC-DOE-2847-specs.pdf parsed',                 isWarning: false },
+        { text: 'Floor plan detected',                           isWarning: false },
     ];
 
     const handleA11Ingest = () => {

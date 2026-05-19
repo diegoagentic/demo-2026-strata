@@ -114,8 +114,8 @@ export default function DesignerRFQScene({ onSend }: DesignerRFQSceneProps) {
                     <div className="mx-4 mb-3 bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                         <Send className="h-4 w-4 text-success shrink-0 mt-0.5" />
                         <div className="text-xs">
-                            <div className="font-bold text-foreground">Quote request sent · DOE-2847 · May 5 · 9:14 AM</div>
-                            <div className="text-muted-foreground mt-0.5">Received by Strata · BFI processing the SIF and documents</div>
+                            <div className="font-bold text-foreground">SIF sent to Quote Tool · DOE-2847 · May 5 · 9:14 AM</div>
+                            <div className="text-muted-foreground mt-0.5">Confirmation sent to HMK Designer · SIF queued for Quote Tool</div>
                         </div>
                     </div>
                 )}
@@ -133,7 +133,7 @@ export default function DesignerRFQScene({ onSend }: DesignerRFQSceneProps) {
                         className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                     >
                         <Send className="h-3.5 w-3.5" />
-                        Send Request for Quote →
+                        Send SIF to Quote Tool →
                     </button>
                 </div>
             )}

@@ -54,7 +54,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                 {/* Email metadata */}
                 <div className="px-4 pt-4 pb-3 border-b border-border/60 space-y-1.5">
                     <div className="text-[13px] font-bold text-foreground leading-snug">
-                        Re: RFQ Received · Q-2026-0089 · DOE-2847
+                        Re: SIF Received · Q-2026-0089 · DOE-2847
                     </div>
                     <div className="space-y-0.5">
                         {[
@@ -75,7 +75,7 @@ export default function DesignerResponseScene({ onAcknowledge }: DesignerRespons
                     <div className="text-[12px] text-foreground leading-relaxed space-y-3">
                         <p>Hi Robert,</p>
                         <p>
-                            We've received your Request for Quote for{' '}
+                            We've received your SIF for{' '}
                             <span className="font-semibold">DOE-2847</span>. Your submitted documents have been
                             validated and are on file.
                         </p>

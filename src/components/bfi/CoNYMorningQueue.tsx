@@ -20,7 +20,7 @@ interface CoNYMorningQueueProps {
     onSelectOrder?: () => void
 }
 
-const NOTIFY_MESSAGE = `Hi Robert — SIF for DOE-2847 has been ingested and validated. CPR discrepancy detected: Carpenters −5h, OT −2h (−$2,340). Quote Q-2026-0089 is being processed. We'll follow up shortly with confirmation.
+const NOTIFY_MESSAGE = `Hi Robert — SIF for DOE-2847 has been ingested and validated. Quote Q-2026-0089 is being processed. We'll follow up shortly with confirmation.
 
 — Lauren DeMarco, BFI Furniture`
 
@@ -82,7 +82,7 @@ export default function CoNYMorningQueue({ onSelectOrder }: CoNYMorningQueueProp
 
             <p className="text-[11px] text-muted-foreground text-center">
                 {showDoe
-                    ? '4 active orders · DOE-2847 flagged · CPR discrepancy detected'
+                    ? '4 active orders · DOE-2847 received · ready for review'
                     : '3 active orders · monitoring CoNY pipeline…'
                 }
             </p>

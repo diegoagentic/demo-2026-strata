@@ -64,7 +64,7 @@ function getNewCardColors(name: string): { avatarBg: string; avatarColor: string
 // ─── DOE-2847 contextual content per column ───────────────────────────────────
 
 const DOE_BADGE: Record<number, { label: string; className: string }> = {
-    0: { label: '! CPR',       className: 'bg-warning/10 text-warning border border-warning/20' },
+    0: { label: 'New SIF',     className: 'bg-ai/10 text-ai border border-ai/20'                },
     1: { label: 'Quote Tool',  className: 'bg-info/10 text-info border border-info/20'          },
     2: { label: 'PO received', className: 'bg-warning/10 text-warning border border-warning/20' },
     3: { label: '2 pending',   className: 'bg-warning/10 text-warning border border-warning/20' },
@@ -72,7 +72,7 @@ const DOE_BADGE: Record<number, { label: string; className: string }> = {
 }
 
 const DOE_SUBTITLE: Record<number, string> = {
-    0: 'SIF received · CPR discrepancy flagged',
+    0: 'SIF received · Intake processing',
     1: 'Quote Tool validation · 1 price corrected',
     2: 'PO received · WIG labor quote compiled',
     3: 'CPR reconciliation · 2 lines to approve',
