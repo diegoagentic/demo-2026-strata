@@ -250,10 +250,7 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                                     <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
                                     <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{fmtUnit(sifUnit)}</span>
-                                    <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
-                                        {fmtUnit(unitSell)}
-                                        {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
-                                    </span>
+                                    <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(unitSell)}</span>
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
                                 </div>
                             )
@@ -2505,7 +2502,7 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                             ].map(row => (
                                 <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-border/50 last:border-0 text-[11px] ${row.bold ? 'bg-muted/20' : ''}`}>
                                     <span className="text-muted-foreground">{row.label}</span>
-                                    <span className={`font-mono font-semibold ${row.accent ? 'text-success' : row.muted ? 'text-muted-foreground' : 'text-foreground'}`}>{row.value}</span>
+                                    <span className={`font-mono font-semibold ${row.muted ? 'text-muted-foreground' : 'text-foreground'}`}>{row.value}</span>
                                 </div>
                             ))}
                         </div>
