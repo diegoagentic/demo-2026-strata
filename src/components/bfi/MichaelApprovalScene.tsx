@@ -55,6 +55,9 @@ BFI Furniture · Account Manager`
 
 function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () => void; onClose?: () => void }) {
     const [fromEmail, setFromEmail] = useState('michael.boyle@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('lauren.demarco@bfifurniture.com · Account Manager')
+    const [ccEmail,   setCcEmail]   = useState('nancy.bos@hermanmiller.com · walter@conyny.gov')
+    const [subject,   setSubject]   = useState('Final Labor Quote · DOE-2847 · Invoice Request')
     const [message,   setMessage]   = useState(NANCY_MESSAGE)
     const [sending,   setSending]   = useState(false)
     const [sent,      setSent]      = useState(false)
@@ -69,10 +72,10 @@ function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
     }
 
     const META_ROWS = [
-        { label: 'From', editable: true },
-        { label: 'To',   value: 'lauren.demarco@bfifurniture.com · Account Manager' },
-        { label: 'CC',   value: 'nancy.bos@hermanmiller.com · walter@conyny.gov', muted: true },
-        { label: 'Subj', value: 'Final Labor Quote · DOE-2847 · Invoice Request' },
+        { label: 'From', value: fromEmail, setter: setFromEmail },
+        { label: 'To',   value: toEmail,   setter: setToEmail   },
+        { label: 'CC',   value: ccEmail,   setter: setCcEmail, muted: true },
+        { label: 'Subj', value: subject,   setter: setSubject   },
     ]
 
     return (
@@ -109,22 +112,17 @@ function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
 
                             {/* Body */}
                             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                                {/* Email metadata */}
+                                {/* Email metadata — all fields editable */}
                                 <div className="rounded-xl border border-border overflow-hidden text-[11px]">
                                     {META_ROWS.map((row, i) => (
                                         <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
                                             <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
-                                            {row.editable ? (
-                                                <input
-                                                    value={fromEmail}
-                                                    onChange={e => setFromEmail(e.target.value)}
-                                                    className="flex-1 bg-transparent outline-none text-foreground border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors"
-                                                />
-                                            ) : (
-                                                <span className={row.muted ? 'text-muted-foreground italic' : 'text-foreground'}>
-                                                    {row.value}
-                                                </span>
-                                            )}
+                                            <input
+                                                value={row.value}
+                                                onChange={e => row.setter(e.target.value)}
+                                                disabled={sent}
+                                                className={`flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`}
+                                            />
                                         </div>
                                     ))}
                                 </div>
@@ -134,7 +132,8 @@ function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                     value={message}
                                     onChange={e => setMessage(e.target.value)}
                                     rows={14}
-                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono"
+                                    disabled={sent}
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono disabled:opacity-60"
                                 />
 
                                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_RPA] }]} />
