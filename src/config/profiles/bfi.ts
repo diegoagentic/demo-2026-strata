@@ -4,22 +4,27 @@
 // CLIENT: BFI Furniture (Elizabeth, NJ · ~50 employees · Women Owned
 //         Government/Municipal furniture dealer · CoNY primary customer)
 //
-// DEMO STRUCTURE: 2 flows · 9 total steps · minimalista, un valor por paso
+// DEMO STRUCTURE: 1 flow · 14 steps (post-Wendy revisions May 2026)
 //
 //   Dashboard — navbar tab permanente (no es un paso del demo)
 //
-//   FLOW 1 — Agency Fee (4 steps)
-//     a1.1: CoNY Order Queue   — morning triage · DOE-2847 CPR flag
-//     a1.2: Quote + Pricing    — form + discount calc + SIF timeline + order tracker
-//     a1.3: CPR Reconciliation — per-line approval + relay to Michael/Nancy inline
-//     a1.4: Agency Fee Verify  — Patricia verifies fee vs Nancy's report · closes
+//   FLOW 1 — Agency Fee · pre-award sequence (a1.0 → a1.2c)
+//     a1.0:   Request for Quote      — Miller Knoll designer sends SIF/specs/floor plan
+//     a1.1:   CoNY Order Queue       — Lauren morning triage · DOE-2847 surfaced
+//     a1.2:   Order Confirmation     — Lauren confirms receipt to Robert Chen
+//     a1.2b:  Quote Tool Validation  — SIF → Quote Tool · price correction + fee 3.75%
+//     a1.2b2: Labor Quote Request    — Lauren → WIG email · Michael compiles labor figures
+//     a1.2b3: Send Proposal          — Lauren sends formal proposal (product + labor) to NYC DOE
+//     a1.2c:  PO Received · CORE     — NYC DOE issues PO · Lauren confirms in CORE
 //
-//   FLOW 2 — Product Receiving (5 steps)
-//     r1.2: WIG Bingo Check    — comienza con dashboard overview + notif WIG · ready for AI analysis
-//     r1.3: AI Analysis        — progress bar → bingo grid · #34 missing
-//     r1.4: Alert & Claim      — notify Andy (HM) · open Omni claim
-//     r1.5: Core Entry         — 34/35 confirmed · confirm in CORE
-//     r1.6: Notify Walter      — BFI PM sees status before paper arrives (mobile)
+//   FLOW 1 — Agency Fee · post-delivery sequence (a1.2d → a1.4)
+//     a1.2d:  WIG Bingo Check        — receiving report ingested · AI vs bingo sheet
+//     a1.2e:  Shortage Claim         — missing carton · file claim with Herman Miller
+//     a1.2f:  Work Order Ready       — replacement confirmed · notify BFI PM Walter
+//     a1.3:   CPR Reconciliation     — per-line approval · CORE update · notify Michael/Nancy
+//     a1.3b:  Manager Review         — BFI manager sends final quote to HM invoice processor
+//     a1.3c:  Invoice Upload         — Strata detects invoice · forward to Finance/AR
+//     a1.4:   Agency Fee Verify      — Patricia reconciles fee vs Nancy's report · closes
 //
 // PRESENTATION DATE: May 14, 2026
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -32,7 +37,7 @@ import type { StepBehavior } from '../../components/demo/DemoStepBanner';
 export const BFI_STEPS: DemoStep[] = [
 
     // ═══════════════════════════════════════════
-    // FLOW 1: Agency Fee (4 steps · consolidated)
+    // FLOW 1: Agency Fee (14 steps)
     // ═══════════════════════════════════════════
     {
         id: 'a1.0',
@@ -168,8 +173,8 @@ export const BFI_STEPS: DemoStep[] = [
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'The Miller Knoll rep sends the RFQ to BFI with SIF, spec sheet, and floor plan attached' },
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · new SIF on DOE-2847 · click to investigate' },
-    'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges the update · loop closed' },
-    'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 correction $8,100 → $7,560 · verify service fee 3.75% (Grand Total $8,833.50) · approve to request labor quote from WIG' },
+    'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges receipt · BFI proceeds to validate pricing' },
+    'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 unit price correction $1,350 → $1,260 (Ext. Sell $7,560) · verify service fee 3.75% (Grand Total $8,833.50) · approve to request labor quote from WIG' },
     'a1.2b2': { mode: 'interactive', userAction: 'Send labor quote request to WIG · review scope · wait for Michael Weller to compile figures · receive labor quote back' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the formal proposal (product + labor) · send to NYC DoE procurement · await client review and PO issuance' },
     'a1.2c': { mode: 'interactive', userAction: 'PO arrives from NYC DoE · review PO against the proposal sent · confirm 30-day delivery window · confirm in CORE' },
@@ -188,7 +193,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
     'a1.0': [
         'Request for Quote received · DOE-2847 · Miller Knoll',
         'Parsing attachments: SIF, spec sheet, floor plan',
-        'Extracting line items and CPR package from SIF',
+        'Extracting line items from SIF · 3 product lines detected',
         'Documents queued in Strata intake · notifying Lauren DeMarco',
     ],
     'a1.1': [
@@ -201,12 +206,12 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Order Q-2026-0089 confirmed · notification sent to Robert Chen',
         'Robert Chen (Miller Knoll) received email confirmation',
         'Spec sheet NYC-DOE-2847-specs.pdf attached',
-        'Order acknowledged · loop closed · BFI proceeds to Quote Tool validation',
+        'Receipt acknowledged · BFI proceeds to Quote Tool validation',
     ],
     'a1.2b': [
         'Uploading SIF to Quote Tool · DOE-2847 · Q-2026-0089',
         'Comparing Requested vs Response against CoNY Contract ANT122',
-        'HMI-FU-300 ×6 corrected — List Ext $8,100 → $7,560 (CoNY contract rate)',
+        'HMI-FU-300 unit price corrected — $1,350 → $1,260 (CoNY contract rate) · Ext. Sell $7,560',
         'Herman Miller service fees applied (3.75%) · Grand Total $8,833.50',
     ],
     'a1.2b2': [
