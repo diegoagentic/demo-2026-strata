@@ -1972,6 +1972,17 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                     </div>
                 </div>
 
+                {/* Restricted Products Check — Strata extracts from Quote Comparison Download */}
+                <div className="rounded-xl border border-success/20 bg-success/5 px-4 py-3 flex items-start gap-2.5">
+                    <div className="h-5 w-5 rounded-full bg-success/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <CheckCircle2 className="h-3 w-3 text-success" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold text-foreground">Restricted Products Check · 0 flagged</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Strata OCR'd the Quote Comparison Download · all 3 lines cleared. Exception path ready: if Quote Tool kicks back a restricted item, Strata routes the alert to HMK and tracks the response.</p>
+                    </div>
+                </div>
+
                 {/* Quote Comparison — collapsible */}
                 <div className="rounded-xl border border-border overflow-hidden">
                     <button
