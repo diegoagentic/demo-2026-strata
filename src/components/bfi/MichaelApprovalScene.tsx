@@ -1,8 +1,8 @@
 /**
  * COMPONENT: MichaelApprovalScene (a1.3b)
- * PURPOSE: Michael Chen (Lauren's manager, BFI) sees the Agency Fee CPR funnel,
+ * PURPOSE: Michael Boyle (Lauren's manager, BFI) sees the Agency Fee CPR funnel,
  *          receives Lauren's CPR approval notification, reviews the same CPR detail
- *          as step 1.8 (pre-approved), and sends the final quote to Nancy Rodriguez
+ *          as step 1.8 (pre-approved), and sends the final quote to Nancy Bos
  *          (Herman Miller invoice processor) requesting the invoice.
  *
  * FLOW:
@@ -48,13 +48,13 @@ Following CPR reconciliation, the labor hours have been adjusted and approved:
 Please issue the final invoice for $6,920 and send it to ar@bfifurniture.com at your earliest convenience.
 
 Thank you,
-Michael Chen
+Michael Boyle
 BFI Furniture · Account Manager`
 
 // ─── Nancy Send Dialog ────────────────────────────────────────────────────────
 
 function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () => void; onClose?: () => void }) {
-    const [fromEmail, setFromEmail] = useState('michael.chen@bfifurniture.com')
+    const [fromEmail, setFromEmail] = useState('michael.boyle@bfifurniture.com')
     const [message,   setMessage]   = useState(NANCY_MESSAGE)
     const [sending,   setSending]   = useState(false)
     const [sent,      setSent]      = useState(false)
@@ -71,7 +71,7 @@ function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
     const META_ROWS = [
         { label: 'From', editable: true },
         { label: 'To',   value: 'lauren.demarco@bfifurniture.com · Account Manager' },
-        { label: 'CC',   value: 'nancy.rodriguez@hermanmiller.com · walter@conyny.gov', muted: true },
+        { label: 'CC',   value: 'nancy.bos@hermanmiller.com · walter@conyny.gov', muted: true },
         { label: 'Subj', value: 'Final Labor Quote · DOE-2847 · Invoice Request' },
     ]
 

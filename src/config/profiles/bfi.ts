@@ -80,7 +80,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Labor Quote Request',
-        description: 'After Quote Tool approves the product pricing, the BFI account manager sends a labor quote request to WIG (Workplace Installation Group). Michael Weller reviews the scope, compiles the labor figures, and returns the quote.',
+        description: 'After Quote Tool approves the product pricing, the BFI account manager sends a labor quote request to WIG (Workplace Installation Group). Michael Boyle reviews the scope, compiles the labor figures, and returns the quote.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -175,7 +175,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · new SIF on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges receipt · BFI proceeds to validate pricing' },
     'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 unit price correction $1,350 → $1,260 (Ext. Sell $7,560) · verify service fee 3.75% (Grand Total $8,833.50) · approve to request labor quote from WIG' },
-    'a1.2b2': { mode: 'interactive', userAction: 'Send labor quote request to WIG · review scope · wait for Michael Weller to compile figures · receive labor quote back' },
+    'a1.2b2': { mode: 'interactive', userAction: 'Send labor quote request to WIG · review scope · wait for Michael Boyle to compile figures · receive labor quote back' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the formal proposal (product + labor) · send to NYC DoE procurement · await client review and PO issuance' },
     'a1.2c': { mode: 'interactive', userAction: 'PO arrives from NYC DoE · review PO against the proposal sent · confirm 30-day delivery window · confirm in CORE' },
     'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
@@ -217,7 +217,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
     'a1.2b2': [
         'Drafting labor quote request to WIG · DOE-2847',
         'Scope attached: 3 product lines · 30 Court St, Brooklyn',
-        'Email sent to Michael Weller (WIG) · awaiting response',
+        'Email sent to Michael Boyle (WIG) · awaiting response',
         'Labor quote received · Teamsters 24h · Carpenters 50h · OT 8h',
     ],
     'a1.2b3': [
@@ -236,13 +236,13 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Loading CPR document for DOE-2847',
         'Extracting certified hours by labor category',
         'Comparing against quoted hours · Carpenters −5h · OT −2h',
-        'Drafting CORE update + stakeholder notification · Michael Chen + Nancy Rodriguez',
+        'Drafting CORE update + stakeholder notification · Michael Boyle + Nancy Bos',
     ],
     'a1.3b': [
         'CPR approval received from Lauren DeMarco',
         'Compiling final labor quote: Teamsters 24h · Carpenters 45h · OT 6h',
         'Calculating total: $6,920 (−$2,340 from original quote)',
-        'Drafting invoice request to Nancy Rodriguez · Herman Miller',
+        'Drafting invoice request to Nancy Bos · Herman Miller',
     ],
     'a1.3c': [
         'Quote Tool invoice received · invoice-QT-DOE2847.pdf',

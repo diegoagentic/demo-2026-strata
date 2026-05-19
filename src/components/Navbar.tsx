@@ -90,17 +90,17 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face',
     },
     'BFI Manager': {
-        name: 'Michael C.',
-        role: 'Account Manager · BFI',
+        name: 'Michael Boyle',
+        role: 'Director of Strategic Accounts · BFI',
         photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
     },
     'BFI Project Manager': {
-        name: 'Walter G.',
+        name: 'Walter Goley',
         role: 'CoNY Project Manager',
         photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
     },
     'BFI Finance': {
-        name: 'Patricia H.',
+        name: 'Patricia Hilger',
         role: 'Finance / AR',
         photo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=80&h=80&fit=crop&crop=face',
     },

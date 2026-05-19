@@ -107,7 +107,7 @@ const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
         badge: '1 new', badgeColor: 'ai',
         title: 'Final Labor Quote ready · DOE-2847 · Invoice upload requested',
         desc: 'CPR-adjusted quote ($6,920) has been approved. Please upload the Quote Tool approved invoice to complete the fee verification process.',
-        sender: 'Michael Chen · Account Manager',
+        sender: 'Michael Boyle · Director of Strategic Accounts',
         cta: 'Upload invoice →',
         event: 'bfi:invoice-open',
         footerText: 'Invoice upload pending',

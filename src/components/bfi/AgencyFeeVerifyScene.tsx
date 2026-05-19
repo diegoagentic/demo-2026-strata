@@ -70,7 +70,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 showDoe={true}
                 doeSubtitle={kanbanCol === 3
                     ? 'Quote Tool invoice attached · fee verification pending'
-                    : (scenario === 'match' ? 'Agency fee verified · Patricia Hayes' : 'Fee gap · −$315 · Flag pending')
+                    : (scenario === 'match' ? 'Agency fee verified · Patricia Hilger' : 'Fee gap · −$315 · Flag pending')
                 }
                 onReviewDoe={!verified ? handleOpenModal : undefined}
                 highlightReview={!verified}

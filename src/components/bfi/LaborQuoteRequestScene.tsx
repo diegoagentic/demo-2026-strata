@@ -1,7 +1,7 @@
 /**
  * COMPONENT: LaborQuoteRequestScene  (a1.2b2)
  * PURPOSE: After Quote Tool approval, Lauren sends a labor quote request
- *          to WIG (Workplace Installation Group). Michael Weller compiles
+ *          to WIG (Workplace Installation Group). Michael Boyle compiles
  *          the labor figures and returns the quote. Two phases in one step:
  *          (1) Lauren's outgoing email → (2) WIG response with labor figures.
  */
@@ -166,7 +166,7 @@ export default function LaborQuoteRequestScene({ onContinue }: LaborQuoteRequest
                                 <User className="h-3.5 w-3.5 text-success" />
                             </div>
                             <div className="min-w-0">
-                                <div className="text-[11px] font-bold text-foreground leading-none truncate">Michael Weller</div>
+                                <div className="text-[11px] font-bold text-foreground leading-none truncate">Michael Boyle</div>
                                 <div className="text-[9px] text-muted-foreground leading-none mt-0.5">WIG Installation · Lead Estimator</div>
                             </div>
                         </div>
@@ -236,7 +236,7 @@ export default function LaborQuoteRequestScene({ onContinue }: LaborQuoteRequest
                                 Please confirm and we will schedule the crew.
                             </p>
                             <p className="text-muted-foreground">
-                                — Michael Weller<br />
+                                — Michael Boyle<br />
                                 WIG Installation · Lead Estimator
                             </p>
                         </div>
