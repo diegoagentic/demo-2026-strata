@@ -2044,6 +2044,7 @@ const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
 
 function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
     const fmt2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
 
     const [compOpen, setCompOpen] = useState(false)
     const [showLaborDialog, setShowLaborDialog] = useState(false)
