@@ -287,12 +287,16 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                                     <span className="font-mono text-zinc-800 dark:text-zinc-100">7 (Enter Cost / Enter Sell)</span>
                                 </div>
                                 <div className="flex justify-between">
+                                    <span className="text-zinc-500 dark:text-zinc-400">Booking method</span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">Per-line fee (Method 3)</span>
+                                </div>
+                                <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">GP target</span>
-                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">0% (CoNY rule · cost = sell)</span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">Variable per line (avg 4.0%)</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">Agency Fee credit</span>
-                                    <span className="font-mono font-bold text-success">$9,255.24 (avg 4.0% · variable)</span>
+                                    <span className="font-mono font-bold text-success">$9,255.24 (per-line · 3 products)</span>
                                 </div>
                             </div>
                         </div>
@@ -308,6 +312,39 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
 }
 
 // ─── Service Fees Document Tab ────────────────────────────────────────────────
+
+// ─── CoNY Master Services Agreement (mock contract data · per Jessica 20-may) ──
+// The contract is the single source of truth for labor rules and agency fee %s.
+// Vigencia 15 years + 15 optional. Locked-in pricing per product category.
+const CONY_CONTRACT_DATA = {
+    id: 'ANT122',
+    name: 'City of New York · Master Services Agreement',
+    effective: 'Jan 1, 2025',
+    expires: 'Dec 31, 2040',
+    extension: '+15 years optional',
+    laborRules: [
+        { label: 'Minimum',     value: '4h skilled labor (per visit)'                },
+        { label: 'Rounding',    value: 'Quarter-hour · rounded up'                   },
+        { label: 'OT rate',     value: '1.5× standard rate'                          },
+        { label: 'Max labor',   value: '8% of order subtotal (projects under $250K)' },
+    ],
+    feeSchedule: [
+        { category: 'Filing & Storage',       pct: '2.9%' },
+        { category: 'Workstations & Systems', pct: '4.0%' },
+        { category: 'Lounge & Seating',       pct: '3.9%' },
+        { category: 'Tables · Custom',        pct: '3.5% (avg · varies)' },
+    ],
+}
+
+// ─── Booking methods that CORE supports for direct-bill orders (per Jessica) ───
+// Strata can configure any of the 3 per tenant. We're using Method 3 (Jessica's
+// preferred · per-line fee) because it gives GP visibility per product at booking.
+const BOOKING_METHODS = [
+    { id: 'sell-line',   label: 'Sell+ line',     desc: 'Positive sell line, 0 cost · invoice shows GP only' },
+    { id: 'credit-memo', label: 'Credit memo',    desc: 'Cost=sell, then negative cost line · what BFI does today' },
+    { id: 'per-line',    label: 'Per-line fee',   desc: 'Fee within each product line · GP visible per product (Jessica\'s preferred)' },
+] as const
+const ACTIVE_METHOD: typeof BOOKING_METHODS[number]['id'] = 'per-line'
 
 // Variable per-product agency fee % (per Jessica · Controller of BFI · 20-may)
 // Each Herman Miller product has its own contract %. Average ~4%.
@@ -1978,9 +2015,21 @@ BFI Furniture · CoNY Account Manager`
                                                         <span className="text-[13px] font-black font-mono text-foreground">{LQ_LABOR_TOTAL}</span>
                                                     </div>
                                                 </div>
-                                                <p className="text-[9px] text-muted-foreground italic">
-                                                    Within CoNY contract caps · min 4h enforced per skilled labor category
-                                                </p>
+                                                {/* Contract labor rules · sourced from CoNY ANT122 */}
+                                                <div className="rounded-lg border border-info/30 bg-info/5 overflow-hidden">
+                                                    <div className="px-3 py-1.5 border-b border-info/20 bg-info/10 flex items-center gap-2">
+                                                        <Building2 className="h-2.5 w-2.5 text-info" />
+                                                        <p className="text-[8px] font-bold text-info uppercase tracking-widest">Contract labor rules · {CONY_CONTRACT_DATA.id}</p>
+                                                    </div>
+                                                    <div className="px-3 py-1.5 space-y-0.5 text-[9px]">
+                                                        {CONY_CONTRACT_DATA.laborRules.map(r => (
+                                                            <div key={r.label} className="flex justify-between gap-3">
+                                                                <span className="text-muted-foreground shrink-0">{r.label}</span>
+                                                                <span className="text-foreground text-right">{r.value}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                                 <p className="text-[10px] text-muted-foreground">
                                                     — Michael Boyle<br />
                                                     BFI · Director of Strategic Accounts
@@ -2040,13 +2089,13 @@ BFI Furniture · CoNY Account Manager`
 // Credit line · sourced from CORE (Calc Code 7 · Direct Bill-HMI vendor type)
 // CORE generates the credit line when the Quote Tool output is uploaded.
 // Strata's role: surface CORE's record so Lauren can confirm — no draft/push.
+// Active booking method: per-line fee (Method 3 · Jessica's preferred).
 const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
-    { label: 'Amount',     value: '$9,255.24',                                   mono: true },
     { label: 'GL Account', value: '4200-Agency-Fees',                            mono: true },
     { label: 'Calc Code',  value: '7 · Enter Cost / Enter Sell Price'                       },
     { label: 'Vendor',     value: 'Direct Bill-HMI',                             mono: true },
     { label: 'Linked to',  value: 'DOE-2847 · Q-2026-0089',                      mono: true },
-    { label: 'Memo',       value: 'Herman Miller agency fee · variable per product (2.9% / 4.0% / 3.9%) on DOE-2847 · per Estimated Service Fees Q-2026-0089' },
+    { label: 'Memo',       value: 'Per-line agency fee (Method 3) · variable % per product type · per CoNY Contract ANT122' },
 ]
 
 function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
@@ -2164,7 +2213,7 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
 
-                {/* ─── Credit Line · From CORE (read-only) ────────────────────────── */}
+                {/* ─── Credit Line · From CORE (read-only · Method 3 active) ──────── */}
                 <div className="rounded-xl border border-ai/30 bg-ai/5 overflow-hidden">
                     <div className="px-4 py-3 border-b border-ai/20 bg-ai/5 flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-full bg-ai/15 flex items-center justify-center shrink-0">
@@ -2175,11 +2224,63 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                                 <p className="text-[12px] font-bold text-foreground">Credit Line · From CORE</p>
                                 <span className="text-[8px] font-bold text-info bg-info/10 border border-info/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Source: CORE</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">CORE prepared this credit line · review and confirm before sending the labor request</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Per-line fee method (Jessica's preferred) · GP visible per product at booking</p>
                         </div>
                     </div>
+
+                    {/* 3 booking methods badges (Strata supports all 3 · Method 3 active) */}
+                    <div className="px-4 py-2.5 border-b border-ai/20 bg-card/50">
+                        <div className="flex flex-wrap gap-1.5">
+                            {BOOKING_METHODS.map(m => {
+                                const isActive = m.id === ACTIVE_METHOD
+                                return (
+                                    <span
+                                        key={m.id}
+                                        title={m.desc}
+                                        className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border transition-colors ${
+                                            isActive
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-muted/40 text-muted-foreground border-border'
+                                        }`}
+                                    >
+                                        {isActive && <CheckCircle2 className="h-2.5 w-2.5" />}
+                                        {m.label}
+                                        {isActive && <span className="text-[8px] uppercase tracking-wider">· Active</span>}
+                                    </span>
+                                )
+                            })}
+                        </div>
+                        <p className="text-[9px] text-muted-foreground mt-1.5">
+                            Strata supports all 3 booking methods · per-line gives day-1 GP visibility per product
+                        </p>
+                    </div>
+
                     <div className="px-4 py-3 space-y-2.5">
-                        {/* Read-only fields — sourced from CORE */}
+                        {/* Per-line GP breakdown (Method 3 · Jessica's preferred) */}
+                        <div className="rounded-lg border border-border overflow-hidden bg-card">
+                            <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Per-line GP breakdown · Method 3</p>
+                            </div>
+                            <div className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-1.5 bg-muted/20 border-b border-border/50">
+                                {['Line', '%', 'List ext', 'GP'].map(h => (
+                                    <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
+                                ))}
+                            </div>
+                            {SF_LINES.map(line => (
+                                <div key={line.product} className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-2 border-b border-border/30 last:border-0 items-center">
+                                    <span className="text-[10px] font-medium text-foreground truncate">{line.product}</span>
+                                    <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{line.svcPct}%</span>
+                                    <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{fmt2(line.listExt)}</span>
+                                    <span className="text-[10px] font-mono font-semibold text-success text-right tabular-nums">{fmt2(line.svcExt)}</span>
+                                </div>
+                            ))}
+                            <div className="px-3 py-2 bg-success/5 border-t border-success/20 flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Total GP recognized · day 1</span>
+                                <span className="text-[12px] font-black font-mono text-success">{fmt2(grandTotal)} <span className="text-[9px] text-muted-foreground font-normal">avg 4.0%</span></span>
+                            </div>
+                        </div>
+
+                        {/* Read-only metadata fields (GL, Calc Code, Vendor, Linked, Memo) */}
                         <div className="rounded-lg border border-border overflow-hidden text-[11px] bg-card">
                             {CL_FIELDS.map((row, i) => (
                                 <div key={row.label} className={`flex gap-3 px-3 py-2 ${i < CL_FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
@@ -2189,10 +2290,24 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                             ))}
                         </div>
 
-                        {/* GP target callout */}
-                        <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-center justify-between text-[10px]">
-                            <span className="text-muted-foreground">GP target · CoNY contract</span>
-                            <span className="font-mono font-bold text-success tabular-nums">avg 4.0% · {fmt2(grandTotal)}</span>
+                        {/* Fee schedule · Contract ANT122 (mini-section) */}
+                        <div className="rounded-lg border border-info/30 bg-info/5 overflow-hidden">
+                            <div className="px-3 py-2 border-b border-info/20 bg-info/10 flex items-center gap-2">
+                                <Building2 className="h-3 w-3 text-info" />
+                                <p className="text-[9px] font-bold text-info uppercase tracking-widest">Fee schedule · Contract {CONY_CONTRACT_DATA.id}</p>
+                                <span className="ml-auto text-[8px] text-muted-foreground">{CONY_CONTRACT_DATA.effective} → {CONY_CONTRACT_DATA.expires}</span>
+                            </div>
+                            <div className="px-3 py-2 space-y-0.5 text-[10px]">
+                                {CONY_CONTRACT_DATA.feeSchedule.map(f => (
+                                    <div key={f.category} className="flex justify-between">
+                                        <span className="text-muted-foreground">{f.category}</span>
+                                        <span className="font-mono text-foreground">{f.pct}</span>
+                                    </div>
+                                ))}
+                                <p className="text-[9px] text-muted-foreground italic pt-1 border-t border-info/20 mt-1">
+                                    Locked-in pricing · {CONY_CONTRACT_DATA.extension}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3209,7 +3324,7 @@ export default function BFIDocumentReviewModal({
                                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                                     <p className="text-[11px] text-ai font-medium">
                                         {step === 'quote'
-                                            ? <><span className="font-bold">Quote Tool</span> · 1 price correction applied · Grand Total $9,255.24 · Credit line ready in CORE</>
+                                            ? <><span className="font-bold">Quote Tool</span> · 1 price correction · Per-line fee per Contract ANT122 · Total $9,255.24 ready in CORE</>
                                             : step === 'cpr'
                                                 ? <><span className="font-bold">CPR</span> · 2 lines adjusted · Impact −$720 · ready to approve</>
                                                 : step === 'fee'
