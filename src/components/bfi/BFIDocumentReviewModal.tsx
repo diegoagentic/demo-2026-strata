@@ -104,7 +104,7 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
             { k: 'Qty',         reqVal: '×6',       resVal: '×6'       },
             { k: 'List Unit $', reqVal: '1,350.00',  resVal: '1,260.00', changed: true },
             { k: 'List Ext $',  reqVal: '8,100.00',  resVal: '7,560.00', changed: true },
-            { k: 'Sell %',      reqVal: '18%',        resVal: '18%'       },
+            { k: 'GP target',   reqVal: '0%',         resVal: '0%'        },
             { k: 'Sell Unit $', reqVal: '243.00',     resVal: '226.80',   changed: true },
             { k: 'Sell Ext $',  reqVal: '1,458.00',   resVal: '1,360.80', changed: true },
             { k: 'Lead Time',   reqVal: 'Assigned',   resVal: '20 Day'   },
@@ -116,7 +116,7 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
         fields: [
             { k: 'Qty',         reqVal: '×24',          resVal: '×24'          },
             { k: 'List Ext $',  reqVal: '144,000.00',   resVal: '144,000.00'   },
-            { k: 'Sell %',      reqVal: '18%',           resVal: '18%'          },
+            { k: 'GP target',   reqVal: '0%',            resVal: '0%'           },
             { k: 'Lead Time',   reqVal: '20 Day',       resVal: '20 Day'       },
             { k: 'Disc. Code',  reqVal: 'IV',            resVal: 'IV'           },
         ],
@@ -126,7 +126,7 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
         fields: [
             { k: 'Qty',         reqVal: '×12',         resVal: '×12'         },
             { k: 'List Ext $',  reqVal: '84,000.00',   resVal: '84,000.00'   },
-            { k: 'Sell %',      reqVal: '18%',          resVal: '18%'         },
+            { k: 'GP target',   reqVal: '0%',           resVal: '0%'          },
             { k: 'Lead Time',   reqVal: '20 Day',      resVal: '20 Day'      },
             { k: 'Disc. Code',  reqVal: 'IV',           resVal: 'IV'          },
         ],
@@ -462,7 +462,7 @@ const FIELDS_LABOR: ReviewField[] = [
     { id: 'f2', name: 'Overtime labor',   category: 'labor', extractedValue: '6h',  status: 'valid' },
     { id: 'l3', name: 'Teamsters',            category: 'labor', extractedValue: '24h', status: 'valid' },
     // ── Pricing & Delivery ────────────────────────────────────────────────────
-    { id: 'l4', name: 'PO amount',        category: 'logistics', extractedValue: '$235,560',         status: 'valid' },
+    { id: 'l4', name: 'PO amount',        category: 'logistics', extractedValue: '$242,480',         status: 'valid' },
     { id: 'l5', name: 'Delivery window',  category: 'logistics', extractedValue: 'May 14–21, 2026',  status: 'valid' },
     { id: 'l6', name: 'Install crew',     category: 'logistics', extractedValue: '3 techs · A·B·C',  status: 'valid' },
 ]
@@ -906,10 +906,10 @@ function AttachmentsPanel({ invoiceUpload, michaelMode, onValidate }: { invoiceU
 // ─── CPR Review Panel ─────────────────────────────────────────────────────────
 
 const CPR_LINES = [
-    { id: 'teamsters',       category: 'Teamsters',      quoted: '24h', cpr: '24h', diff: null,   impact: null,     ok: true  },
-    { id: 'carpenters',      category: 'Carpenters',     quoted: '50h', cpr: '45h', diff: '-5h',  impact: '-$1,800', ok: false },
-    { id: 'ot-carpenters',   category: 'OT Carpenters',  quoted: '8h',  cpr: '6h',  diff: '-2h',  impact: '-$540',  ok: false },
-    { id: 'inside-delivery', category: 'Inside Delivery', quoted: '4h', cpr: '4h',  diff: null,   impact: null,     ok: true  },
+    { id: 'teamsters',       category: 'Teamsters',      quoted: '24h', cpr: '24h', diff: null,   impact: null,    ok: true  },
+    { id: 'carpenters',      category: 'Carpenters',     quoted: '50h', cpr: '45h', diff: '-5h',  impact: '-$450', ok: false },
+    { id: 'ot-carpenters',   category: 'OT Carpenters',  quoted: '8h',  cpr: '6h',  diff: '-2h',  impact: '-$270', ok: false },
+    { id: 'inside-delivery', category: 'Inside Delivery', quoted: '4h', cpr: '4h',  diff: null,   impact: null,    ok: true  },
 ]
 
 // ─── CPR Notify Dialog ────────────────────────────────────────────────────────
@@ -924,9 +924,9 @@ function CPRNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent:
 
 CPR reconciliation for DOE-2847 is complete. Adjusted labor hours have been reviewed and applied in CORE:
 
-  · Carpenters:    50h → 45h (−5h · −$1,800)
-  · OT Carpenters: 8h → 6h (−2h · −$540)
-  · Total impact:  −$2,340
+  · Carpenters:    50h → 45h (−5h · −$450)
+  · OT Carpenters: 8h → 6h (−2h · −$270)
+  · Total impact:  −$720
 
 Please confirm so we can proceed to agency fee verification.
 
@@ -998,7 +998,7 @@ Please confirm so we can proceed to agency fee verification.
                                         <span className="text-muted-foreground">OT Carpenters</span>
                                         <span className="font-mono font-semibold text-foreground">8h → 6h (−2h)</span>
                                         <span className="text-muted-foreground">Total impact</span>
-                                        <span className="font-mono font-bold text-warning">−$2,340</span>
+                                        <span className="font-mono font-bold text-warning">−$720</span>
                                         <span className="text-muted-foreground">SIF</span>
                                         <span className="font-semibold text-foreground">Updated accordingly</span>
                                     </div>
@@ -1109,7 +1109,7 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
         doe:     { initials: 'DOE', name: 'NYC DOE Procurement',  role: 'nycdoe-procurement@schools.nyc.gov', color: 'bg-success/15 text-success' },
     } as const
     const commentRecipient = COMMENT_RECIPIENTS[commentTo]
-    const commentMessage = `Hi ${commentRecipient.name.split(' ')[0]} — update on DOE-2847 CPR reconciliation: both labor adjustments (Carpenters −5h · OT −2h · total impact −$2,340) have been reviewed and approved. Figures are now reflected in CORE.\n\n— Lauren DeMarco, BFI Furniture`
+    const commentMessage = `Hi ${commentRecipient.name.split(' ')[0]} — update on DOE-2847 CPR reconciliation: both labor adjustments (Carpenters −5h · OT −2h · total impact −$720) have been reviewed and approved. Figures are now reflected in CORE.\n\n— Lauren DeMarco, BFI Furniture`
 
     const handleCommentSend = () => {
         setCommentSent(true)
@@ -1119,7 +1119,7 @@ function CPRReviewPanel({ onValidate, michaelMode, invoiceUpload, onResolveChang
     const [rightTab, setRightTab] = useState<'review' | 'attachments'>(invoiceUpload ? 'attachments' : 'review')
 
     const allApproved  = diffLines.every(l => approved.has(l.id))
-    const totalImpact  = '-$2,340'
+    const totalImpact  = '-$720'
 
     const handleApprove = (id: string) => {
         const next = new Set([...approved, id])
@@ -1500,15 +1500,15 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 // ─── Fee Review Panel ─────────────────────────────────────────────────────────
 
 const FEE_LINES = [
-    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '4.0%', fee: '$5,760' },
-    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '3.9%', fee: '$3,276' },
-    { product: 'Filing Units (×6)',    sale: '$7,560',   tcode: '2.9%', fee: '$219'   },
+    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '3.75%', fee: '$5,400.00' },
+    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '3.75%', fee: '$3,150.00' },
+    { product: 'Filing Units (×6)',    sale: '$7,560',   tcode: '3.75%', fee: '$283.50'   },
 ]
 
-const EXPECTED_FEE = '$9,255'
-const MK_INVOICE_MATCH = '$9,255'
-const MK_INVOICE_GAP   = '$8,940'
-const FEE_GAP          = '−$315'
+const EXPECTED_FEE = '$8,833.50'
+const MK_INVOICE_MATCH = '$8,833.50'
+const MK_INVOICE_GAP   = '$8,500.00'
+const FEE_GAP          = '−$333.50'
 
 function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; onValidate?: () => void }) {
     const isMatch        = scenario === 'match'
@@ -1558,8 +1558,8 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                         </p>
                         <div className="space-y-1">
                             {[
-                                { label: 'Carpenters',    quoted: '50h', cpr: '45h', impact: '−$1,800' },
-                                { label: 'OT Carpenters', quoted: '8h',  cpr: '6h',  impact: '−$540'   },
+                                { label: 'Carpenters',    quoted: '50h', cpr: '45h', impact: '−$450' },
+                                { label: 'OT Carpenters', quoted: '8h',  cpr: '6h',  impact: '−$270' },
                             ].map(row => (
                                 <div key={row.label} className="flex items-center gap-2 text-[10px]">
                                     <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
@@ -1571,7 +1571,7 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                             ))}
                             <div className="flex items-center gap-2 text-[10px] pt-1 border-t border-border/50 mt-1">
                                 <span className="font-black text-foreground ml-5 w-24 shrink-0">Total impact</span>
-                                <span className="ml-auto text-success font-black font-mono text-[11px]">−$2,340</span>
+                                <span className="ml-auto text-success font-black font-mono text-[11px]">−$720</span>
                             </div>
                         </div>
                     </div>
@@ -1745,11 +1745,12 @@ const LQ_SCOPE = [
     { code: 'HMI-LS-500',  desc: 'Aeron Seating',         qty: '×12' },
 ]
 const LQ_LABOR = [
-    { role: 'Teamsters',    hours: 24, rate: '$145/h', subtotal: '$3,480' },
-    { role: 'Carpenters',   hours: 50, rate: '$95/h',  subtotal: '$4,750' },
-    { role: 'Overtime (OT)',hours: 8,  rate: '$129/h', subtotal: '$1,032' },
+    { role: 'Teamsters',       hours: 24, rate: '$75/h',  subtotal: '$1,800' },
+    { role: 'Carpenters',      hours: 50, rate: '$90/h',  subtotal: '$4,500' },
+    { role: 'OT Carpenters',   hours: 8,  rate: '$135/h', subtotal: '$1,080' },
+    { role: 'Inside Delivery', hours: 4,  rate: '$65/h',  subtotal: '$260'   },
 ]
-const LQ_LABOR_TOTAL = '$9,262'
+const LQ_LABOR_TOTAL = '$7,640'
 
 // ─── Labor Quote Dialog (overlay · same email-composer pattern as SendProposalDialog) ──
 
@@ -3293,7 +3294,7 @@ export default function BFIDocumentReviewModal({
                                         {step === 'quote'
                                             ? <><span className="font-bold">Quote Tool</span> · 1 correction applied · HMI-FU-300 $8,100 → $7,560 (CoNY rate) · Service Fees 3.75% · Grand Total $8,833.50</>
                                             : step === 'cpr'
-                                                ? <><span className="font-bold">CPR</span> reconciliation · Carpenters −5h · OT −2h · Impact: −$2,340 · 2 lines to approve</>
+                                                ? <><span className="font-bold">CPR</span> reconciliation · Carpenters −5h · OT −2h · Impact: −$720 · 2 lines to approve</>
                                                 : step === 'fee'
                                                     ? scenario === 'gap'
                                                         ? <><span className="font-bold">Agency fee</span> gap detected · MK Invoice {MK_INVOICE_GAP} vs expected {EXPECTED_FEE} · {FEE_GAP}</>

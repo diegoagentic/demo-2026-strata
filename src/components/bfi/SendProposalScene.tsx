@@ -24,31 +24,27 @@ function SendProposalDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
     const [toEmail,   setToEmail]   = useState('nycdoe-procurement@schools.nyc.gov')
     const [dateText,  setDateText]  = useState('May 6, 2026 · 10:45 AM')
-    const [subject,   setSubject]   = useState('Formal Proposal · DOE-2847')
+    const [subject,   setSubject]   = useState('Quote DOE-2847 for 30 Court Street, Brooklyn, NY')
     const [bodyIntro, setBodyIntro] = useState(
 `Good morning,
 
-Please find attached our formal proposal for project DOE-2847. Pricing has been validated against the CoNY contract through Quote Tool (one correction applied: Filing Units $8,100 → $7,560 per T-code) and the WIG labor schedule has been compiled and confirmed.`
+Please find attached our formal quote for project DOE-2847 at 30 Court Street, Brooklyn, NY.`
     )
     const [bodyClose, setBodyClose] = useState(
-`The updated SIF, Quote Tool validation, and WIG labor quote are attached for your records. Please review and confirm so we can proceed with the Purchase Order.
+`Please review and confirm so we can proceed with the Purchase Order.
 
 — Lauren DeMarco
 BFI Furniture · CoNY Account Manager`
     )
     const [summary, setSummary] = useState([
+        { label: 'Project',         value: 'DOE-2847 · 30 Court Street, Brooklyn, NY' },
         { label: 'Contract',        value: 'CoNY · City of New York' },
-        { label: 'Price corrected', value: 'Filing Units $8,100 → $7,560 per T-code' },
-        { label: 'Adjusted total',  value: '$235,560' },
-        { label: 'CoNY discount',   value: '−$88,335 (37.5%)' },
-        { label: 'Labor (WIG)',     value: 'Teamsters 24h · Carpenters 50h · OT 8h' },
+        { label: 'Total',           value: '$242,480' },
         { label: 'Delivery window', value: 'May 14–21, 2026 (30 days)' },
         { label: 'Install crew',    value: '3 technicians · Open Area · Lounge · Storage Room' },
     ])
     const [attachments, setAttachments] = useState([
-        { name: 'DOE-2847-SIF-updated.pdf',     label: 'Updated SIF' },
-        { name: 'QuoteTool-DOE-2847.pdf',       label: 'Quote Tool'  },
-        { name: 'WIG-Labor-Quote-DOE-2847.pdf', label: 'Labor Quote' },
+        { name: 'DOE-2847-Quote.pdf', label: 'Quote' },
     ])
 
     const updateSummary = (i: number, value: string) =>

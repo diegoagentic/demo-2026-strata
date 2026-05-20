@@ -43,7 +43,7 @@ Following CPR reconciliation, the labor hours have been adjusted and approved:
   · OT Carpenters:    6h × $135/h = $810    (revised from 8h)
   · Inside Delivery:  4h × $65/h  = $260
 
-  Total labor:  $6,920  (adjusted from $9,260 · saving: −$2,340)
+  Total labor:  $6,920  (adjusted from $7,640 · saving: −$720)
 
 Please issue the final invoice for $6,920 and send it to ar@bfifurniture.com at your earliest convenience.
 

@@ -158,7 +158,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Fee verification',
-        description: 'Patricia compares Nancy\'s reported fee against the CoNY contract. Strata catches a $1,250 gap automatically — Patricia decides whether to confirm the match or flag the discrepancy.',
+        description: 'Patricia compares Nancy\'s reported fee against the CoNY contract. Strata catches a −$333.50 gap automatically — Patricia decides whether to confirm the match or flag the discrepancy.',
         app: 'bfi-agency-fee',
         role: 'Finance / AR',
     },
@@ -180,7 +180,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line by line · approve · open the team notification · send the CORE update' },
     'a1.3b': { mode: 'interactive', userAction: 'Review Lauren\'s CPR approval · send the invoice request to Nancy at Herman Miller' },
     'a1.3c': { mode: 'interactive', userAction: 'Upload the approved invoice · Strata detects it automatically · forward to Patricia in Finance/AR' },
-    'a1.4': { mode: 'interactive', userAction: 'Compare the agency fee — match or gap scenario · confirm the match or flag the $1,250 discrepancy' },
+    'a1.4': { mode: 'interactive', userAction: 'Compare the agency fee — match or gap scenario · confirm the match or flag the −$333.50 discrepancy' },
 };
 
 // ─── STEP MESSAGES (AI agent progress · short, status-style) ─────────────────
@@ -217,7 +217,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Sending request to WIG',
         'WIG response in · forwarded to Michael',
         'Michael compiled labor · Teamsters 24h · Carpenters 50h · OT 8h · Inside 4h',
-        'Labor total $9,262 · ready for proposal',
+        'Labor total $7,640 · ready for proposal',
     ],
     'a1.2b3': [
         'Compiling proposal · product + labor',
@@ -240,7 +240,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
     'a1.3b': [
         'CPR approval received from Lauren',
         'Final labor · Teamsters 24h · Carpenters 45h · OT 6h',
-        'New total $6,920 (−$2,340 from quote)',
+        'New total $6,920 (−$720 from quote)',
         'Drafting invoice request to Nancy',
     ],
     'a1.3c': [
@@ -251,9 +251,9 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'a1.4': [
         'Loading contract codes for DOE-2847',
-        'Calculating expected fee · 18% per line',
+        'Calculating expected fee · 3.75% per line',
         'Pulling Nancy\'s report from Herman Miller',
-        'Comparison ready · gap detected · $1,250',
+        'Comparison ready · gap detected · −$333.50',
     ],
 };
 
