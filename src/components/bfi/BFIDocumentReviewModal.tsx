@@ -3039,7 +3039,7 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
                                     </div>
                                 )}
 
-                                {/* Expanded: issue field — OmniQuote review */}
+                                {/* Expanded: issue field — Quote Tool review */}
                                 {isExpanded && isIssue && !isResolved && (
                                     <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                                         <div className="space-y-1.5">
@@ -3195,7 +3195,7 @@ export default function BFIDocumentReviewModal({
     const [customValues, setCustomValues] = useState<Record<string, string>>(
         step === 'labor' ? { f1: '45h', f2: '6h' } : {}
     )
-    // OmniQuote lines — shared between left doc and right review panel
+    // Quote Tool lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
     const [acceptedRows, setAcceptedRows] = useState<Set<number>>(() =>
         step === 'labor' ? new Set([0]) : new Set()

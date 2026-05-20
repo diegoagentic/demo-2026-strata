@@ -1,6 +1,6 @@
 /**
  * COMPONENT: OrderTrackerScene
- * PURPOSE: Flow 1 · Scene 5 — Unified order tracker (CORE + OmniQuote + R Drive).
+ * PURPOSE: Flow 1 · Scene 5 — Unified order tracker (CORE + Quote Tool + R Drive).
  *          Brief scene — shows consolidated status, Lauren confirms.
  *
  * DS TOKENS: bg-card · bg-success/5 · text-success · border-border
