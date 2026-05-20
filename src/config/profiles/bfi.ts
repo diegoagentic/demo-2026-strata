@@ -73,7 +73,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Quote · Credit · Labor',
-        description: 'Three actions in one place. Lauren validates pricing through Quote Tool (it auto-corrects one item against the CoNY contract and surfaces the 3.75% service fees). She then posts the credit line to CORE — the fee becomes BFI\'s profit automatically, no manual math. Finally, she emails WIG for the labor quote; Michael reviews and compiles it before sending back.',
+        description: 'Three actions in one step: ① validate pricing in Quote Tool, ② post the credit line to CORE (the fee becomes profit — no manual math), ③ email WIG for the labor quote.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
