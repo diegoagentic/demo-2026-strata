@@ -284,13 +284,13 @@ export default function PricingValidationScene() {
                     </div>
                     <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-bold text-foreground tabular-nums">42.3%</span>
-                        <span className="text-xs text-muted-foreground">across 3 validated lines · Cost = Sale</span>
+                        <span className="text-xs text-muted-foreground">across 3 validated lines · CoNY contract pricing applied</span>
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                        Filing Units corrected $8,100 → $7,560 · Formula: (Sale ÷ List) − 1 · $0 GP
+                        Filing Units corrected $8,100 → $7,560 · CoNY contract rate applied
                     </div>
                     <div className="text-[10px] text-muted-foreground/70 pt-0.5 border-t border-border">
-                        Before: upload SIF → wait Quote Tool email → download → re-upload → manual calc · ~65 min. Now: 0 min.
+                        Before: upload SIF → wait Quote Tool email → download → re-upload · ~65 min. Now: 0 min — Strata posts the credit line automatically.
                     </div>
                 </div>
             )}

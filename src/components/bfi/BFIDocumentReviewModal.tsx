@@ -15,13 +15,14 @@ import {
     X, FileText,
     ChevronDown, ChevronUp, CheckCircle2, Sparkles,
     Edit, Edit2, Edit3, Zap, Info, MapPin, Send, AlertCircle,
-    Download, Mail, Upload, Loader2, Paperclip
+    Download, Mail, Upload, Loader2, Paperclip,
+    CreditCard, ArrowRight, AlertTriangle, Building2
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type BFIReviewStep = 'extract' | 'quote' | 'val-sif' | 'val-ovniq' | 'labor' | 'cpr' | 'fee'
+export type BFIReviewStep = 'extract' | 'quote' | 'val-sif' | 'val-ovniq' | 'labor-request' | 'labor' | 'cpr' | 'fee'
 
 interface BFIDocumentReviewModalProps {
     isOpen: boolean
@@ -1965,12 +1966,47 @@ BFI Furniture · Account Manager`
     )
 }
 
+type CreditLinePhase = 'review' | 'draft' | 'pushing' | 'posted'
+
 function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
     const fmt2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    const fmt0 = (n: number) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
     const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
+    const listTotal = SF_LINES.reduce((sum, l) => sum + l.listExt, 0)
 
-    const [compOpen,  setCompOpen]  = useState(false)
-    const [showEmail, setShowEmail] = useState(false)
+    const [compOpen, setCompOpen] = useState(false)
+    const [phase, setPhase] = useState<CreditLinePhase>('review')
+
+    // Credit line draft fields — editable per user request (Wendy 18-may)
+    const [clAmount, setClAmount] = useState(grandTotal.toFixed(2))
+    const [clGlAccount, setClGlAccount] = useState('4200-Agency-Fees')
+    const [clMemo, setClMemo] = useState('Herman Miller agency fee · 3.75% on DOE-2847 product lines · per Estimated Service Fees Q-2026-0089')
+
+    // Pushing animation messages
+    const [pushMsgIdx, setPushMsgIdx] = useState(0)
+    const pushMessages = [
+        'Posting credit line to CORE...',
+        'Creating CL-2026-0089 · GL account ' + clGlAccount,
+        'Linking to order DOE-2847 · cost credit applied',
+    ]
+
+    const clAmountNum = parseFloat(clAmount) || 0
+    const amountDelta = clAmountNum - grandTotal
+    const amountDiffers = Math.abs(amountDelta) > 0.01
+    const gpPct = listTotal > 0 ? (clAmountNum / listTotal) * 100 : 0
+
+    const handleApproveContinue = () => setPhase('draft')
+
+    const handlePushToCore = () => {
+        setPhase('pushing')
+        setPushMsgIdx(0)
+        const id1 = setTimeout(() => setPushMsgIdx(1), 700)
+        const id2 = setTimeout(() => setPushMsgIdx(2), 1400)
+        const id3 = setTimeout(() => setPhase('posted'), 2200)
+        return () => { clearTimeout(id1); clearTimeout(id2); clearTimeout(id3) }
+    }
+
+    const handleContinueToLabor = () => onValidate?.()
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
@@ -2073,23 +2109,376 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                 </div>
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+
+                {/* ─── Sub-step Credit Line · DRAFT EDITABLE ───────────────────── */}
+                {phase === 'draft' && (
+                    <div className="rounded-xl border border-ai/30 bg-ai/5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="px-4 py-3 border-b border-ai/20 bg-ai/5 flex items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-full bg-ai/15 flex items-center justify-center shrink-0">
+                                <CreditCard className="h-3.5 w-3.5 text-ai" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[12px] font-bold text-foreground">Credit Line · Draft for CORE</p>
+                                <p className="text-[10px] text-muted-foreground">Strata will post a cost credit · review fields before pushing</p>
+                            </div>
+                        </div>
+                        <div className="px-4 py-3 space-y-2.5">
+                            {/* Editable fields — META_ROWS pattern from PatriciaDialog */}
+                            <div className="rounded-lg border border-border overflow-hidden text-[11px]">
+                                <div className="flex gap-3 px-3 py-2.5 border-b border-border/60">
+                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">Amount</span>
+                                    <span className="text-muted-foreground shrink-0">$</span>
+                                    <input
+                                        value={clAmount}
+                                        onChange={e => setClAmount(e.target.value)}
+                                        inputMode="decimal"
+                                        className="flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors text-foreground font-mono tabular-nums"
+                                    />
+                                </div>
+                                <div className="flex gap-3 px-3 py-2.5 border-b border-border/60">
+                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">GL Account</span>
+                                    <input
+                                        value={clGlAccount}
+                                        onChange={e => setClGlAccount(e.target.value)}
+                                        className="flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors text-foreground font-mono"
+                                    />
+                                </div>
+                                <div className="flex gap-3 px-3 py-2.5 border-b border-border/60">
+                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">Linked to</span>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-foreground bg-muted px-2 py-0.5 rounded">
+                                        <Building2 className="h-3 w-3 text-muted-foreground" />
+                                        DOE-2847 · Q-2026-0089
+                                    </span>
+                                </div>
+                                <div className="px-3 py-2.5">
+                                    <span className="text-muted-foreground font-semibold block mb-1">Memo</span>
+                                    <textarea
+                                        value={clMemo}
+                                        onChange={e => setClMemo(e.target.value)}
+                                        rows={2}
+                                        className="w-full bg-transparent outline-none border border-border/60 focus:border-primary/50 transition-colors rounded px-2 py-1 text-[10px] text-foreground resize-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* GP preview — recalculates dynamically */}
+                            <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 flex items-center justify-between text-[10px]">
+                                <span className="text-muted-foreground">GP recognized on posting</span>
+                                <span className="font-mono font-bold text-foreground tabular-nums">
+                                    {fmt2(clAmountNum)} <span className="text-muted-foreground font-normal">· {gpPct.toFixed(2)}% of list</span>
+                                </span>
+                            </div>
+
+                            {/* Differs warning — only if user edited the amount */}
+                            {amountDiffers && (
+                                <div className="rounded-lg border border-warning/40 bg-warning/5 px-3 py-2 flex items-start gap-2 animate-in fade-in duration-200">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
+                                    <p className="text-[10px] text-foreground leading-relaxed">
+                                        <span className="font-bold">Differs from Estimated Service Fees</span> by {fmt2(Math.abs(amountDelta))} ({amountDelta > 0 ? 'over' : 'under'}). Posting anyway — confirm this is intentional.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* ─── Sub-step Credit Line · PUSHING (animated) ──────────────────── */}
+                {phase === 'pushing' && (
+                    <div className="rounded-xl border border-ai/40 bg-ai/10 px-4 py-3.5 flex items-start gap-2.5 animate-in fade-in duration-200">
+                        <div className="h-7 w-7 rounded-full bg-ai/20 flex items-center justify-center shrink-0">
+                            <Loader2 className="h-3.5 w-3.5 text-ai animate-spin" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-bold text-ai uppercase tracking-wide">Posting to CORE</p>
+                            <p key={pushMsgIdx} className="text-[11px] text-foreground mt-1 animate-in fade-in slide-in-from-bottom-1 duration-300">
+                                {pushMessages[pushMsgIdx]}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ─── Sub-step Credit Line · POSTED (success) ────────────────────── */}
+                {phase === 'posted' && (
+                    <div className="rounded-xl border border-success/30 bg-success/5 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                        <div className="px-4 py-3 flex items-start gap-2.5">
+                            <div className="h-7 w-7 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                                <CheckCircle2 className="h-4 w-4 text-success" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[12px] font-bold text-foreground">Credit line CL-2026-0089 posted</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">DOE-2847 · {fmt2(clAmountNum)} cost credit · GP {gpPct.toFixed(2)}% recognized · {clGlAccount}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Footer */}
+            {/* Footer — changes by phase */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
-                <button
-                    onClick={() => setShowEmail(true)}
-                    className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm"
-                >
-                    Approve & Request Labor Quote →
-                </button>
+                {phase === 'review' && (
+                    <button
+                        onClick={handleApproveContinue}
+                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
+                    >
+                        Approve & continue to Credit Line
+                        <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                )}
+                {phase === 'draft' && (
+                    <button
+                        onClick={handlePushToCore}
+                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
+                    >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Push to CORE · {fmt0(clAmountNum)}
+                    </button>
+                )}
+                {phase === 'pushing' && (
+                    <button
+                        disabled
+                        className="w-full py-2.5 text-[11px] font-black rounded-xl uppercase tracking-widest bg-muted text-muted-foreground inline-flex items-center justify-center gap-2"
+                    >
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Posting...
+                    </button>
+                )}
+                {phase === 'posted' && (
+                    <button
+                        onClick={handleContinueToLabor}
+                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
+                    >
+                        Continue to Labor Quote
+                        <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                )}
+            </div>
+        </div>
+    )
+}
+
+// ─── Labor Request Panel (step a1.2b2 — Lauren → WIG · Michael compiles) ─────
+
+type LaborRequestPhase = 'draft' | 'sent' | 'received'
+
+function LaborRequestPanel({ onValidate }: { onValidate?: () => void }) {
+    const [phase, setPhase] = useState<LaborRequestPhase>('draft')
+    const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
+    const [toEmail,   setToEmail]   = useState('m.weller@wiginstall.com · WIG Installation')
+    const [ccEmail,   setCcEmail]   = useState('michael.boyle@bfifurniture.com · BFI Director Strategic Accounts')
+    const [subject,   setSubject]   = useState('Labor Quote Request · DOE-2847 · NYC Dept. of Education')
+    const [body, setBody] = useState(
+`Hi Mike,
+
+Please prepare a labor quote for DOE-2847 (NYC Department of Education · CoNY contract). Pricing was already validated through Quote Tool against CoNY Contract ANT122.
+
+Site: 30 Court Street, Brooklyn, NY 11201
+Delivery window: May 14–21, 2026
+
+Please include line items for Teamsters, Carpenters, OT differential, and inside delivery. Send the quote back at your earliest convenience so we can compile the full proposal.
+
+Thanks,
+Lauren DeMarco
+BFI Furniture · CoNY Account Manager`
+    )
+
+    const META_ROWS = [
+        { label: 'From', value: fromEmail, setter: setFromEmail },
+        { label: 'To',   value: toEmail,   setter: setToEmail   },
+        { label: 'CC',   value: ccEmail,   setter: setCcEmail, muted: true },
+        { label: 'Subj', value: subject,   setter: setSubject   },
+    ]
+
+    const handleSend = () => {
+        setPhase('sent')
+        setTimeout(() => setPhase('received'), 1600)
+    }
+
+    const handleContinue = () => onValidate?.()
+
+    const locked = phase !== 'draft'
+
+    return (
+        <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
+            {/* Header */}
+            <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
+                <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">LABOR QUOTE REQUEST</h4>
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">CoNY Contract ANT122 · DOE-2847 · Workplace Installation Group</p>
             </div>
 
-        <LaborQuoteDialog
-            isOpen={showEmail}
-            onComplete={() => { setShowEmail(false); onValidate?.() }}
-            onClose={() => setShowEmail(false)}
-        />
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+
+                {/* Phase: DRAFT — outgoing email editable */}
+                {phase === 'draft' && (
+                    <>
+                        <div className="rounded-xl border border-info/20 bg-info/5 px-4 py-3 flex items-start gap-2.5">
+                            <div className="h-5 w-5 rounded-full bg-info/10 flex items-center justify-center shrink-0 mt-0.5">
+                                <Mail className="h-3 w-3 text-info" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-foreground">Drafting labor quote request</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Scope auto-populated from validated Quote · Michael Boyle (BFI) will compile WIG response</p>
+                            </div>
+                        </div>
+
+                        {/* Editable meta rows */}
+                        <div className="rounded-xl border border-border overflow-hidden text-[11px]">
+                            {META_ROWS.map((row, i) => (
+                                <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
+                                    <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
+                                    <input
+                                        value={row.value}
+                                        onChange={e => row.setter(e.target.value)}
+                                        disabled={locked}
+                                        className={`flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Editable body */}
+                        <textarea
+                            value={body}
+                            onChange={e => setBody(e.target.value)}
+                            disabled={locked}
+                            rows={10}
+                            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono disabled:opacity-60"
+                        />
+
+                        {/* Scope reference */}
+                        <div className="rounded-xl border border-border overflow-hidden">
+                            <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Installation Scope · DOE-2847</p>
+                            </div>
+                            {LQ_SCOPE.map(l => (
+                                <div key={l.code} className="flex items-center gap-3 px-3 py-2 border-b border-border/40 last:border-0">
+                                    <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <span className="text-[10px] font-mono text-muted-foreground">{l.code}</span>
+                                    <span className="text-[10px] font-medium text-foreground flex-1">{l.desc}</span>
+                                    <span className="text-[10px] font-mono text-foreground">{l.qty}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {/* Phase: SENT — loading */}
+                {phase === 'sent' && (
+                    <div className="space-y-3 animate-in fade-in duration-200">
+                        <div className="rounded-xl border border-success/30 bg-success/5 px-4 py-3 flex items-start gap-2.5">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-[11px] font-bold text-foreground">Sent to WIG · May 6 · 2:47 PM</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Awaiting Michael Boyle (BFI) to compile WIG response</p>
+                            </div>
+                        </div>
+                        <div className="rounded-xl border border-ai/40 bg-ai/10 px-4 py-3 flex items-center gap-2.5">
+                            <Loader2 className="h-3.5 w-3.5 text-ai animate-spin shrink-0" />
+                            <span className="text-[11px] font-bold text-ai uppercase tracking-wide">Waiting for WIG response…</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Phase: RECEIVED — Michael's compiled response */}
+                {phase === 'received' && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+                        <div className="rounded-xl border border-success/30 bg-success/5 px-4 py-3 flex items-start gap-2.5">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-bold text-foreground">Response received · compiled by Michael</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Ref: WIG-2026-0412 · forwarded to Lauren for proposal compilation</p>
+                            </div>
+                        </div>
+
+                        {/* Incoming email card */}
+                        <div className="rounded-xl border border-border overflow-hidden">
+                            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-muted/30 border-b border-border">
+                                <div className="h-7 w-7 rounded-full bg-ai/15 flex items-center justify-center shrink-0">
+                                    <span className="text-[9px] font-black text-ai">MB</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-bold text-foreground">Michael Boyle · BFI → Lauren DeMarco</p>
+                                    <p className="text-[9px] text-muted-foreground">May 6, 2026 · 3:15 PM · RE: Labor Quote Request · DOE-2847</p>
+                                </div>
+                            </div>
+                            <div className="px-4 py-3 space-y-2.5">
+                                <p className="text-[11px] text-foreground leading-relaxed">
+                                    Hi Lauren, labor quote compiled for{' '}
+                                    <span className="font-semibold">DOE-2847</span> — 30 Court Street installation.
+                                    Scope reviewed against WIG response, crew availability confirmed for the delivery window.
+                                </p>
+
+                                {/* Labor table */}
+                                <div className="rounded-xl border border-border overflow-hidden">
+                                    <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
+                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Labor Quote · DOE-2847</p>
+                                        <span className="text-[9px] font-bold text-muted-foreground">Ref: WIG-2026-0412</span>
+                                    </div>
+                                    <div className="grid grid-cols-[1fr_3.5rem_4rem_5rem] px-3 py-1.5 bg-muted/20 border-b border-border/50">
+                                        {['Role', 'Hours', 'Rate', 'Subtotal'].map(h => (
+                                            <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
+                                        ))}
+                                    </div>
+                                    {LQ_LABOR.map(l => (
+                                        <div key={l.role} className="grid grid-cols-[1fr_3.5rem_4rem_5rem] px-3 py-2 border-b border-border/30 last:border-0 items-center">
+                                            <span className="text-[10px] font-medium text-foreground">{l.role}</span>
+                                            <span className="text-[10px] font-mono text-muted-foreground text-right">{l.hours}h</span>
+                                            <span className="text-[10px] font-mono text-muted-foreground text-right">{l.rate}</span>
+                                            <span className="text-[10px] font-mono font-semibold text-foreground text-right">{l.subtotal}</span>
+                                        </div>
+                                    ))}
+                                    <div className="px-3 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Total Labor Quote</span>
+                                        <span className="text-[13px] font-black font-mono text-foreground">$9,262</span>
+                                    </div>
+                                </div>
+
+                                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                    Total ready to add to the proposal alongside the Quote Tool product pricing.
+                                    All categories match the standard CoNY contract template.
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">
+                                    — Michael Boyle<br />
+                                    BFI · Director of Strategic Accounts
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
+            </div>
+
+            {/* Footer — phase dynamic */}
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
+                {phase === 'draft' && (
+                    <button
+                        onClick={handleSend}
+                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
+                    >
+                        <Send className="h-3.5 w-3.5" />
+                        Send Request to WIG
+                    </button>
+                )}
+                {phase === 'sent' && (
+                    <button
+                        disabled
+                        className="w-full py-2.5 text-[11px] font-black rounded-xl uppercase tracking-widest bg-muted text-muted-foreground inline-flex items-center justify-center gap-2"
+                    >
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Sending…
+                    </button>
+                )}
+                {phase === 'received' && (
+                    <button
+                        onClick={handleContinue}
+                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
+                    >
+                        Continue to Proposal
+                        <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                )}
+            </div>
         </div>
     )
 }
@@ -2359,6 +2748,7 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
     if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
+    if (step === 'labor-request') return <LaborRequestPanel onValidate={onValidate} />
     if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} onCustomValue={onCustomValue} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
@@ -2376,13 +2766,14 @@ const FUNNEL_STEPS = [
 ]
 
 const STEP_TO_FUNNEL_IDX: Record<BFIReviewStep, number> = {
-    extract:     0,
-    quote:       1,
-    'val-sif':   1,
-    'val-ovniq': 1,
-    labor:       2,
-    cpr:         3,
-    fee:         4,
+    extract:         0,
+    quote:           1,
+    'val-sif':       1,
+    'val-ovniq':     1,
+    'labor-request': 2,
+    labor:           2,
+    cpr:             3,
+    fee:             4,
 }
 
 function FunnelStepper({ step }: { step: BFIReviewStep }) {
@@ -2988,7 +3379,7 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
 export default function BFIDocumentReviewModal({
     isOpen, onClose, step, onValidate, scenario, michaelMode, invoiceUpload
 }: BFIDocumentReviewModalProps) {
-    const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' ? 'specs' : 'sif')
+    const [activeTab, setActiveTab] = useState<'sif' | 'specs' | 'floorplan'>(step === 'quote' || step === 'labor-request' ? 'specs' : 'sif')
     const [downloadConfirm, setDownloadConfirm] = useState<string | null>(null)
     // quote/fee/labor + cpr(michaelMode/invoiceUpload): start with f1+f2 resolved (already reconciled)
     // cpr regular (paso 1.9): start empty so approvals drive the SIF doc live
@@ -3016,13 +3407,14 @@ export default function BFIDocumentReviewModal({
     }
 
     const STEP_LABELS: Record<BFIReviewStep, string> = {
-        extract:     'Extracting fields',
-        quote:       'Quote Tool Validation',
-        'val-sif':   'Validating SIF',
-        'val-ovniq': 'Validating Quote Tool',
-        labor:       'PO & Labor Review',
-        cpr:         'CPR Reconciliation',
-        fee:         'Agency Fee Verification',
+        extract:         'Extracting fields',
+        quote:           'Quote Tool Validation',
+        'val-sif':       'Validating SIF',
+        'val-ovniq':     'Validating Quote Tool',
+        'labor-request': 'Labor Quote Request',
+        labor:           'PO & Labor Review',
+        cpr:             'CPR Reconciliation',
+        fee:             'Agency Fee Verification',
     }
 
     return (
@@ -3091,6 +3483,8 @@ export default function BFIDocumentReviewModal({
                                                     ? scenario === 'gap'
                                                         ? <><span className="font-bold">Agency fee</span> gap detected · MK Invoice {MK_INVOICE_GAP} vs expected {EXPECTED_FEE} · {FEE_GAP}</>
                                                         : <><span className="font-bold">Agency fee</span> verified · MK Invoice matches T-code calculation</>
+                                                    : step === 'labor-request'
+                                                        ? <><span className="font-bold">Strata AI</span> · Drafting labor quote request to WIG · scope auto-populated from validated Quote · Michael Boyle compiles WIG response</>
                                                     : step === 'labor'
                                                         ? <><span className="font-bold">Strata AI</span> · Purchase Order received · DOE-2847 · confirm receipt</>
                                                         : <><span className="font-bold">Strata AI</span> · SIF ingested · DOE-2847 fields extracted · ready for intake review</>
