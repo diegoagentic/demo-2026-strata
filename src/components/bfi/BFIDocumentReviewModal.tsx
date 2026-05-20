@@ -231,8 +231,12 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                         <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
                         <span className={`text-[8px] font-bold tracking-widest ${validated ? 'text-primary' : 'text-zinc-400'}`}>{validated ? 'Quote Tool VALIDATED ✓' : 'PENDING QUOTE TOOL VALIDATION'}</span>
                     </div>
-                    <div className="px-6 pt-3 pb-1 grid grid-cols-7 gap-2">
-                        {['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell'].map(h => (
+                    {/* Headers · 10 cols when validated (CORE Method 3) · 7 cols otherwise */}
+                    <div className={`px-6 pt-3 pb-1 grid gap-2 ${validated ? 'grid-cols-10' : 'grid-cols-7'}`}>
+                        {(validated
+                            ? ['Code', 'Product', 'Qty', 'T-Code', 'List Ext', 'Sell', 'Ext. Sell', 'Cost', 'GP $', 'GP %']
+                            : ['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell']
+                        ).map(h => (
                             <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
                         ))}
                     </div>
@@ -244,15 +248,27 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                             const sifUnit   = sifExt / qty
                             const unitSell  = sellExt / qty
                             const corrected = line.sifPrice !== line.ovniq
+                            // CORE Method 3 columns (variable per-product agency fee)
+                            const sf = SF_LINES.find(s => s.product === line.code)
+                            const gpAmount = sf?.svcExt ?? 0
+                            const cost = sellExt - gpAmount
+                            const gpPct = sf?.svcPct ?? 0
                             return (
-                                <div key={line.code ?? line.product} className={`grid grid-cols-7 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                <div key={line.code ?? line.product} className={`grid gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${validated ? 'grid-cols-10' : 'grid-cols-7'} ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
                                     <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
                                     <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
-                                    <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{fmtUnit(sifUnit)}</span>
+                                    <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{validated ? fmtUnit(sellExt) : fmtUnit(sifUnit)}</span>
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(unitSell)}</span>
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
+                                    {validated && (
+                                        <>
+                                            <span className="text-[10px] font-mono text-zinc-500">{fmtUnit(cost)}</span>
+                                            <span className="text-[10px] font-mono font-semibold text-success">{fmtUnit(gpAmount)}</span>
+                                            <span className="text-[10px] font-mono text-success">{gpPct}%</span>
+                                        </>
+                                    )}
                                 </div>
                             )
                         })}
@@ -1570,10 +1586,11 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 
 // ─── Fee Review Panel ─────────────────────────────────────────────────────────
 
+// Fee verification · per-line match (Method 3) · expected vs received per product
 const FEE_LINES = [
-    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '4.0%', fee: '$5,760.00' },
-    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '3.9%', fee: '$3,276.00' },
-    { product: 'Filing Units (×6)',    sale: '$7,560',   tcode: '2.9%', fee: '$219.24'   },
+    { product: 'HMI-WS-2400 · Workstations',  sale: '$144,000', tcode: '4.0%', expected: '$5,760.00', receivedMatch: '$5,760.00', receivedGap: '$5,760.00', delta: '$0',       gapDelta: '$0'        },
+    { product: 'HMI-LS-500 · Lounge Seating', sale: '$84,000',  tcode: '3.9%', expected: '$3,276.00', receivedMatch: '$3,276.00', receivedGap: '$3,020.76', delta: '$0',       gapDelta: '−$255.24'  },
+    { product: 'HMI-FU-300 · Filing Units',   sale: '$7,560',   tcode: '2.9%', expected: '$219.24',   receivedMatch: '$219.24',   receivedGap: '$219.24',   delta: '$0',       gapDelta: '$0'        },
 ]
 
 const EXPECTED_FEE = '$9,255.24'
@@ -1648,26 +1665,50 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                     </div>
                 </div>
 
-                {/* Fee breakdown table */}
+                {/* Fee breakdown table · per-line match (Expected vs Received) */}
                 <div className="px-5 mt-4">
                     <div className="rounded-xl border border-border overflow-hidden">
-                        <div className="grid grid-cols-4 px-3 py-2 bg-muted/40 border-b border-border">
-                            {['Product', 'Sale', 'T-Code', 'Fee'].map(h => (
-                                <span key={h} className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{h}</span>
+                        <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center gap-2">
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Per-line match · Contract ANT122 vs Nancy report</p>
+                        </div>
+                        <div className="grid grid-cols-[1.6fr_5rem_5rem_5rem_3rem] px-3 py-2 bg-muted/20 border-b border-border/50">
+                            {['Product · T-code', 'Expected', 'Received', 'Delta', 'Status'].map(h => (
+                                <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide">{h}</span>
                             ))}
                         </div>
-                        {FEE_LINES.map((line, i) => (
-                            <div key={i} className="grid grid-cols-4 px-3 py-2.5 border-b border-border/50 last:border-0">
-                                <span className="text-[11px] font-medium text-foreground pr-1 leading-tight">{line.product}</span>
-                                <span className="text-[11px] text-muted-foreground font-mono">{line.sale}</span>
-                                <span className="text-[11px] text-muted-foreground font-mono">{line.tcode}</span>
-                                <span className="text-[11px] font-semibold text-foreground font-mono">{line.fee}</span>
-                            </div>
-                        ))}
-                        <div className="grid grid-cols-4 px-3 py-2.5 bg-muted/30 border-t border-border">
-                            <span className="text-[10px] font-black text-foreground col-span-2 uppercase tracking-wide">Expected total</span>
-                            <span />
-                            <span className="text-[12px] font-black text-foreground font-mono">{EXPECTED_FEE}</span>
+                        {FEE_LINES.map((line, i) => {
+                            const received = isMatch ? line.receivedMatch : line.receivedGap
+                            const delta = isMatch ? line.delta : line.gapDelta
+                            const isLineGap = delta !== '$0'
+                            return (
+                                <div key={i} className="grid grid-cols-[1.6fr_5rem_5rem_5rem_3rem] px-3 py-2 border-b border-border/30 last:border-0 items-center">
+                                    <div className="pr-2 leading-tight">
+                                        <p className="text-[10px] font-medium text-foreground truncate">{line.product}</p>
+                                        <p className="text-[8px] text-muted-foreground font-mono">T-code {line.tcode}</p>
+                                    </div>
+                                    <span className="text-[10px] font-mono text-foreground tabular-nums">{line.expected}</span>
+                                    <span className={`text-[10px] font-mono tabular-nums ${isLineGap ? 'text-warning' : 'text-foreground'}`}>{received}</span>
+                                    <span className={`text-[10px] font-mono font-semibold tabular-nums ${isLineGap ? 'text-warning' : 'text-muted-foreground'}`}>{delta}</span>
+                                    <span className="flex justify-center">
+                                        {isLineGap
+                                            ? <AlertCircle className="h-3.5 w-3.5 text-warning" />
+                                            : <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                        }
+                                    </span>
+                                </div>
+                            )
+                        })}
+                        <div className="grid grid-cols-[1.6fr_5rem_5rem_5rem_3rem] px-3 py-2.5 bg-muted/30 border-t border-border items-center">
+                            <span className="text-[10px] font-black text-foreground uppercase tracking-wide">Total</span>
+                            <span className="text-[10px] font-mono font-bold text-foreground tabular-nums">{EXPECTED_FEE}</span>
+                            <span className={`text-[10px] font-mono font-bold tabular-nums ${isMatch ? 'text-success' : 'text-warning'}`}>{mkInvoice}</span>
+                            <span className={`text-[10px] font-mono font-black tabular-nums ${isMatch ? 'text-success' : 'text-warning'}`}>{isMatch ? '$0' : FEE_GAP}</span>
+                            <span className="flex justify-center">
+                                {isMatch
+                                    ? <CheckCircle2 className="h-4 w-4 text-success" />
+                                    : <AlertCircle className="h-4 w-4 text-warning" />
+                                }
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -2095,7 +2136,7 @@ const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
     { label: 'Calc Code',  value: '7 · Enter Cost / Enter Sell Price'                       },
     { label: 'Vendor',     value: 'Direct Bill-HMI',                             mono: true },
     { label: 'Linked to',  value: 'DOE-2847 · Q-2026-0089',                      mono: true },
-    { label: 'Memo',       value: 'Per-line agency fee (Method 3) · variable % per product type · per CoNY Contract ANT122' },
+    { label: 'Memo',       value: 'Per CoNY Contract ANT122 · per-line fee' },
 ]
 
 function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
@@ -2131,25 +2172,23 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                     </div>
                 </div>
 
-                {/* Restricted Products Check — Strata extracts from Quote Comparison Download */}
-                <div className="rounded-xl border border-success/20 bg-success/5 px-4 py-3 flex items-start gap-2.5">
-                    <div className="h-5 w-5 rounded-full bg-success/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <CheckCircle2 className="h-3 w-3 text-success" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-bold text-foreground">Restricted Products Check · 0 flagged</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Strata OCR'd the Quote Comparison Download · all 3 lines cleared. Exception path ready: if Quote Tool kicks back a restricted item, Strata routes the alert to HMK and tracks the response.</p>
-                    </div>
-                </div>
-
-                {/* Quote Comparison — collapsible */}
+                {/* Quote Comparison — collapsible · with Restricted Products status chip */}
                 <div className="rounded-xl border border-border overflow-hidden">
                     <button
                         onClick={() => setCompOpen(v => !v)}
-                        className="w-full flex items-center justify-between px-4 py-2.5 bg-muted/40 hover:bg-muted/60 transition-colors"
+                        className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/40 hover:bg-muted/60 transition-colors"
                     >
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Quote Comparison · Requested vs Response</p>
-                        {compOpen ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                        <span
+                            title="Strata OCR'd the Quote Comparison Download · all 3 lines cleared. Exception path ready."
+                            className="inline-flex items-center gap-1 text-[8px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded uppercase tracking-wider"
+                        >
+                            <CheckCircle2 className="h-2.5 w-2.5" />
+                            Restricted · 0 flagged
+                        </span>
+                        <span className="ml-auto inline-flex items-center">
+                            {compOpen ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                        </span>
                     </button>
                     {compOpen && (
                         <div className="border-t border-border divide-y divide-border/50">
@@ -2185,30 +2224,6 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                             ))}
                         </div>
                     )}
-                </div>
-
-                {/* Estimated Service Fees · variable per product (per Jessica) */}
-                <div className="rounded-xl border border-border overflow-hidden">
-                    <div className="px-4 py-2.5 bg-muted/40 border-b border-border">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Estimated Service Fees · variable per product (avg 4.0%)</p>
-                    </div>
-                    <div className="grid grid-cols-[1fr_5.5rem_4rem_5.5rem] px-4 py-2 bg-muted/20 border-b border-border/50">
-                        {['Product', 'List Ext $', 'Svc %', 'Service $'].map(h => (
-                            <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
-                        ))}
-                    </div>
-                    {SF_LINES.map(line => (
-                        <div key={line.product} className="grid grid-cols-[1fr_5.5rem_4rem_5.5rem] px-4 py-2.5 border-b border-border/30 last:border-0 items-center">
-                            <span className="text-[11px] font-medium text-foreground">{line.product}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground text-right">{fmt2(line.listExt)}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground text-right">{line.svcPct}%</span>
-                            <span className="text-[11px] font-mono font-semibold text-foreground text-right">{fmt2(line.svcExt)}</span>
-                        </div>
-                    ))}
-                    <div className="px-4 py-3 bg-muted/30 border-t border-border flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Grand Total</span>
-                        <span className="text-[14px] font-black font-mono text-foreground">{fmt2(grandTotal)}</span>
-                    </div>
                 </div>
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
@@ -2290,23 +2305,31 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                             ))}
                         </div>
 
-                        {/* Fee schedule · Contract ANT122 (mini-section) */}
-                        <div className="rounded-lg border border-info/30 bg-info/5 overflow-hidden">
-                            <div className="px-3 py-2 border-b border-info/20 bg-info/10 flex items-center gap-2">
-                                <Building2 className="h-3 w-3 text-info" />
-                                <p className="text-[9px] font-bold text-info uppercase tracking-widest">Fee schedule · Contract {CONY_CONTRACT_DATA.id}</p>
-                                <span className="ml-auto text-[8px] text-muted-foreground">{CONY_CONTRACT_DATA.effective} → {CONY_CONTRACT_DATA.expires}</span>
-                            </div>
-                            <div className="px-3 py-2 space-y-0.5 text-[10px]">
-                                {CONY_CONTRACT_DATA.feeSchedule.map(f => (
-                                    <div key={f.category} className="flex justify-between">
-                                        <span className="text-muted-foreground">{f.category}</span>
-                                        <span className="font-mono text-foreground">{f.pct}</span>
-                                    </div>
-                                ))}
-                                <p className="text-[9px] text-muted-foreground italic pt-1 border-t border-info/20 mt-1">
-                                    Locked-in pricing · {CONY_CONTRACT_DATA.extension}
-                                </p>
+                        {/* Contract ANT122 chip · hover-triggered tooltip with full fee schedule */}
+                        <div className="group relative inline-flex">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-info bg-info/10 border border-info/20 px-2 py-1 rounded cursor-help">
+                                <Building2 className="h-2.5 w-2.5" />
+                                Contract {CONY_CONTRACT_DATA.id} · fee schedule
+                                <span className="text-muted-foreground font-normal">(hover)</span>
+                            </span>
+                            {/* Tooltip · shown on group hover */}
+                            <div className="absolute bottom-full left-0 mb-2 z-50 hidden group-hover:block w-72 rounded-lg border border-info/30 bg-card shadow-lg overflow-hidden animate-in fade-in duration-150">
+                                <div className="px-3 py-2 border-b border-info/20 bg-info/10 flex items-center gap-2">
+                                    <Building2 className="h-3 w-3 text-info" />
+                                    <p className="text-[9px] font-bold text-info uppercase tracking-widest flex-1">Contract {CONY_CONTRACT_DATA.id}</p>
+                                    <span className="text-[8px] text-muted-foreground">{CONY_CONTRACT_DATA.effective} → {CONY_CONTRACT_DATA.expires}</span>
+                                </div>
+                                <div className="px-3 py-2 space-y-0.5 text-[10px]">
+                                    {CONY_CONTRACT_DATA.feeSchedule.map(f => (
+                                        <div key={f.category} className="flex justify-between">
+                                            <span className="text-muted-foreground">{f.category}</span>
+                                            <span className="font-mono text-foreground">{f.pct}</span>
+                                        </div>
+                                    ))}
+                                    <p className="text-[9px] text-muted-foreground italic pt-1 border-t border-info/20 mt-1">
+                                        Locked-in pricing · {CONY_CONTRACT_DATA.extension}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

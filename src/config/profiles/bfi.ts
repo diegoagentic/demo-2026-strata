@@ -169,7 +169,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Flow 1: CPR & Closing',
         title: 'Fee verification',
-        description: 'Patricia compares Nancy\'s reported fee against the per-line GP already booked in CORE (Contract ANT122). Strata catches a −$255.24 gap automatically — Patricia decides whether to confirm the match or flag the discrepancy.',
+        description: 'Patricia compares Nancy\'s reported fee against the per-line GP already booked in CORE (per Contract ANT122). Each product is matched line by line — Strata catches a −$255.24 gap on HMI-LS-500 automatically. Patricia decides whether to confirm the match or flag the discrepancy.',
         app: 'bfi-agency-fee',
         role: 'Finance / AR',
     },
@@ -191,7 +191,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line by line · approve · open the team notification · send the CORE update' },
     'a1.3b': { mode: 'interactive', userAction: 'Review Lauren\'s CPR approval · send the invoice request to Nancy at Herman Miller' },
     'a1.3c': { mode: 'interactive', userAction: 'Upload the approved invoice · Strata detects it automatically · forward to Patricia in Finance/AR' },
-    'a1.4': { mode: 'interactive', userAction: 'Compare the agency fee — match or gap scenario · confirm the match or flag the −$255.24 discrepancy' },
+    'a1.4': { mode: 'interactive', userAction: 'Compare per-line: each product expected vs received from Nancy · 2 lines match · 1 line gap (HMI-LS-500 · −$255.24) · confirm or flag' },
 };
 
 // ─── STEP MESSAGES (AI agent progress · short, status-style) ─────────────────
@@ -262,10 +262,10 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Matches CPR · ready for Finance/AR',
     ],
     'a1.4': [
-        'Loading contract codes for DOE-2847',
-        'Calculating expected fee · variable per line (2.9% / 4.0% / 3.9%)',
+        'Loading contract codes for DOE-2847 · ANT122',
+        'Per-line expected: $219.24 / $5,760 / $3,276 · total $9,255.24',
         'Pulling Nancy\'s report from Herman Miller',
-        'Comparison ready · gap detected · −$255.24',
+        'Per-line match · 2 lines ✓ · HMI-LS-500 gap −$255.24',
     ],
 };
 
