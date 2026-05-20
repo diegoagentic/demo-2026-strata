@@ -292,7 +292,7 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">Agency Fee credit</span>
-                                    <span className="font-mono font-bold text-success">$8,833.50 (3.75%)</span>
+                                    <span className="font-mono font-bold text-success">$9,255.24 (avg 4.0% · variable)</span>
                                 </div>
                             </div>
                         </div>
@@ -309,10 +309,12 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
 
 // ─── Service Fees Document Tab ────────────────────────────────────────────────
 
+// Variable per-product agency fee % (per Jessica · Controller of BFI · 20-may)
+// Each Herman Miller product has its own contract %. Average ~4%.
 const SF_LINES = [
-    { lineNum: '00001', product: 'HMI-FU-300',  svcPct: 3.75, listExt: 7560,    svcExt: 283.50   },
-    { lineNum: '00002', product: 'HMI-WS-2400', svcPct: 3.75, listExt: 144000,  svcExt: 5400.00  },
-    { lineNum: '00003', product: 'HMI-LS-500',  svcPct: 3.75, listExt: 84000,   svcExt: 3150.00  },
+    { lineNum: '00001', product: 'HMI-FU-300',  svcPct: 2.9, listExt: 7560,    svcExt: 219.24   },
+    { lineNum: '00002', product: 'HMI-WS-2400', svcPct: 4.0, listExt: 144000,  svcExt: 5760.00  },
+    { lineNum: '00003', product: 'HMI-LS-500',  svcPct: 3.9, listExt: 84000,   svcExt: 3276.00  },
 ]
 
 function ServiceFeesDocumentTab() {
@@ -958,6 +960,8 @@ CPR reconciliation for DOE-2847 is complete. Adjusted labor hours have been revi
   · OT Carpenters: 8h → 6h (−2h · −$270)
   · Total impact:  −$720
 
+Signed sign-in sheet (DOE-2847-signin.pdf) is attached as NYC backup. CPR + sign-in together are required to invoice the city.
+
 Please confirm so we can proceed to agency fee verification.
 
 — Lauren DeMarco
@@ -1530,15 +1534,15 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 // ─── Fee Review Panel ─────────────────────────────────────────────────────────
 
 const FEE_LINES = [
-    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '3.75%', fee: '$5,400.00' },
-    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '3.75%', fee: '$3,150.00' },
-    { product: 'Filing Units (×6)',    sale: '$7,560',   tcode: '3.75%', fee: '$283.50'   },
+    { product: 'Workstations (×24)',   sale: '$144,000', tcode: '4.0%', fee: '$5,760.00' },
+    { product: 'Lounge Seating (×12)', sale: '$84,000',  tcode: '3.9%', fee: '$3,276.00' },
+    { product: 'Filing Units (×6)',    sale: '$7,560',   tcode: '2.9%', fee: '$219.24'   },
 ]
 
-const EXPECTED_FEE = '$8,833.50'
-const MK_INVOICE_MATCH = '$8,833.50'
-const MK_INVOICE_GAP   = '$8,500.00'
-const FEE_GAP          = '−$333.50'
+const EXPECTED_FEE = '$9,255.24'
+const MK_INVOICE_MATCH = '$9,255.24'
+const MK_INVOICE_GAP   = '$9,000.00'
+const FEE_GAP          = '−$255.24'
 
 function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; onValidate?: () => void }) {
     const isMatch        = scenario === 'match'
@@ -1974,6 +1978,9 @@ BFI Furniture · CoNY Account Manager`
                                                         <span className="text-[13px] font-black font-mono text-foreground">{LQ_LABOR_TOTAL}</span>
                                                     </div>
                                                 </div>
+                                                <p className="text-[9px] text-muted-foreground italic">
+                                                    Within CoNY contract caps · min 4h enforced per skilled labor category
+                                                </p>
                                                 <p className="text-[10px] text-muted-foreground">
                                                     — Michael Boyle<br />
                                                     BFI · Director of Strategic Accounts
@@ -2034,12 +2041,12 @@ BFI Furniture · CoNY Account Manager`
 // CORE generates the credit line when the Quote Tool output is uploaded.
 // Strata's role: surface CORE's record so Lauren can confirm — no draft/push.
 const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
-    { label: 'Amount',     value: '$8,833.50',                                   mono: true },
+    { label: 'Amount',     value: '$9,255.24',                                   mono: true },
     { label: 'GL Account', value: '4200-Agency-Fees',                            mono: true },
     { label: 'Calc Code',  value: '7 · Enter Cost / Enter Sell Price'                       },
     { label: 'Vendor',     value: 'Direct Bill-HMI',                             mono: true },
     { label: 'Linked to',  value: 'DOE-2847 · Q-2026-0089',                      mono: true },
-    { label: 'Memo',       value: 'Herman Miller agency fee · 3.75% on DOE-2847 product lines · per Estimated Service Fees Q-2026-0089' },
+    { label: 'Memo',       value: 'Herman Miller agency fee · variable per product (2.9% / 4.0% / 3.9%) on DOE-2847 · per Estimated Service Fees Q-2026-0089' },
 ]
 
 function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
@@ -2131,10 +2138,10 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                     )}
                 </div>
 
-                {/* Estimated Service Fees */}
+                {/* Estimated Service Fees · variable per product (per Jessica) */}
                 <div className="rounded-xl border border-border overflow-hidden">
                     <div className="px-4 py-2.5 bg-muted/40 border-b border-border">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Estimated Service Fees · 3.75%</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Estimated Service Fees · variable per product (avg 4.0%)</p>
                     </div>
                     <div className="grid grid-cols-[1fr_5.5rem_4rem_5.5rem] px-4 py-2 bg-muted/20 border-b border-border/50">
                         {['Product', 'List Ext $', 'Svc %', 'Service $'].map(h => (
@@ -2145,7 +2152,7 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                         <div key={line.product} className="grid grid-cols-[1fr_5.5rem_4rem_5.5rem] px-4 py-2.5 border-b border-border/30 last:border-0 items-center">
                             <span className="text-[11px] font-medium text-foreground">{line.product}</span>
                             <span className="text-[10px] font-mono text-muted-foreground text-right">{fmt2(line.listExt)}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground text-right">3.75%</span>
+                            <span className="text-[10px] font-mono text-muted-foreground text-right">{line.svcPct}%</span>
                             <span className="text-[11px] font-mono font-semibold text-foreground text-right">{fmt2(line.svcExt)}</span>
                         </div>
                     ))}
@@ -2185,7 +2192,7 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                         {/* GP target callout */}
                         <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-center justify-between text-[10px]">
                             <span className="text-muted-foreground">GP target · CoNY contract</span>
-                            <span className="font-mono font-bold text-success tabular-nums">3.75% · {fmt2(grandTotal)}</span>
+                            <span className="font-mono font-bold text-success tabular-nums">avg 4.0% · {fmt2(grandTotal)}</span>
                         </div>
                     </div>
                 </div>
@@ -3202,7 +3209,7 @@ export default function BFIDocumentReviewModal({
                                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                                     <p className="text-[11px] text-ai font-medium">
                                         {step === 'quote'
-                                            ? <><span className="font-bold">Quote Tool</span> · 1 correction · HMI-FU-300 $8,100 → $7,560 · Service Fees 3.75% · Grand Total $8,833.50 · Credit line ready in CORE</>
+                                            ? <><span className="font-bold">Quote Tool</span> · 1 correction · HMI-FU-300 $8,100 → $7,560 · Service Fees avg 4.0% (variable per product) · Grand Total $9,255.24 · Credit line ready in CORE</>
                                             : step === 'cpr'
                                                 ? <><span className="font-bold">CPR</span> reconciliation · Carpenters −5h · OT −2h · Impact: −$720 · 2 lines to approve</>
                                                 : step === 'fee'
@@ -3215,6 +3222,16 @@ export default function BFIDocumentReviewModal({
                                         }
                                     </p>
                                 </div>
+
+                                {/* Narrative banner · Kate's $8M blind spot (only on quote step) */}
+                                {step === 'quote' && (
+                                    <div className="px-6 py-2 bg-warning/5 border-b border-warning/20 flex items-start gap-2 shrink-0">
+                                        <Building2 className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
+                                        <p className="text-[10px] text-foreground leading-snug">
+                                            <span className="font-bold text-warning">Why this matters:</span> BFI's $8M City of NY backlog shows 0.5% GP today — not because they're losing money, but because credit lines aren't booked until checks arrive weeks later. Strata posts the credit line at order entry → Kate (CFO) sees real GP from day 1, not day 30.
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* ── Split pane ── */}
                                 <div className="flex-1 grid grid-cols-5 min-h-0">

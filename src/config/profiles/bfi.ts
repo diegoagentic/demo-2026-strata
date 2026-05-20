@@ -158,7 +158,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Fee verification',
-        description: 'Patricia compares Nancy\'s reported fee against the CoNY contract. Strata catches a −$333.50 gap automatically — Patricia decides whether to confirm the match or flag the discrepancy.',
+        description: 'Patricia compares Nancy\'s reported fee against the CoNY contract. Strata catches a −$255.24 gap automatically — Patricia decides whether to confirm the match or flag the discrepancy.',
         app: 'bfi-agency-fee',
         role: 'Finance / AR',
     },
@@ -171,7 +171,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'Watch Robert Chen send the request to Lauren · specs, floor plan and pricing file arrive in Strata' },
     'a1.1': { mode: 'interactive', userAction: 'Open the morning queue · DOE-2847 surfaces as priority · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'Read Robert\'s acknowledgment · quote Q-2026-0089 confirmed · move on to validate pricing' },
-    'a1.2b': { mode: 'interactive', userAction: '① Review Quote Tool: HMI-FU-300 corrected $1,350 → $1,260 · 3.75% service fee · ② Review the credit line CORE prepared (Amount $8,833.50 · Calc Code 7 · Direct Bill-HMI · GL 4200-Agency-Fees) · confirm to open the labor request · ③ Open the labor request email to WIG · send · wait for Michael\'s compiled response · continue to proposal' },
+    'a1.2b': { mode: 'interactive', userAction: '① Review Quote Tool: HMI-FU-300 corrected $1,350 → $1,260 · service fees variable per product (avg 4.0%) · ② Review the credit line CORE prepared (Amount $9,255.24 · Calc Code 7 · Direct Bill-HMI · GL 4200-Agency-Fees) · confirm to open the labor request · ③ Open the labor request email to WIG · send · wait for Michael\'s compiled response (within contract caps) · continue to proposal' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the full proposal (product + labor) · send to NYC DOE procurement · wait for the PO' },
     'a1.2c': { mode: 'interactive', userAction: 'Open the PO from NYC DOE · check it against the proposal · confirm the 30-day delivery window in CORE' },
     'a1.2d': { mode: 'interactive', userAction: 'Open the WIG receiving notification · review the bingo sheet · run AI analysis to find the missing carton' },
@@ -180,7 +180,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.3': { mode: 'interactive', userAction: 'Review CPR discrepancies line by line · approve · open the team notification · send the CORE update' },
     'a1.3b': { mode: 'interactive', userAction: 'Review Lauren\'s CPR approval · send the invoice request to Nancy at Herman Miller' },
     'a1.3c': { mode: 'interactive', userAction: 'Upload the approved invoice · Strata detects it automatically · forward to Patricia in Finance/AR' },
-    'a1.4': { mode: 'interactive', userAction: 'Compare the agency fee — match or gap scenario · confirm the match or flag the −$333.50 discrepancy' },
+    'a1.4': { mode: 'interactive', userAction: 'Compare the agency fee — match or gap scenario · confirm the match or flag the −$255.24 discrepancy' },
 };
 
 // ─── STEP MESSAGES (AI agent progress · short, status-style) ─────────────────
@@ -209,10 +209,10 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Comparing prices vs CoNY Contract ANT122',
         'Corrected HMI-FU-300 · $1,350 → $1,260',
         'Restricted-product check · all clear',
-        'Service fees applied · 3.75% · total $8,833.50',
-        'Reading credit line from CORE · CL-2026-0089 · cost credit $8,833.50',
+        'Service fees applied · variable per product (2.9% / 4.0% / 3.9%) · total $9,255.24',
+        'Reading credit line from CORE · CL-2026-0089 · cost credit $9,255.24',
         'Calc Code 7 verified · Direct Bill-HMI vendor type · GL 4200-Agency-Fees',
-        'GP target 3.75% confirmed · matches Herman Miller Estimated Service Fees',
+        'GP avg 4.0% confirmed · matches Herman Miller Estimated Service Fees',
         'Opening labor quote request · scope auto-filled',
         'Sending request to WIG',
         'WIG response in · forwarded to Michael',
@@ -251,9 +251,9 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'a1.4': [
         'Loading contract codes for DOE-2847',
-        'Calculating expected fee · 3.75% per line',
+        'Calculating expected fee · variable per line (2.9% / 4.0% / 3.9%)',
         'Pulling Nancy\'s report from Herman Miller',
-        'Comparison ready · gap detected · −$333.50',
+        'Comparison ready · gap detected · −$255.24',
     ],
 };
 
