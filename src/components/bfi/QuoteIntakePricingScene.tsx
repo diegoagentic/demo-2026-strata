@@ -1,12 +1,18 @@
 /**
- * COMPONENT: QuoteIntakePricingScene (a1.2)
- * PURPOSE: Agency Fee step 2 — SIF validation via OVNIQ + Discount Calc.
+ * COMPONENT: QuoteIntakePricingScene (a1.2b — unified)
+ * PURPOSE: Agency Fee a1.2b — Quote Tool validation + Credit Line push + Labor Quote Request.
+ *
+ * The modal opens at step="quote". When the credit line is posted and Lauren clicks
+ * "Continue to Labor Quote", the modal transitions internally to step="labor-request"
+ * (funnel jumps from Quote ✓ to PO & Labor highlighted; RightPanel swaps via key={step}).
+ * Only when Michael's compiled labor response is received and Lauren clicks "Continue
+ * to Proposal" the modal closes and the wizard advances to a1.2b3.
  */
 
 import { useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
-import BFIDocumentReviewModal from './BFIDocumentReviewModal'
+import BFIDocumentReviewModal, { type BFIReviewStep } from './BFIDocumentReviewModal'
 import BFIProcessKanban from './BFIProcessKanban'
 
 interface QuoteIntakePricingSceneProps {
@@ -18,11 +24,24 @@ const ACTIVE_COL = 1  // Quote
 export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingSceneProps) {
     const { nextStep } = useDemo()
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [modalStep, setModalStep] = useState<BFIReviewStep>('quote')
+
+    const handleOpen = () => {
+        setModalStep('quote')  // always start at quote
+        setIsModalOpen(true)
+    }
 
     const handleValidate = () => {
-        setIsModalOpen(false)
-        onApply?.()
-        nextStep()
+        if (modalStep === 'quote') {
+            // Internal transition: stay open, switch to labor-request
+            setModalStep('labor-request')
+        } else {
+            // Labor request received — close modal + advance wizard
+            setIsModalOpen(false)
+            setModalStep('quote')  // reset for re-entry
+            onApply?.()
+            nextStep()
+        }
     }
 
     return (
@@ -32,7 +51,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
             <BFIProcessKanban
                 activeCol={ACTIVE_COL}
                 showDoe={true}
-                onReviewDoe={() => setIsModalOpen(true)}
+                onReviewDoe={handleOpen}
                 reviewLabel="Continue"
             />
 
@@ -43,7 +62,7 @@ export default function QuoteIntakePricingScene({ onApply }: QuoteIntakePricingS
             <BFIDocumentReviewModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                step="quote"
+                step={modalStep}
                 onValidate={handleValidate}
             />
 

@@ -5,7 +5,7 @@
  *          (with DOE-2847 in the PO & Labor column) and auto-opens a Dialog
  *          overlay where Lauren reviews and sends the formal proposal to
  *          NYC Dept. of Education. Patrón: Dialog overlay sobre kanban
- *          (consistente con LaborQuoteDialog, NancyDialog, WalterNotifyDialog).
+ *          (consistente con NancyDialog, WalterNotifyDialog, PatriciaDialog).
  */
 
 import { useState, useEffect, Fragment } from 'react'

@@ -4,7 +4,7 @@
 // CLIENT: BFI Furniture (Elizabeth, NJ · ~50 employees · Women Owned
 //         Government/Municipal furniture dealer · CoNY primary customer)
 //
-// DEMO STRUCTURE: 1 flow · 14 steps (post-Wendy revisions May 2026)
+// DEMO STRUCTURE: 1 flow · 13 steps (post-Wendy revisions May 2026)
 //
 //   Dashboard — navbar tab permanente (no es un paso del demo)
 //
@@ -12,12 +12,12 @@
 //     a1.0:   Request for Quote      — Miller Knoll designer sends SIF/specs/floor plan
 //     a1.1:   CoNY Order Queue       — Lauren morning triage · DOE-2847 surfaced
 //     a1.2:   Order Confirmation     — Lauren confirms receipt to Robert Chen
-//     a1.2b:  Quote Tool Validation  — SIF → Quote Tool · price correction + fee 3.75%
-//                                      · Lauren reviews and applies credit line to CORE (sub-step editable)
-//                                      · Strata posts CL-2026-0089 → GP 3.75% recognized automatically
-//                                      · per Wendy 18-may feedback: no manual discount calculation needed
-//     a1.2b2: Labor Quote Request    — Lauren emails WIG · Michael Boyle (BFI) compiles labor figures
-//                                      · restored as standalone step per Wendy 18-may feedback
+//     a1.2b:  Quote Tool Validation  — UNIFIED step: 3 sub-actions inside the same modal
+//                                      · 1) Lauren reviews SIF + Quote Tool comparison + Estimated Service Fees (3.75%)
+//                                      · 2) Lauren pushes credit line to CORE (CL-2026-0089 · GP 3.75% recognized)
+//                                      · 3) Modal transitions to labor-request: Lauren emails WIG · Michael Boyle (BFI) compiles WIG response
+//                                      · funnel jumps Quote ✓ → PO & Labor active inside the same modal session
+//                                      · no manual discount calculation surfaced (Wendy 18-may feedback)
 //     a1.2b3: Send Proposal          — Dialog overlay on kanban · Lauren sends proposal (product + labor) to NYC DOE
 //     a1.2c:  PO Received · CORE     — NYC DOE issues PO · Lauren confirms in CORE
 //
@@ -75,16 +75,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Quote Tool Validation',
-        description: 'Strata uploads the SIF to Quote Tool, which corrects the Filing Unit price against the CoNY contract. Lauren reviews the Quote Comparison and Herman Miller\'s Estimated Service Fees (3.75%), then applies the credit line to CORE — Strata posts CL-2026-0089 as a cost credit, recognizing $8,833.50 GP automatically. No manual discount calculation needed.',
-        app: 'bfi-agency-fee',
-        role: 'Account Manager',
-    },
-    {
-        id: 'a1.2b2',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Labor Quote Request to WIG',
-        description: 'Lauren sends a labor quote request to WIG (Workplace Installation Group). Michael Boyle (BFI Director of Strategic Accounts) reviews WIG\'s response and compiles the labor figures (Teamsters, Carpenters, OT, Inside Delivery) before forwarding the consolidated quote to Lauren for proposal compilation.',
+        description: 'Strata uploads the SIF to Quote Tool, corrects the Filing Unit price against the CoNY contract, and surfaces Herman Miller\'s Estimated Service Fees (3.75%). Lauren reviews the Quote Comparison and applies the credit line to CORE (CL-2026-0089 · GP $8,833.50 recognized — no manual discount calc). The modal then transitions to the labor quote request: Lauren sends the email to WIG and Michael Boyle (BFI Director of Strategic Accounts) compiles the WIG response before forwarding to Lauren for proposal compilation.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -178,8 +169,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'The Miller Knoll rep sends the RFQ to BFI with SIF, spec sheet, and floor plan attached' },
     'a1.1': { mode: 'interactive', userAction: 'Review Lauren\'s morning queue — AI-prioritized orders · new SIF on DOE-2847 · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'See Robert Chen\'s email — order confirmation received · DOE-2847 · Q-2026-0089 · Robert acknowledges receipt · BFI proceeds to validate pricing' },
-    'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 unit price correction $1,350 → $1,260 · verify service fee 3.75% · approve to draft Credit Line · review editable fields (Amount, GL Account, Memo) · push to CORE → CL-2026-0089 posted · GP $8,833.50 recognized · continue to Labor Quote' },
-    'a1.2b2': { mode: 'interactive', userAction: 'Review the editable email draft to WIG (m.weller@wiginstall.com) · send · wait for WIG response · review Michael Boyle\'s compiled labor figures (Teamsters 24h · Carpenters 50h · OT 8h · Inside Delivery 4h · Total $9,444) · continue to proposal' },
+    'a1.2b': { mode: 'interactive', userAction: 'Review Quote Tool comparison · verify HMI-FU-300 unit price correction $1,350 → $1,260 · verify service fee 3.75% · approve to draft Credit Line · review editable fields (Amount, GL Account, Memo) · push to CORE → CL-2026-0089 posted · continue to Labor Quote → modal transitions to labor-request → review editable email to WIG (m.weller@wiginstall.com) · send · wait for WIG response · review Michael Boyle\'s compiled labor figures (Teamsters 24h · Carpenters 50h · OT 8h · Inside Delivery 4h) · continue to proposal' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the formal proposal (product + labor) · send to NYC DoE procurement · await client review and PO issuance' },
     'a1.2c': { mode: 'interactive', userAction: 'PO arrives from NYC DoE · review PO against the proposal sent · confirm 30-day delivery window · confirm in CORE' },
     'a1.2d': { mode: 'interactive', userAction: 'See WIG document notification · review Receiving Report + Bingo Sheet · click Run AI Analysis' },
@@ -221,13 +211,12 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Drafting credit line for CORE · GL account 4200-Agency-Fees · linked to DOE-2847',
         'Posting credit line to CORE · CL-2026-0089 · cost credit $8,833.50',
         'GP recognized · 3.75% on DOE-2847 · matched Herman Miller Estimated Service Fees',
-    ],
-    'a1.2b2': [
-        'Drafting labor quote request · DOE-2847 · 3 product lines',
+        'Transitioning to labor quote request · scope auto-populated from validated Quote',
+        'Drafting labor quote request to WIG · DOE-2847 · 3 product lines',
         'Email sent to WIG · m.weller@wiginstall.com',
         'WIG response received · forwarded to Michael Boyle (BFI)',
         'Michael compiled labor figures · Teamsters 24h · Carpenters 50h · OT 8h · Inside Delivery 4h',
-        'Labor total $9,444 · ready for proposal compilation',
+        'Labor total $9,262 · ready for proposal compilation',
     ],
     'a1.2b3': [
         'Compiling proposal · product pricing (Quote Tool) + labor (WIG)',
@@ -270,5 +259,5 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const BFI_SELF_INDICATED: string[] = [
-    'a1.0', 'a1.1', 'a1.2', 'a1.2b', 'a1.2b2', 'a1.2b3', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
+    'a1.0', 'a1.1', 'a1.2', 'a1.2b', 'a1.2b3', 'a1.2c', 'a1.2d', 'a1.2e', 'a1.2f', 'a1.3', 'a1.3b', 'a1.3c', 'a1.4',
 ];
