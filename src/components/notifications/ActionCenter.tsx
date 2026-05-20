@@ -58,7 +58,7 @@ interface BfiStepNotif {
 const BFI_STEP_NOTIFICATIONS: Record<string, BfiStepNotif> = {
     'a1.2c': {
         badge: '1 new', badgeColor: 'success',
-        title: 'Purchase Order approved · DOE-2847 ready for review',
+        title: 'Quote approved · DOE-2847 ready for review',
         desc: 'Q-2026-0089 has been approved and converted to PO DOE-2847 ($235,560). Please review PO and labor figures before confirming and sending to CORE.',
         sender: 'nycdoe-procurement@schools.nyc.gov',
         re: 'Purchase Order DOE-2847 · NYC Dept. of Education · $235,560',
