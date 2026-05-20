@@ -1919,7 +1919,6 @@ BFI Furniture · CoNY Account Manager`
                                                 <p className="text-[11px] text-foreground leading-relaxed">
                                                     Hi Lauren, labor quote compiled for{' '}
                                                     <span className="font-semibold">DOE-2847</span> — 30 Court Street installation.
-                                                    Scope reviewed against WIG response, crew availability confirmed for the delivery window.
                                                 </p>
                                                 <div className="rounded-xl border border-border overflow-hidden">
                                                     <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
