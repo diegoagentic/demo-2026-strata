@@ -1767,18 +1767,24 @@ function LaborQuoteDialog({ isOpen, onComplete, onClose }: {
     const [dateText,  setDateText]  = useState('May 6, 2026 · 2:47 PM')
     const [subject,   setSubject]   = useState('Labor Quote Request · DOE-2847 · NYC Dept. of Education')
     const [bodyText,  setBodyText]  = useState(
-`Hi Mike,
+`Hi Michael,
 
-Please prepare a labor quote for DOE-2847 (NYC Department of Education · CoNY contract). Pricing was already validated through Quote Tool against CoNY Contract ANT122.
+Please provide a labor quote for the following installation at 30 Court Street, Brooklyn, NY 11201 (NYC Dept. of Education · Order DOE-2847).
 
-Site: 30 Court Street, Brooklyn, NY 11201
-Delivery window: May 14–21, 2026
+Attached is the floor plan and product list for your reference.
 
-Please include line items for Teamsters, Carpenters, OT differential, and inside delivery. Send the quote back at your earliest convenience so we can compile the full proposal.
+Please confirm crew availability and delivery window. Quote needed ASAP to proceed with the NYC DOE purchase order.
 
 — Lauren DeMarco
 BFI Furniture · CoNY Account Manager`
     )
+    const [attachments, setAttachments] = useState([
+        { name: 'DOE-2847-floorplan.pdf',     label: 'Floor Plan'   },
+        { name: 'DOE-2847-product-list.pdf',  label: 'Product List' },
+    ])
+
+    const removeAttachment = (name: string) =>
+        setAttachments(prev => prev.filter(a => a.name !== name))
 
     // Reset to draft whenever the dialog re-opens
     useEffect(() => { if (!isOpen) setPhase('draft') }, [isOpen])
@@ -1857,15 +1863,22 @@ BFI Furniture · CoNY Account Manager`
                                         rows={10}
                                         className="w-full text-[12px] text-foreground leading-relaxed bg-transparent outline-none border border-transparent hover:border-border/60 focus:border-primary/50 rounded-lg px-2 py-1.5 -mx-2 transition-colors disabled:opacity-60 resize-y" />
 
-                                    {/* Scope summary card (same shape as Proposal Summary in SendProposalDialog) */}
-                                    <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-[11px]">
-                                        <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Installation Scope · DOE-2847</p>
-                                        {LQ_SCOPE.map(l => (
-                                            <div key={l.code} className="flex items-center gap-2">
-                                                <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
-                                                <span className="font-mono text-muted-foreground w-24 shrink-0">{l.code}</span>
-                                                <span className="text-foreground flex-1 truncate">{l.desc}</span>
-                                                <span className="font-mono text-foreground shrink-0">{l.qty}</span>
+                                    {/* Attachment chips — removable while in draft (pattern from SendProposalDialog) */}
+                                    <div className="flex flex-col gap-1.5">
+                                        {attachments.map(a => (
+                                            <div key={a.name} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[11px] text-foreground font-medium">
+                                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                <span className="flex-1 truncate">{a.name}</span>
+                                                <span className="text-[9px] text-muted-foreground">· {a.label}</span>
+                                                {!locked && (
+                                                    <button
+                                                        onClick={() => removeAttachment(a.name)}
+                                                        className="p-0.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                                                        aria-label={`Remove ${a.name}`}
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
