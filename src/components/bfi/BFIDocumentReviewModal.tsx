@@ -268,6 +268,36 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                             </div>
                         ))}
                     </div>
+
+                    {/* CORE Entry Preview — how CORE registers this order (source of truth for credit/discount) */}
+                    {validated && (
+                        <div className="mx-6 mb-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 overflow-hidden">
+                            <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/60 flex items-center gap-2">
+                                <Building2 className="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
+                                <p className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">CORE Entry Preview</p>
+                                <span className="ml-auto text-[8px] font-bold text-info bg-info/10 border border-info/20 px-1.5 py-0.5 rounded uppercase tracking-wider">From CORE</span>
+                            </div>
+                            <div className="px-4 py-2 space-y-1 text-[10px]">
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500 dark:text-zinc-400">Order Type</span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">Direct Bill-HMI</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500 dark:text-zinc-400">Calc Code</span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">7 (Enter Cost / Enter Sell)</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500 dark:text-zinc-400">GP target</span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">0% (CoNY rule · cost = sell)</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500 dark:text-zinc-400">Agency Fee credit</span>
+                                    <span className="font-mono font-bold text-success">$8,833.50 (3.75%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="text-[9px] text-zinc-400 dark:text-zinc-500 text-center py-3 border-t border-zinc-100 dark:border-zinc-800">
                         {validated ? 'Quote Tool validated · 1 correction applied · CoNY Contract ANT122' : 'SIF pricing · Awaiting Quote Tool validation against CoNY contract'}
                     </div>
@@ -2000,48 +2030,25 @@ BFI Furniture · CoNY Account Manager`
     )
 }
 
-type CreditLinePhase = 'review' | 'draft' | 'pushing' | 'posted'
+// Credit line · sourced from CORE (Calc Code 7 · Direct Bill-HMI vendor type)
+// CORE generates the credit line when the Quote Tool output is uploaded.
+// Strata's role: surface CORE's record so Lauren can confirm — no draft/push.
+const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
+    { label: 'Amount',     value: '$8,833.50',                                   mono: true },
+    { label: 'GL Account', value: '4200-Agency-Fees',                            mono: true },
+    { label: 'Calc Code',  value: '7 · Enter Cost / Enter Sell Price'                       },
+    { label: 'Vendor',     value: 'Direct Bill-HMI',                             mono: true },
+    { label: 'Linked to',  value: 'DOE-2847 · Q-2026-0089',                      mono: true },
+    { label: 'Memo',       value: 'Herman Miller agency fee · 3.75% on DOE-2847 product lines · per Estimated Service Fees Q-2026-0089' },
+]
 
 function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
     const fmt2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    const fmt0 = (n: number) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
-    const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
-    const listTotal = SF_LINES.reduce((sum, l) => sum + l.listExt, 0)
 
     const [compOpen, setCompOpen] = useState(false)
-    const [phase, setPhase] = useState<CreditLinePhase>('review')
     const [showLaborDialog, setShowLaborDialog] = useState(false)
 
-    // Credit line draft fields — editable per user request (Wendy 18-may)
-    const [clAmount, setClAmount] = useState(grandTotal.toFixed(2))
-    const [clGlAccount, setClGlAccount] = useState('4200-Agency-Fees')
-    const [clMemo, setClMemo] = useState('Herman Miller agency fee · 3.75% on DOE-2847 product lines · per Estimated Service Fees Q-2026-0089')
-
-    // Pushing animation messages
-    const [pushMsgIdx, setPushMsgIdx] = useState(0)
-    const pushMessages = [
-        'Posting credit line to CORE...',
-        'Creating CL-2026-0089 · GL account ' + clGlAccount,
-        'Linking to order DOE-2847 · cost credit applied',
-    ]
-
-    const clAmountNum = parseFloat(clAmount) || 0
-    const amountDelta = clAmountNum - grandTotal
-    const amountDiffers = Math.abs(amountDelta) > 0.01
-    const gpPct = listTotal > 0 ? (clAmountNum / listTotal) * 100 : 0
-
-    const handleApproveContinue = () => setPhase('draft')
-
-    const handlePushToCore = () => {
-        setPhase('pushing')
-        setPushMsgIdx(0)
-        const id1 = setTimeout(() => setPushMsgIdx(1), 700)
-        const id2 = setTimeout(() => setPushMsgIdx(2), 1400)
-        const id3 = setTimeout(() => setPhase('posted'), 2200)
-        return () => { clearTimeout(id1); clearTimeout(id2); clearTimeout(id3) }
-    }
-
-    const handleOpenLaborDialog = () => setShowLaborDialog(true)
+    const handleConfirmAndOpenLabor = () => setShowLaborDialog(true)
     const handleLaborComplete = () => {
         setShowLaborDialog(false)
         onValidate?.()
@@ -2149,147 +2156,49 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
 
-                {/* ─── Sub-step Credit Line · DRAFT EDITABLE ───────────────────── */}
-                {phase === 'draft' && (
-                    <div className="rounded-xl border border-ai/30 bg-ai/5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="px-4 py-3 border-b border-ai/20 bg-ai/5 flex items-center gap-2.5">
-                            <div className="h-7 w-7 rounded-full bg-ai/15 flex items-center justify-center shrink-0">
-                                <CreditCard className="h-3.5 w-3.5 text-ai" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[12px] font-bold text-foreground">Credit Line · Draft for CORE</p>
-                                <p className="text-[10px] text-muted-foreground">Strata will post a cost credit · review fields before pushing</p>
-                            </div>
-                        </div>
-                        <div className="px-4 py-3 space-y-2.5">
-                            {/* Editable fields — META_ROWS pattern from PatriciaDialog */}
-                            <div className="rounded-lg border border-border overflow-hidden text-[11px]">
-                                <div className="flex gap-3 px-3 py-2.5 border-b border-border/60">
-                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">Amount</span>
-                                    <span className="text-muted-foreground shrink-0">$</span>
-                                    <input
-                                        value={clAmount}
-                                        onChange={e => setClAmount(e.target.value)}
-                                        inputMode="decimal"
-                                        className="flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors text-foreground font-mono tabular-nums"
-                                    />
-                                </div>
-                                <div className="flex gap-3 px-3 py-2.5 border-b border-border/60">
-                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">GL Account</span>
-                                    <input
-                                        value={clGlAccount}
-                                        onChange={e => setClGlAccount(e.target.value)}
-                                        className="flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors text-foreground font-mono"
-                                    />
-                                </div>
-                                <div className="flex gap-3 px-3 py-2.5 border-b border-border/60">
-                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">Linked to</span>
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-foreground bg-muted px-2 py-0.5 rounded">
-                                        <Building2 className="h-3 w-3 text-muted-foreground" />
-                                        DOE-2847 · Q-2026-0089
-                                    </span>
-                                </div>
-                                <div className="px-3 py-2.5">
-                                    <span className="text-muted-foreground font-semibold block mb-1">Memo</span>
-                                    <textarea
-                                        value={clMemo}
-                                        onChange={e => setClMemo(e.target.value)}
-                                        rows={2}
-                                        className="w-full bg-transparent outline-none border border-border/60 focus:border-primary/50 transition-colors rounded px-2 py-1 text-[10px] text-foreground resize-none"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* GP preview — recalculates dynamically */}
-                            <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 flex items-center justify-between text-[10px]">
-                                <span className="text-muted-foreground">GP recognized on posting</span>
-                                <span className="font-mono font-bold text-foreground tabular-nums">
-                                    {fmt2(clAmountNum)} <span className="text-muted-foreground font-normal">· {gpPct.toFixed(2)}% of list</span>
-                                </span>
-                            </div>
-
-                            {/* Differs warning — only if user edited the amount */}
-                            {amountDiffers && (
-                                <div className="rounded-lg border border-warning/40 bg-warning/5 px-3 py-2 flex items-start gap-2 animate-in fade-in duration-200">
-                                    <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
-                                    <p className="text-[10px] text-foreground leading-relaxed">
-                                        <span className="font-bold">Differs from Estimated Service Fees</span> by {fmt2(Math.abs(amountDelta))} ({amountDelta > 0 ? 'over' : 'under'}). Posting anyway — confirm this is intentional.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* ─── Sub-step Credit Line · PUSHING (animated) ──────────────────── */}
-                {phase === 'pushing' && (
-                    <div className="rounded-xl border border-ai/40 bg-ai/10 px-4 py-3.5 flex items-start gap-2.5 animate-in fade-in duration-200">
-                        <div className="h-7 w-7 rounded-full bg-ai/20 flex items-center justify-center shrink-0">
-                            <Loader2 className="h-3.5 w-3.5 text-ai animate-spin" />
+                {/* ─── Credit Line · From CORE (read-only) ────────────────────────── */}
+                <div className="rounded-xl border border-ai/30 bg-ai/5 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-ai/20 bg-ai/5 flex items-center gap-2.5">
+                        <div className="h-7 w-7 rounded-full bg-ai/15 flex items-center justify-center shrink-0">
+                            <CreditCard className="h-3.5 w-3.5 text-ai" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-bold text-ai uppercase tracking-wide">Posting to CORE</p>
-                            <p key={pushMsgIdx} className="text-[11px] text-foreground mt-1 animate-in fade-in slide-in-from-bottom-1 duration-300">
-                                {pushMessages[pushMsgIdx]}
-                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-[12px] font-bold text-foreground">Credit Line · From CORE</p>
+                                <span className="text-[8px] font-bold text-info bg-info/10 border border-info/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Source: CORE</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">CORE prepared this credit line · review and confirm before sending the labor request</p>
                         </div>
                     </div>
-                )}
+                    <div className="px-4 py-3 space-y-2.5">
+                        {/* Read-only fields — sourced from CORE */}
+                        <div className="rounded-lg border border-border overflow-hidden text-[11px] bg-card">
+                            {CL_FIELDS.map((row, i) => (
+                                <div key={row.label} className={`flex gap-3 px-3 py-2 ${i < CL_FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
+                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">{row.label}</span>
+                                    <span className={`flex-1 text-foreground ${row.mono ? 'font-mono tabular-nums' : 'leading-snug'}`}>{row.value}</span>
+                                </div>
+                            ))}
+                        </div>
 
-                {/* ─── Sub-step Credit Line · POSTED (success) ────────────────────── */}
-                {phase === 'posted' && (
-                    <div className="rounded-xl border border-success/30 bg-success/5 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                        <div className="px-4 py-3 flex items-start gap-2.5">
-                            <div className="h-7 w-7 rounded-full bg-success/15 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="h-4 w-4 text-success" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[12px] font-bold text-foreground">Credit line CL-2026-0089 posted</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">DOE-2847 · {fmt2(clAmountNum)} cost credit · GP {gpPct.toFixed(2)}% recognized · {clGlAccount}</p>
-                            </div>
+                        {/* GP target callout */}
+                        <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-center justify-between text-[10px]">
+                            <span className="text-muted-foreground">GP target · CoNY contract</span>
+                            <span className="font-mono font-bold text-success tabular-nums">3.75% · {fmt2(grandTotal)}</span>
                         </div>
                     </div>
-                )}
+                </div>
             </div>
 
-            {/* Footer — changes by phase */}
+            {/* Footer — single CTA · confirm & open Labor Quote dialog */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
-                {phase === 'review' && (
-                    <button
-                        onClick={handleApproveContinue}
-                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
-                    >
-                        Approve & continue to Credit Line
-                        <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                )}
-                {phase === 'draft' && (
-                    <button
-                        onClick={handlePushToCore}
-                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
-                    >
-                        <CreditCard className="h-3.5 w-3.5" />
-                        Push to CORE · {fmt0(clAmountNum)}
-                    </button>
-                )}
-                {phase === 'pushing' && (
-                    <button
-                        disabled
-                        className="w-full py-2.5 text-[11px] font-black rounded-xl uppercase tracking-widest bg-muted text-muted-foreground inline-flex items-center justify-center gap-2"
-                    >
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Posting...
-                    </button>
-                )}
-                {phase === 'posted' && (
-                    <button
-                        onClick={handleOpenLaborDialog}
-                        className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
-                    >
-                        <Mail className="h-3.5 w-3.5" />
-                        Send Labor Quote Request to WIG
-                    </button>
-                )}
+                <button
+                    onClick={handleConfirmAndOpenLabor}
+                    className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
+                >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Confirm credit line & continue to Labor Quote
+                </button>
             </div>
 
             {/* Labor Quote Dialog — opens after credit line posted; overlay z-[400] over the modal */}
@@ -3292,7 +3201,7 @@ export default function BFIDocumentReviewModal({
                                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                                     <p className="text-[11px] text-ai font-medium">
                                         {step === 'quote'
-                                            ? <><span className="font-bold">Quote Tool</span> · 1 correction applied · HMI-FU-300 $8,100 → $7,560 (CoNY rate) · Service Fees 3.75% · Grand Total $8,833.50</>
+                                            ? <><span className="font-bold">Quote Tool</span> · 1 correction · HMI-FU-300 $8,100 → $7,560 · Service Fees 3.75% · Grand Total $8,833.50 · Credit line ready in CORE</>
                                             : step === 'cpr'
                                                 ? <><span className="font-bold">CPR</span> reconciliation · Carpenters −5h · OT −2h · Impact: −$720 · 2 lines to approve</>
                                                 : step === 'fee'

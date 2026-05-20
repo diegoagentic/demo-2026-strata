@@ -14,7 +14,7 @@
 //     a1.2:   Confirm receipt          — Lauren replies · Miller Knoll acknowledges
 //     a1.2b:  Quote · Credit · Labor   — unified step (3 actions in one modal):
 //                                        1) review Quote Tool pricing
-//                                        2) post credit line to CORE (fee becomes GP)
+//                                        2) confirm the credit line CORE already prepared (fee = GP)
 //                                        3) email WIG for labor · Michael compiles
 //     a1.2b3: Send proposal            — Lauren emails NYC DOE the full proposal
 //     a1.2c:  PO received              — Lauren confirms the PO in CORE
@@ -73,7 +73,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Agency Fee',
         title: 'Quote · Credit · Labor',
-        description: 'Three actions in one step: ① validate pricing in Quote Tool, ② post the credit line to CORE (the fee becomes profit — no manual math), ③ email WIG for the labor quote.',
+        description: 'Three actions in one step: ① validate pricing in Quote Tool, ② confirm the credit line CORE already prepared (no manual math), ③ email WIG for the labor quote.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -171,7 +171,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'Watch Robert Chen send the request to Lauren · specs, floor plan and pricing file arrive in Strata' },
     'a1.1': { mode: 'interactive', userAction: 'Open the morning queue · DOE-2847 surfaces as priority · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'Read Robert\'s acknowledgment · quote Q-2026-0089 confirmed · move on to validate pricing' },
-    'a1.2b': { mode: 'interactive', userAction: '① Review Quote Tool: HMI-FU-300 corrected $1,350 → $1,260 · 3.75% service fee · approve to draft credit line · ② Edit credit line fields if needed (Amount, GL Account, Memo) · push to CORE → CL-2026-0089 posted · ③ Open the labor request email to WIG · send · wait for Michael\'s compiled response · continue to proposal' },
+    'a1.2b': { mode: 'interactive', userAction: '① Review Quote Tool: HMI-FU-300 corrected $1,350 → $1,260 · 3.75% service fee · ② Review the credit line CORE prepared (Amount $8,833.50 · Calc Code 7 · Direct Bill-HMI · GL 4200-Agency-Fees) · confirm to open the labor request · ③ Open the labor request email to WIG · send · wait for Michael\'s compiled response · continue to proposal' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the full proposal (product + labor) · send to NYC DOE procurement · wait for the PO' },
     'a1.2c': { mode: 'interactive', userAction: 'Open the PO from NYC DOE · check it against the proposal · confirm the 30-day delivery window in CORE' },
     'a1.2d': { mode: 'interactive', userAction: 'Open the WIG receiving notification · review the bingo sheet · run AI analysis to find the missing carton' },
@@ -210,9 +210,9 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Corrected HMI-FU-300 · $1,350 → $1,260',
         'Restricted-product check · all clear',
         'Service fees applied · 3.75% · total $8,833.50',
-        'Drafting credit line · GL 4200-Agency-Fees',
-        'Credit line CL-2026-0089 posted to CORE · $8,833.50',
-        'GP recognized · 3.75% on DOE-2847',
+        'Reading credit line from CORE · CL-2026-0089 · cost credit $8,833.50',
+        'Calc Code 7 verified · Direct Bill-HMI vendor type · GL 4200-Agency-Fees',
+        'GP target 3.75% confirmed · matches Herman Miller Estimated Service Fees',
         'Opening labor quote request · scope auto-filled',
         'Sending request to WIG',
         'WIG response in · forwarded to Michael',
