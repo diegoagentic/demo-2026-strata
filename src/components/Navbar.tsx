@@ -114,6 +114,22 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Receiving Coordinator',
         photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face',
     },
+    // Officeworks demo personas
+    'Officeworks Design Manager': {
+        name: 'Felicia Miano-Poles',
+        role: 'EVP Design & PM',
+        photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face',
+    },
+    'Officeworks Designer': {
+        name: 'Kimberly Tucker',
+        role: 'Design Manager · PA',
+        photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face',
+    },
+    'Officeworks Sales Coordinator': {
+        name: 'Randy Martinez',
+        role: 'Sales Coordinator',
+        photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
@@ -127,6 +143,12 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
         if (role === 'Receiving Coordinator') return 'BFI Receiving';
         if (role === 'BFI Manager')          return 'BFI Manager';
         return 'BFI Account Manager';
+    }
+    if (app?.startsWith('officeworks-')) {
+        if (role === 'Design Manager')    return 'Officeworks Design Manager';
+        if (role === 'Designer')          return 'Officeworks Designer';
+        if (role === 'Sales Coordinator') return 'Officeworks Sales Coordinator';
+        return 'Officeworks Design Manager';
     }
     if (role === 'Expert') return 'Expert';
     if (role === 'Estimator') return 'Estimator';
@@ -245,27 +267,29 @@ export default function Navbar({
                             leaveFrom="opacity-100 translate-y-0"
                             leaveTo="opacity-0 translate-y-1"
                         >
-                            <PopoverPanel className="absolute left-0 top-full mt-2 w-64 py-2 rounded-xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl z-[200]">
-                                <div className="px-3 py-2 border-b border-border mb-1">
+                            <PopoverPanel className="absolute left-0 top-full mt-2 w-64 py-2 rounded-xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl z-[200] max-h-[70vh] flex flex-col">
+                                <div className="px-3 py-2 border-b border-border mb-1 shrink-0">
                                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Switch Demo</p>
                                 </div>
-                                {profiles.map((profile) => (
-                                    <PopoverButton
-                                        as="button"
-                                        key={profile.id}
-                                        onClick={() => switchProfile(profile.id)}
-                                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left"
-                                    >
-                                        <span className="text-lg shrink-0">{profile.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-foreground">{profile.name}</p>
-                                            <p className="text-[11px] text-muted-foreground truncate">{profile.description}</p>
-                                        </div>
-                                        {activeProfile.id === profile.id && (
-                                            <CheckIcon className="w-4 h-4 text-primary shrink-0" />
-                                        )}
-                                    </PopoverButton>
-                                ))}
+                                <div className="overflow-y-auto flex-1 min-h-0">
+                                    {profiles.map((profile) => (
+                                        <PopoverButton
+                                            as="button"
+                                            key={profile.id}
+                                            onClick={() => switchProfile(profile.id)}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left"
+                                        >
+                                            <span className="text-lg shrink-0">{profile.icon}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-foreground">{profile.name}</p>
+                                                <p className="text-[11px] text-muted-foreground truncate">{profile.description}</p>
+                                            </div>
+                                            {activeProfile.id === profile.id && (
+                                                <CheckIcon className="w-4 h-4 text-primary shrink-0" />
+                                            )}
+                                        </PopoverButton>
+                                    ))}
+                                </div>
                             </PopoverPanel>
                         </Transition>
                     </Popover>

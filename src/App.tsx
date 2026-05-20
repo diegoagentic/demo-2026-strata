@@ -48,7 +48,8 @@ import MBIQuotesPage from "./components/mbi/MBIQuotesPage"
 import MBIDesignPage from "./components/mbi/MBIDesignPage"
 import BFIPage, { BFIDashboardPage } from "./components/bfi/BFIPage"
 import WorkspacesPage from "./components/workspaces/WorkspacesPage"
-import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon, LayoutDashboard as LayoutDashboardIcon } from 'lucide-react'
+import OfficeworksPage, { OfficeworksDashboardPage } from "./components/officeworks/OfficeworksPage"
+import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon, LayoutDashboard as LayoutDashboardIcon, Inbox as InboxIcon, Pencil as PencilIcon, ClipboardCheck as ClipboardCheckIcon, Send as SendIcon } from 'lucide-react'
 
 // Leland Demo — 4 app shells (Phase L0 · expanded in L1-L5)
 import { LelandStrataShell, LelandInboxApp, LelandSeradexApp, LelandReviewQueueApp } from "./features/leland"
@@ -73,6 +74,7 @@ function App() {
   const [showArchSlide, setShowArchSlide] = useState(false)
   const [bfiLoginActive, setBfiLoginActive] = useState(false)
   const [bfiDashboardActive, setBfiDashboardActive] = useState(false)
+  const [officeworksDashboardActive, setOfficeworksDashboardActive] = useState(false)
 
   // Set initial page for CRM steps
   useEffect(() => {
@@ -93,15 +95,24 @@ function App() {
     if (bfiDashboardActive) setBfiDashboardActive(false)
   }, [currentStep?.id])
 
+  // Reset Officeworks dashboard mode when any demo step advances
+  useEffect(() => {
+    if (officeworksDashboardActive) setOfficeworksDashboardActive(false)
+  }, [currentStep?.id])
+
   const handleNavigate = (page: string) => {
     if (page === 'overview') {
       setCurrentPage('dashboard')
     } else if (page === 'bfi-dashboard') {
       // BFI Dashboard is a permanent page — not a demo step
       setBfiDashboardActive(true)
-    } else if (page.startsWith('mbi-') || page.startsWith('leland-') || page.startsWith('bfi-')) {
-      // MBI/Leland/BFI nav tabs jump to the first demo step matching that module's app
+    } else if (page === 'officeworks-dashboard') {
+      // Officeworks Dashboard is a permanent page — not a demo step
+      setOfficeworksDashboardActive(true)
+    } else if (page.startsWith('mbi-') || page.startsWith('leland-') || page.startsWith('bfi-') || page.startsWith('officeworks-')) {
+      // MBI/Leland/BFI/Officeworks nav tabs jump to the first demo step matching that module's app
       setBfiDashboardActive(false)
+      setOfficeworksDashboardActive(false)
       const idx = steps.findIndex(s => s.app === page)
       if (idx >= 0) goToStep(idx)
     } else {
@@ -143,6 +154,7 @@ function App() {
   const isLeland = demoProfile.id === 'leland';
   const isBFI = demoProfile.id === 'bfi';
   const isWorkspaces = demoProfile.id === 'workspaces';
+  const isOfficeworks = demoProfile.id === 'officeworks';
   const getSimulationConfig = () => {
     if (!isDemoActive) return { appName: undefined, companyName: undefined, customNavigation: undefined };
 
@@ -185,10 +197,20 @@ function App() {
       : 'Expense AI';
     const workspacesCompany = demoProfile.companyName;
 
+    // Officeworks — appName follows the active module; company is Officeworks Inc.
+    const officeworksAppName = currentStep.app === 'officeworks-intake' ? 'Intake AI'
+      : currentStep.app === 'officeworks-design' ? 'Design AI'
+      : currentStep.app === 'officeworks-spec-check' ? 'Spec Check AI'
+      : currentStep.app === 'officeworks-submission' ? 'Submission AI'
+      : currentStep.app === 'officeworks-dashboard' ? 'Design Dashboard'
+      : 'Spec Check AI';
+    const officeworksCompany = demoProfile.companyName;
+
     const resolvedAppName = isContinua ? continuaAppName
       : isLeland ? lelandAppName
       : isBFI ? bfiAppName
       : isWorkspaces ? workspacesAppName
+      : isOfficeworks ? officeworksAppName
       : currentStep.app === 'email-marketplace' ? (isWRG ? 'WRG Mail' : 'Wells Fargo Mail')
       : currentStep.app === 'catalog' ? 'Marketplace'
       : currentStep.app === 'service-now' ? 'ServiceNow'
@@ -204,6 +226,7 @@ function App() {
       : isLeland ? lelandCompany
       : isBFI ? bfiCompany
       : isWorkspaces ? workspacesCompany
+      : isOfficeworks ? officeworksCompany
       : isExpert || isDuplerExpert || isWrgExpert || isWrgDesigner ? 'Strata Services'
       : demoProfile.companyName;
 
@@ -267,7 +290,16 @@ function App() {
       { name: 'Spend Dashboard', page: 'workspaces-dashboard', icon: LayoutDashboardIcon },
     ];
 
-    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : expertNav;
+    // Officeworks profile: 5-tab primary nav (Dashboard persistent + 4 module tabs · per plan Iter 1 decision)
+    const officeworksNav = [
+      { name: 'Dashboard', page: 'officeworks-dashboard', icon: LayoutDashboardIcon },
+      { name: 'Intake AI', page: 'officeworks-intake', icon: InboxIcon },
+      { name: 'Design AI', page: 'officeworks-design', icon: PencilIcon },
+      { name: 'Spec Check AI', page: 'officeworks-spec-check', icon: ClipboardCheckIcon },
+      { name: 'Submission AI', page: 'officeworks-submission', icon: SendIcon },
+    ];
+
+    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : isOfficeworks ? officeworksNav : expertNav;
     return { appName: resolvedAppName, companyName: resolvedCompany, customNavigation: nav };
   };
 
@@ -316,8 +348,15 @@ function App() {
       'workspaces-approval': 'workspaces-submit',
       'workspaces-ap': 'workspaces-ap',
       'workspaces-reporting': 'workspaces-dashboard',
+      // Officeworks Demo: 5 tabs (Dashboard persistent + 4 module tabs)
+      'officeworks-dashboard': 'officeworks-dashboard',
+      'officeworks-intake': 'officeworks-intake',
+      'officeworks-design': 'officeworks-design',
+      'officeworks-spec-check': 'officeworks-spec-check',
+      'officeworks-submission': 'officeworks-submission',
     };
     if (isBFI && bfiDashboardActive) return 'bfi-dashboard'
+    if (isOfficeworks && officeworksDashboardActive) return 'officeworks-dashboard'
     return appToTab[currentStep.app] || currentPage;
   };
 
@@ -419,6 +458,14 @@ function App() {
       case 'workspaces-ap':
       case 'workspaces-reporting':
         return <WorkspacesPage />;
+      case 'officeworks-intake':
+      case 'officeworks-design':
+      case 'officeworks-spec-check':
+      case 'officeworks-submission':
+        if (officeworksDashboardActive) return <OfficeworksDashboardPage />
+        return <OfficeworksPage />;
+      case 'officeworks-dashboard':
+        return <OfficeworksDashboardPage />;
       default:
         return (
           <ExpertHubTransactions
