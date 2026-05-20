@@ -4,11 +4,11 @@
 // CLIENT: BFI Furniture (Elizabeth, NJ · ~50 employees · Women Owned
 //         Government/Municipal furniture dealer · CoNY primary customer)
 //
-// DEMO STRUCTURE: 1 flow · 13 steps (post-Wendy revisions May 2026)
+// DEMO STRUCTURE: 1 flow · 13 steps in 3 sidebar groups (post-Jessica revisions May 2026)
 //
 //   Dashboard — permanent navbar tab (not a tour step)
 //
-//   FLOW 1 — Agency Fee · pre-award (a1.0 → a1.2c)
+//   GROUP 1 · Pre-award (a1.0 → a1.2c · 6 steps)
 //     a1.0:   Quote request arrives    — Miller Knoll sends specs · auto-ingested
 //     a1.1:   Morning queue            — Lauren opens · DOE-2847 surfaced
 //     a1.2:   Confirm receipt          — Lauren replies · Miller Knoll acknowledges
@@ -19,14 +19,16 @@
 //     a1.2b3: Send proposal            — Lauren emails NYC DOE the full proposal
 //     a1.2c:  PO received              — Lauren confirms the PO in CORE
 //
-//   FLOW 1 — Agency Fee · post-delivery (a1.2d → a1.4)
-//     a1.2d:  Receiving check          — Strata scans WIG report · finds missing carton
-//     a1.2e:  Shortage claim           — Lauren files claim with Herman Miller
-//     a1.2f:  Work order ready         — Replacement confirmed · notify Walter
-//     a1.3:   CPR reconciliation       — Field hours vs quote · Lauren approves
-//     a1.3b:  Manager review           — Michael sends invoice request to Nancy
-//     a1.3c:  Invoice upload           — Lauren forwards approved invoice to Finance/AR
-//     a1.4:   Fee verification         — Patricia compares Nancy's fee vs contract
+//   GROUP 2 · Receiving & Resolution (a1.2d → a1.2f · 3 steps)
+//     a1.2d:  Bingo check              — Strata scans WIG report · finds missing carton
+//     a1.2e:  File shortage claim      — Lauren files claim with Herman Miller (preserves the email dialog)
+//     a1.2f:  Notify scheduler         — Replacement confirmed · Walter notified (preserves the email dialog)
+//
+//   GROUP 3 · CPR & Closing (a1.3 → a1.4 · 4 steps)
+//     a1.3:   CPR review               — Field hours vs quote · Lauren approves (preserves CPR notify dialog)
+//     a1.3b:  Manager approval         — Michael sends invoice request to Nancy (preserves Nancy email)
+//     a1.3c:  Invoice forward          — Lauren forwards approved invoice to Patricia/Finance (preserves Patricia email)
+//     a1.4:   Fee verification         — Patricia compares Nancy's fee vs contract (Strata catches gap)
 //
 // PRESENTATION DATE: May 14, 2026
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -39,12 +41,13 @@ import type { StepBehavior } from '../../components/demo/DemoStepBanner';
 export const BFI_STEPS: DemoStep[] = [
 
     // ═══════════════════════════════════════════
-    // FLOW 1: Agency Fee · pre-award
+    // GROUP 1: Pre-award  (a1.0 → a1.2c)
+    // Quote intake · validation · proposal · PO received
     // ═══════════════════════════════════════════
     {
         id: 'a1.0',
         groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
+        groupTitle: 'Flow 1: Pre-award',
         title: 'Quote request arrives',
         description: 'Robert Chen (Miller Knoll) sends a quote request for a Herman Miller installation at 30 Court Street, Brooklyn. Specs, floor plan, and the pricing file land directly in Strata — no email tracking needed.',
         app: 'bfi-agency-fee',
@@ -53,7 +56,7 @@ export const BFI_STEPS: DemoStep[] = [
     {
         id: 'a1.1',
         groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
+        groupTitle: 'Flow 1: Pre-award',
         title: 'Morning queue',
         description: 'Lauren opens her morning queue. Strata ranks active CoNY orders by urgency and surfaces DOE-2847 at the top — ready for review.',
         app: 'bfi-agency-fee',
@@ -62,7 +65,7 @@ export const BFI_STEPS: DemoStep[] = [
     {
         id: 'a1.2',
         groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
+        groupTitle: 'Flow 1: Pre-award',
         title: 'Confirm receipt',
         description: 'Robert acknowledges the order — quote Q-2026-0089 is locked in. Lauren moves on to validate pricing.',
         app: 'bfi-agency-fee',
@@ -71,7 +74,7 @@ export const BFI_STEPS: DemoStep[] = [
     {
         id: 'a1.2b',
         groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
+        groupTitle: 'Flow 1: Pre-award',
         title: 'Quote · Credit · Labor',
         description: 'Three actions in one step: ① validate pricing in Quote Tool, ② confirm the credit line CORE already prepared (no manual math), ③ email WIG for the labor quote.',
         app: 'bfi-agency-fee',
@@ -80,7 +83,7 @@ export const BFI_STEPS: DemoStep[] = [
     {
         id: 'a1.2b3',
         groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
+        groupTitle: 'Flow 1: Pre-award',
         title: 'Send proposal',
         description: 'Product pricing and labor are both ready. Lauren reviews the full proposal and sends it to NYC DOE procurement.',
         app: 'bfi-agency-fee',
@@ -89,7 +92,7 @@ export const BFI_STEPS: DemoStep[] = [
     {
         id: 'a1.2c',
         groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
+        groupTitle: 'Flow 1: Pre-award',
         title: 'PO received',
         description: 'The Purchase Order comes back from NYC DOE. Lauren checks it against the proposal and locks in the 30-day delivery window in CORE.',
         app: 'bfi-agency-fee',
@@ -97,66 +100,74 @@ export const BFI_STEPS: DemoStep[] = [
     },
 
     // ═══════════════════════════════════════════
-    // FLOW 1: Agency Fee · post-delivery
+    // GROUP 2: Receiving & Resolution  (a1.2d → a1.2f)
+    // One logical session: bingo check · shortage claim · work order ready.
+    // Kept as 3 steps to preserve the dialogs (claim email to HM, Walter notify).
     // ═══════════════════════════════════════════
     {
         id: 'a1.2d',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Receiving check',
+        groupId: 2,
+        groupTitle: 'Flow 1: Receiving & Resolution',
+        title: 'Bingo check',
         description: 'The receiving report arrives from WIG. Strata scans the bingo sheet against the order and flags what\'s missing — no manual carton counting.',
         app: 'bfi-receiving',
         role: 'Receiving Coordinator',
     },
     {
         id: 'a1.2e',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Shortage claim',
+        groupId: 2,
+        groupTitle: 'Flow 1: Receiving & Resolution',
+        title: 'File shortage claim',
         description: 'Lena flags a missing carton. Lauren reviews the order, attaches the receiving report as proof, and files the claim with Herman Miller.',
         app: 'bfi-receiving',
         role: 'Account Manager',
     },
     {
         id: 'a1.2f',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Work order ready',
+        groupId: 2,
+        groupTitle: 'Flow 1: Receiving & Resolution',
+        title: 'Notify scheduler',
         description: 'Herman Miller confirms the replacement shipment. Lauren reviews the updated work order and notifies Walter (project manager) to schedule the install crew.',
         app: 'bfi-receiving',
         role: 'Account Manager',
     },
+
+    // ═══════════════════════════════════════════
+    // GROUP 3: CPR & Closing  (a1.3 → a1.4)
+    // Financial close: CPR review · manager approval · invoice forward · fee verify.
+    // Kept as 4 steps to preserve the dialogs (CPR notify, Nancy email, Patricia forward).
+    // ═══════════════════════════════════════════
     {
         id: 'a1.3',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'CPR reconciliation',
+        groupId: 3,
+        groupTitle: 'Flow 1: CPR & Closing',
+        title: 'CPR review',
         description: 'Labor hours from the field don\'t match the original quote. Lauren reviews the gaps — Strata prepared the revision automatically — approves line by line, and notifies the team.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
     {
         id: 'a1.3b',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Manager review',
+        groupId: 3,
+        groupTitle: 'Flow 1: CPR & Closing',
+        title: 'Manager approval',
         description: 'Michael reviews Lauren\'s CPR approval and the final labor numbers, then sends the invoice request to Nancy at Herman Miller.',
         app: 'bfi-agency-fee',
         role: 'BFI Manager',
     },
     {
         id: 'a1.3c',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
-        title: 'Invoice upload',
+        groupId: 3,
+        groupTitle: 'Flow 1: CPR & Closing',
+        title: 'Invoice forward',
         description: 'The invoice arrives. Lauren attaches it to the record — Strata identifies the document automatically — and forwards it to Finance/AR to close out the order.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
     {
         id: 'a1.4',
-        groupId: 1,
-        groupTitle: 'Flow 1: Agency Fee',
+        groupId: 3,
+        groupTitle: 'Flow 1: CPR & Closing',
         title: 'Fee verification',
         description: 'Patricia compares Nancy\'s reported fee against the CoNY contract. Strata catches a −$255.24 gap automatically — Patricia decides whether to confirm the match or flag the discrepancy.',
         app: 'bfi-agency-fee',
