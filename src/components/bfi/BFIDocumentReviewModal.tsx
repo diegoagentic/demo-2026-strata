@@ -2067,7 +2067,7 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
             {/* Header */}
             <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
                 <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">QUOTE TOOL VALIDATION</h4>
-                <p className="text-[11px] text-muted-foreground/70 mt-0.5">CoNY Contract ANT122 · DOE-2847 · Q-2026-0089</p>
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">DOE-2847 · Q-2026-0089</p>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
@@ -3204,21 +3204,21 @@ export default function BFIDocumentReviewModal({
                                     </button>
                                 </div>
 
-                                {/* AI context banner — contextual per step */}
+                                {/* AI context banner — contextual per step · max 3-4 fragments */}
                                 <div className="px-6 py-2 bg-ai/5 border-b border-ai/20 flex items-center gap-2 shrink-0">
                                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                                     <p className="text-[11px] text-ai font-medium">
                                         {step === 'quote'
-                                            ? <><span className="font-bold">Quote Tool</span> · 1 correction · HMI-FU-300 $8,100 → $7,560 · Service Fees avg 4.0% (variable per product) · Grand Total $9,255.24 · Credit line ready in CORE</>
+                                            ? <><span className="font-bold">Quote Tool</span> · 1 price correction applied · Grand Total $9,255.24 · Credit line ready in CORE</>
                                             : step === 'cpr'
-                                                ? <><span className="font-bold">CPR</span> reconciliation · Carpenters −5h · OT −2h · Impact: −$720 · 2 lines to approve</>
+                                                ? <><span className="font-bold">CPR</span> · 2 lines adjusted · Impact −$720 · ready to approve</>
                                                 : step === 'fee'
                                                     ? scenario === 'gap'
-                                                        ? <><span className="font-bold">Agency fee</span> gap detected · MK Invoice {MK_INVOICE_GAP} vs expected {EXPECTED_FEE} · {FEE_GAP}</>
-                                                        : <><span className="font-bold">Agency fee</span> verified · MK Invoice matches T-code calculation</>
+                                                        ? <><span className="font-bold">Agency fee</span> · gap detected · {FEE_GAP}</>
+                                                        : <><span className="font-bold">Agency fee</span> · verified · matches contract</>
                                                     : step === 'labor'
-                                                        ? <><span className="font-bold">Strata AI</span> · Purchase Order received · DOE-2847 · confirm receipt</>
-                                                        : <><span className="font-bold">Strata AI</span> · SIF ingested · DOE-2847 fields extracted · ready for intake review</>
+                                                        ? <><span className="font-bold">Strata AI</span> · PO received · confirm receipt</>
+                                                        : <><span className="font-bold">Strata AI</span> · SIF ingested · ready for intake review</>
                                         }
                                     </p>
                                 </div>

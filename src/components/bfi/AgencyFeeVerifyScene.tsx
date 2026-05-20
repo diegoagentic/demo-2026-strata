@@ -54,13 +54,27 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
     return (
         <div className="space-y-3">
 
-            {/* Success banner — appears after verification */}
+            {/* Closing dashboard — order summary after verification */}
             {verified && (
-                <div className="flex items-center gap-2 p-3 bg-success/5 border border-success/20 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-400">
-                    <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                    <p className="text-[12px] font-bold text-success">
-                        DOE-2847 complete · Agency fee verified · $6,920 confirmed
-                    </p>
+                <div className="rounded-xl border border-success/20 bg-success/5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-400">
+                    <div className="px-4 py-3 border-b border-success/20 bg-success/10 flex items-center gap-2.5">
+                        <div className="h-7 w-7 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="h-4 w-4 text-success" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-bold text-foreground">Order DOE-2847 closed · all reconciled</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Agency fee verified · matches contract · ready for AR posting</p>
+                        </div>
+                        <span className="text-[8px] font-bold text-success bg-success/15 border border-success/30 px-2 py-1 rounded uppercase tracking-wider">Closed</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-4 py-3 text-[11px]">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Product total</span><span className="font-mono text-foreground">$235,560</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Labor final</span><span className="font-mono text-foreground">$6,920</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">PO total</span><span className="font-mono font-bold text-foreground">$242,480</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Agency fee credit</span><span className="font-mono font-bold text-success">$9,255.24</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">GP recognized</span><span className="font-mono text-foreground">avg 4.0%</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="font-mono text-foreground">Closed · day 1</span></div>
+                    </div>
                 </div>
             )}
 
@@ -70,7 +84,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                 showDoe={true}
                 doeSubtitle={kanbanCol === 3
                     ? 'Quote Tool invoice attached · fee verification pending'
-                    : (scenario === 'match' ? 'Agency fee verified · Patricia Hilger' : 'Fee gap · −$315 · Flag pending')
+                    : 'Agency fee verified · $9,255.24 · order closed'
                 }
                 onReviewDoe={!verified ? handleOpenModal : undefined}
                 highlightReview={!verified}
