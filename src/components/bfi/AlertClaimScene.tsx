@@ -12,6 +12,7 @@ import { AlertTriangle, Mail, FileWarning, CheckCircle2, ChevronRight, X, GitBra
 import { useDemo } from '../../context/DemoContext'
 import ReceivingProcessBar from './ReceivingProcessBar'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import EmailMetadataBlock from './EmailMetadataBlock'
 
 interface AlertClaimSceneProps {
     onProceed?: () => void
@@ -61,6 +62,12 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
     const [submitting, setSubmitting]   = useState(false)
     const [claimReason, setClaimReason] = useState(CLAIM_REASONS[0])
     const [claimNotes, setClaimNotes]   = useState('')
+
+    // POD email metadata · editable via EmailMetadataBlock toggle
+    const [podFrom,    setPodFrom]    = useState('lauren.demarco@bfifurniture.com')
+    const [podTo,      setPodTo]      = useState('andy@hermanmiller.com')
+    const [podSubject, setPodSubject] = useState('Missing carton alert — PMO-2026-0412 · Bingo #34')
+    const [podBody,    setPodBody]    = useState(POD_DRAFT)
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -248,21 +255,18 @@ export default function AlertClaimScene({ onProceed }: AlertClaimSceneProps) {
                             </button>
                         </div>
                         <div className="p-5 space-y-4">
-                            <div className="space-y-2">
-                                {[
-                                    { label: 'To', value: 'andy@hermanmiller.com' },
-                                    { label: 'Subject', value: 'Missing carton alert — PMO-2026-0412 · Bingo #34' },
-                                ].map(f => (
-                                    <div key={f.label} className="flex items-start gap-3 text-xs border-b border-border/50 pb-2">
-                                        <span className="text-muted-foreground w-16 shrink-0 pt-0.5">{f.label}:</span>
-                                        <span className="text-foreground font-medium">{f.value}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            <EmailMetadataBlock
+                                subject={{ value: podSubject, onChange: setPodSubject }}
+                                fields={[
+                                    { label: 'From', value: podFrom, onChange: setPodFrom },
+                                    { label: 'To',   value: podTo,   onChange: setPodTo },
+                                ]}
+                            />
                             <textarea
-                                readOnly
-                                defaultValue={POD_DRAFT}
-                                className="w-full h-52 text-xs text-muted-foreground bg-muted/30 border border-border rounded-xl px-4 py-3 resize-none font-mono leading-relaxed"
+                                value={podBody}
+                                onChange={e => setPodBody(e.target.value)}
+                                rows={10}
+                                className="w-full text-xs text-foreground bg-card border border-border rounded-xl px-4 py-3 resize-y font-mono leading-relaxed focus:outline-none focus:border-primary/50 transition-colors"
                             />
                             <div className="flex gap-3">
                                 <button

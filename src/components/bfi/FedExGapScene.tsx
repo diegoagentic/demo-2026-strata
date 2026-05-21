@@ -12,6 +12,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Sparkles, AlertTriangle, CheckCircle2, Send } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import EmailMetadataBlock from './EmailMetadataBlock'
 
 interface FedExGapSceneProps {
     onSend?: () => void
@@ -29,6 +30,15 @@ export default function FedExGapScene({ onSend }: FedExGapSceneProps) {
     useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
 
     const [sent, setSent] = useState(false)
+
+    // POD email metadata · editable via EmailMetadataBlock toggle
+    const [podFrom,    setPodFrom]    = useState('lauren.demarco@bfifurniture.com')
+    const [podTo,      setPodTo]      = useState('andy@hermanmiller.com')
+    const [podSubject, setPodSubject] = useState('POD Request — DCAS-1182')
+    const [podFO,      setPodFO]      = useState('FX284920, FX284921, FX284922')
+    const [podBody,    setPodBody]    = useState(
+`Please provide Proof of Delivery for the above shipments. Items expected at WIG but no receiving confirmation found.`
+    )
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -75,18 +85,26 @@ export default function FedExGapScene({ onSend }: FedExGapSceneProps) {
                 ))}
             </div>
 
-            {/* Pre-filled POD request */}
+            {/* Pre-filled POD request · editable via Edit toggle */}
             <div className="border border-border rounded-xl overflow-hidden bg-card">
                 <div className="px-3.5 py-2 border-b border-border bg-muted/40">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">POD Request · pre-filled · to Andy (HM)</div>
                 </div>
-                <div className="px-3.5 py-3 space-y-1 text-[11px]">
-                    <div className="text-muted-foreground">To: Andy [HMK Contact]</div>
-                    <div className="text-muted-foreground">Re: POD Request — DCAS-1182</div>
-                    <div className="text-muted-foreground">FO Numbers: FX284920, FX284921, FX284922</div>
-                    <p className="mt-2 pt-2 border-t border-border text-foreground leading-relaxed">
-                        "Please provide Proof of Delivery for the above shipments. Items expected at WIG but no receiving confirmation found."
-                    </p>
+                <div className="px-3.5 py-3 space-y-2 text-[11px]">
+                    <EmailMetadataBlock
+                        subject={{ value: podSubject, onChange: setPodSubject }}
+                        fields={[
+                            { label: 'From', value: podFrom, onChange: setPodFrom },
+                            { label: 'To',   value: podTo,   onChange: setPodTo },
+                            { label: 'FO #', value: podFO,   onChange: setPodFO },
+                        ]}
+                    />
+                    <textarea
+                        value={podBody}
+                        onChange={e => setPodBody(e.target.value)}
+                        rows={3}
+                        className="w-full mt-2 pt-2 border-t border-border text-foreground leading-relaxed bg-transparent outline-none resize-y text-[11px] focus:border-primary/50 transition-colors"
+                    />
                 </div>
             </div>
 

@@ -10,7 +10,7 @@
 //
 //   GROUP 1 · Pre-award (a1.0 → a1.2c · 6 steps)
 //     a1.0:   Quote request arrives    — Miller Knoll sends specs · auto-ingested
-//     a1.1:   Morning queue            — Lauren opens · DOE-2847 surfaced
+//     a1.1:   Ingestion                — Lauren opens · DOE-2847 surfaced
 //     a1.2:   Confirm receipt          — Lauren replies · Miller Knoll acknowledges
 //     a1.2b:  Quote · Credit · Labor   — unified step (3 actions in one modal):
 //                                        1) review Quote Tool pricing
@@ -57,8 +57,8 @@ export const BFI_STEPS: DemoStep[] = [
         id: 'a1.1',
         groupId: 1,
         groupTitle: 'Flow 1: Pre-award',
-        title: 'Morning queue',
-        description: 'Lauren opens her morning queue. Strata ranks active CoNY orders by urgency and surfaces DOE-2847 at the top — ready for review.',
+        title: 'Ingestion',
+        description: 'Lauren opens her ingestion queue. Strata ranks active CoNY orders by urgency and surfaces DOE-2847 at the top — ready for review.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -180,7 +180,7 @@ export const BFI_STEPS: DemoStep[] = [
 
 export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'Watch Robert Chen send the request to Lauren · specs, floor plan and pricing file arrive in Strata' },
-    'a1.1': { mode: 'interactive', userAction: 'Open the morning queue · DOE-2847 surfaces as priority · click to investigate' },
+    'a1.1': { mode: 'interactive', userAction: 'Open the ingestion queue · DOE-2847 surfaces as priority · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'Read Robert\'s acknowledgment · quote Q-2026-0089 confirmed · move on to validate pricing' },
     'a1.2b': { mode: 'interactive', userAction: '① Review Quote Tool: HMI-FU-300 corrected $1,350 → $1,260 · service fees variable per product (avg 4.0%) · ② Review the per-line fee CORE prepared (Method 3 · Total $9,255.24 · Calc Code 7 · Direct Bill-HMI · GL 4200-Agency-Fees) · confirm to open the labor request · ③ Open the labor request email to WIG · send · wait for Michael\'s compiled response (within contract caps) · continue to proposal' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the full proposal (product + labor) · send to NYC DOE procurement · wait for the PO' },

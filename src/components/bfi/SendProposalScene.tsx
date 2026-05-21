@@ -25,14 +25,13 @@ function SendProposalDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
     const [toEmail,   setToEmail]   = useState('nycdoe-procurement@schools.nyc.gov')
     const [dateText,  setDateText]  = useState('May 6, 2026 · 10:45 AM')
-    const [subject,   setSubject]   = useState('Quote DOE-2847')
-    const [bodyIntro, setBodyIntro] = useState(
+    const [subject, setSubject] = useState('Quote DOE-2847')
+    const [body,    setBody]    = useState(
 `Good morning,
 
-Please find attached the quote for DOE-2847.`
-    )
-    const [bodyClose, setBodyClose] = useState(
-`Please let me know if you have any questions.
+Please find attached the quote for DOE-2847.
+
+Please let me know if you have any questions.
 
 — Lauren DeMarco
 BFI Furniture · CoNY Account Manager`
@@ -98,14 +97,10 @@ BFI Furniture · CoNY Account Manager`
                                     />
                                 </div>
 
-                                {/* Body */}
+                                {/* Body — single unified textarea */}
                                 <div className="px-5 py-4 space-y-3">
-                                    <textarea value={bodyIntro} onChange={e => setBodyIntro(e.target.value)} disabled={sent}
-                                        rows={4}
-                                        className="w-full text-[12px] text-foreground leading-relaxed bg-transparent outline-none border border-transparent hover:border-border/60 focus:border-primary/50 rounded-lg px-2 py-1.5 -mx-2 transition-colors disabled:opacity-60 resize-y" />
-
-                                    <textarea value={bodyClose} onChange={e => setBodyClose(e.target.value)} disabled={sent}
-                                        rows={5}
+                                    <textarea value={body} onChange={e => setBody(e.target.value)} disabled={sent}
+                                        rows={8}
                                         className="w-full text-[12px] text-foreground leading-relaxed bg-transparent outline-none border border-transparent hover:border-border/60 focus:border-primary/50 rounded-lg px-2 py-1.5 -mx-2 transition-colors disabled:opacity-60 resize-y" />
 
                                     {/* Attachment chips — removable */}

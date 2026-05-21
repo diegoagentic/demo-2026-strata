@@ -137,7 +137,9 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
 function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = 'per-line' }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean; activeMethod?: ActiveBookingMethod }) {
     if (isPO) {
         const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
+        const parseQty = (q?: string) => parseInt((q ?? '').replace(/[^0-9]/g, ''), 10) || 1
         const fmt = (n: number) => '$' + n.toLocaleString('en-US')
+        const fmtUnit = (n: number) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
         const sifTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.sifPrice), 0)
         const adjTotal = ovniqLines.reduce((sum, l) => sum + parseAmt(l.ovniq), 0)
         const discountAmt = Math.round(adjTotal * 0.375)
@@ -161,25 +163,31 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                             <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
                             <span className="text-[8px] font-bold text-primary tracking-widest">PO DOE-2847 · Quote Tool Validated ✓</span>
                         </div>
-                        <div className="px-6 pt-3 pb-1 grid grid-cols-6 gap-2">
-                            {['Code', 'Product', 'Qty', 'T-Code', 'SIF Price', 'Net'].map(h => (
+                        <div className="px-6 pt-3 pb-1 grid grid-cols-7 gap-2">
+                            {['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell'].map(h => (
                                 <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
                             ))}
                         </div>
                         <div className="px-6 pb-4 space-y-0">
                             {ovniqLines.map((line) => {
                                 const corrected = line.sifPrice !== line.ovniq
+                                const qty       = parseQty(line.qty)
+                                const sifExt    = parseAmt(line.sifPrice)
+                                const sellExt   = parseAmt(line.ovniq)
+                                const sifUnit   = sifExt / qty
+                                const unitSell  = sellExt / qty
                                 return (
-                                    <div key={line.code ?? line.product} className={`grid grid-cols-6 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                    <div key={line.code ?? line.product} className={`grid grid-cols-7 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
                                         <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
                                         <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                         <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
                                         <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
-                                        <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{line.sifPrice}</span>
+                                        <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{fmtUnit(sifUnit)}</span>
                                         <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
-                                            {line.ovniq}
+                                            {fmtUnit(unitSell)}
                                             {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
                                         </span>
+                                        <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
                                     </div>
                                 )
                             })}
@@ -232,11 +240,11 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                         <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
                         <span className={`text-[8px] font-bold tracking-widest ${validated ? 'text-primary' : 'text-zinc-400'}`}>{validated ? 'Quote Tool VALIDATED ✓' : 'PENDING QUOTE TOOL VALIDATION'}</span>
                     </div>
-                    {/* Headers · 10 cols when validated AND Method 3 (per-line GP visible) · 7 cols otherwise */}
+                    {/* Headers · 10 cols when validated AND Method 3 (adds Cost/GP$/GP%) · 7 cols otherwise · Wendy's labels (per-unit) */}
                     {(() => { const showPerLine = validated && activeMethod === 'per-line'; return (
                     <div className={`px-6 pt-3 pb-1 grid gap-2 ${showPerLine ? 'grid-cols-10' : 'grid-cols-7'}`}>
                         {(showPerLine
-                            ? ['Code', 'Product', 'Qty', 'T-Code', 'List Ext', 'Sell', 'Ext. Sell', 'Cost', 'GP $', 'GP %']
+                            ? ['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell', 'Cost', 'GP $', 'GP %']
                             : ['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell']
                         ).map(h => (
                             <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
@@ -263,8 +271,11 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                                     <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
-                                    <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{validated ? fmtUnit(sellExt) : fmtUnit(sifUnit)}</span>
-                                    <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(unitSell)}</span>
+                                    {/* SIF Unit Price · per-unit · strikethrough if corrected */}
+                                    <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{fmtUnit(sifUnit)}</span>
+                                    {/* Unit Sell · per-unit corrected · green if corrected */}
+                                    <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>{fmtUnit(unitSell)}</span>
+                                    {/* Ext. Sell · extended */}
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
                                     {showPerLine && (
                                         <>

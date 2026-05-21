@@ -3,6 +3,8 @@
  * PURPOSE: Reusable metadata header for all BFI email dialogs.
  *          Default read-only (looks like a real email). Toggle "Edit" reveals
  *          inputs so the presenter can adjust subject, recipients, date, etc.
+ *          Edit button is always visible — presenter can edit at any phase,
+ *          including after Send, for demo flexibility.
  *
  *          Variants:
  *            - 'stacked'  · subject bold heading + label/value rows below
@@ -10,9 +12,6 @@
  *                           LaurenNotificationDialog, ClaimDialog, WalterNotifyDialog)
  *            - 'bordered' · single bordered card with all rows inside
  *                          (used by NancyDialog)
- *
- *          When `disabled` is true (after Send), the Edit button is hidden
- *          and everything renders read-only.
  */
 
 import { useState } from 'react'
@@ -31,19 +30,20 @@ interface EmailMetadataBlockProps {
     subject?: { value: string; onChange: (v: string) => void }
     /** Metadata rows (From / To / CC / Date / Subj) */
     fields: EmailMetadataField[]
-    /** True after Send · hides Edit button + locks all inputs */
-    disabled?: boolean
     /** Visual variant — defaults to 'stacked' (email-like) */
     variant?: 'stacked' | 'bordered'
+    /** Deprecated · kept for backwards-compatibility with call sites */
+    disabled?: boolean
 }
 
 const fieldInputCls = 'flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0'
 
-export default function EmailMetadataBlock({ subject, fields, disabled = false, variant = 'stacked' }: EmailMetadataBlockProps) {
+export default function EmailMetadataBlock({ subject, fields, variant = 'stacked' }: EmailMetadataBlockProps) {
     const [editing, setEditing] = useState(false)
-    const isEdit = editing && !disabled
+    const isEdit = editing
 
-    const editButton = !disabled && (
+    // Edit button is always visible · presenter can edit at any phase (even after Send)
+    const editButton = (
         <button
             type="button"
             onClick={() => setEditing(v => !v)}
@@ -68,7 +68,6 @@ export default function EmailMetadataBlock({ subject, fields, disabled = false, 
                             <input
                                 value={row.value}
                                 onChange={e => row.onChange(e.target.value)}
-                                disabled={disabled}
                                 className={`${fieldInputCls} ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`}
                             />
                         ) : (
@@ -89,8 +88,7 @@ export default function EmailMetadataBlock({ subject, fields, disabled = false, 
                         <input
                             value={subject.value}
                             onChange={e => subject.onChange(e.target.value)}
-                            disabled={disabled}
-                            className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60"
+                            className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors"
                         />
                     ) : (
                         <p className="flex-1 text-[13px] font-bold text-foreground leading-snug">{subject.value}</p>
@@ -108,7 +106,6 @@ export default function EmailMetadataBlock({ subject, fields, disabled = false, 
                             <input
                                 value={row.value}
                                 onChange={e => row.onChange(e.target.value)}
-                                disabled={disabled}
                                 className={`${fieldInputCls} font-medium ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`}
                             />
                         ) : (
