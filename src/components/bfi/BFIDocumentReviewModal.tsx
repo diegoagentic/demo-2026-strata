@@ -1899,12 +1899,23 @@ BFI Furniture · CoNY Account Manager`
     const removeAttachment = (name: string) =>
         setAttachments(prev => prev.filter(a => a.name !== name))
 
-    // Reset to draft whenever the dialog re-opens
-    useEffect(() => { if (!isOpen) setPhase('draft') }, [isOpen])
+    // CORE push state · activates when user confirms received labor (Fase E.17 SOT)
+    const [coreState, setCoreState] = useState<'idle' | 'submitting' | 'confirmed'>('idle')
+
+    // Reset phase + coreState whenever the dialog re-opens
+    useEffect(() => { if (!isOpen) { setPhase('draft'); setCoreState('idle') } }, [isOpen])
 
     const handleSend = () => {
         setPhase('sent')
         setTimeout(() => setPhase('received'), 1600)
+    }
+
+    const handleConfirmCore = () => {
+        setCoreState('submitting')
+        setTimeout(() => {
+            setCoreState('confirmed')
+            setTimeout(() => onComplete(), 3000)
+        }, 800)
     }
 
     const locked = phase !== 'draft'
@@ -2105,12 +2116,41 @@ BFI Furniture · CoNY Account Manager`
                             {phase === 'received' && (
                                 <div className="px-5 py-3.5 border-t border-border bg-card shrink-0">
                                     <button
-                                        onClick={onComplete}
-                                        className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
+                                        onClick={coreState === 'idle' ? handleConfirmCore : undefined}
+                                        disabled={coreState !== 'idle'}
+                                        className={`w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold transition-all shadow-sm ${
+                                            coreState === 'confirmed'
+                                                ? 'bg-success/15 text-success border border-success/30 cursor-default'
+                                                : coreState === 'submitting'
+                                                    ? 'bg-muted text-muted-foreground cursor-wait'
+                                                    : 'bg-primary text-primary-foreground hover:opacity-90'
+                                        }`}
                                     >
-                                        <CheckCircle2 className="h-3.5 w-3.5" />
-                                        Continue →
+                                        {coreState === 'confirmed' ? (
+                                            <><CheckCircle2 className="h-3.5 w-3.5" /> Labor Saved to CORE</>
+                                        ) : coreState === 'submitting' ? (
+                                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Updating CORE…</>
+                                        ) : (
+                                            <><CheckCircle2 className="h-3.5 w-3.5" /> Push Labor to CORE & Continue →</>
+                                        )}
                                     </button>
+                                </div>
+                            )}
+
+                            {/* Toast · z-[500] over modal · visible 3s after labor pushed to CORE */}
+                            {coreState === 'confirmed' && (
+                                <div className="fixed top-6 right-6 z-[500] w-80 rounded-xl border border-success/30 bg-card shadow-2xl p-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="flex items-start gap-2.5">
+                                        <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                                        <div className="text-[11px] leading-relaxed">
+                                            <p className="font-bold text-success text-[12px]">Labor figures saved to CORE</p>
+                                            <ul className="text-muted-foreground mt-1 space-y-0.5">
+                                                <li>· Total: $7,640</li>
+                                                <li>· 4 categories (Teamsters · Carpenters · OT · Inside Delivery)</li>
+                                                <li>· Ready to compile proposal</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </DialogPanel>
