@@ -24,31 +24,22 @@ function SendProposalDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
     const [toEmail,   setToEmail]   = useState('nycdoe-procurement@schools.nyc.gov')
     const [dateText,  setDateText]  = useState('May 6, 2026 · 10:45 AM')
-    const [subject,   setSubject]   = useState('Quote DOE-2847 for 30 Court Street, Brooklyn, NY')
+    const [subject,   setSubject]   = useState('Quote DOE-2847')
     const [bodyIntro, setBodyIntro] = useState(
 `Good morning,
 
-Please find attached our formal quote for project DOE-2847 at 30 Court Street, Brooklyn, NY.`
+Please find attached the quote for DOE-2847.`
     )
     const [bodyClose, setBodyClose] = useState(
-`Please review and confirm so we can proceed with the Purchase Order.
+`Please let me know if you have any questions.
 
 — Lauren DeMarco
 BFI Furniture · CoNY Account Manager`
     )
-    const [summary, setSummary] = useState([
-        { label: 'Project',         value: 'DOE-2847 · 30 Court Street, Brooklyn, NY' },
-        { label: 'Contract',        value: 'CoNY · City of New York' },
-        { label: 'Total',           value: '$242,480' },
-        { label: 'Delivery window', value: 'May 14–21, 2026 (30 days)' },
-        { label: 'Install crew',    value: '3 technicians · Open Area · Lounge · Storage Room' },
-    ])
     const [attachments, setAttachments] = useState([
         { name: 'DOE-2847-Quote.pdf', label: 'Quote' },
     ])
 
-    const updateSummary = (i: number, value: string) =>
-        setSummary(prev => prev.map((r, idx) => idx === i ? { ...r, value } : r))
     const removeAttachment = (name: string) =>
         setAttachments(prev => prev.filter(a => a.name !== name))
 
@@ -119,19 +110,8 @@ BFI Furniture · CoNY Account Manager`
                                 {/* Body */}
                                 <div className="px-5 py-4 space-y-3">
                                     <textarea value={bodyIntro} onChange={e => setBodyIntro(e.target.value)} disabled={sent}
-                                        rows={5}
+                                        rows={4}
                                         className="w-full text-[12px] text-foreground leading-relaxed bg-transparent outline-none border border-transparent hover:border-border/60 focus:border-primary/50 rounded-lg px-2 py-1.5 -mx-2 transition-colors disabled:opacity-60 resize-y" />
-
-                                    {/* Proposal summary — values editable */}
-                                    <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-[11px]">
-                                        <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Proposal Summary</p>
-                                        {summary.map((r, i) => (
-                                            <div key={r.label} className="flex items-start gap-2">
-                                                <span className="text-muted-foreground w-28 shrink-0">{r.label}:</span>
-                                                <input value={r.value} onChange={e => updateSummary(i, e.target.value)} disabled={sent} className={inputCls} />
-                                            </div>
-                                        ))}
-                                    </div>
 
                                     <textarea value={bodyClose} onChange={e => setBodyClose(e.target.value)} disabled={sent}
                                         rows={5}

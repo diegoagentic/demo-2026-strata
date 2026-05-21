@@ -71,7 +71,7 @@ export default function AgencyFeeVerifyScene({ onComplete }: AgencyFeeVerifyScen
                         <div className="flex justify-between"><span className="text-muted-foreground">Product total</span><span className="font-mono text-foreground">$235,560</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Labor final</span><span className="font-mono text-foreground">$6,920</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">PO total</span><span className="font-mono font-bold text-foreground">$242,480</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Agency fee credit</span><span className="font-mono font-bold text-success">$9,255.24</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Per-line fee total</span><span className="font-mono font-bold text-success">$9,255.24</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">GP recognized</span><span className="font-mono text-foreground">avg 4.0%</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="font-mono text-foreground">Closed · day 1</span></div>
                     </div>

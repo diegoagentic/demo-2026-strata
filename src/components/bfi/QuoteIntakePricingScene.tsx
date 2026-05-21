@@ -1,8 +1,8 @@
 /**
  * COMPONENT: QuoteIntakePricingScene (a1.2b — unified)
- * PURPOSE: Agency Fee a1.2b — Quote Tool validation + Credit Line push + Labor Quote Request.
+ * PURPOSE: Agency Fee a1.2b — Quote Tool validation + Per-line Fee booking + Labor Quote Request.
  *
- * The modal opens at step="quote" and stays there. After the credit line is POSTED,
+ * The modal opens at step="quote" and stays there. After the per-line fee is confirmed,
  * QuoteReviewPanel internally opens a LaborQuoteDialog overlay (email composer pattern,
  * consistent with SendProposalDialog/NancyDialog). When the labor quote is received and
  * Lauren clicks Continue, the dialog completes → onValidate fires → modal closes →

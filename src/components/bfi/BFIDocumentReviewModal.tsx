@@ -133,7 +133,7 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
     },
 ]
 
-function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean }) {
+function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = 'per-line' }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean; activeMethod?: ActiveBookingMethod }) {
     if (isPO) {
         const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
         const fmt = (n: number) => '$' + n.toLocaleString('en-US')
@@ -231,15 +231,17 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                         <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
                         <span className={`text-[8px] font-bold tracking-widest ${validated ? 'text-primary' : 'text-zinc-400'}`}>{validated ? 'Quote Tool VALIDATED ✓' : 'PENDING QUOTE TOOL VALIDATION'}</span>
                     </div>
-                    {/* Headers · 10 cols when validated (CORE Method 3) · 7 cols otherwise */}
-                    <div className={`px-6 pt-3 pb-1 grid gap-2 ${validated ? 'grid-cols-10' : 'grid-cols-7'}`}>
-                        {(validated
+                    {/* Headers · 10 cols when validated AND Method 3 (per-line GP visible) · 7 cols otherwise */}
+                    {(() => { const showPerLine = validated && activeMethod === 'per-line'; return (
+                    <div className={`px-6 pt-3 pb-1 grid gap-2 ${showPerLine ? 'grid-cols-10' : 'grid-cols-7'}`}>
+                        {(showPerLine
                             ? ['Code', 'Product', 'Qty', 'T-Code', 'List Ext', 'Sell', 'Ext. Sell', 'Cost', 'GP $', 'GP %']
                             : ['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell']
                         ).map(h => (
                             <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
                         ))}
                     </div>
+                    )})()}
                     <div className="px-6 pb-4 space-y-0">
                         {ovniqLines.map((line) => {
                             const qty       = parseQty(line.qty)
@@ -253,8 +255,9 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                             const gpAmount = sf?.svcExt ?? 0
                             const cost = sellExt - gpAmount
                             const gpPct = sf?.svcPct ?? 0
+                            const showPerLine = validated && activeMethod === 'per-line'
                             return (
-                                <div key={line.code ?? line.product} className={`grid gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${validated ? 'grid-cols-10' : 'grid-cols-7'} ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                <div key={line.code ?? line.product} className={`grid gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${showPerLine ? 'grid-cols-10' : 'grid-cols-7'} ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
                                     <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
                                     <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
@@ -262,7 +265,7 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                                     <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{validated ? fmtUnit(sellExt) : fmtUnit(sifUnit)}</span>
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(unitSell)}</span>
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
-                                    {validated && (
+                                    {showPerLine && (
                                         <>
                                             <span className="text-[10px] font-mono text-zinc-500">{fmtUnit(cost)}</span>
                                             <span className="text-[10px] font-mono font-semibold text-success">{fmtUnit(gpAmount)}</span>
@@ -304,15 +307,26 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: 
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">Booking method</span>
-                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">Per-line fee (Method 3)</span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">
+                                        {activeMethod === 'per-line' ? 'Per-line fee (Method 3)' : 'Credit memo (Method 2)'}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">GP target</span>
-                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">Variable per line (avg 4.0%)</span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">
+                                        {activeMethod === 'per-line' ? 'Variable per line (avg 4.0%)' : 'Post-credit-memo · TBD'}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500 dark:text-zinc-400">Agency Fee credit</span>
-                                    <span className="font-mono font-bold text-success">$9,255.24 (per-line · 3 products)</span>
+                                    <span className="text-zinc-500 dark:text-zinc-400">
+                                        {activeMethod === 'per-line' ? 'Per-line fee total' : 'Credit memo (pending)'}
+                                    </span>
+                                    <span className={`font-mono font-bold ${activeMethod === 'per-line' ? 'text-success' : 'text-warning'}`}>
+                                        {activeMethod === 'per-line'
+                                            ? '$9,255.24 (Method 3 · 3 products)'
+                                            : '$9,255.24 (Method 2 · post-delivery)'
+                                        }
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -357,10 +371,11 @@ const CONY_CONTRACT_DATA = {
 // preferred · per-line fee) because it gives GP visibility per product at booking.
 const BOOKING_METHODS = [
     { id: 'sell-line',   label: 'Sell+ line',     desc: 'Positive sell line, 0 cost · invoice shows GP only' },
-    { id: 'credit-memo', label: 'Credit memo',    desc: 'Cost=sell, then negative cost line · what BFI does today' },
-    { id: 'per-line',    label: 'Per-line fee',   desc: 'Fee within each product line · GP visible per product (Jessica\'s preferred)' },
+    { id: 'credit-memo', label: 'Credit memo',    desc: 'Method 2 (Wendy) · credit memo issued post-delivery · what BFI does today' },
+    { id: 'per-line',    label: 'Per-line fee',   desc: 'Method 3 (Jessica\'s preferred) · fee within each product line · GP visible day 1' },
 ] as const
-const ACTIVE_METHOD: typeof BOOKING_METHODS[number]['id'] = 'per-line'
+// Methods user can toggle between in a1.2b (Method 1 / Sell+ line stays read-only info)
+type ActiveBookingMethod = 'credit-memo' | 'per-line'
 
 // Variable per-product agency fee % (per Jessica · Controller of BFI · 20-may)
 // Each Herman Miller product has its own contract %. Average ~4%.
@@ -1617,7 +1632,10 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
         <div className="flex flex-col h-full bg-white dark:bg-zinc-900 min-h-0">
             {/* Header */}
             <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
-                <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">AGENCY FEE VERIFICATION</h4>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">AGENCY FEE VERIFICATION</h4>
+                    <span className="text-[8px] font-bold text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Method 3 · Per-line fee</span>
+                </div>
                 <p className="text-[11px] text-muted-foreground/70 mt-0.5">Patricia Hilger · Finance & AR · DOE-2847</p>
             </div>
 
@@ -1996,13 +2014,18 @@ BFI Furniture · CoNY Account Manager`
                                         ))}
                                     </div>
 
-                                    {/* Sent confirmation */}
+                                    {/* Sent confirmation — adapts to phase */}
                                     {phase !== 'draft' && (
                                         <div className="bg-success/5 border border-success/30 rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-300">
                                             <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                                             <div className="text-xs">
                                                 <div className="font-bold text-foreground">Sent to WIG · May 6 · 2:47 PM</div>
-                                                <div className="text-muted-foreground mt-0.5">Awaiting labor quote · Michael Boyle (BFI) will compile WIG response</div>
+                                                <div className="text-muted-foreground mt-0.5">
+                                                    {phase === 'sent'
+                                                        ? 'Awaiting labor quote · Michael Boyle (BFI) will compile WIG response'
+                                                        : 'Labor quote received · Michael Boyle (BFI) compiled WIG response below'
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -2115,7 +2138,7 @@ BFI Furniture · CoNY Account Manager`
                                         className="w-full flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
                                     >
                                         <CheckCircle2 className="h-3.5 w-3.5" />
-                                        Labor Quote Received · Continue →
+                                        Continue →
                                     </button>
                                 </div>
                             )}
@@ -2127,8 +2150,8 @@ BFI Furniture · CoNY Account Manager`
     )
 }
 
-// Credit line · sourced from CORE (Calc Code 7 · Direct Bill-HMI vendor type)
-// CORE generates the credit line when the Quote Tool output is uploaded.
+// Per-line fee · sourced from CORE (Calc Code 7 · Direct Bill-HMI vendor type)
+// CORE registers the per-line fee (Method 3) when the Quote Tool output is uploaded.
 // Strata's role: surface CORE's record so Lauren can confirm — no draft/push.
 // Active booking method: per-line fee (Method 3 · Jessica's preferred).
 const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
@@ -2139,7 +2162,11 @@ const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
     { label: 'Memo',       value: 'Per CoNY Contract ANT122 · per-line fee' },
 ]
 
-function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
+function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
+    onValidate?: () => void;
+    activeMethod: ActiveBookingMethod;
+    setActiveMethod: (m: ActiveBookingMethod) => void;
+}) {
     const fmt2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
 
@@ -2166,9 +2193,12 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                     <div className="h-5 w-5 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
                         <span className="text-[9px] font-black text-destructive">1</span>
                     </div>
-                    <div>
-                        <p className="text-[11px] font-bold text-foreground">1 price correction applied</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">HMI-FU-300 · List Ext $8,100 → $7,560 · CoNY contract rate applied</p>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-[11px] font-bold text-foreground">1 price correction applied</p>
+                            <span className="text-[8px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Source: Quote Tool</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">HMI-FU-300 · $8,100 → $7,560 · per CoNY contract ANT122</p>
                     </div>
                 </div>
 
@@ -2179,8 +2209,9 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                         className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/40 hover:bg-muted/60 transition-colors"
                     >
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Quote Comparison · Requested vs Response</p>
+                        <span className="text-[8px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Source: Quote Tool</span>
                         <span
-                            title="Strata OCR'd the Quote Comparison Download · all 3 lines cleared. Exception path ready."
+                            title="Quote Tool OCR'd the Quote Comparison Download · all 3 lines cleared. Exception path ready."
                             className="inline-flex items-center gap-1 text-[8px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded uppercase tracking-wider"
                         >
                             <CheckCircle2 className="h-2.5 w-2.5" />
@@ -2228,7 +2259,7 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
 
-                {/* ─── Credit Line · From CORE (read-only · Method 3 active) ──────── */}
+                {/* ─── Per-line Fee · From CORE (Method 3 · read-only) ──────────────── */}
                 <div className="rounded-xl border border-ai/30 bg-ai/5 overflow-hidden">
                     <div className="px-4 py-3 border-b border-ai/20 bg-ai/5 flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-full bg-ai/15 flex items-center justify-center shrink-0">
@@ -2236,73 +2267,121 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-[12px] font-bold text-foreground">Credit Line · From CORE</p>
+                                <p className="text-[12px] font-bold text-foreground">
+                                    {activeMethod === 'per-line' ? 'Per-line Fee · From CORE' : 'Credit Memo · From CORE'}
+                                </p>
                                 <span className="text-[8px] font-bold text-info bg-info/10 border border-info/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Source: CORE</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">Per-line fee method (Jessica's preferred) · GP visible per product at booking</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {activeMethod === 'per-line'
+                                    ? 'Method 3 (Jessica\'s preferred) · GP visible per product at booking'
+                                    : 'Method 2 (Wendy\'s proposal · what BFI does today) · GP recognized when check arrives'
+                                }
+                            </p>
                         </div>
                     </div>
 
-                    {/* 3 booking methods badges (Strata supports all 3 · Method 3 active) */}
+                    {/* Booking methods · Method 2 / Method 3 clickable · Method 1 read-only (Strata supports all 3) */}
                     <div className="px-4 py-2.5 border-b border-ai/20 bg-card/50">
                         <div className="flex flex-wrap gap-1.5">
                             {BOOKING_METHODS.map(m => {
-                                const isActive = m.id === ACTIVE_METHOD
+                                const isClickable = m.id === 'credit-memo' || m.id === 'per-line'
+                                const isActive    = isClickable && m.id === activeMethod
+                                const baseCls     = `inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border transition-colors ${
+                                    isActive
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-muted/40 text-muted-foreground border-border'
+                                }`
+                                if (!isClickable) {
+                                    return (
+                                        <span key={m.id} title={m.desc} className={baseCls + ' cursor-default opacity-70'}>
+                                            {m.label}
+                                        </span>
+                                    )
+                                }
                                 return (
-                                    <span
+                                    <button
                                         key={m.id}
+                                        type="button"
                                         title={m.desc}
-                                        className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border transition-colors ${
-                                            isActive
-                                                ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-muted/40 text-muted-foreground border-border'
-                                        }`}
+                                        aria-pressed={isActive}
+                                        onClick={() => setActiveMethod(m.id as ActiveBookingMethod)}
+                                        className={baseCls + ' cursor-pointer hover:opacity-90'}
                                     >
                                         {isActive && <CheckCircle2 className="h-2.5 w-2.5" />}
                                         {m.label}
                                         {isActive && <span className="text-[8px] uppercase tracking-wider">· Active</span>}
-                                    </span>
+                                    </button>
                                 )
                             })}
                         </div>
                         <p className="text-[9px] text-muted-foreground mt-1.5">
-                            Strata supports all 3 booking methods · per-line gives day-1 GP visibility per product
+                            {activeMethod === 'per-line'
+                                ? 'Strata supports all 3 booking methods · per-line gives day-1 GP visibility per product'
+                                : 'Click between Method 2 and Method 3 to preview · Method 2 is what BFI does today'
+                            }
                         </p>
                     </div>
 
                     <div className="px-4 py-3 space-y-2.5">
-                        {/* Per-line GP breakdown (Method 3 · Jessica's preferred) */}
-                        <div className="rounded-lg border border-border overflow-hidden bg-card">
-                            <div className="px-3 py-2 bg-muted/40 border-b border-border">
-                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Per-line GP breakdown · Method 3</p>
-                            </div>
-                            <div className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-1.5 bg-muted/20 border-b border-border/50">
-                                {['Line', '%', 'List ext', 'GP'].map(h => (
-                                    <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
+                        {/* Breakdown · per method · Method 3 = per-line GP / Method 2 = single credit memo */}
+                        {activeMethod === 'per-line' ? (
+                            <div className="rounded-lg border border-border overflow-hidden bg-card">
+                                <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Per-line GP breakdown · Method 3</p>
+                                </div>
+                                <div className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-1.5 bg-muted/20 border-b border-border/50">
+                                    {['Line', '%', 'List ext', 'GP'].map(h => (
+                                        <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
+                                    ))}
+                                </div>
+                                {SF_LINES.map(line => (
+                                    <div key={line.product} className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-2 border-b border-border/30 last:border-0 items-center">
+                                        <span className="text-[10px] font-medium text-foreground truncate">{line.product}</span>
+                                        <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{line.svcPct}%</span>
+                                        <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{fmt2(line.listExt)}</span>
+                                        <span className="text-[10px] font-mono font-semibold text-success text-right tabular-nums">{fmt2(line.svcExt)}</span>
+                                    </div>
                                 ))}
-                            </div>
-                            {SF_LINES.map(line => (
-                                <div key={line.product} className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-2 border-b border-border/30 last:border-0 items-center">
-                                    <span className="text-[10px] font-medium text-foreground truncate">{line.product}</span>
-                                    <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{line.svcPct}%</span>
-                                    <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{fmt2(line.listExt)}</span>
-                                    <span className="text-[10px] font-mono font-semibold text-success text-right tabular-nums">{fmt2(line.svcExt)}</span>
+                                <div className="px-3 py-2 bg-success/5 border-t border-success/20 flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Total GP recognized · day 1</span>
+                                    <span className="text-[12px] font-black font-mono text-success">{fmt2(grandTotal)} <span className="text-[9px] text-muted-foreground font-normal">avg 4.0%</span></span>
                                 </div>
-                            ))}
-                            <div className="px-3 py-2 bg-success/5 border-t border-success/20 flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Total GP recognized · day 1</span>
-                                <span className="text-[12px] font-black font-mono text-success">{fmt2(grandTotal)} <span className="text-[9px] text-muted-foreground font-normal">avg 4.0%</span></span>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="rounded-lg border border-warning/30 bg-warning/5 overflow-hidden">
+                                <div className="px-3 py-2 bg-warning/10 border-b border-warning/20 flex items-center justify-between gap-2">
+                                    <p className="text-[9px] font-bold text-warning uppercase tracking-widest">Credit Memo · Pending · Method 2</p>
+                                    <span className="text-[8px] font-bold text-warning bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded uppercase tracking-wider">Day 1 GP: $0</span>
+                                </div>
+                                <div className="px-3 py-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-medium text-foreground">Agency fee credit memo</span>
+                                        <span className="text-[12px] font-black font-mono text-foreground">{fmt2(grandTotal)}</span>
+                                    </div>
+                                    <div className="text-[9px] text-muted-foreground space-y-0.5">
+                                        <div>From HMI AP → BFI AR · issued post-delivery</div>
+                                        <div className="font-bold text-warning">GP recognized on check arrival (~30 days · Jessica's pain point)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-                        {/* Read-only metadata fields (GL, Calc Code, Vendor, Linked, Memo) */}
+                        {/* Read-only metadata fields (GL, Calc Code, Vendor, Linked, Memo) · Memo adapts to method */}
                         <div className="rounded-lg border border-border overflow-hidden text-[11px] bg-card">
-                            {CL_FIELDS.map((row, i) => (
-                                <div key={row.label} className={`flex gap-3 px-3 py-2 ${i < CL_FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
-                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">{row.label}</span>
-                                    <span className={`flex-1 text-foreground ${row.mono ? 'font-mono tabular-nums' : 'leading-snug'}`}>{row.value}</span>
-                                </div>
-                            ))}
+                            {CL_FIELDS.map((row, i) => {
+                                const value = row.label === 'Memo'
+                                    ? (activeMethod === 'per-line'
+                                        ? 'Per CoNY Contract ANT122 · per-line fee'
+                                        : 'Per CoNY Contract ANT122 · credit memo post-delivery')
+                                    : row.value
+                                return (
+                                    <div key={row.label} className={`flex gap-3 px-3 py-2 ${i < CL_FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
+                                        <span className="text-muted-foreground font-semibold w-24 shrink-0">{row.label}</span>
+                                        <span className={`flex-1 text-foreground ${row.mono ? 'font-mono tabular-nums' : 'leading-snug'}`}>{value}</span>
+                                    </div>
+                                )
+                            })}
                         </div>
 
                         {/* Contract ANT122 chip · hover-triggered tooltip with full fee schedule */}
@@ -2343,11 +2422,11 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
                     className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
                 >
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    Confirm credit line & continue to Labor Quote
+                    Confirm & continue →
                 </button>
             </div>
 
-            {/* Labor Quote Dialog — opens after credit line posted; overlay z-[400] over the modal */}
+            {/* Labor Quote Dialog — opens after per-line fee confirmed; overlay z-[400] over the modal */}
             <LaborQuoteDialog
                 isOpen={showLaborDialog}
                 onComplete={handleLaborComplete}
@@ -2592,8 +2671,7 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
 
             </div>
 
-            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-2">
-                <p className="text-[10px] text-muted-foreground text-center uppercase tracking-widest">10 fields · 0 need review</p>
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
                 <button
                     onClick={onValidate}
                     className="w-full py-2.5 text-[13px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest"
@@ -2607,7 +2685,7 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
 
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
-function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, onCustomValue, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted }: {
+function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, onCustomValue, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted, activeMethod, setActiveMethod }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
@@ -2619,9 +2697,11 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
     onUpdateLine: (i: number, field: keyof OvniqLine, val: string) => void
     acceptedRows: Set<number>
     onSetAccepted: (next: Set<number>) => void
+    activeMethod: ActiveBookingMethod
+    setActiveMethod: (m: ActiveBookingMethod) => void
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
-    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
+    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} activeMethod={activeMethod} setActiveMethod={setActiveMethod} />
     if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} onCustomValue={onCustomValue} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
@@ -2832,9 +2912,6 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
 
             {/* Shared footer — always visible */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
-                <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
-                    {FIELDS_EXTRACT.length} fields · 0 need review
-                </div>
                 <div className="flex gap-2">
                     <button className="flex-1 py-2.5 text-[12px] font-black border border-border text-foreground rounded-xl hover:bg-muted/50 transition-all uppercase tracking-wide">
                         Save
@@ -3219,9 +3296,6 @@ function BFIFieldReview({ step, scenario, onValidate, onResolveChange, onCustomV
 
             {/* Footer */}
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
-                <div className="text-[10px] text-muted-foreground font-bold text-center mb-3 uppercase tracking-widest">
-                    {fields.length} fields · {totalIssues} need review
-                </div>
                 <div className="flex gap-2">
                     <button className="flex-1 py-2.5 text-[11px] font-black border border-border text-foreground rounded-xl hover:bg-muted/50 transition-all uppercase tracking-widest">
                         SAVE
@@ -3265,6 +3339,8 @@ export default function BFIDocumentReviewModal({
     )
     // Quote Tool lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
+    // Booking method toggle (a1.2b · educational preview · default Method 3 Jessica's preferred)
+    const [activeMethod, setActiveMethod] = useState<ActiveBookingMethod>('per-line')
     const [acceptedRows, setAcceptedRows] = useState<Set<number>>(() =>
         step === 'labor' ? new Set([0]) : new Set()
     )
@@ -3366,7 +3442,7 @@ export default function BFIDocumentReviewModal({
                                     <div className="px-6 py-2 bg-warning/5 border-b border-warning/20 flex items-start gap-2 shrink-0">
                                         <Building2 className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
                                         <p className="text-[10px] text-foreground leading-snug">
-                                            <span className="font-bold text-warning">Why this matters:</span> BFI's $8M City of NY backlog shows 0.5% GP today — not because they're losing money, but because credit lines aren't booked until checks arrive weeks later. Strata posts the credit line at order entry → Kate (CFO) sees real GP from day 1, not day 30.
+                                            <span className="font-bold text-warning">Why this matters:</span> BFI's $8M City of NY backlog shows 0.5% GP today — not because they're losing money, but because agency fees aren't booked until checks arrive weeks later. With Method 3, Strata surfaces the per-line fee at order entry → Kate (CFO) sees real GP from day 1, not day 30.
                                         </p>
                                     </div>
                                 )}
@@ -3422,7 +3498,7 @@ export default function BFIDocumentReviewModal({
                                             {activeTab === 'sif' ? (
                                                 <SIFDocumentPreview resolvedIds={resolvedIds} step={step} customValues={customValues} />
                                             ) : activeTab === 'specs' ? (
-                                                <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'labor' || step === 'cpr' || step === 'fee'} validated={step !== 'extract'} />
+                                                <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'labor' || step === 'cpr' || step === 'fee'} validated={step !== 'extract'} activeMethod={activeMethod} />
                                             ) : (
                                                 <div className="h-full overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950">
                                                     <div className="border border-border rounded-xl overflow-hidden bg-card">
@@ -3449,7 +3525,7 @@ export default function BFIDocumentReviewModal({
 
                                     {/* Right: Contextual panel per step (2/5) */}
                                     <div className="col-span-2 flex flex-col min-h-0">
-                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} onCustomValue={(fid, val) => setCustomValues(prev => ({ ...prev, [fid]: val }))} ovniqLines={ovniqLines} onUpdateLine={updateOvniqLine} acceptedRows={acceptedRows} onSetAccepted={setAcceptedRows} />
+                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} onCustomValue={(fid, val) => setCustomValues(prev => ({ ...prev, [fid]: val }))} ovniqLines={ovniqLines} onUpdateLine={updateOvniqLine} acceptedRows={acceptedRows} onSetAccepted={setAcceptedRows} activeMethod={activeMethod} setActiveMethod={setActiveMethod} />
                                     </div>
 
                                 </div>
