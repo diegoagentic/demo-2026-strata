@@ -2205,19 +2205,22 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                                         <span className="text-[10px] font-bold text-foreground">{line.code}</span>
                                         <span className="text-[9px] text-muted-foreground">· {line.desc}</span>
                                         {line.corrected
-                                            ? <span className="ml-auto text-[7px] font-black px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">CORRECTED</span>
+                                            ? <span className="ml-auto text-[7px] font-black px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20">CORRECTED</span>
                                             : <span className="ml-auto text-[7px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">NO CHANGE</span>
                                         }
                                     </div>
                                     {line.corrected && (
                                         <div className="grid grid-cols-2 gap-2">
                                             {(['REQUESTED', 'RESPONSE'] as const).map(col => (
-                                                <div key={col} className={`rounded-lg px-2.5 py-2 border ${col === 'RESPONSE' ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-muted/20'}`}>
-                                                    <p className={`text-[7px] font-bold uppercase tracking-widest mb-1.5 ${col === 'RESPONSE' ? 'text-destructive' : 'text-muted-foreground'}`}>{col}</p>
+                                                <div key={col} className={`rounded-lg px-2.5 py-2 border ${col === 'RESPONSE' ? 'border-success/30 bg-success/5' : 'border-border bg-muted/20'}`}>
+                                                    <p className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${col === 'RESPONSE' ? 'text-success' : 'text-muted-foreground'}`}>{col}</p>
+                                                    <p className="text-[7px] text-muted-foreground/70 mb-1.5 normal-case tracking-normal">
+                                                        {col === 'REQUESTED' ? 'From SIF · Designer' : 'Validated by Quote Tool'}
+                                                    </p>
                                                     {line.fields.filter(f => f.changed || ['Qty','Sell %'].includes(f.k)).slice(0, 5).map(f => (
                                                         <div key={f.k} className="flex justify-between font-mono text-[8px]">
                                                             <span className="text-muted-foreground">{f.k}</span>
-                                                            <span className={col === 'RESPONSE' && f.changed ? 'text-destructive font-semibold' : 'text-foreground'}>
+                                                            <span className={col === 'RESPONSE' && f.changed ? 'text-success font-semibold' : 'text-foreground'}>
                                                                 {col === 'REQUESTED' ? f.reqVal : f.resVal}
                                                             </span>
                                                         </div>
