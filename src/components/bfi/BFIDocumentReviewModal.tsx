@@ -19,6 +19,7 @@ import {
     CreditCard, ArrowRight, AlertTriangle, Building2
 } from 'lucide-react'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
+import EmailMetadataBlock from './EmailMetadataBlock'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -662,11 +663,11 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
     const removeAttachment = (name: string) =>
         setAttachments(prev => prev.filter(a => a.name !== name))
 
-    const META_ROWS = [
-        { label: 'From', value: fromEmail, setter: setFromEmail },
-        { label: 'To',   value: toEmail,   setter: setToEmail   },
-        { label: 'CC',   value: ccEmail,   setter: setCcEmail, muted: true },
-        { label: 'Subj', value: subject,   setter: setSubject   },
+    const META_FIELDS = [
+        { label: 'From', value: fromEmail, onChange: setFromEmail },
+        { label: 'To',   value: toEmail,   onChange: setToEmail },
+        { label: 'CC',   value: ccEmail,   onChange: setCcEmail, muted: true },
+        { label: 'Subj', value: subject,   onChange: setSubject },
     ]
 
     return (
@@ -712,16 +713,8 @@ function PatriciaDialog({ isOpen, onSent }: { isOpen: boolean; onSent: () => voi
                                     </div>
                                 ))}
 
-                                {/* Email metadata — all fields editable */}
-                                <div className="rounded-xl border border-border overflow-hidden text-[11px]">
-                                    {META_ROWS.map((row, i) => (
-                                        <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
-                                            <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
-                                            <input value={row.value} onChange={e => row.setter(e.target.value)} disabled={sent}
-                                                className={`flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`} />
-                                        </div>
-                                    ))}
-                                </div>
+                                {/* Email metadata — read-only by default · Edit reveals inputs */}
+                                <EmailMetadataBlock variant="bordered" fields={META_FIELDS} disabled={sent} />
 
                                 {/* Editable message */}
                                 <textarea value={message} onChange={e => setMessage(e.target.value)} rows={12} disabled={sent}
@@ -1047,11 +1040,11 @@ Please confirm so we can proceed to agency fee verification.
         }, 800)
     }
 
-    const META_ROWS = [
-        { label: 'From', value: fromEmail, setter: setFromEmail },
-        { label: 'To',   value: toEmail,   setter: setToEmail   },
-        { label: 'CC',   value: ccEmail,   setter: setCcEmail, muted: true },
-        { label: 'Date', value: dateText,  setter: setDateText  },
+    const META_FIELDS = [
+        { label: 'From', value: fromEmail, onChange: setFromEmail },
+        { label: 'To',   value: toEmail,   onChange: setToEmail },
+        { label: 'CC',   value: ccEmail,   onChange: setCcEmail, muted: true },
+        { label: 'Date', value: dateText,  onChange: setDateText },
     ]
 
     return (
@@ -1106,20 +1099,8 @@ Please confirm so we can proceed to agency fee verification.
                                     </div>
                                 </div>
 
-                                {/* Section B — Email metadata · all fields editable */}
-                                <div className="rounded-xl border border-border overflow-hidden text-[11px]">
-                                    {META_ROWS.map((row, i) => (
-                                        <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
-                                            <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
-                                            <input
-                                                value={row.value}
-                                                onChange={e => row.setter(e.target.value)}
-                                                disabled={sent}
-                                                className={`flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
+                                {/* Section B — Email metadata · read-only by default · Edit reveals inputs */}
+                                <EmailMetadataBlock variant="bordered" fields={META_FIELDS} disabled={sent} />
 
                                 {/* Section C — Editable message */}
                                 <textarea
@@ -1517,9 +1498,9 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
         }, 800)
     }
 
-    const META_ROWS = [
-        { label: 'From', value: fromEmail, setter: setFromEmail },
-        { label: 'To',   value: toEmail,   setter: setToEmail   },
+    const META_FIELDS = [
+        { label: 'From', value: fromEmail, onChange: setFromEmail },
+        { label: 'To',   value: toEmail,   onChange: setToEmail },
     ]
 
     return (
@@ -1555,13 +1536,7 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                             </div>
 
                             <div className="px-5 pt-4 pb-2 space-y-2.5">
-                                {META_ROWS.map(row => (
-                                    <div key={row.label} className="flex items-start gap-2 text-[11px]">
-                                        <span className="text-muted-foreground w-10 shrink-0 pt-0.5">{row.label}</span>
-                                        <input value={row.value} onChange={e => row.setter(e.target.value)} disabled={sent}
-                                            className="flex-1 font-medium text-foreground bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0" />
-                                    </div>
-                                ))}
+                                <EmailMetadataBlock fields={META_FIELDS} disabled={sent} />
 
                                 <textarea
                                     value={message}
@@ -1925,7 +1900,6 @@ BFI Furniture · CoNY Account Manager`
         setTimeout(() => setPhase('received'), 1600)
     }
 
-    const inputCls = 'flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0'
     const locked = phase !== 'draft'
 
     return (
@@ -1964,28 +1938,18 @@ BFI Furniture · CoNY Account Manager`
                             {/* Scrollable body */}
                             <div className="flex-1 overflow-y-auto">
 
-                                {/* Metadata */}
-                                <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
-                                    <input value={subject} onChange={e => setSubject(e.target.value)} disabled={locked}
-                                        className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60" />
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">From:</span>
-                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={locked} className={inputCls} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">To:</span>
-                                            <input value={toEmail} onChange={e => setToEmail(e.target.value)} disabled={locked} className={inputCls} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">CC:</span>
-                                            <input value={ccEmail} onChange={e => setCcEmail(e.target.value)} disabled={locked} className={inputCls} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">Date:</span>
-                                            <input value={dateText} onChange={e => setDateText(e.target.value)} disabled={locked} className={inputCls} />
-                                        </div>
-                                    </div>
+                                {/* Metadata · read-only by default · Edit reveals inputs */}
+                                <div className="px-5 pt-4 pb-3 border-b border-border/60">
+                                    <EmailMetadataBlock
+                                        subject={{ value: subject, onChange: setSubject }}
+                                        fields={[
+                                            { label: 'From', value: fromEmail, onChange: setFromEmail },
+                                            { label: 'To',   value: toEmail,   onChange: setToEmail },
+                                            { label: 'CC',   value: ccEmail,   onChange: setCcEmail, muted: true },
+                                            { label: 'Date', value: dateText,  onChange: setDateText },
+                                        ]}
+                                        disabled={locked}
+                                    />
                                 </div>
 
                                 {/* Body */}
@@ -3436,16 +3400,6 @@ export default function BFIDocumentReviewModal({
                                         }
                                     </p>
                                 </div>
-
-                                {/* Narrative banner · Kate's $8M blind spot (only on quote step) */}
-                                {step === 'quote' && (
-                                    <div className="px-6 py-2 bg-warning/5 border-b border-warning/20 flex items-start gap-2 shrink-0">
-                                        <Building2 className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
-                                        <p className="text-[10px] text-foreground leading-snug">
-                                            <span className="font-bold text-warning">Why this matters:</span> BFI's $8M City of NY backlog shows 0.5% GP today — not because they're losing money, but because agency fees aren't booked until checks arrive weeks later. With Method 3, Strata surfaces the per-line fee at order entry → Kate (CFO) sees real GP from day 1, not day 30.
-                                        </p>
-                                    </div>
-                                )}
 
                                 {/* ── Split pane ── */}
                                 <div className="flex-1 grid grid-cols-5 min-h-0">

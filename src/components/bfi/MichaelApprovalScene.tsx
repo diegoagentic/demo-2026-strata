@@ -19,6 +19,7 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIDocumentReviewModal from './BFIDocumentReviewModal'
+import EmailMetadataBlock from './EmailMetadataBlock'
 import BFIProcessKanban from './BFIProcessKanban'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -71,11 +72,11 @@ function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
         }, 800)
     }
 
-    const META_ROWS = [
-        { label: 'From', value: fromEmail, setter: setFromEmail },
-        { label: 'To',   value: toEmail,   setter: setToEmail   },
-        { label: 'CC',   value: ccEmail,   setter: setCcEmail, muted: true },
-        { label: 'Subj', value: subject,   setter: setSubject   },
+    const META_FIELDS = [
+        { label: 'From', value: fromEmail, onChange: setFromEmail },
+        { label: 'To',   value: toEmail,   onChange: setToEmail },
+        { label: 'CC',   value: ccEmail,   onChange: setCcEmail, muted: true },
+        { label: 'Subj', value: subject,   onChange: setSubject },
     ]
 
     return (
@@ -112,20 +113,8 @@ function NancyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
 
                             {/* Body */}
                             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                                {/* Email metadata — all fields editable */}
-                                <div className="rounded-xl border border-border overflow-hidden text-[11px]">
-                                    {META_ROWS.map((row, i) => (
-                                        <div key={row.label} className={`flex gap-3 px-3 py-2.5 ${i < META_ROWS.length - 1 ? 'border-b border-border/60' : ''}`}>
-                                            <span className="text-muted-foreground font-semibold w-10 shrink-0">{row.label}</span>
-                                            <input
-                                                value={row.value}
-                                                onChange={e => row.setter(e.target.value)}
-                                                disabled={sent}
-                                                className={`flex-1 bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 ${row.muted ? 'text-muted-foreground italic' : 'text-foreground'}`}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
+                                {/* Email metadata — read-only by default · click Edit to modify */}
+                                <EmailMetadataBlock variant="bordered" fields={META_FIELDS} disabled={sent} />
 
                                 {/* Editable message */}
                                 <textarea

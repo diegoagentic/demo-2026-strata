@@ -14,6 +14,7 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIProcessKanban from './BFIProcessKanban'
+import EmailMetadataBlock from './EmailMetadataBlock'
 
 const ACTIVE_COL = 2  // PO & Labor
 
@@ -47,9 +48,6 @@ BFI Furniture · CoNY Account Manager`
         setSent(true)
         setTimeout(() => onSent(), 1200)
     }
-
-    // Shared classes for inline editable inputs (transparent, underline on focus)
-    const inputCls = 'flex-1 bg-transparent outline-none text-foreground font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0'
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -87,24 +85,17 @@ BFI Furniture · CoNY Account Manager`
                             {/* Scrollable body */}
                             <div className="flex-1 overflow-y-auto">
 
-                                {/* Metadata */}
-                                <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
-                                    <input value={subject} onChange={e => setSubject(e.target.value)} disabled={sent}
-                                        className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60" />
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">From:</span>
-                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent} className={inputCls} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">To:</span>
-                                            <input value={toEmail} onChange={e => setToEmail(e.target.value)} disabled={sent} className={inputCls} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">Date:</span>
-                                            <input value={dateText} onChange={e => setDateText(e.target.value)} disabled={sent} className={inputCls} />
-                                        </div>
-                                    </div>
+                                {/* Metadata · read-only by default · Edit button reveals inputs */}
+                                <div className="px-5 pt-4 pb-3 border-b border-border/60">
+                                    <EmailMetadataBlock
+                                        subject={{ value: subject, onChange: setSubject }}
+                                        fields={[
+                                            { label: 'From', value: fromEmail, onChange: setFromEmail },
+                                            { label: 'To',   value: toEmail,   onChange: setToEmail },
+                                            { label: 'Date', value: dateText,  onChange: setDateText },
+                                        ]}
+                                        disabled={sent}
+                                    />
                                 </div>
 
                                 {/* Body */}

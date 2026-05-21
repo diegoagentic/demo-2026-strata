@@ -18,6 +18,7 @@ import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 import BFIDashboardScene from './BFIDashboardScene'
 import { FloorPlanSVG } from './BFIDocumentReviewModal'
+import EmailMetadataBlock from './EmailMetadataBlock'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -186,7 +187,6 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
     const removeAttachment = (name: string) => setAttachments(prev => prev.filter(a => a !== name))
 
-    const inputCls = 'flex-1 bg-transparent outline-none font-medium border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60 min-w-0'
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -223,27 +223,17 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
 
                             {/* Scrollable body */}
                             <div className="flex-1 overflow-y-auto">
-                                <div className="px-5 pt-4 pb-3 border-b border-border/60 space-y-1.5">
-                                    <input value={subject} onChange={e => setSubject(e.target.value)} disabled={sent}
-                                        className="w-full text-[13px] font-bold text-foreground leading-snug bg-transparent outline-none border-b border-transparent hover:border-border/60 focus:border-primary/50 transition-colors disabled:opacity-60" />
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">From:</span>
-                                            <input value={fromEmail} onChange={e => setFromEmail(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">To:</span>
-                                            <input value={toEmail} onChange={e => setToEmail(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">CC:</span>
-                                            <input value={ccEmail} onChange={e => setCcEmail(e.target.value)} disabled={sent} className={`${inputCls} text-muted-foreground italic`} />
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px]">
-                                            <span className="text-muted-foreground w-7 shrink-0">Date:</span>
-                                            <input value={dateText} onChange={e => setDateText(e.target.value)} disabled={sent} className={`${inputCls} text-foreground`} />
-                                        </div>
-                                    </div>
+                                <div className="px-5 pt-4 pb-3 border-b border-border/60">
+                                    <EmailMetadataBlock
+                                        subject={{ value: subject, onChange: setSubject }}
+                                        fields={[
+                                            { label: 'From', value: fromEmail, onChange: setFromEmail },
+                                            { label: 'To',   value: toEmail,   onChange: setToEmail },
+                                            { label: 'CC',   value: ccEmail,   onChange: setCcEmail, muted: true },
+                                            { label: 'Date', value: dateText,  onChange: setDateText },
+                                        ]}
+                                        disabled={sent}
+                                    />
                                 </div>
 
                                 <div className="px-5 py-4 space-y-3">
