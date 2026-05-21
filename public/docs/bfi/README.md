@@ -16,3 +16,6 @@ Files here are served statically by Vite and included in Vercel deploys.
 
 ## signin/
 - `signin-NYPL-17706.pdf`   — Sign In Sheet NYPL, Mark Mross Carpenter, 4-9-26
+
+## po/
+- `customer-po-example.pdf`   — Reference example: NYC DOE PO format (KI · WO210031387 · Krueger International · $14,785). Used in paso 1.6 modal as visual reference; NOT actual DOE-2847 data. Wendy-provided sample.

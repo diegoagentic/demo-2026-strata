@@ -3471,77 +3471,122 @@ export default function BFIDocumentReviewModal({
                                 {/* ── Split pane ── */}
                                 <div className="flex-1 grid grid-cols-5 min-h-0">
 
-                                    {/* Left: Document tabs (3/5) */}
+                                    {/* Left: Document tabs (3/5) — paso 1.6 (step='labor') shows single PO PDF · per Wendy */}
                                     <div className="col-span-3 border-r border-border flex flex-col min-h-0">
-                                        {/* Tab bar */}
-                                        <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2">
-                                            {([
-                                                { id: 'sif' as const,       icon: FileText, label: 'SIF · DOE-2847' },
-                                                { id: 'specs' as const,     icon: FileText, label: (step === 'labor' || step === 'cpr' || step === 'fee') ? 'DOE-2847 · Purchase Order' : 'Quote' },
-                                                { id: 'floorplan' as const,  icon: MapPin,   label: 'Floor Plan' },
-                                            ]).map(tab => (
-                                                <button
-                                                    key={tab.id}
-                                                    onClick={() => setActiveTab(tab.id)}
-                                                    className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border-b-2 transition-all mr-1 ${
-                                                        activeTab === tab.id
-                                                            ? 'border-primary text-foreground'
-                                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                                    }`}
-                                                >
-                                                    <tab.icon className="h-3 w-3" />
-                                                    {tab.label}
-                                                </button>
-                                            ))}
-                                            {/* Download button — only for SIF and Specs tabs */}
-                                            {(activeTab === 'sif' || activeTab === 'specs') && (
-                                                <div className="ml-auto pb-1.5 shrink-0">
+                                        {step === 'labor' ? (
+                                            <div className="flex flex-col h-full bg-zinc-100 dark:bg-zinc-950">
+                                                {/* Header with title + download */}
+                                                <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border bg-muted/30 shrink-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <FileText className="h-3 w-3 text-muted-foreground" />
+                                                        <span className="text-[11px] font-semibold text-foreground">DOE-2847 · Purchase Order</span>
+                                                    </div>
                                                     {downloadConfirm ? (
                                                         <span className="flex items-center gap-1 text-[10px] text-success font-semibold px-2">
                                                             <CheckCircle2 className="h-3 w-3" />
                                                             {downloadConfirm} downloaded
                                                         </span>
                                                     ) : (
-                                                        <button
-                                                            onClick={handleDownload}
+                                                        <a
+                                                            href="/docs/bfi/po/customer-po-example.pdf"
+                                                            download
                                                             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
                                                         >
                                                             <Download className="h-3 w-3" />
-                                                            {activeTab === 'sif' ? 'Download SIF' : (step === 'labor' || step === 'cpr' || step === 'fee') ? 'Download PO' : 'Download Quote'}
-                                                        </button>
+                                                            Download PO
+                                                        </a>
                                                     )}
                                                 </div>
-                                            )}
-                                        </div>
-
-                                        {/* Tab content */}
-                                        <div className="flex-1 min-h-0 overflow-hidden">
-                                            {activeTab === 'sif' ? (
-                                                <SIFDocumentPreview resolvedIds={resolvedIds} step={step} customValues={customValues} />
-                                            ) : activeTab === 'specs' ? (
-                                                <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'labor' || step === 'cpr' || step === 'fee'} validated={step !== 'extract'} activeMethod={activeMethod} />
-                                            ) : (
-                                                <div className="h-full overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950">
-                                                    <div className="border border-border rounded-xl overflow-hidden bg-card">
-                                                        <div className="flex items-center gap-2 px-3.5 py-2.5 bg-muted/40 border-b border-border">
-                                                            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
-                                                                Architectural Layout · 52 Chambers St · Floor 12
-                                                            </span>
-                                                            <span className="ml-auto text-[9px] text-success font-medium">OCR ✓</span>
-                                                        </div>
-                                                        <div className="p-3">
-                                                            <FloorPlanSVG />
-                                                        </div>
-                                                        <div className="px-3.5 py-2 bg-muted/20 border-t border-border">
-                                                            <p className="text-[10px] text-muted-foreground">
-                                                                NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
-                                                            </p>
-                                                        </div>
-                                                    </div>
+                                                {/* Info banner · sticky · Wendy disclaimer */}
+                                                <div className="px-4 py-2 bg-info/5 border-b border-info/20 flex items-start gap-2 shrink-0">
+                                                    <Info className="h-3.5 w-3.5 text-info shrink-0 mt-0.5" />
+                                                    <p className="text-[10px] text-foreground leading-snug">
+                                                        <span className="font-bold text-info">Reference example</span>
+                                                        {' · NYC DOE PO format · not actual DOE-2847 data'}
+                                                    </p>
                                                 </div>
-                                            )}
-                                        </div>
+                                                {/* PDF iframe · full-height */}
+                                                <div className="flex-1 min-h-0">
+                                                    <iframe
+                                                        src="/docs/bfi/po/customer-po-example.pdf#toolbar=0&navpanes=0&view=FitH"
+                                                        className="w-full h-full border-0"
+                                                        title="DOE-2847 Purchase Order (reference example)"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {/* Tab bar */}
+                                                <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2">
+                                                    {([
+                                                        { id: 'sif' as const,       icon: FileText, label: 'SIF · DOE-2847' },
+                                                        { id: 'specs' as const,     icon: FileText, label: (step === 'cpr' || step === 'fee') ? 'DOE-2847 · Purchase Order' : 'Quote' },
+                                                        { id: 'floorplan' as const,  icon: MapPin,   label: 'Floor Plan' },
+                                                    ]).map(tab => (
+                                                        <button
+                                                            key={tab.id}
+                                                            onClick={() => setActiveTab(tab.id)}
+                                                            className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border-b-2 transition-all mr-1 ${
+                                                                activeTab === tab.id
+                                                                    ? 'border-primary text-foreground'
+                                                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                                                            }`}
+                                                        >
+                                                            <tab.icon className="h-3 w-3" />
+                                                            {tab.label}
+                                                        </button>
+                                                    ))}
+                                                    {/* Download button — only for SIF and Specs tabs */}
+                                                    {(activeTab === 'sif' || activeTab === 'specs') && (
+                                                        <div className="ml-auto pb-1.5 shrink-0">
+                                                            {downloadConfirm ? (
+                                                                <span className="flex items-center gap-1 text-[10px] text-success font-semibold px-2">
+                                                                    <CheckCircle2 className="h-3 w-3" />
+                                                                    {downloadConfirm} downloaded
+                                                                </span>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={handleDownload}
+                                                                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
+                                                                >
+                                                                    <Download className="h-3 w-3" />
+                                                                    {activeTab === 'sif' ? 'Download SIF' : (step === 'cpr' || step === 'fee') ? 'Download PO' : 'Download Quote'}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Tab content */}
+                                                <div className="flex-1 min-h-0 overflow-hidden">
+                                                    {activeTab === 'sif' ? (
+                                                        <SIFDocumentPreview resolvedIds={resolvedIds} step={step} customValues={customValues} />
+                                                    ) : activeTab === 'specs' ? (
+                                                        <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'cpr' || step === 'fee'} validated={step !== 'extract'} activeMethod={activeMethod} />
+                                                    ) : (
+                                                        <div className="h-full overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950">
+                                                            <div className="border border-border rounded-xl overflow-hidden bg-card">
+                                                                <div className="flex items-center gap-2 px-3.5 py-2.5 bg-muted/40 border-b border-border">
+                                                                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                                                                        Architectural Layout · 52 Chambers St · Floor 12
+                                                                    </span>
+                                                                    <span className="ml-auto text-[9px] text-success font-medium">OCR ✓</span>
+                                                                </div>
+                                                                <div className="p-3">
+                                                                    <FloorPlanSVG />
+                                                                </div>
+                                                                <div className="px-3.5 py-2 bg-muted/20 border-t border-border">
+                                                                    <p className="text-[10px] text-muted-foreground">
+                                                                        NYC Dept. of Education · DOE-2847 · by Robert Chen · Miller Knoll
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
 
                                     {/* Right: Contextual panel per step (2/5) */}
