@@ -1886,7 +1886,7 @@ Please provide a labor quote for the following installation at 30 Court Street, 
 
 Attached is the floor plan and product list for your reference.
 
-Please confirm crew availability and delivery window. Quote needed ASAP to proceed with the NYC DOE purchase order.
+Thanks,
 
 — Lauren DeMarco
 BFI Furniture · CoNY Account Manager`
