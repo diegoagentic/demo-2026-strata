@@ -33,7 +33,7 @@ const WALTER_MESSAGE =
 
 The shortage claim for DOE-2847 has been resolved. Herman Miller confirmed a replacement shipment for Carton #34 (Monitor Arm Dual Adjustable) — ETA May 18, 2026.
 
-The CORE work order (WO-2026-0089) has been updated. All items are now cleared for the May 14–21 delivery window. The install crew is confirmed for the three areas (Open Area, Lounge, Storage Room).
+The CORE work order (WO-2026-0089) has been updated. All items are now cleared for the May 19–21 delivery window. The install crew is confirmed for the three areas (Open Area, Lounge, Storage Room).
 
 Please approve the scheduling so we can coordinate with the Workplace labor team.
 
@@ -135,7 +135,7 @@ function CoreWorkOrder() {
                     { label: 'Vendor',    value: 'BFI Furniture · Herman Miller' },
                     { label: 'Contract',  value: 'CoNY · City of New York' },
                     { label: 'Ship to',   value: 'WIG Group · NJ Warehouse' },
-                    { label: 'Delivery',  value: 'May 14–21 · Replacement May 18' },
+                    { label: 'Delivery',  value: 'May 19–21 · Replacement arrives May 18' },
                 ].map(r => (
                     <div key={r.label}>
                         <span className="text-muted-foreground">{r.label}: </span>
@@ -367,7 +367,7 @@ export default function ClaimResolvedScene() {
                         <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <div className="flex-1 min-w-0">
                             <div className="text-[10px] font-bold text-foreground truncate">DOE-2847 · Floor 12 Layout</div>
-                            <div className="text-[9px] text-muted-foreground">Floor plan · 3 areas · May 14–21</div>
+                            <div className="text-[9px] text-muted-foreground">Floor plan · 3 areas · May 19–21</div>
                         </div>
                         <span className="text-[9px] font-bold bg-success/10 text-success border border-success/20 px-1.5 py-0.5 rounded-full shrink-0">Confirmed</span>
                     </div>

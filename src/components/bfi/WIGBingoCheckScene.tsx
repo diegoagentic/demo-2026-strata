@@ -1,7 +1,7 @@
 /**
  * COMPONENT: WIGBingoCheckScene  (r1.2 / a1.2d)
  * PURPOSE: Product Receiving step 1.
- *   Standard mode (r1.2): dashboard → docs + bingo sheet → Run AI Analysis → nextStep()
+ *   Standard mode (r1.2): dashboard → docs + packing list → Run AI Analysis → nextStep()
  *   Upload mode (a1.2d): dashboard → upload zones → uploaded files + bingo grid → notes → Update CORE → Lauren dialog → nextStep()
  */
 
@@ -40,88 +40,22 @@ PO_LINES.forEach(l => l.cartons.forEach(c => { CARTON_MAP[c] = l.abbr }))
 
 const MISSING_CARTON = 34
 
-const PO_TOTAL = PO_LINES.reduce((s, l) => s + l.unit * l.qty, 0)
-
 const DEFAULT_NOTIFICATION: NotificationConfig = {
     title: 'WIG document received',
-    desc: 'PMO-2026-0412 · Bingo Sheet · 35 cartons · ready for AI analysis',
-    cta: 'Review bingo sheet →',
+    desc: 'PMO-2026-0412 · Packing list · 35 cartons · ready for AI analysis',
+    cta: 'Review packing list →',
 }
 
 const DEFAULT_NOTES =
 `Hi Lauren,
 
-Received DOE-2847 at WIG — 35 of 35 cartons received.
+Received DOE-2847 at WIG — 34 of 35 cartons received.
 
-Monitor Arm Dual Adjustable (carton #34) arrived incomplete — mounting hardware missing. Unit cannot be assembled.
+Monitor Arm Dual Adjustable · carton #34 is missing.
 
-CORE updated — incomplete shipment flag set. M-ARM flagged for claim.
+CORE flagged — claim pending.
 
 — Lena C. · Receiving Coordinator`
-
-// ─── Purchase Order Document ──────────────────────────────────────────────────
-
-function PODocument() {
-    return (
-        <div className="text-[10px] space-y-3 bg-background rounded-xl border border-border p-3">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <div className="text-[13px] font-black text-foreground">PURCHASE ORDER</div>
-                    <div className="text-muted-foreground mt-0.5">DOE-2847 · Q-2026-0089</div>
-                </div>
-                <div className="text-right space-y-0.5">
-                    <div className="font-bold text-foreground">NYC Dept. of Education</div>
-                    <div className="text-muted-foreground">Procurement Office</div>
-                    <div className="text-muted-foreground">May 6, 2026</div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 border-t border-border pt-2">
-                {[
-                    { label: 'Vendor',    value: 'BFI Furniture · Herman Miller' },
-                    { label: 'Contract',  value: 'CoNY · City of New York' },
-                    { label: 'Ship to',   value: 'WIG Group · NJ Warehouse' },
-                    { label: 'Delivery',  value: 'May 14–21, 2026 · 35 cartons' },
-                ].map(r => (
-                    <div key={r.label}>
-                        <span className="text-muted-foreground">{r.label}: </span>
-                        <span className="font-medium text-foreground">{r.value}</span>
-                    </div>
-                ))}
-            </div>
-
-            {/* Line items table */}
-            <div className="border-t border-border pt-2 space-y-0.5">
-                <div className="grid grid-cols-[1fr_3rem_4rem_4rem] gap-1 pb-1 border-b border-border/60 text-[9px] font-bold text-muted-foreground uppercase tracking-wide">
-                    <span>Description</span>
-                    <span className="text-right">Qty</span>
-                    <span className="text-right">Unit</span>
-                    <span className="text-right">Total</span>
-                </div>
-                {PO_LINES.map(l => (
-                    <div key={l.id} className={`grid grid-cols-[1fr_3rem_4rem_4rem] gap-1 py-0.5 ${l.id === 'L7' ? 'text-warning font-medium' : ''}`}>
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[8px] font-bold bg-muted px-1 rounded text-muted-foreground shrink-0">{l.abbr}</span>
-                            <span className="truncate">{l.desc}</span>
-                        </div>
-                        <span className="text-right">{l.qty}</span>
-                        <span className="text-right">${l.unit.toLocaleString()}</span>
-                        <span className="text-right">${(l.unit * l.qty).toLocaleString()}</span>
-                    </div>
-                ))}
-                <div className="grid grid-cols-[1fr_3rem_4rem_4rem] gap-1 border-t border-border pt-1 font-bold text-foreground">
-                    <span className="col-span-3 text-right">Total</span>
-                    <span className="text-right">${PO_TOTAL.toLocaleString()}</span>
-                </div>
-            </div>
-
-            <div className="text-[9px] text-muted-foreground border-t border-border pt-2">
-                Zones A·B·C · Install crew: 3 technicians · Labor: Carpenters 45h + OT 6h
-            </div>
-        </div>
-    )
-}
 
 // ─── Enhanced Bingo Grid ──────────────────────────────────────────────────────
 
@@ -150,13 +84,13 @@ function BingoGrid() {
             {/* Missing annotation */}
             <div className="bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-2 flex items-center gap-2">
                 <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
-                <span className="text-[10px] font-bold text-foreground">Monitor Arm · mounting hardware missing · cannot assemble</span>
+                <span className="text-[10px] font-bold text-foreground">Monitor Arm Dual Adjustable · carton #34 is missing</span>
             </div>
         </div>
     )
 }
 
-// ─── Bingo Sheet Card (standard mode) ────────────────────────────────────────
+// ─── Packing List Card (standard mode) ───────────────────────────────────────
 
 function BingoSheetCard() {
     return (
@@ -165,7 +99,7 @@ function BingoSheetCard() {
                 <div className="flex items-center gap-2">
                     <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <div>
-                        <div className="text-[10px] font-bold text-foreground">Bingo Sheet · BD-2026-0412</div>
+                        <div className="text-[10px] font-bold text-foreground">Packing list · BD-2026-0412</div>
                         <div className="text-[9px] text-muted-foreground">review required · manual notation detected</div>
                     </div>
                 </div>
@@ -189,13 +123,13 @@ function BingoSheetCard() {
                 <div className="bg-warning/5 border border-warning/20 rounded-lg px-2.5 py-2">
                     <div className="text-[10px] text-muted-foreground">
                         <span className="font-medium text-foreground">Carton #34 — </span>
-                        <span className="italic text-amber-600 dark:text-amber-400">"Monitor Arm · hardware missing"</span>
+                        <span className="italic text-amber-600 dark:text-amber-400">"Monitor Arm · carton missing"</span>
                         {' '}(written manually by Workplace)
                     </div>
                 </div>
                 <div className="flex items-start gap-1.5 text-[9px] text-muted-foreground">
                     <AlertTriangle className="h-2.5 w-2.5 text-warning shrink-0 mt-0.5" />
-                    The bingo sheet has no "missing" checkbox — Workplace writes manually.
+                    The packing list has no "missing" checkbox — Workplace writes manually.
                 </div>
             </div>
         </div>
@@ -277,9 +211,9 @@ function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: 
     const [toEmail,   setToEmail]   = useState('lauren.demarco@bfifurniture.com')
     const [ccEmail,   setCcEmail]   = useState('walter.goley@conyny.gov · CoNY PM')
     const [dateText,  setDateText]  = useState('May 11, 2026 · 8:42 AM')
-    const [subject,   setSubject]   = useState('DOE-2847 · Monitor Arm Incomplete · Hardware Missing')
+    const [subject,   setSubject]   = useState('DOE-2847 · Carton #34 Missing · Monitor Arm')
     const [bodyText,  setBodyText]  = useState(notes)
-    const [attachments, setAttachments] = useState(['BD-2026-0412_BingoSheet.pdf', 'DOE-2847-PO.pdf'])
+    const [attachments, setAttachments] = useState(['BD-2026-0412_PackingList.pdf'])
 
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
     const removeAttachment = (name: string) => setAttachments(prev => prev.filter(a => a !== name))
@@ -336,12 +270,12 @@ function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: 
 
                                     {/* Missing item summary */}
                                     <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 space-y-1.5 text-[11px]">
-                                        <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Damaged Item — Monitor Arm</p>
+                                        <p className="font-bold text-foreground text-[10px] uppercase tracking-wide">Missing Item — Monitor Arm</p>
                                         {[
                                             { label: 'Item',     value: 'Monitor Arm Dual Adjustable' },
                                             { label: 'PO line',  value: 'L7 · 1 of 2 units' },
                                             { label: 'Zone',     value: 'C · Install crew' },
-                                            { label: 'Status',   value: 'CORE flagged · damage claim pending' },
+                                            { label: 'Status',   value: 'CORE flagged · claim pending' },
                                         ].map(r => (
                                             <div key={r.label} className="flex items-start gap-2">
                                                 <span className="text-muted-foreground w-16 shrink-0">{r.label}:</span>
@@ -370,7 +304,7 @@ function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: 
                                             <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                                             <div className="text-xs">
                                                 <div className="font-bold text-foreground">Sent to Lauren · May 11 · 8:42 AM</div>
-                                                <div className="text-muted-foreground mt-0.5">M-ARM flagged · CORE updated · damage claim pending</div>
+                                                <div className="text-muted-foreground mt-0.5">M-ARM flagged · CORE updated · claim pending</div>
                                             </div>
                                         </div>
                                     )}
@@ -413,14 +347,13 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
     }, [])
 
     const [bingoUploaded, setBingoUploaded] = useState(false)
-    const [poUploaded,    setPoUploaded]    = useState(false)
     const [notes,         setNotes]         = useState(DEFAULT_NOTES)
     const [coreUpdated,   setCoreUpdated]   = useState(false)
     const [coreUpdating,  setCoreUpdating]  = useState(false)
     const [showNotify,    setShowNotify]    = useState(false)
     const [clicked,       setClicked]       = useState(false)
 
-    const bothUploaded = bingoUploaded && poUploaded
+    const packingReady = bingoUploaded
 
     const pauseAware = useCallback((fn: () => void) => () => {
         if (!isPausedRef.current) { fn(); return }
@@ -450,41 +383,31 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
             {uploadMode && (
                 <>
                     {/* Header — only while pending uploads */}
-                    {!bothUploaded && (
+                    {!packingReady && (
                         <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-muted-foreground" />
                             <div>
                                 <div className="text-[12px] font-bold text-foreground">DOE-2847 · Warehouse Documents</div>
-                                <div className="text-[10px] text-muted-foreground">Attach receiving documents to continue</div>
+                                <div className="text-[10px] text-muted-foreground">Attach packing list to continue</div>
                             </div>
                         </div>
                     )}
 
-                    {/* Always-2-column grid — each column switches independently */}
-                    <div className="grid grid-cols-2 gap-3">
-                        {/* Left: Bingo Sheet */}
+                    {/* Packing list upload — single column */}
+                    <div className="space-y-3">
                         {bingoUploaded ? (
-                            <UploadedFileCard label="Bingo Sheet · BD-2026-0412" filename="BD-2026-0412_BingoSheet.pdf">
+                            <UploadedFileCard label="Packing list · BD-2026-0412" filename="BD-2026-0412_PackingList.pdf">
                                 <BFIDocViewer {...BFI_DOCS.RR_37577_MISSING} height={260} extractedFields={[]} />
                                 <BingoGrid />
                             </UploadedFileCard>
                         ) : (
-                            <UploadZone label="Bingo Sheet" filename="BD-2026-0412_BingoSheet.pdf"
+                            <UploadZone label="Packing list" filename="BD-2026-0412_PackingList.pdf"
                                 uploaded={bingoUploaded} onUpload={() => setBingoUploaded(true)} />
-                        )}
-                        {/* Right: Purchase Order */}
-                        {poUploaded ? (
-                            <UploadedFileCard label="Purchase Order · DOE-2847" filename="DOE-2847-PO.pdf">
-                                <PODocument />
-                            </UploadedFileCard>
-                        ) : (
-                            <UploadZone label="Purchase Order" filename="DOE-2847-PO.pdf"
-                                uploaded={poUploaded} onUpload={() => setPoUploaded(true)} />
                         )}
                     </div>
 
                     {/* Notes */}
-                    {bothUploaded && !coreUpdated && (
+                    {packingReady && !coreUpdated && (
                         <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-2 animate-in fade-in duration-300">
                             <div className="flex items-center gap-1.5">
                                 <Mail className="h-3.5 w-3.5 text-muted-foreground" />
@@ -496,7 +419,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                     )}
 
                     {/* Update CORE button */}
-                    {bothUploaded && !coreUpdated && (
+                    {packingReady && !coreUpdated && (
                         <button onClick={handleUpdateCore} disabled={coreUpdating}
                             className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-all shadow-sm animate-in fade-in duration-300">
                             {coreUpdating
@@ -512,7 +435,7 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                             <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                             <div className="text-[11px]">
                                 <span className="font-bold text-foreground">CORE updated · </span>
-                                <span className="text-muted-foreground">DOE-2847 · 35/35 cartons received · M-ARM incomplete · claim filed</span>
+                                <span className="text-muted-foreground">DOE-2847 · 34/35 cartons received · carton #34 missing · claim pending</span>
                             </div>
                         </div>
                     )}
@@ -542,9 +465,9 @@ export default function WIGBingoCheckScene({ onAnalyze, notificationConfig, uplo
                                 </div>
                                 <pre className="font-mono text-[10px] text-muted-foreground leading-relaxed whitespace-pre-wrap">{`WIG RECEIVING REPORT #RR-41200
 Date: 05/11/2026  Carrier: ALTL
-Cartons rcv'd: 35  Damage: None
-[bingo sheet + packing slips · pages 2-4]
-Note: carton 34 · Monitor Arm incomplete · hardware missing`}</pre>
+Cartons rcv'd: 34 of 35  Damage: None
+[packing list + slips · pages 2-4]
+Note: carton 34 · Monitor Arm Dual Adjustable · MISSING`}</pre>
                             </div>
                         </div>
                     </div>

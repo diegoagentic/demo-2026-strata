@@ -43,7 +43,7 @@ const ALERTS = [
         type: 'missing-carton',
         severity: 'destructive',
         title: 'Missing Carton · PMO-2026-0412',
-        desc: 'Carton #34 not received at WIG NJ — bingo sheet mismatch detected by AI',
+        desc: 'Carton #34 not received at WIG NJ — packing list mismatch detected by AI',
         cta: 'Start Receiving →',
         primary: true,
     },

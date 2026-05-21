@@ -11,7 +11,7 @@
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import {
     AlertTriangle, CheckCircle2, FileText, Mail, Send, X,
-    Package, Paperclip, Loader2, ChevronDown, ChevronUp,
+    Package, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { useDemo } from '../../context/DemoContext'
@@ -21,8 +21,8 @@ import BFIDashboardScene from './BFIDashboardScene'
 import EmailMetadataBlock from './EmailMetadataBlock'
 
 const LAUREN_NOTIFICATION = {
-    title: 'DOE-2847 · Monitor Arm incomplete · Receiving complete',
-    desc: 'Lena C. · 35/35 cartons received · Monitor Arm arrived incomplete — hardware missing · CORE updated',
+    title: 'DOE-2847 · Carton #34 missing · Receiving complete',
+    desc: 'Lena C. · 34/35 cartons received · carton #34 missing · CORE updated',
     cta: 'Review report & file claim →',
 }
 
@@ -30,18 +30,13 @@ const LAUREN_NOTIFICATION = {
 
 const CLAIM_MESSAGE = `Hi Herman Miller team,
 
-We are filing an incomplete shipment claim for PO DOE-2847 (CoNY · NYC Dept. of Education), delivered to WIG Group NJ Warehouse on May 11, 2026.
+We are filing a missing carton claim for PO DOE-2847 (CoNY · NYC Dept. of Education), delivered to WIG Group NJ Warehouse on May 11, 2026.
 
 Shipment summary:
-  · Cartons received: 35 of 35
-  · Incomplete item: Monitor Arm Dual Adjustable · carton #34
+  · Cartons received: 34 of 35
+  · Missing item: Monitor Arm Dual Adjustable · carton #34
 
-Issue:
-  · Unit arrived with mounting hardware missing
-  · Product cannot be assembled or installed
-  · 1 of 2 units affected
-
-Please review the attached receiving report (RR-37577) and confirm receipt of this claim. We request replacement hardware or a full unit replacement within 5 business days.
+Please review the attached receiving report (RR-37577) and confirm receipt of this claim. We request a replacement unit within 5 business days.
 
 — Lauren DeMarco
   BFI Furniture · CoNY Account Manager
@@ -57,7 +52,7 @@ function OrderDetailCard({ expanded, onToggle }: { expanded: boolean; onToggle: 
         { abbr: 'WS-72', desc: 'Work Surface 72" × 30"',            qty: 4,  status: 'ok' },
         { abbr: 'SC',    desc: 'Storage Cabinet Overhead 72"',       qty: 3,  status: 'ok' },
         { abbr: 'CHAIR', desc: 'Ergonomic Chair · Aeron B · HM',    qty: 8,  status: 'ok' },
-        { abbr: 'M-ARM', desc: 'Monitor Arm Dual Adjustable',        qty: 2,  status: 'damaged' },
+        { abbr: 'M-ARM', desc: 'Monitor Arm Dual Adjustable',        qty: 2,  status: 'missing' },
     ]
 
     return (
@@ -71,11 +66,11 @@ function OrderDetailCard({ expanded, onToggle }: { expanded: boolean; onToggle: 
                 </div>
                 <div className="flex-1 text-left">
                     <div className="text-[11px] font-bold text-foreground">DOE-2847</div>
-                    <div className="text-[9px] text-muted-foreground">NYC Dept. of Education · 35 cartons · 1 item damaged</div>
+                    <div className="text-[9px] text-muted-foreground">NYC Dept. of Education · 35 cartons · 1 carton missing</div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
-                        1 damaged
+                        1 missing
                     </span>
                     {expanded
                         ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
@@ -90,116 +85,19 @@ function OrderDetailCard({ expanded, onToggle }: { expanded: boolean; onToggle: 
                         <span>Ref</span><span>Description</span><span className="text-right">Qty</span><span className="text-right">Status</span>
                     </div>
                     {LINES.map(l => (
-                        <div key={l.abbr} className={`grid grid-cols-[2.5rem_1fr_2rem_4rem] gap-1 py-0.5 text-[10px] ${l.status === 'damaged' ? 'font-bold text-destructive' : 'text-foreground'}`}>
-                            <span className={`text-[8px] font-bold px-1 rounded text-center self-center ${l.status === 'damaged' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                        <div key={l.abbr} className={`grid grid-cols-[2.5rem_1fr_2rem_4rem] gap-1 py-0.5 text-[10px] ${l.status === 'missing' ? 'font-bold text-destructive' : 'text-foreground'}`}>
+                            <span className={`text-[8px] font-bold px-1 rounded text-center self-center ${l.status === 'missing' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
                                 {l.abbr}
                             </span>
                             <span className="truncate self-center">{l.desc}</span>
                             <span className="text-right self-center">{l.qty}</span>
-                            <span className={`text-right self-center text-[9px] font-bold ${l.status === 'damaged' ? 'text-destructive' : 'text-success'}`}>
-                                {l.status === 'damaged' ? '✗ damaged' : '✓ rcv\'d'}
+                            <span className={`text-right self-center text-[9px] font-bold ${l.status === 'missing' ? 'text-destructive' : 'text-success'}`}>
+                                {l.status === 'missing' ? '✗ missing' : '✓ rcv\'d'}
                             </span>
                         </div>
                     ))}
                 </div>
             )}
-        </div>
-    )
-}
-
-// ─── Proof Attachment Card ────────────────────────────────────────────────────
-
-function ProofCard({ attached, onAttach }: { attached: boolean; onAttach: () => void }) {
-    const [attaching, setAttaching] = useState(false)
-    const [previewOpen, setPreviewOpen] = useState(false)
-
-    const handleAttach = () => {
-        setAttaching(true)
-        setTimeout(() => { setAttaching(false); onAttach(); setPreviewOpen(true) }, 1400)
-    }
-
-    return (
-        <div className="border border-border rounded-xl bg-card overflow-hidden">
-            <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border">
-                <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Proof of Shipment</div>
-                {attached && (
-                    <span className="ml-auto text-[9px] font-bold text-success flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> Attached
-                    </span>
-                )}
-            </div>
-
-            <div className="px-3.5 py-3 space-y-2">
-                {!attached && !attaching && (
-                    <button onClick={handleAttach}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-dashed border-border bg-muted/30 hover:border-primary/40 hover:bg-primary/5 transition-all group text-left">
-                        <div className="h-6 w-6 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                            <FileText className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold text-muted-foreground group-hover:text-foreground transition-colors">RR-37577 · WIG Receiving Report</div>
-                            <div className="text-[9px] text-muted-foreground">Click to attach · May 11, 2026</div>
-                        </div>
-                    </button>
-                )}
-
-                {attaching && (
-                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-muted/30">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
-                        <div className="flex-1">
-                            <div className="text-[10px] font-medium text-muted-foreground">Attaching…</div>
-                            <div className="mt-1 h-0.5 rounded-full bg-border overflow-hidden">
-                                <div className="h-full bg-primary rounded-full" style={{ transition: 'width 1.3s ease-in-out', width: '100%' }} />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {attached && (
-                    <>
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-success/20 bg-success/5">
-                            <FileText className="h-3.5 w-3.5 text-success shrink-0" />
-                            <div className="flex-1 min-w-0">
-                                <div className="text-[10px] font-bold text-foreground truncate">carton-34-evidence.jpg</div>
-                                <div className="text-[9px] text-muted-foreground">Photo evidence · carton #34 · dock receipt</div>
-                            </div>
-                            <button onClick={() => setPreviewOpen(true)}
-                                className="text-[9px] text-primary font-bold hover:opacity-70 transition-opacity shrink-0">
-                                Preview
-                            </button>
-                        </div>
-
-                        {/* Lightbox */}
-                        {previewOpen && (
-                            <div
-                                className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-200"
-                                onClick={() => setPreviewOpen(false)}
-                            >
-                                <div
-                                    className="relative max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl"
-                                    onClick={e => e.stopPropagation()}
-                                >
-                                    <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-900">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wide">Photo evidence · WIG Warehouse · May 11, 2026</span>
-                                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning border border-warning/30">Monitor Arm · incomplete</span>
-                                        </div>
-                                        <button onClick={() => setPreviewOpen(false)}
-                                            className="text-zinc-400 hover:text-white text-lg leading-none transition-colors">×</button>
-                                    </div>
-                                    <img
-                                        src="/docs/bfi/receiving/monitor-arm-evidence.png"
-                                        alt="Monitor Arm evidence photo"
-                                        className="w-full object-contain bg-black"
-                                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
         </div>
     )
 }
@@ -213,7 +111,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
     const [toEmail,   setToEmail]   = useState('claims@hermanmiller.com')
     const [ccEmail,   setCcEmail]   = useState('walter.goley@conyny.gov · CoNY PM')
     const [dateText,  setDateText]  = useState('May 11, 2026 · 9:05 AM')
-    const [subject,   setSubject]   = useState('Incomplete Shipment · DOE-2847 · Monitor Arm')
+    const [subject,   setSubject]   = useState('Missing Carton · DOE-2847 · Monitor Arm')
     const [attachments, setAttachments] = useState([
         { name: 'RR-37577_BingoSheet_May11.pdf', meta: '2 pages' },
     ])
@@ -248,7 +146,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="text-[12px] font-bold text-foreground">Herman Miller · Customer Service</div>
-                                    <div className="text-[10px] text-muted-foreground">claims@hermanmiller.com · Incomplete Shipment Claim</div>
+                                    <div className="text-[10px] text-muted-foreground">claims@hermanmiller.com · Missing Carton Claim</div>
                                 </div>
                                 <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0" aria-label="Close">
                                     <X className="h-4 w-4" />
@@ -275,7 +173,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                     <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 space-y-1 text-[11px]">
                                         <div className="flex items-center gap-1.5 mb-1">
                                             <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
-                                            <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Incomplete Item</span>
+                                            <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Missing Item</span>
                                         </div>
                                         {[
                                             { label: 'Order',    value: 'DOE-2847' },
@@ -323,7 +221,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                             <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                                             <div className="text-xs">
                                                 <div className="font-bold text-foreground">Claim sent to Herman Miller · May 11 · 9:05 AM</div>
-                                                <div className="text-muted-foreground mt-0.5">Receiving report attached · Awaiting replacement hardware or unit</div>
+                                                <div className="text-muted-foreground mt-0.5">Receiving report attached · Awaiting replacement unit</div>
                                             </div>
                                         </div>
                                     )}
@@ -373,10 +271,7 @@ export default function LaurenClaimScene() {
     }, [])
 
     const [orderExpanded, setOrderExpanded] = useState(true)
-    const [proofAttached,  setProofAttached]  = useState(false)
     const [showClaim,      setShowClaim]      = useState(false)
-
-    const canSendClaim = proofAttached
 
     if (phase === 'dashboard') {
         return (
@@ -397,16 +292,16 @@ export default function LaurenClaimScene() {
                         <AlertTriangle className="h-3.5 w-3.5 text-warning" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-bold text-foreground">DOE-2847 · Monitor Arm Incomplete · Receiving complete</div>
+                        <div className="text-[11px] font-bold text-foreground">DOE-2847 · Carton #34 Missing · Receiving complete</div>
                         <div className="text-[9px] text-muted-foreground">From: lena.c@bfifurniture.com · May 11 · 8:42 AM</div>
                     </div>
                     <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 </div>
                 <div className="px-4 py-3 space-y-1.5 text-[11px] text-foreground leading-relaxed">
                     <p>Hi Lauren,</p>
-                    <p>Received DOE-2847 at WIG — <span className="font-semibold">34 of 35 cartons confirmed.</span></p>
+                    <p>Received DOE-2847 at WIG — <span className="font-semibold">34 of 35 cartons received.</span></p>
                     <p className="text-destructive font-medium">
-                        Monitor Arm Dual Adjustable (carton #34) arrived incomplete — mounting hardware missing. Unit cannot be assembled.
+                        Monitor Arm Dual Adjustable · carton #34 is missing.
                     </p>
                     <p className="text-muted-foreground text-[10px]">— Lena C. · Receiving Coordinator</p>
                 </div>
@@ -441,23 +336,21 @@ export default function LaurenClaimScene() {
                             </div>
                             <div className="bg-destructive/5 border border-destructive/20 rounded-lg px-2.5 py-2 flex items-center gap-2">
                                 <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
-                                <span className="text-[10px] font-bold text-foreground">Monitor Arm · mounting hardware missing · cannot assemble</span>
+                                <span className="text-[10px] font-bold text-foreground">Monitor Arm Dual Adjustable · carton #34 is missing</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right: Order detail + Proof + CTA */}
+                {/* Right: Order detail + CTA */}
                 <div className="space-y-3 flex flex-col">
                     <OrderDetailCard expanded={orderExpanded} onToggle={() => setOrderExpanded(v => !v)} />
-                    <ProofCard attached={proofAttached} onAttach={() => setProofAttached(true)} />
                     <button
                         onClick={() => setShowClaim(true)}
-                        disabled={!canSendClaim}
-                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-destructive text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm mt-auto"
+                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl bg-destructive text-white hover:opacity-90 transition-all shadow-sm mt-auto"
                     >
                         <AlertTriangle className="h-4 w-4" />
-                        {canSendClaim ? 'Claim →' : 'Attach proof to continue'}
+                        Claim →
                     </button>
                 </div>
             </div>
