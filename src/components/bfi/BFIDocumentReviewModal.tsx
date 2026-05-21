@@ -1600,15 +1600,15 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
     const isMatch        = scenario === 'match'
     const mkInvoice      = isMatch ? MK_INVOICE_MATCH : MK_INVOICE_GAP
     const [showAskLauren, setShowAskLauren] = useState(false)
-    const [confirming,    setConfirming]    = useState(false)
-    const [showSuccess,   setShowSuccess]   = useState(false)
+    // CORE submit state · 'idle' → 'submitting' (loading 800ms) → 'confirmed' (toast 3s) → onValidate()
+    const [coreState, setCoreState] = useState<'idle' | 'submitting' | 'confirmed'>('idle')
 
-    const handleConfirm = () => {
-        setConfirming(true)
+    const handleConfirmCore = () => {
+        setCoreState('submitting')
         setTimeout(() => {
-            setConfirming(false)
-            setShowSuccess(true)
-        }, 1200)
+            setCoreState('confirmed')
+            setTimeout(() => onValidate?.(), 3000)
+        }, 800)
     }
 
     return (
@@ -1746,97 +1746,72 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
                 <div className="flex gap-2">
                     <button
                         onClick={() => setShowAskLauren(true)}
-                        className="px-3 py-2.5 text-[11px] font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all shrink-0"
+                        disabled={coreState !== 'idle'}
+                        className="px-3 py-2.5 text-[11px] font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all shrink-0 disabled:opacity-50"
                     >
                         Return to Lauren →
                     </button>
-                    {isMatch ? (
-                        <button
-                            onClick={handleConfirm}
-                            disabled={confirming}
-                            className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest shadow-sm disabled:opacity-70"
-                        >
-                            {confirming
-                                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Processing…</>
-                                : 'Confirm Fee'
-                            }
-                        </button>
-                    ) : (
-                        <>
-                            <button
-                                onClick={() => onValidate?.()}
-                                className="flex-1 py-2.5 text-[11px] font-black rounded-xl bg-warning/10 text-warning border border-warning/30 hover:bg-warning/20 transition-all uppercase tracking-widest"
-                            >
-                                Request Changes
-                            </button>
-                            <button
-                                onClick={() => onValidate?.()}
-                                className="flex-1 py-2.5 text-[11px] font-black rounded-xl border border-border text-foreground bg-card hover:bg-muted/50 transition-all uppercase tracking-widest"
-                            >
-                                Flag
-                            </button>
-                        </>
-                    )}
+                    <button
+                        onClick={coreState === 'idle' ? handleConfirmCore : undefined}
+                        disabled={coreState !== 'idle'}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest ${
+                            coreState === 'confirmed'
+                                ? (isMatch
+                                    ? 'bg-success/15 text-success border border-success/30 cursor-default'
+                                    : 'bg-warning/15 text-warning border border-warning/30 cursor-default')
+                                : coreState === 'submitting'
+                                    ? 'bg-muted text-muted-foreground cursor-wait'
+                                    : (isMatch
+                                        ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-sm'
+                                        : 'bg-warning/10 text-warning border border-warning/30 hover:bg-warning/20')
+                        }`}
+                    >
+                        {coreState === 'confirmed' ? (
+                            isMatch
+                                ? <><CheckCircle2 className="h-3.5 w-3.5" /> Order Closed in CORE</>
+                                : <><AlertCircle className="h-3.5 w-3.5" /> Discrepancy Flagged</>
+                        ) : coreState === 'submitting' ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {isMatch ? 'Closing in CORE…' : 'Flagging…'}</>
+                        ) : (
+                            isMatch ? 'Close Order & Apply Fee →' : 'Flag discrepancy →'
+                        )}
+                    </button>
                 </div>
                 <AskLaurenDialog isOpen={showAskLauren} onClose={() => setShowAskLauren(false)} />
             </div>
 
-            {/* Success overlay modal */}
-            <Transition show={showSuccess} as={Fragment}>
-                <Dialog as="div" className="relative z-[500]" onClose={() => {}}>
-                    <TransitionChild as={Fragment}
-                        enter="ease-out duration-250" enterFrom="opacity-0" enterTo="opacity-100"
-                        leave="ease-in duration-150"  leaveFrom="opacity-100" leaveTo="opacity-0"
-                    >
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-                    </TransitionChild>
-
-                    <div className="fixed inset-0 flex items-center justify-center p-8">
-                        <TransitionChild as={Fragment}
-                            enter="ease-out duration-300" enterFrom="opacity-0 scale-90" enterTo="opacity-100 scale-100"
-                            leave="ease-in duration-150"  leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-90"
-                        >
-                            <DialogPanel className="w-full max-w-sm rounded-2xl bg-card border border-border shadow-2xl overflow-hidden text-center">
-                                {/* Success icon */}
-                                <div className="px-8 pt-8 pb-5">
-                                    <div className="h-16 w-16 rounded-full bg-success/10 border-2 border-success/30 flex items-center justify-center mx-auto mb-4">
-                                        <CheckCircle2 className="h-8 w-8 text-success" />
-                                    </div>
-                                    <h3 className="text-[17px] font-black text-foreground mb-1">Process Closed Successfully</h3>
-                                    <p className="text-[12px] text-muted-foreground leading-relaxed">
-                                        Agency fee verification complete for DOE-2847
-                                    </p>
-                                </div>
-
-                                {/* Summary */}
-                                <div className="mx-6 mb-6 rounded-xl border border-success/20 bg-success/5 px-4 py-3 space-y-1.5 text-left">
-                                    {[
-                                        ['Order',    'DOE-2847 · NYC Dept. of Education'],
-                                        ['PO',       'DOE-2847 · Purchase Order Confirmed'],
-                                        ['Amount',   '$6,920 · Agency fee confirmed'],
-                                        ['Verified', 'Patricia Hilger · Finance & AR'],
-                                        ['Date',     'May 13, 2026'],
-                                    ].map(([label, value]) => (
-                                        <div key={label} className="flex gap-2 text-[11px]">
-                                            <span className="text-muted-foreground w-16 shrink-0">{label}</span>
-                                            <span className="font-semibold text-foreground">{value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="px-6 pb-6">
-                                    <button
-                                        onClick={() => { setShowSuccess(false); onValidate?.() }}
-                                        className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-[12px] font-black hover:opacity-90 transition-all uppercase tracking-widest shadow-sm"
-                                    >
-                                        Done →
-                                    </button>
-                                </div>
-                            </DialogPanel>
-                        </TransitionChild>
+            {/* Toast · z-[500] over modal · visible 3s after CORE close/flag */}
+            {coreState === 'confirmed' && (
+                <div className={`fixed top-6 right-6 z-[500] w-80 rounded-xl border shadow-2xl p-3.5 animate-in fade-in slide-in-from-top-2 duration-300 bg-card ${
+                    isMatch ? 'border-success/30' : 'border-warning/30'
+                }`}>
+                    <div className="flex items-start gap-2.5">
+                        {isMatch
+                            ? <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                            : <AlertCircle  className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+                        }
+                        <div className="text-[11px] leading-relaxed">
+                            <p className={`font-bold text-[12px] ${isMatch ? 'text-success' : 'text-warning'}`}>
+                                {isMatch ? 'Order DOE-2847 closed in CORE' : 'Discrepancy flagged'}
+                            </p>
+                            <ul className="text-muted-foreground mt-1 space-y-0.5">
+                                {isMatch ? (
+                                    <>
+                                        <li>· Agency fee posted: $9,255.24</li>
+                                        <li>· Status: Reconciled · Ready for AR</li>
+                                    </>
+                                ) : (
+                                    <>
+                                        <li>· HMI-LS-500 gap: −$255.24</li>
+                                        <li>· Flagged to Lauren · awaiting Nancy response</li>
+                                    </>
+                                )}
+                            </ul>
+                        </div>
                     </div>
-                </Dialog>
-            </Transition>
+                </div>
+            )}
+
         </div>
     )
 }
@@ -2355,8 +2330,16 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                 </div>
             </div>
 
-            {/* Footer — single CTA · confirm & open Labor Quote dialog */}
-            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
+            {/* Footer — status (Strata already posted to CORE) + acknowledge CTA */}
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-2">
+                {/* Status row · Strata already pushed corrected SIF + booked fee */}
+                <div className="rounded-lg border border-success/20 bg-success/5 px-3 py-2 flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
+                    <div className="text-[10px] leading-snug">
+                        <p className="font-bold text-success">Corrected SIF posted to CORE</p>
+                        <p className="text-muted-foreground">Per-line fee booked per Contract ANT122</p>
+                    </div>
+                </div>
                 <button
                     onClick={handleConfirmAndOpenLabor}
                     className="w-full py-2.5 text-[11px] font-black rounded-xl transition-all uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 shadow-sm inline-flex items-center justify-center gap-2"
@@ -2393,6 +2376,16 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
     const [fieldEdits, setFieldEdits] = useState<Record<string, string>>({})
     const [editingOvniqIdx, setEditingOvniqIdx] = useState<number | null>(null)
     const [ovniqEditVals,   setOvniqEditVals]   = useState<{ sif: string; ovniq: string }>({ sif: '', ovniq: '' })
+    // CORE submit state · 'idle' → 'submitting' (loading) → 'confirmed' (toast 3s) → onValidate()
+    const [coreState, setCoreState] = useState<'idle' | 'submitting' | 'confirmed'>('idle')
+
+    const handleConfirmCore = () => {
+        setCoreState('submitting')
+        setTimeout(() => {
+            setCoreState('confirmed')
+            setTimeout(() => onValidate?.(), 3000)
+        }, 800)
+    }
 
     const openOvniqEdit = (i: number) => {
         setEditingOvniqIdx(i)
@@ -2613,12 +2606,42 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
 
             <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0">
                 <button
-                    onClick={onValidate}
-                    className="w-full py-2.5 text-[13px] font-black rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all uppercase tracking-widest"
+                    onClick={coreState === 'idle' ? handleConfirmCore : undefined}
+                    disabled={coreState !== 'idle'}
+                    className={`w-full py-2.5 text-[13px] font-black rounded-xl transition-all uppercase tracking-widest inline-flex items-center justify-center gap-2 ${
+                        coreState === 'confirmed'
+                            ? 'bg-success/15 text-success border border-success/30 cursor-default'
+                            : coreState === 'submitting'
+                                ? 'bg-muted text-muted-foreground cursor-wait'
+                                : 'bg-primary text-primary-foreground hover:opacity-90'
+                    }`}
                 >
-                    Confirm &amp; Send PO →
+                    {coreState === 'confirmed' ? (
+                        <><CheckCircle2 className="h-4 w-4" /> Order Entered in CORE</>
+                    ) : coreState === 'submitting' ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Updating CORE…</>
+                    ) : (
+                        <>Confirm PO &amp; Update CORE →</>
+                    )}
                 </button>
             </div>
+
+            {/* Toast · z-[500] over modal · visible 3s after CORE update */}
+            {coreState === 'confirmed' && (
+                <div className="fixed top-6 right-6 z-[500] w-80 rounded-xl border border-success/30 bg-card shadow-2xl p-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-start gap-2.5">
+                        <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                        <div className="text-[11px] leading-relaxed">
+                            <p className="font-bold text-success text-[12px]">Order DOE-2847 entered in CORE</p>
+                            <ul className="text-muted-foreground mt-1 space-y-0.5">
+                                <li>· Type: Direct Bill-HMI</li>
+                                <li>· Delivery: May 14–21, 2026</li>
+                                <li>· Stakeholders notified</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
