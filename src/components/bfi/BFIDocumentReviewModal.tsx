@@ -134,7 +134,7 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
     },
 ]
 
-function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = 'per-line' }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean; activeMethod?: ActiveBookingMethod }) {
+function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = 'credit-memo' }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean; activeMethod?: ActiveBookingMethod }) {
     if (isPO) {
         const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
         const parseQty = (q?: string) => parseInt((q ?? '').replace(/[^0-9]/g, ''), 10) || 1
@@ -320,18 +320,18 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">Booking method</span>
                                     <span className="font-mono text-zinc-800 dark:text-zinc-100">
-                                        {activeMethod === 'per-line' ? 'Per-line fee (Method 3)' : 'Credit memo (Method 2)'}
+                                        {activeMethod === 'per-line' ? 'Per-line fee (Method 3)' : 'CMF (Method 2)'}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">GP target</span>
                                     <span className="font-mono text-zinc-800 dark:text-zinc-100">
-                                        {activeMethod === 'per-line' ? 'Variable per line (avg 4.0%)' : 'Post-credit-memo · TBD'}
+                                        {activeMethod === 'per-line' ? 'Variable per line (avg 4.0%)' : 'Post-CMF · TBD'}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">
-                                        {activeMethod === 'per-line' ? 'Per-line fee total' : 'Credit memo (pending)'}
+                                        {activeMethod === 'per-line' ? 'Per-line fee total' : 'CMF (pending)'}
                                     </span>
                                     <span className={`font-mono font-bold ${activeMethod === 'per-line' ? 'text-success' : 'text-warning'}`}>
                                         {activeMethod === 'per-line'
@@ -379,14 +379,11 @@ const CONY_CONTRACT_DATA = {
 }
 
 // ─── Booking methods that CORE supports for direct-bill orders (per Jessica) ───
-// Strata can configure any of the 3 per tenant. We're using Method 3 (Jessica's
-// preferred · per-line fee) because it gives GP visibility per product at booking.
+// Default: Method 2 (CMF) — what BFI does today. Demo can toggle to Method 3.
 const BOOKING_METHODS = [
-    { id: 'sell-line',   label: 'Sell+ line',     desc: 'Positive sell line, 0 cost · invoice shows GP only' },
-    { id: 'credit-memo', label: 'Credit memo',    desc: 'Method 2 (Wendy) · credit memo issued post-delivery · what BFI does today' },
-    { id: 'per-line',    label: 'Per-line fee',   desc: 'Method 3 (Jessica\'s preferred) · fee within each product line · GP visible day 1' },
+    { id: 'credit-memo', label: 'CMF',          desc: 'Method 2 (Wendy) · CMF issued post-delivery · what BFI does today' },
+    { id: 'per-line',    label: 'Per-line fee', desc: 'Method 3 (Jessica\'s preferred) · fee within each product line · GP visible day 1' },
 ] as const
-// Methods user can toggle between in a1.2b (Method 1 / Sell+ line stays read-only info)
 type ActiveBookingMethod = 'credit-memo' | 'per-line'
 
 // Variable per-product agency fee % (per Jessica · Controller of BFI · 20-may)
@@ -2246,7 +2243,7 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-[12px] font-bold text-foreground">
-                                    {activeMethod === 'per-line' ? 'Per-line Fee · From CORE' : 'Credit Memo · From CORE'}
+                                    {activeMethod === 'per-line' ? 'Per-line Fee · From CORE' : 'CMF · From CORE'}
                                 </p>
                                 <span className="text-[8px] font-bold text-info bg-info/10 border border-info/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Source: CORE</span>
                             </div>
@@ -2259,24 +2256,16 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                         </div>
                     </div>
 
-                    {/* Booking methods · Method 2 / Method 3 clickable · Method 1 read-only (Strata supports all 3) */}
+                    {/* Booking methods · CMF (Method 2 default) and Per-line fee (Method 3) · both clickable */}
                     <div className="px-4 py-2.5 border-b border-ai/20 bg-card/50">
                         <div className="flex flex-wrap gap-1.5">
                             {BOOKING_METHODS.map(m => {
-                                const isClickable = m.id === 'credit-memo' || m.id === 'per-line'
-                                const isActive    = isClickable && m.id === activeMethod
-                                const baseCls     = `inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border transition-colors ${
+                                const isActive = m.id === activeMethod
+                                const baseCls  = `inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border transition-colors ${
                                     isActive
                                         ? 'bg-primary text-primary-foreground border-primary'
                                         : 'bg-muted/40 text-muted-foreground border-border'
                                 }`
-                                if (!isClickable) {
-                                    return (
-                                        <span key={m.id} title={m.desc} className={baseCls + ' cursor-default opacity-70'}>
-                                            {m.label}
-                                        </span>
-                                    )
-                                }
                                 return (
                                     <button
                                         key={m.id}
@@ -2295,14 +2284,14 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                         </div>
                         <p className="text-[9px] text-muted-foreground mt-1.5">
                             {activeMethod === 'per-line'
-                                ? 'Strata supports all 3 booking methods · per-line gives day-1 GP visibility per product'
-                                : 'Click between Method 2 and Method 3 to preview · Method 2 is what BFI does today'
+                                ? 'Strata supports both methods · per-line gives day-1 GP visibility per product'
+                                : 'Click between CMF and Per-line fee to preview · CMF is what BFI does today'
                             }
                         </p>
                     </div>
 
                     <div className="px-4 py-3 space-y-2.5">
-                        {/* Breakdown · per method · Method 3 = per-line GP / Method 2 = single credit memo */}
+                        {/* Breakdown · per method · Method 3 = per-line GP / Method 2 = single CMF */}
                         {activeMethod === 'per-line' ? (
                             <div className="rounded-lg border border-border overflow-hidden bg-card">
                                 <div className="px-3 py-2 bg-muted/40 border-b border-border">
@@ -2329,12 +2318,12 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                         ) : (
                             <div className="rounded-lg border border-warning/30 bg-warning/5 overflow-hidden">
                                 <div className="px-3 py-2 bg-warning/10 border-b border-warning/20 flex items-center justify-between gap-2">
-                                    <p className="text-[9px] font-bold text-warning uppercase tracking-widest">Credit Memo · Pending · Method 2</p>
+                                    <p className="text-[9px] font-bold text-warning uppercase tracking-widest">CMF · Pending · Method 2</p>
                                     <span className="text-[8px] font-bold text-warning bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded uppercase tracking-wider">Day 1 GP: $0</span>
                                 </div>
                                 <div className="px-3 py-3 space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-medium text-foreground">Agency fee credit memo</span>
+                                        <span className="text-[10px] font-medium text-foreground">Agency fee CMF</span>
                                         <span className="text-[12px] font-black font-mono text-foreground">{fmt2(grandTotal)}</span>
                                     </div>
                                     <div className="text-[9px] text-muted-foreground space-y-0.5">
@@ -2351,7 +2340,7 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                                 const value = row.label === 'Memo'
                                     ? (activeMethod === 'per-line'
                                         ? 'Per CoNY Contract ANT122 · per-line fee'
-                                        : 'Per CoNY Contract ANT122 · credit memo post-delivery')
+                                        : 'Per CoNY Contract ANT122 · CMF post-delivery')
                                     : row.value
                                 return (
                                     <div key={row.label} className={`flex gap-3 px-3 py-2 ${i < CL_FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
@@ -2362,33 +2351,6 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                             })}
                         </div>
 
-                        {/* Contract ANT122 chip · hover-triggered tooltip with full fee schedule */}
-                        <div className="group relative inline-flex">
-                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-info bg-info/10 border border-info/20 px-2 py-1 rounded cursor-help">
-                                <Building2 className="h-2.5 w-2.5" />
-                                Contract {CONY_CONTRACT_DATA.id} · fee schedule
-                                <span className="text-muted-foreground font-normal">(hover)</span>
-                            </span>
-                            {/* Tooltip · shown on group hover */}
-                            <div className="absolute bottom-full left-0 mb-2 z-50 hidden group-hover:block w-72 rounded-lg border border-info/30 bg-card shadow-lg overflow-hidden animate-in fade-in duration-150">
-                                <div className="px-3 py-2 border-b border-info/20 bg-info/10 flex items-center gap-2">
-                                    <Building2 className="h-3 w-3 text-info" />
-                                    <p className="text-[9px] font-bold text-info uppercase tracking-widest flex-1">Contract {CONY_CONTRACT_DATA.id}</p>
-                                    <span className="text-[8px] text-muted-foreground">{CONY_CONTRACT_DATA.effective} → {CONY_CONTRACT_DATA.expires}</span>
-                                </div>
-                                <div className="px-3 py-2 space-y-0.5 text-[10px]">
-                                    {CONY_CONTRACT_DATA.feeSchedule.map(f => (
-                                        <div key={f.category} className="flex justify-between">
-                                            <span className="text-muted-foreground">{f.category}</span>
-                                            <span className="font-mono text-foreground">{f.pct}</span>
-                                        </div>
-                                    ))}
-                                    <p className="text-[9px] text-muted-foreground italic pt-1 border-t border-info/20 mt-1">
-                                        Locked-in pricing · {CONY_CONTRACT_DATA.extension}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -3318,7 +3280,7 @@ export default function BFIDocumentReviewModal({
     // Quote Tool lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
     // Booking method toggle (a1.2b · educational preview · default Method 3 Jessica's preferred)
-    const [activeMethod, setActiveMethod] = useState<ActiveBookingMethod>('per-line')
+    const [activeMethod, setActiveMethod] = useState<ActiveBookingMethod>('credit-memo')
     const [acceptedRows, setAcceptedRows] = useState<Set<number>>(() =>
         step === 'labor' ? new Set([0]) : new Set()
     )
@@ -3401,7 +3363,9 @@ export default function BFIDocumentReviewModal({
                                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                                     <p className="text-[11px] text-ai font-medium">
                                         {step === 'quote'
-                                            ? <><span className="font-bold">Quote Tool</span> · 1 price correction · Per-line fee per Contract ANT122 · Total $9,255.24 ready in CORE</>
+                                            ? (activeMethod === 'per-line'
+                                                ? <><span className="font-bold">Quote Tool</span> · 1 price correction · Per-line fee per Contract ANT122 · Total $9,255.24 ready in CORE</>
+                                                : <><span className="font-bold">Quote Tool</span> · 1 price correction · CMF for $9,255.24 · pending post-delivery</>)
                                             : step === 'cpr'
                                                 ? <><span className="font-bold">CPR</span> · 2 lines adjusted · Impact −$720 · ready to approve</>
                                                 : step === 'fee'
