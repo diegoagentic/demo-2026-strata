@@ -373,7 +373,7 @@ export default function BFIProcessKanban({
             orderId: 'DOE-2847',
             initials: 'DOE',
             agency: 'NYC Dept. of Education',
-            value: '$48,200',
+            value: '$236,100',
             colIdx: activeCol,
             avatarBg: 'bg-success/15',
             avatarColor: 'text-success',
@@ -518,7 +518,7 @@ export default function BFIProcessKanban({
                                                 </div>
                                                 <div className="flex justify-between text-sm">
                                                     <span className="text-muted-foreground">Amount</span>
-                                                    <span className="font-semibold text-foreground">$48,200</span>
+                                                    <span className="font-semibold text-foreground">$236,100</span>
                                                 </div>
                                             </div>
 

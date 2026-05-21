@@ -164,7 +164,7 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                             <span className="text-[8px] font-bold text-primary tracking-widest">PO DOE-2847 · Quote Tool Validated ✓</span>
                         </div>
                         <div className="px-6 pt-3 pb-1 grid grid-cols-7 gap-2">
-                            {['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell'].map(h => (
+                            {['Code', 'Product', 'Qty', 'T-Code', 'List Unit', 'Sale Unit', 'Sale Ext'].map(h => (
                                 <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
                             ))}
                         </div>
@@ -176,28 +176,40 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                                 const sellExt   = parseAmt(line.ovniq)
                                 const sifUnit   = sifExt / qty
                                 const unitSell  = sellExt / qty
+                                // List = sale / (1 - 37.5% CoNY discount) — catalog price BEFORE CoNY discount
+                                const listUnit  = sifUnit / 0.625
                                 return (
                                     <div key={line.code ?? line.product} className={`grid grid-cols-7 gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
                                         <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
                                         <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                         <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
                                         <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
-                                        <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{fmtUnit(sifUnit)}</span>
-                                        <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>
-                                            {fmtUnit(unitSell)}
-                                            {corrected && <span className="ml-1 text-[8px] font-black text-success">↓</span>}
-                                        </span>
+                                        {/* List Unit · catalog · static (pre-CoNY-discount) */}
+                                        <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{fmtUnit(listUnit)}</span>
+                                        {/* Sale Unit · with Quote Tool correction story (strikethrough orig + green corrected) */}
+                                        {corrected ? (
+                                            <span className="text-[10px] font-mono">
+                                                <span className="text-warning line-through mr-1">{fmtUnit(sifUnit)}</span>
+                                                <span className="text-success font-semibold">{fmtUnit(unitSell)}</span>
+                                                <span className="ml-1 text-[8px] font-black text-success">↓</span>
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(unitSell)}</span>
+                                        )}
                                         <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
                                     </div>
                                 )
                             })}
                         </div>
                         <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
-                            {[
-                                { label: 'SIF Total',               value: fmt(sifTotal),         muted: true  },
-                                { label: 'Adjusted Total',          value: fmt(adjTotal),         bold: true   },
-                                { label: 'Discount (−37.5% CoNY)', value: `−${fmt(discountAmt)}`, accent: true },
-                            ].map(row => (
+                            {(() => {
+                                const listTotal = ovniqLines.reduce((sum, l) => sum + (parseAmt(l.sifPrice) / 0.625), 0)
+                                return [
+                                    { label: 'List Total · pre-CoNY-discount',     value: fmt(Math.round(listTotal)), muted: true },
+                                    { label: 'Adjusted Total · post-discount',     value: fmt(adjTotal),              bold: true  },
+                                    { label: 'Discount (−37.5% CoNY)',             value: `−${fmt(discountAmt)}`,    accent: true },
+                                ]
+                            })().map(row => (
                                 <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${row.bold ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''}`}>
                                     <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{row.label}</span>
                                     <span className={`text-[11px] font-mono font-semibold ${row.accent ? 'text-success' : row.muted ? 'text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{row.value}</span>
@@ -240,12 +252,12 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                         <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
                         <span className={`text-[8px] font-bold tracking-widest ${validated ? 'text-primary' : 'text-zinc-400'}`}>{validated ? 'Quote Tool VALIDATED ✓' : 'PENDING QUOTE TOOL VALIDATION'}</span>
                     </div>
-                    {/* Headers · 10 cols when validated AND Method 3 (adds Cost/GP$/GP%) · 7 cols otherwise · Wendy's labels (per-unit) */}
+                    {/* Headers · 10 cols when validated AND Method 3 (adds Cost/GP$/GP%) · 7 cols otherwise · List Unit (pre-CoNY-discount HIGHER, per Wendy) + Sale columns */}
                     {(() => { const showPerLine = validated && activeMethod === 'per-line'; return (
                     <div className={`px-6 pt-3 pb-1 grid gap-2 ${showPerLine ? 'grid-cols-10' : 'grid-cols-7'}`}>
                         {(showPerLine
-                            ? ['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell', 'Cost', 'GP $', 'GP %']
-                            : ['Code', 'Product', 'Qty', 'T-Code', 'SIF Unit Price', 'Unit Sell', 'Ext. Sell']
+                            ? ['Code', 'Product', 'Qty', 'T-Code', 'List Unit', 'Sale Unit', 'Sale Ext', 'Cost', 'GP $', 'GP %']
+                            : ['Code', 'Product', 'Qty', 'T-Code', 'List Unit', 'Sale Unit', 'Sale Ext']
                         ).map(h => (
                             <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
                         ))}
@@ -258,6 +270,8 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                             const sellExt   = parseAmt(line.ovniq)
                             const sifUnit   = sifExt / qty
                             const unitSell  = sellExt / qty
+                            // List = sale / (1 - 37.5% CoNY discount) — catalog price BEFORE CoNY discount
+                            const listUnit  = sifUnit / 0.625
                             const corrected = line.sifPrice !== line.ovniq
                             // CORE Method 3 columns (variable per-product agency fee)
                             const sf = SF_LINES.find(s => s.product === line.code)
@@ -271,11 +285,18 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                                     <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.tcode}</span>
-                                    {/* SIF Unit Price · per-unit · strikethrough if corrected */}
-                                    <span className={`text-[10px] font-mono ${corrected ? 'text-warning line-through' : 'text-zinc-600 dark:text-zinc-300'}`}>{fmtUnit(sifUnit)}</span>
-                                    {/* Unit Sell · per-unit corrected · green if corrected */}
-                                    <span className={`text-[10px] font-semibold font-mono ${corrected ? 'text-success' : 'text-zinc-800 dark:text-zinc-100'}`}>{fmtUnit(unitSell)}</span>
-                                    {/* Ext. Sell · extended */}
+                                    {/* List Unit · catalog price · pre-CoNY-discount · static (list doesn't change with Quote Tool) */}
+                                    <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">{fmtUnit(listUnit)}</span>
+                                    {/* Sale Unit · per-unit post-discount · strikethrough orig + green corrected (Quote Tool correction story) */}
+                                    {corrected ? (
+                                        <span className="text-[10px] font-mono">
+                                            <span className="text-warning line-through mr-1">{fmtUnit(sifUnit)}</span>
+                                            <span className="text-success font-semibold">{fmtUnit(unitSell)}</span>
+                                        </span>
+                                    ) : (
+                                        <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(unitSell)}</span>
+                                    )}
+                                    {/* Sale Ext · extended sale (post-discount, post-correction) */}
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
                                     {showPerLine && (
                                         <>
@@ -289,10 +310,13 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                         })}
                     </div>
                     <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
-                        {[
-                            { label: 'SIF Total',      value: fmtQ(sifTotal), muted: true },
-                            { label: 'Adjusted Total', value: fmtQ(adjTotal), bold: true  },
-                        ].map(row => (
+                        {(() => {
+                            const listTotal = ovniqLines.reduce((sum, l) => sum + (parseAmt(l.sifPrice) / 0.625), 0)
+                            return [
+                                { label: 'List Total · pre-CoNY-discount',     value: fmtQ(Math.round(listTotal)), muted: true },
+                                { label: 'Adjusted Total · post-discount',     value: fmtQ(adjTotal),              bold: true  },
+                            ]
+                        })().map(row => (
                             <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${row.bold ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''}`}>
                                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{row.label}</span>
                                 <span className={`text-[11px] font-mono font-semibold ${row.muted ? 'text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{row.value}</span>
@@ -1017,11 +1041,11 @@ const CPR_LINES = [
 
 function CPRNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () => void; onClose?: () => void }) {
     const [fromEmail, setFromEmail] = useState('lauren.demarco@bfifurniture.com')
-    const [toEmail,   setToEmail]   = useState('michael.boyle@bfifurniture.com · Nancy Bos')
+    const [toEmail,   setToEmail]   = useState('michael.boyle@bfifurniture.com')
     const [ccEmail,   setCcEmail]   = useState('walter@conyny.gov · lena.watts@bfi-warehouse.com')
     const [dateText,  setDateText]  = useState('May 6, 2026 · 11:30 AM')
     const [message, setMessage]     = useState(
-`Hi Michael, Nancy,
+`Hi Michael,
 
 CPR reconciliation for DOE-2847 is complete. Adjusted labor hours have been reviewed and applied in CORE:
 
@@ -2731,10 +2755,12 @@ function FunnelStepper({ step }: { step: BFIReviewStep }) {
 
 interface ExtractQuoteLine { code: string; name: string; qty: string; sif: string; net: string; corrected: boolean }
 
+// SIF arrives with LIST extended prices (catalog · pre-CoNY-discount). The 37.5% discount is applied in CORE later (Fase D).
+// List = sale / 0.625 · so $8,100 sale ext → $12,960 list ext
 const EXTRACT_QUOTE_LINES: ExtractQuoteLine[] = [
-    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  sif: '$8,100',   net: '$8,100',   corrected: false },
-    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', sif: '$144,000', net: '$144,000', corrected: false },
-    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', sif: '$84,000',  net: '$84,000',  corrected: false },
+    { code: 'HMI-FU-300',  name: 'Lateral Filing Unit 3-Drawer', qty: '×6',  sif: '$12,960',  net: '$12,960',  corrected: false },
+    { code: 'HMI-WS-2400', name: 'Locale Open-Plan Workstation', qty: '×24', sif: '$230,400', net: '$230,400', corrected: false },
+    { code: 'HMI-LS-500',  name: 'Brody WorkLounge',             qty: '×12', sif: '$134,400', net: '$134,400', corrected: false },
 ]
 
 const EXTRACT_ZONES = [
@@ -2808,7 +2834,7 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
                         {/* Column headers */}
                         <div className="grid grid-cols-4 gap-2 px-1">
-                            {['Product', 'Qty', 'SIF', 'Net (OmniQ)'].map(h => (
+                            {['Product', 'Qty', 'List Ext', 'Net (OmniQ)'].map(h => (
                                 <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide">{h}</span>
                             ))}
                         </div>
@@ -2834,8 +2860,8 @@ function ExtractReviewPanel({ onValidate, onResolveChange, onCustomValue }: { on
                         {/* Totals — raw from SIF, pending Quote Tool validation */}
                         <div className="rounded-xl border border-border overflow-hidden">
                             {[
-                                { label: 'SIF Total', value: '$236,100', bold: true  },
-                                { label: 'Line items',     value: '3 lines',  muted: true },
+                                { label: 'List Total · pre-CoNY-discount', value: '$377,760', bold: true  },
+                                { label: 'Line items',                     value: '3 lines',  muted: true },
                             ].map(row => (
                                 <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-border/50 last:border-0 text-[11px] ${row.bold ? 'bg-muted/20' : ''}`}>
                                     <span className="text-muted-foreground">{row.label}</span>

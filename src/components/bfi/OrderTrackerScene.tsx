@@ -80,7 +80,7 @@ export default function OrderTrackerScene({ onConfirm }: OrderTrackerSceneProps)
                     <Package className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <div className="flex-1">
                         <div className="text-xs font-bold text-foreground">DOE-2847 · NYC Dept. of Education</div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">PO 18082-27619 · Delivery May 14, 2026 · $48,200</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">PO 18082-27619 · Delivery May 14, 2026 · $236,100</div>
                     </div>
                     <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg px-2 py-0.5">
                         Receiving pending
