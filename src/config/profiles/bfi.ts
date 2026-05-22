@@ -14,7 +14,7 @@
 //     a1.2:   Confirm receipt          — Lauren replies · Miller Knoll acknowledges
 //     a1.2b:  Quote · Credit · Labor   — unified step (3 actions in one modal):
 //                                        1) review Quote Tool pricing
-//                                        2) confirm the per-line fee CORE already prepared (Method 3 · fee = GP)
+//                                        2) confirm the CMF Free line CORE already prepared (single line · negative cost / $0 sell · Day-1 GP)
 //                                        3) email WIG for labor · Michael compiles
 //     a1.2b3: Send proposal            — Lauren emails NYC DOE the full proposal
 //     a1.2c:  PO received              — Lauren confirms the PO in CORE
@@ -76,7 +76,7 @@ export const BFI_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'Flow 1: Pre-award',
         title: 'Quote · Credit · Labor',
-        description: 'Three actions in one step: ① validate pricing in Quote Tool, ② confirm the per-line fee CORE prepared (Method 3 · per CoNY Contract ANT122 · GP visible per product at booking), ③ email WIG for the labor quote.',
+        description: 'Three actions in one step: ① validate pricing in Quote Tool, ② confirm the CMF Free line CORE prepared (single line item · negative cost / $0 sell · per CoNY Contract ANT122 · Day-1 GP visible), ③ email WIG for the labor quote.',
         app: 'bfi-agency-fee',
         role: 'Account Manager',
     },
@@ -182,7 +182,7 @@ export const BFI_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'a1.0': { mode: 'interactive', userAction: 'Watch Robert Chen send the request to Lauren · specs, floor plan and pricing file arrive in Strata' },
     'a1.1': { mode: 'interactive', userAction: 'Open the ingestion queue · DOE-2847 surfaces as priority · click to investigate' },
     'a1.2': { mode: 'interactive', userAction: 'Read Robert\'s acknowledgment · quote Q-2026-0089 confirmed · move on to validate pricing' },
-    'a1.2b': { mode: 'interactive', userAction: '① Review Quote Tool: HMI-FU-300 corrected $1,350 → $1,260 · service fees variable per product (avg 4.0%) · ② Review the per-line fee CORE prepared (Method 3 · Total $9,255.24 · Calc Code 7 · Direct Bill-HMI · GL 4200-Agency-Fees) · confirm to open the labor request · ③ Open the labor request email to WIG · send · wait for Michael\'s compiled response (within contract caps) · continue to proposal' },
+    'a1.2b': { mode: 'interactive', userAction: '① Review Quote Tool: HMI-FU-300 corrected $1,350 → $1,260 · service fees variable per product (avg 4.0%) · ② Review the CMF Free line CORE prepared (single line item · Cost −$9,255.24 · Sell $0 · Day-1 GP +$9,255.24 · Calc Code 7 · Direct Bill-HMI · GL 4200-Agency-Fees) · confirm to open the labor request · ③ Open the labor request email to WIG · send · wait for Michael\'s compiled response (within contract caps) · continue to proposal' },
     'a1.2b3': { mode: 'interactive', userAction: 'Review the full proposal (product + labor) · send to NYC DOE procurement · wait for the PO' },
     'a1.2c': { mode: 'interactive', userAction: 'Open the PO from NYC DOE · check it against the proposal · confirm the 30-day delivery window in CORE' },
     'a1.2d': { mode: 'interactive', userAction: 'Open the WIG receiving notification · review the packing list · run AI analysis to find the missing carton' },
@@ -221,7 +221,7 @@ export const BFI_STEP_MESSAGES: Record<string, string[]> = {
         'Corrected HMI-FU-300 · $1,350 → $1,260',
         'Restricted-product check · all clear',
         'Service fees applied · variable per product (2.9% / 4.0% / 3.9%) · total $9,255.24',
-        'Reading per-line fee from CORE · Method 3 (Jessica\'s preferred)',
+        'Reading CMF Free line from CORE · single line item · Day-1 GP',
         'Calc Code 7 verified · Direct Bill-HMI vendor type · GL 4200-Agency-Fees',
         'GP recognized per product · Filing 2.9% · Workstations 4.0% · Lounge 3.9% · Total $9,255.24',
         'Day-1 GP visible per Contract ANT122 (no end-of-month wait)',

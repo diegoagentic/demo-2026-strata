@@ -290,7 +290,7 @@ export default function PricingValidationScene() {
                         Filing Units corrected $8,100 → $7,560 · CoNY contract rate applied
                     </div>
                     <div className="text-[10px] text-muted-foreground/70 pt-0.5 border-t border-border">
-                        Before: upload SIF → wait Quote Tool email → download → re-upload · ~65 min. Now: 0 min — Strata posts the per-line fee automatically.
+                        Before: upload SIF → wait Quote Tool email → download → re-upload · ~65 min. Now: 0 min — Strata posts the CMF Free line automatically.
                     </div>
                 </div>
             )}

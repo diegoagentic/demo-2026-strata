@@ -134,7 +134,7 @@ const QT_LINES: { code: string; desc: string; lineNum: number; corrected: boolea
     },
 ]
 
-function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = 'credit-memo' }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean; activeMethod?: ActiveBookingMethod }) {
+function QuoteDocumentTab({ ovniqLines, isPO, validated = true }: { ovniqLines: OvniqLine[]; isPO?: boolean; validated?: boolean }) {
     if (isPO) {
         const parseAmt = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0
         const parseQty = (q?: string) => parseInt((q ?? '').replace(/[^0-9]/g, ''), 10) || 1
@@ -252,17 +252,12 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                         <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">LINE ITEMS · CoNY CONTRACT</span>
                         <span className={`text-[8px] font-bold tracking-widest ${validated ? 'text-primary' : 'text-zinc-400'}`}>{validated ? 'Quote Tool VALIDATED ✓' : 'PENDING QUOTE TOOL VALIDATION'}</span>
                     </div>
-                    {/* Headers · 10 cols when validated AND Method 3 (adds Cost/GP$/GP%) · 7 cols otherwise · List Unit (pre-CoNY-discount HIGHER, per Wendy) + Sale columns */}
-                    {(() => { const showPerLine = validated && activeMethod === 'per-line'; return (
-                    <div className={`px-6 pt-3 pb-1 grid gap-2 ${showPerLine ? 'grid-cols-10' : 'grid-cols-7'}`}>
-                        {(showPerLine
-                            ? ['Code', 'Product', 'Qty', 'T-Code', 'List Unit', 'Sale Unit', 'Sale Ext', 'Cost', 'GP $', 'GP %']
-                            : ['Code', 'Product', 'Qty', 'T-Code', 'List Unit', 'Sale Unit', 'Sale Ext']
-                        ).map(h => (
+                    {/* Headers · 7 cols · List Unit (pre-CoNY-discount HIGHER, per Wendy) + Sale columns */}
+                    <div className="px-6 pt-3 pb-1 grid gap-2 grid-cols-7">
+                        {['Code', 'Product', 'Qty', 'T-Code', 'List Unit', 'Sale Unit', 'Sale Ext'].map(h => (
                             <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide">{h}</span>
                         ))}
                     </div>
-                    )})()}
                     <div className="px-6 pb-4 space-y-0">
                         {ovniqLines.map((line) => {
                             const qty       = parseQty(line.qty)
@@ -273,14 +268,8 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                             // List = sale / (1 - 37.5% CoNY discount) — catalog price BEFORE CoNY discount
                             const listUnit  = sifUnit / 0.625
                             const corrected = line.sifPrice !== line.ovniq
-                            // CORE Method 3 columns (variable per-product agency fee)
-                            const sf = SF_LINES.find(s => s.product === line.code)
-                            const gpAmount = sf?.svcExt ?? 0
-                            const cost = sellExt - gpAmount
-                            const gpPct = sf?.svcPct ?? 0
-                            const showPerLine = validated && activeMethod === 'per-line'
                             return (
-                                <div key={line.code ?? line.product} className={`grid gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${showPerLine ? 'grid-cols-10' : 'grid-cols-7'} ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
+                                <div key={line.code ?? line.product} className={`grid gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0 grid-cols-7 ${corrected ? 'bg-warning/5 -mx-6 px-6' : ''}`}>
                                     <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate">{line.code}</span>
                                     <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100 col-span-1 truncate">{line.product}</span>
                                     <span className="text-[10px] font-mono text-zinc-500">{line.qty}</span>
@@ -298,33 +287,42 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                                     )}
                                     {/* Sale Ext · extended sale (post-discount, post-correction) */}
                                     <span className="text-[10px] font-semibold font-mono text-zinc-800 dark:text-zinc-100">{fmtUnit(sellExt)}</span>
-                                    {showPerLine && (
-                                        <>
-                                            <span className="text-[10px] font-mono text-zinc-500">{fmtUnit(cost)}</span>
-                                            <span className="text-[10px] font-mono font-semibold text-success">{fmtUnit(gpAmount)}</span>
-                                            <span className="text-[10px] font-mono text-success">{gpPct}%</span>
-                                        </>
-                                    )}
                                 </div>
                             )
                         })}
+                        {/* CMF Free · single line item in CORE · negative cost / $0 sell · captures Day-1 GP */}
+                        {validated && (
+                            <div className="grid gap-2 items-center py-2.5 border-b border-success/20 grid-cols-7 bg-success/5 -mx-6 px-6">
+                                <span className="text-[9px] font-mono font-bold text-success truncate">CMF Free</span>
+                                <span className="text-[10px] font-semibold text-foreground col-span-1 truncate">
+                                    Agency fee · ANT122 <span className="font-mono font-bold text-destructive ml-1">(Cost −$9,255.24)</span>
+                                </span>
+                                <span className="text-[10px] font-mono text-muted-foreground">1</span>
+                                <span className="text-[10px] font-mono text-muted-foreground">AG</span>
+                                <span className="text-[10px] font-mono text-muted-foreground">—</span>
+                                <span className="text-[10px] font-mono font-semibold text-foreground">$0</span>
+                                <span className="text-[10px] font-mono font-semibold text-foreground">$0</span>
+                            </div>
+                        )}
                     </div>
                     <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
                         {(() => {
                             const listTotal = ovniqLines.reduce((sum, l) => sum + (parseAmt(l.sifPrice) / 0.625), 0)
-                            return [
+                            const rows: { label: string; value: string; muted?: boolean; bold?: boolean; accent?: boolean }[] = [
                                 { label: 'List Total · pre-CoNY-discount',     value: fmtQ(Math.round(listTotal)), muted: true },
                                 { label: 'Adjusted Total · post-discount',     value: fmtQ(adjTotal),              bold: true  },
                             ]
+                            if (validated) rows.push({ label: 'Net Day-1 GP · CMF Free line', value: '+$9,255.24', accent: true })
+                            return rows
                         })().map(row => (
                             <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${row.bold ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''}`}>
                                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{row.label}</span>
-                                <span className={`text-[11px] font-mono font-semibold ${row.muted ? 'text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{row.value}</span>
+                                <span className={`text-[11px] font-mono font-semibold ${row.accent ? 'text-success' : row.muted ? 'text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{row.value}</span>
                             </div>
                         ))}
                     </div>
 
-                    {/* CORE Entry Preview — how CORE registers this order (source of truth for credit/discount) */}
+                    {/* CORE Entry Preview — how CORE registers this order (Wendy + Jessica: CMF Free as single line item) */}
                     {validated && (
                         <div className="mx-6 mb-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 overflow-hidden">
                             <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/60 flex items-center gap-2">
@@ -343,26 +341,15 @@ function QuoteDocumentTab({ ovniqLines, isPO, validated = true, activeMethod = '
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">Booking method</span>
-                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">
-                                        {activeMethod === 'per-line' ? 'Per-line fee (Method 3)' : 'CMF (Method 2)'}
-                                    </span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">CMF Free · single line item</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 dark:text-zinc-400">GP target</span>
-                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">
-                                        {activeMethod === 'per-line' ? 'Variable per line (avg 4.0%)' : 'Post-CMF · TBD'}
-                                    </span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-100">$9,255.24 Day-1 GP (negative-cost line)</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500 dark:text-zinc-400">
-                                        {activeMethod === 'per-line' ? 'Per-line fee total' : 'CMF (pending)'}
-                                    </span>
-                                    <span className={`font-mono font-bold ${activeMethod === 'per-line' ? 'text-success' : 'text-warning'}`}>
-                                        {activeMethod === 'per-line'
-                                            ? '$9,255.24 (Method 3 · 3 products)'
-                                            : '$9,255.24 (Method 2 · post-delivery)'
-                                        }
-                                    </span>
+                                    <span className="text-zinc-500 dark:text-zinc-400">CMF Free line</span>
+                                    <span className="font-mono font-bold text-success">Cost −$9,255.24 · Sell $0 · GP +$9,255.24</span>
                                 </div>
                             </div>
                         </div>
@@ -402,79 +389,11 @@ const CONY_CONTRACT_DATA = {
     ],
 }
 
-// ─── Booking methods that CORE supports for direct-bill orders (per Jessica) ───
-// Default: Method 2 (CMF) — what BFI does today. Demo can toggle to Method 3.
-const BOOKING_METHODS = [
-    { id: 'credit-memo', label: 'CMF',          desc: 'Method 2 (Wendy) · CMF issued post-delivery · what BFI does today' },
-    { id: 'per-line',    label: 'Per-line fee', desc: 'Method 3 (Jessica\'s preferred) · fee within each product line · GP visible day 1' },
-] as const
-type ActiveBookingMethod = 'credit-memo' | 'per-line'
-
-// Variable per-product agency fee % (per Jessica · Controller of BFI · 20-may)
-// Each Herman Miller product has its own contract %. Average ~4%.
-const SF_LINES = [
-    { lineNum: '00001', product: 'HMI-FU-300',  svcPct: 2.9, listExt: 7560,    svcExt: 219.24   },
-    { lineNum: '00002', product: 'HMI-WS-2400', svcPct: 4.0, listExt: 144000,  svcExt: 5760.00  },
-    { lineNum: '00003', product: 'HMI-LS-500',  svcPct: 3.9, listExt: 84000,   svcExt: 3276.00  },
-]
-
-function ServiceFeesDocumentTab() {
-    const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
-    const fmt2 = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    return (
-        <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950 scrollbar-minimal">
-                <div className="mx-auto w-full bg-white dark:bg-zinc-900 rounded-xl shadow border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                    <div className="h-1.5 bg-gradient-to-r from-zinc-800 to-zinc-600" />
-                    <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between">
-                        <div>
-                            <span className="inline-block text-[9px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded mb-2">Herman Miller</span>
-                            <p className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Estimated Service Fees</p>
-                            <p className="text-xs font-mono text-zinc-400 mt-0.5">Quote # Q-2026-0089 · Order: DOE-2847</p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">MILLER KNOLL</div>
-                            <div className="text-xs text-zinc-400 mt-0.5">Order Receipt: May 6, 2026</div>
-                        </div>
-                    </div>
-                    <div className="bg-zinc-800 dark:bg-zinc-700 px-6 py-1.5 flex items-center justify-between">
-                        <span className="text-[8px] font-bold uppercase text-zinc-200 tracking-widest">PL: IV · EXPEDITED SERVICE CHARGE (W)</span>
-                        <span className="text-[8px] font-bold text-zinc-200 tracking-widest">Svc % 3.75</span>
-                    </div>
-                    <div className="px-6 pt-3 pb-1 grid grid-cols-[3rem_1fr_3.5rem_6rem_5.5rem] gap-2">
-                        {['Line #', 'Product', 'Svc %', 'List Ext $', 'Svc Ext $'].map(h => (
-                            <span key={h} className="text-[8px] font-bold text-zinc-400 uppercase tracking-wide text-right first:text-left">{h}</span>
-                        ))}
-                    </div>
-                    <div className="px-6 pb-4 space-y-0">
-                        {SF_LINES.map(line => (
-                            <div key={line.lineNum} className="grid grid-cols-[3rem_1fr_3.5rem_6rem_5.5rem] gap-2 items-center py-2.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                <span className="text-[9px] font-mono text-zinc-500">{line.lineNum}</span>
-                                <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-100">{line.product}</span>
-                                <span className="text-[10px] font-mono text-zinc-500 text-right">{line.svcPct}</span>
-                                <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300 text-right">{fmt2(line.listExt)}</span>
-                                <span className="text-[10px] font-mono font-semibold text-zinc-800 dark:text-zinc-100 text-right">{fmt2(line.svcExt)}</span>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mx-6 mb-4 rounded-lg border border-zinc-100 dark:border-zinc-800 overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800">
-                            <span className="text-[9px] text-zinc-500">Total for IV – EXPEDITED SERVICE CHARGE (W)</span>
-                            <span className="text-[11px] font-mono font-semibold text-zinc-700 dark:text-zinc-300">${fmt2(grandTotal)}</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 bg-zinc-800 dark:bg-zinc-700">
-                            <span className="text-[10px] font-bold text-zinc-100 uppercase tracking-wide">Grand Total Estimated Service Fees</span>
-                            <span className="text-[13px] font-black font-mono text-white">${fmt2(grandTotal)}</span>
-                        </div>
-                    </div>
-                    <div className="text-[9px] text-zinc-400 dark:text-zinc-500 text-center py-3 border-t border-zinc-100 dark:border-zinc-800">
-                        Dealer: CND018253 · Contract Volume $: 1,000.00 · Discount Code: IV
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
+// ─── Booking method (post Wendy + Jessica 21-may decision) ─────────────────────
+// "CMF Free as one line item in Core. Negative cost and 0 sell. NOT a credit memo.
+//  Created at line import." Same mechanics as Method 2 of David's transcript,
+//  but applied Day 1 (not post-delivery). Resolves the backlog-GP-invisible pain.
+// CMF Free amount: $9,255.24 = sum of per-product fees per CoNY ANT122.
 
 // ─── SIF Document Mock Preview ───────────────────────────────────────────────
 
@@ -1608,7 +1527,7 @@ function AskLaurenDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 
 // ─── Fee Review Panel ─────────────────────────────────────────────────────────
 
-// Fee verification · per-line match (Method 3) · expected vs received per product
+// Fee verification · per-line match · expected vs received per product
 const FEE_LINES = [
     { product: 'HMI-WS-2400 · Workstations',  sale: '$144,000', tcode: '4.0%', expected: '$5,760.00', receivedMatch: '$5,760.00', receivedGap: '$5,760.00', delta: '$0',       gapDelta: '$0'        },
     { product: 'HMI-LS-500 · Lounge Seating', sale: '$84,000',  tcode: '3.9%', expected: '$3,276.00', receivedMatch: '$3,276.00', receivedGap: '$3,020.76', delta: '$0',       gapDelta: '−$255.24'  },
@@ -1641,7 +1560,7 @@ function FeeReviewPanel({ scenario, onValidate }: { scenario: 'match' | 'gap'; o
             <div className="bg-background px-5 py-3.5 border-b border-border shrink-0">
                 <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest">AGENCY FEE VERIFICATION</h4>
-                    <span className="text-[8px] font-bold text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Method 3 · Per-line fee</span>
+                    <span className="text-[8px] font-bold text-ai bg-ai/10 border border-ai/20 px-1.5 py-0.5 rounded uppercase tracking-wider">CMF Free · per-line match</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground/70 mt-0.5">Patricia Hilger · Finance & AR · DOE-2847</p>
             </div>
@@ -2161,25 +2080,21 @@ BFI Furniture · CoNY Account Manager`
     )
 }
 
-// Per-line fee · sourced from CORE (Calc Code 7 · Direct Bill-HMI vendor type)
-// CORE registers the per-line fee (Method 3) when the Quote Tool output is uploaded.
+// CMF Free · sourced from CORE (Calc Code 7 · Direct Bill-HMI vendor type)
+// CORE registers the CMF Free line (single line item · negative cost / $0 sell)
+// when the Quote Tool output is uploaded.
 // Strata's role: surface CORE's record so Lauren can confirm — no draft/push.
-// Active booking method: per-line fee (Method 3 · Jessica's preferred).
+// Booking method per Wendy + Jessica 21-may: CMF Free line · NOT a credit memo.
 const CL_FIELDS: { label: string; value: string; mono?: boolean }[] = [
     { label: 'GL Account', value: '4200-Agency-Fees',                            mono: true },
     { label: 'Calc Code',  value: '7 · Enter Cost / Enter Sell Price'                       },
     { label: 'Vendor',     value: 'Direct Bill-HMI',                             mono: true },
     { label: 'Linked to',  value: 'DOE-2847 · Q-2026-0089',                      mono: true },
-    { label: 'Memo',       value: 'Per CoNY Contract ANT122 · per-line fee' },
+    { label: 'Memo',       value: 'Per CoNY Contract ANT122 · CMF Free line item · Day 1' },
 ]
 
-function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
-    onValidate?: () => void;
-    activeMethod: ActiveBookingMethod;
-    setActiveMethod: (m: ActiveBookingMethod) => void;
-}) {
+function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
     const fmt2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    const grandTotal = SF_LINES.reduce((sum, l) => sum + l.svcExt, 0)
 
     const [compOpen, setCompOpen] = useState(false)
     const [showLaborDialog, setShowLaborDialog] = useState(false)
@@ -2273,7 +2188,7 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
 
                 <DataSourcesBar groups={[{ sources: [SOURCES.STRATA_AI, SOURCES.CORE_PO] }]} />
 
-                {/* ─── Per-line Fee · From CORE (Method 3 · read-only) ──────────────── */}
+                {/* ─── CMF Free · From CORE (single line item · read-only) ──────────── */}
                 <div className="rounded-xl border border-ai/30 bg-ai/5 overflow-hidden">
                     <div className="px-4 py-3 border-b border-ai/20 bg-ai/5 flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-full bg-ai/15 flex items-center justify-center shrink-0">
@@ -2281,113 +2196,57 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-[12px] font-bold text-foreground">
-                                    {activeMethod === 'per-line' ? 'Per-line Fee · From CORE' : 'CMF · From CORE'}
-                                </p>
+                                <p className="text-[12px] font-bold text-foreground">CMF Free · From CORE</p>
                                 <span className="text-[8px] font-bold text-info bg-info/10 border border-info/20 px-1.5 py-0.5 rounded uppercase tracking-wider">Source: CORE</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {activeMethod === 'per-line'
-                                    ? 'Method 3 (Jessica\'s preferred) · GP visible per product at booking'
-                                    : 'Method 2 (Wendy\'s proposal · what BFI does today) · GP recognized when check arrives'
-                                }
-                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Single line item · negative cost / $0 sell · created at line import (Day 1 GP)</p>
                         </div>
-                    </div>
-
-                    {/* Booking methods · CMF (Method 2 default) and Per-line fee (Method 3) · both clickable */}
-                    <div className="px-4 py-2.5 border-b border-ai/20 bg-card/50">
-                        <div className="flex flex-wrap gap-1.5">
-                            {BOOKING_METHODS.map(m => {
-                                const isActive = m.id === activeMethod
-                                const baseCls  = `inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border transition-colors ${
-                                    isActive
-                                        ? 'bg-primary text-primary-foreground border-primary'
-                                        : 'bg-muted/40 text-muted-foreground border-border'
-                                }`
-                                return (
-                                    <button
-                                        key={m.id}
-                                        type="button"
-                                        title={m.desc}
-                                        aria-pressed={isActive}
-                                        onClick={() => setActiveMethod(m.id as ActiveBookingMethod)}
-                                        className={baseCls + ' cursor-pointer hover:opacity-90'}
-                                    >
-                                        {isActive && <CheckCircle2 className="h-2.5 w-2.5" />}
-                                        {m.label}
-                                        {isActive && <span className="text-[8px] uppercase tracking-wider">· Active</span>}
-                                    </button>
-                                )
-                            })}
-                        </div>
-                        <p className="text-[9px] text-muted-foreground mt-1.5">
-                            {activeMethod === 'per-line'
-                                ? 'Strata supports both methods · per-line gives day-1 GP visibility per product'
-                                : 'Click between CMF and Per-line fee to preview · CMF is what BFI does today'
-                            }
-                        </p>
                     </div>
 
                     <div className="px-4 py-3 space-y-2.5">
-                        {/* Breakdown · per method · Method 3 = per-line GP / Method 2 = single CMF */}
-                        {activeMethod === 'per-line' ? (
-                            <div className="rounded-lg border border-border overflow-hidden bg-card">
-                                <div className="px-3 py-2 bg-muted/40 border-b border-border">
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Per-line GP breakdown · Method 3</p>
+                        {/* CMF Free line item · Day-1 GP captured via negative-cost line */}
+                        <div className="rounded-lg border border-success/30 bg-success/5 overflow-hidden">
+                            <div className="px-3 py-2 bg-success/10 border-b border-success/20 flex items-center justify-between gap-2">
+                                <p className="text-[9px] font-bold text-success uppercase tracking-widest">CMF Free · Line item details</p>
+                                <span className="text-[8px] font-bold text-success bg-success/15 border border-success/30 px-1.5 py-0.5 rounded uppercase tracking-wider">Day 1 GP captured</span>
+                            </div>
+                            <div className="px-3 py-2.5 space-y-1.5 text-[10px]">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Description</span>
+                                    <span className="text-foreground font-medium">Agency fee · CoNY ANT122</span>
                                 </div>
-                                <div className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-1.5 bg-muted/20 border-b border-border/50">
-                                    {['Line', '%', 'List ext', 'GP'].map(h => (
-                                        <span key={h} className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</span>
-                                    ))}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Calc Code</span>
+                                    <span className="text-foreground font-mono">7 · Enter Cost / Enter Sell</span>
                                 </div>
-                                {SF_LINES.map(line => (
-                                    <div key={line.product} className="grid grid-cols-[1fr_3.5rem_5rem_5rem] px-3 py-2 border-b border-border/30 last:border-0 items-center">
-                                        <span className="text-[10px] font-medium text-foreground truncate">{line.product}</span>
-                                        <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{line.svcPct}%</span>
-                                        <span className="text-[10px] font-mono text-muted-foreground text-right tabular-nums">{fmt2(line.listExt)}</span>
-                                        <span className="text-[10px] font-mono font-semibold text-success text-right tabular-nums">{fmt2(line.svcExt)}</span>
-                                    </div>
-                                ))}
-                                <div className="px-3 py-2 bg-success/5 border-t border-success/20 flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Total GP recognized · day 1</span>
-                                    <span className="text-[12px] font-black font-mono text-success">{fmt2(grandTotal)} <span className="text-[9px] text-muted-foreground font-normal">avg 4.0%</span></span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Cost</span>
+                                    <span className="font-mono font-bold text-destructive">−$9,255.24</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Sell</span>
+                                    <span className="font-mono font-bold text-foreground">$0</span>
                                 </div>
                             </div>
-                        ) : (
-                            <div className="rounded-lg border border-warning/30 bg-warning/5 overflow-hidden">
-                                <div className="px-3 py-2 bg-warning/10 border-b border-warning/20 flex items-center justify-between gap-2">
-                                    <p className="text-[9px] font-bold text-warning uppercase tracking-widest">CMF · Pending · Method 2</p>
-                                    <span className="text-[8px] font-bold text-warning bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded uppercase tracking-wider">Day 1 GP: $0</span>
-                                </div>
-                                <div className="px-3 py-3 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-medium text-foreground">Agency fee CMF</span>
-                                        <span className="text-[12px] font-black font-mono text-foreground">{fmt2(grandTotal)}</span>
-                                    </div>
-                                    <div className="text-[9px] text-muted-foreground space-y-0.5">
-                                        <div>From HMI AP → BFI AR · issued post-delivery</div>
-                                        <div className="font-bold text-warning">GP recognized on check arrival (~30 days · Jessica's pain point)</div>
-                                    </div>
-                                </div>
+                            <div className="px-3 py-2 bg-success/10 border-t border-success/20 flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Net effect · Day-1 GP</span>
+                                <span className="text-[12px] font-black font-mono text-success">+{fmt2(9255.24)}</span>
                             </div>
-                        )}
+                            <div className="px-3 py-2 border-t border-success/20 bg-card/50">
+                                <p className="text-[9px] text-muted-foreground leading-snug">
+                                    GP = Sell − Cost = 0 − (−$9,255.24) = <span className="text-success font-bold">+$9,255.24</span>. Same mechanic BFI uses today, applied at booking instead of post-delivery — GP visible in backlog Day 1.
+                                </p>
+                            </div>
+                        </div>
 
-                        {/* Read-only metadata fields (GL, Calc Code, Vendor, Linked, Memo) · Memo adapts to method */}
+                        {/* Read-only metadata fields (GL, Calc Code, Vendor, Linked, Memo) */}
                         <div className="rounded-lg border border-border overflow-hidden text-[11px] bg-card">
-                            {CL_FIELDS.map((row, i) => {
-                                const value = row.label === 'Memo'
-                                    ? (activeMethod === 'per-line'
-                                        ? 'Per CoNY Contract ANT122 · per-line fee'
-                                        : 'Per CoNY Contract ANT122 · CMF post-delivery')
-                                    : row.value
-                                return (
-                                    <div key={row.label} className={`flex gap-3 px-3 py-2 ${i < CL_FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
-                                        <span className="text-muted-foreground font-semibold w-24 shrink-0">{row.label}</span>
-                                        <span className={`flex-1 text-foreground ${row.mono ? 'font-mono tabular-nums' : 'leading-snug'}`}>{value}</span>
-                                    </div>
-                                )
-                            })}
+                            {CL_FIELDS.map((row, i) => (
+                                <div key={row.label} className={`flex gap-3 px-3 py-2 ${i < CL_FIELDS.length - 1 ? 'border-b border-border/60' : ''}`}>
+                                    <span className="text-muted-foreground font-semibold w-24 shrink-0">{row.label}</span>
+                                    <span className={`flex-1 text-foreground ${row.mono ? 'font-mono tabular-nums' : 'leading-snug'}`}>{row.value}</span>
+                                </div>
+                            ))}
                         </div>
 
                     </div>
@@ -2401,7 +2260,7 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                     <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
                     <div className="text-[10px] leading-snug">
                         <p className="font-bold text-success">Corrected SIF posted to CORE</p>
-                        <p className="text-muted-foreground">Per-line fee booked per Contract ANT122</p>
+                        <p className="text-muted-foreground">CMF Free line booked per Contract ANT122 · Day-1 GP +$9,255.24</p>
                     </div>
                 </div>
                 <button
@@ -2413,7 +2272,7 @@ function QuoteReviewPanel({ onValidate, activeMethod, setActiveMethod }: {
                 </button>
             </div>
 
-            {/* Labor Quote Dialog — opens after per-line fee confirmed; overlay z-[400] over the modal */}
+            {/* Labor Quote Dialog — opens after CMF Free line confirmed; overlay z-[400] over the modal */}
             <LaborQuoteDialog
                 isOpen={showLaborDialog}
                 onComplete={handleLaborComplete}
@@ -2712,7 +2571,7 @@ function LaborReadyPanel({ onValidate, onCustomValue, ovniqLines, onUpdateLine, 
 
 // ─── Right Panel Dispatcher ───────────────────────────────────────────────────
 
-function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, onCustomValue, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted, activeMethod, setActiveMethod }: {
+function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, onResolveChange, onCustomValue, ovniqLines, onUpdateLine, acceptedRows, onSetAccepted }: {
     step: BFIReviewStep
     scenario?: 'match' | 'gap'
     onValidate?: () => void
@@ -2724,11 +2583,9 @@ function RightPanel({ step, scenario, onValidate, michaelMode, invoiceUpload, on
     onUpdateLine: (i: number, field: keyof OvniqLine, val: string) => void
     acceptedRows: Set<number>
     onSetAccepted: (next: Set<number>) => void
-    activeMethod: ActiveBookingMethod
-    setActiveMethod: (m: ActiveBookingMethod) => void
 }) {
     if (step === 'extract') return <ExtractReviewPanel onValidate={onValidate} onResolveChange={onResolveChange} onCustomValue={onCustomValue} />
-    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} activeMethod={activeMethod} setActiveMethod={setActiveMethod} />
+    if (step === 'quote') return <QuoteReviewPanel onValidate={onValidate} />
     if (step === 'labor')  return <LaborReadyPanel onValidate={onValidate} onCustomValue={onCustomValue} ovniqLines={ovniqLines} onUpdateLine={onUpdateLine} acceptedRows={acceptedRows} onSetAccepted={onSetAccepted} />
     if (step === 'cpr')   return <CPRReviewPanel onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={onResolveChange} />
     if (step === 'fee')   return <FeeReviewPanel scenario={scenario ?? 'match'} onValidate={onValidate} />
@@ -3368,8 +3225,6 @@ export default function BFIDocumentReviewModal({
     )
     // Quote Tool lines — shared between left doc and right review panel
     const [ovniqLines, setOvniqLines] = useState<OvniqLine[]>(INITIAL_OVNIQ_LINES)
-    // Booking method toggle (a1.2b · educational preview · default Method 3 Jessica's preferred)
-    const [activeMethod, setActiveMethod] = useState<ActiveBookingMethod>('credit-memo')
     const [acceptedRows, setAcceptedRows] = useState<Set<number>>(() =>
         step === 'labor' ? new Set([0]) : new Set()
     )
@@ -3452,9 +3307,7 @@ export default function BFIDocumentReviewModal({
                                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0" />
                                     <p className="text-[11px] text-ai font-medium">
                                         {step === 'quote'
-                                            ? (activeMethod === 'per-line'
-                                                ? <><span className="font-bold">Quote Tool</span> · 1 price correction · Per-line fee per Contract ANT122 · Total $9,255.24 ready in CORE</>
-                                                : <><span className="font-bold">Quote Tool</span> · 1 price correction · CMF for $9,255.24 · pending post-delivery</>)
+                                            ? <><span className="font-bold">Quote Tool</span> · 1 price correction · CMF Free line item · $9,255.24 Day-1 GP captured in CORE</>
                                             : step === 'cpr'
                                                 ? <><span className="font-bold">CPR</span> · 2 lines adjusted · Impact −$720 · ready to approve</>
                                                 : step === 'fee'
@@ -3562,7 +3415,7 @@ export default function BFIDocumentReviewModal({
                                                     {activeTab === 'sif' ? (
                                                         <SIFDocumentPreview resolvedIds={resolvedIds} step={step} customValues={customValues} />
                                                     ) : activeTab === 'specs' ? (
-                                                        <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'cpr' || step === 'fee'} validated={step !== 'extract'} activeMethod={activeMethod} />
+                                                        <QuoteDocumentTab ovniqLines={ovniqLines} isPO={step === 'cpr' || step === 'fee'} validated={step !== 'extract'} />
                                                     ) : (
                                                         <div className="h-full overflow-y-auto p-4 bg-zinc-100 dark:bg-zinc-950">
                                                             <div className="border border-border rounded-xl overflow-hidden bg-card">
@@ -3591,7 +3444,7 @@ export default function BFIDocumentReviewModal({
 
                                     {/* Right: Contextual panel per step (2/5) */}
                                     <div className="col-span-2 flex flex-col min-h-0">
-                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} onCustomValue={(fid, val) => setCustomValues(prev => ({ ...prev, [fid]: val }))} ovniqLines={ovniqLines} onUpdateLine={updateOvniqLine} acceptedRows={acceptedRows} onSetAccepted={setAcceptedRows} activeMethod={activeMethod} setActiveMethod={setActiveMethod} />
+                                        <RightPanel step={step} scenario={scenario} onValidate={onValidate} michaelMode={michaelMode} invoiceUpload={invoiceUpload} onResolveChange={setResolvedIds} onCustomValue={(fid, val) => setCustomValues(prev => ({ ...prev, [fid]: val }))} ovniqLines={ovniqLines} onUpdateLine={updateOvniqLine} acceptedRows={acceptedRows} onSetAccepted={setAcceptedRows} />
                                     </div>
 
                                 </div>
