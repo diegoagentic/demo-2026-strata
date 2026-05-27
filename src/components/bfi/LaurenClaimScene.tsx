@@ -30,7 +30,7 @@ const LAUREN_NOTIFICATION = {
 
 const CLAIM_MESSAGE = `Hi Herman Miller team,
 
-We are filing a missing carton claim for PO DOE-2847 (CoNY · NYC Dept. of Education), delivered to WIG Group NJ Warehouse on May 11, 2026.
+We are filing a missing carton claim for HM Sales Order #GD2574 (PO DOE-2847 · CoNY · NYC Dept. of Education), delivered to WIG Group NJ Warehouse on May 11, 2026.
 
 Shipment summary:
   · Cartons received: 34 of 35
@@ -111,7 +111,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
     const [toEmail,   setToEmail]   = useState('claims@hermanmiller.com')
     const [ccEmail,   setCcEmail]   = useState('walter.goley@conyny.gov · CoNY PM')
     const [dateText,  setDateText]  = useState('May 11, 2026 · 9:05 AM')
-    const [subject,   setSubject]   = useState('Missing Carton · DOE-2847 · Monitor Arm')
+    const [subject,   setSubject]   = useState('Missing Carton · SO #GD2574 · Monitor Arm')
     const [attachments, setAttachments] = useState([
         { name: 'RR-37577_BingoSheet_May11.pdf', meta: '2 pages' },
     ])
@@ -176,6 +176,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
                                             <span className="text-[10px] font-bold text-foreground uppercase tracking-wide">Missing Item</span>
                                         </div>
                                         {[
+                                            { label: 'HM SO',    value: '#GD2574' },
                                             { label: 'Order',    value: 'DOE-2847' },
                                             { label: 'Item',     value: 'Monitor Arm Dual Adjustable' },
                                             { label: 'PO line',  value: 'L7 · 1 of 2 units' },

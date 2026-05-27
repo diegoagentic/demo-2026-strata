@@ -31,7 +31,7 @@ const DASHBOARD_NOTIFICATION = {
 const WALTER_MESSAGE =
 `Hi Walter,
 
-The shortage claim for DOE-2847 has been resolved. Herman Miller confirmed a replacement shipment for Carton #34 (Monitor Arm Dual Adjustable) — ETA May 18, 2026.
+The shortage claim for HM SO #GD2574 (PO DOE-2847) has been resolved. Herman Miller confirmed a replacement shipment for Carton #34 (Monitor Arm Dual Adjustable) — ETA May 18, 2026.
 
 The CORE work order (WO-2026-0089) has been updated. All items are now cleared for the May 19–21 delivery window. The install crew is confirmed for the three areas (Open Area, Lounge, Storage Room).
 
@@ -181,7 +181,7 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
     const [toEmail,   setToEmail]   = useState('walter.goley@bfifurniture.com · BFI PM')
     const [ccEmail,   setCcEmail]   = useState('nycdoe-procurement@schools.nyc.gov')
     const [dateText,  setDateText]  = useState('May 11, 2026 · 10:15 AM')
-    const [subject,   setSubject]   = useState('DOE-2847 · Claim resolved · Ready for install scheduling')
+    const [subject,   setSubject]   = useState('DOE-2847 · SO #GD2574 · Claim resolved · Ready for install scheduling')
     const [attachments, setAttachments] = useState(['DOE-2847-WorkOrder.pdf', 'DOE-2847-FloorPlan.pdf'])
 
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }

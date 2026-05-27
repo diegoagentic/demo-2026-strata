@@ -211,7 +211,7 @@ function LaurenNotificationDialog({ isOpen, notes, onSent, onClose }: { isOpen: 
     const [toEmail,   setToEmail]   = useState('lauren.demarco@bfifurniture.com')
     const [ccEmail,   setCcEmail]   = useState('walter.goley@conyny.gov · CoNY PM')
     const [dateText,  setDateText]  = useState('May 11, 2026 · 8:42 AM')
-    const [subject,   setSubject]   = useState('DOE-2847 · Carton #34 Missing · Monitor Arm')
+    const [subject,   setSubject]   = useState('DOE-2847 · SO #GD2574 · Carton #34 Missing · Monitor Arm')
     const [bodyText,  setBodyText]  = useState(notes)
     const [attachments, setAttachments] = useState(['BD-2026-0412_PackingList.pdf'])
 
