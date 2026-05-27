@@ -332,8 +332,10 @@ export default function PricingValidationScene() {
                         <div className="text-[11px] leading-relaxed">
                             <p className="font-bold text-success text-[12px]">Product lines saved to CORE</p>
                             <ul className="text-muted-foreground mt-1 space-y-0.5">
-                                <li>· 3 lines validated · CoNY pricing applied</li>
-                                <li>· Filing Units corrected −42.3% ($8,100 → $7,560)</li>
+                                <li>· 3 lines · 480 units · <strong className="text-foreground tabular-nums">$148,500</strong> total</li>
+                                <li>· Filing Units corrected <strong className="text-foreground">−42.3%</strong> ($8,100 → $7,560)</li>
+                                <li>· Linked to <strong className="font-mono text-foreground">DOE-2847 · Q-2026-0089</strong></li>
+                                <li>· CMF Free line auto-booked · Contract <strong className="font-mono text-foreground">ANT122</strong></li>
                                 <li>· Catalog restriction notice sent to MK designer</li>
                             </ul>
                         </div>

@@ -2254,13 +2254,55 @@ function QuoteReviewPanel({ onValidate }: { onValidate?: () => void }) {
             </div>
 
             {/* Footer — status (Strata already posted to CORE) + acknowledge CTA */}
-            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-2">
-                {/* Status row · Strata already pushed corrected SIF + booked fee */}
-                <div className="rounded-lg border border-success/20 bg-success/5 px-3 py-2 flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
-                    <div className="text-[10px] leading-snug">
-                        <p className="font-bold text-success">Corrected SIF posted to CORE</p>
-                        <p className="text-muted-foreground">CMF Free line booked per Contract ANT122 · Day-1 GP +$9,255.24</p>
+            <div className="px-5 py-4 border-t border-border bg-white dark:bg-zinc-900 shrink-0 space-y-3">
+                {/* Status card · Strata already pushed corrected SIF + booked CMF fee
+                    · Enriched per Wendy feedback so the SIF push has the same visual
+                    · weight as the labor push toast. */}
+                <div className="rounded-xl border-2 border-success/30 bg-success/5 px-3.5 py-3 space-y-2.5 animate-in fade-in duration-300">
+                    {/* Header row · big checkmark + title + attribution */}
+                    <div className="flex items-start gap-2.5">
+                        <div className="h-7 w-7 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="h-4 w-4 text-success" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-bold text-success leading-tight">Corrected SIF posted to CORE</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">by Strata AI · 0 min · auto-validated against CoNY contract</p>
+                        </div>
+                        <span className="text-[10px] font-bold text-success/80 tabular-nums shrink-0">3 lines · $148,500</span>
+                    </div>
+
+                    {/* Line breakdown · same level of detail as the labor toast */}
+                    <ul className="space-y-1 pl-9 text-[10px] leading-snug">
+                        <li className="flex items-baseline gap-2">
+                            <span className="text-muted-foreground tabular-nums w-7 shrink-0">×18</span>
+                            <span className="font-mono text-foreground/80 w-24 shrink-0">HMI-WS-LG</span>
+                            <span className="text-foreground flex-1 truncate">Workstations</span>
+                            <span className="font-semibold text-foreground tabular-nums">$108,000</span>
+                        </li>
+                        <li className="flex items-baseline gap-2">
+                            <span className="text-muted-foreground tabular-nums w-7 shrink-0">×18</span>
+                            <span className="font-mono text-foreground/80 w-24 shrink-0">HMI-TC-200</span>
+                            <span className="text-foreground flex-1 truncate">Task Chairs</span>
+                            <span className="font-semibold text-foreground tabular-nums">$32,400</span>
+                        </li>
+                        <li className="flex items-baseline gap-2">
+                            <span className="text-muted-foreground tabular-nums w-7 shrink-0">×6</span>
+                            <span className="font-mono text-foreground/80 w-24 shrink-0">HMI-FU-300</span>
+                            <span className="text-foreground flex-1 truncate">Filing Units <span className="text-success font-semibold">−42.3%</span></span>
+                            <span className="font-semibold text-foreground tabular-nums"><span className="line-through text-muted-foreground/60 mr-1">$8,100</span>$7,560</span>
+                        </li>
+                    </ul>
+
+                    {/* Refs row · order link + CMF Free + contract */}
+                    <div className="pl-9 pt-1.5 border-t border-success/15 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px]">
+                        <span className="text-muted-foreground">Linked:</span>
+                        <span className="font-mono text-foreground">DOE-2847 · Q-2026-0089</span>
+                        <span className="text-muted-foreground/50">·</span>
+                        <span className="text-muted-foreground">CMF Free line:</span>
+                        <span className="font-mono text-foreground">Contract ANT122</span>
+                        <span className="text-muted-foreground/50">·</span>
+                        <span className="text-muted-foreground">Day-1 GP:</span>
+                        <span className="font-semibold text-success tabular-nums">+$9,255.24</span>
                     </div>
                 </div>
                 <button
