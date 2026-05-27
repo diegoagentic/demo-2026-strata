@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Sparkles, CheckCircle2, AlertTriangle, ArrowRight, Send, Ban } from 'lucide-react'
+import { Sparkles, CheckCircle2, AlertTriangle, ArrowRight, Send, Ban, Loader2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import DataSourcesBar, { SOURCES } from '../mbi/DataSourcesBar'
 
@@ -67,7 +67,8 @@ export default function PricingValidationScene() {
     const [sceneState, setSceneState] = useState<'idle' | 'validating'>('idle')
     const [revealedCount, setRevealedCount] = useState(0)
     const [noticeSent, setNoticeSent] = useState(false)
-    const [applied, setApplied] = useState(false)
+    // CORE push state · mirrors the labor pattern in BFIDocumentReviewModal (Wendy feedback)
+    const [coreState, setCoreState] = useState<'idle' | 'submitting' | 'confirmed'>('idle')
 
     const allRevealed = revealedCount >= LINE_ITEMS.length
     const hasRestricted = LINE_ITEMS.some(l => l.status === 'restricted')
@@ -92,9 +93,12 @@ export default function PricingValidationScene() {
         setNoticeSent(true)
     }
 
-    const handleApply = () => {
-        setApplied(true)
-        setTimeout(pauseAware(() => nextStep()), 600)
+    const handleConfirmCore = () => {
+        setCoreState('submitting')
+        setTimeout(pauseAware(() => {
+            setCoreState('confirmed')
+            setTimeout(pauseAware(() => nextStep()), 3000)
+        }), 800)
     }
 
     if (sceneState === 'idle') {
@@ -295,23 +299,45 @@ export default function PricingValidationScene() {
                 </div>
             )}
 
-            {/* Semantic CTA — unlocks after reveal + notice sent (if restricted item) */}
-            {ctaUnlocked && !applied && (
+            {/* Push to CORE CTA — unlocks after reveal + notice sent (if restricted item) · mirrors labor pattern (Wendy feedback) */}
+            {ctaUnlocked && (
                 <div className="flex items-center justify-end animate-in fade-in slide-in-from-bottom-1 duration-300">
                     <button
-                        onClick={handleApply}
-                        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
+                        onClick={coreState === 'idle' ? handleConfirmCore : undefined}
+                        disabled={coreState !== 'idle'}
+                        className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold transition-all shadow-sm ${
+                            coreState === 'confirmed'
+                                ? 'bg-success/15 text-success border border-success/30 cursor-default'
+                                : coreState === 'submitting'
+                                    ? 'bg-muted text-muted-foreground cursor-wait'
+                                    : 'bg-primary text-primary-foreground hover:opacity-90'
+                        }`}
                     >
-                        Apply pricing &amp; continue
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        {coreState === 'confirmed' ? (
+                            <><CheckCircle2 className="h-3.5 w-3.5" /> Product Lines Saved to CORE</>
+                        ) : coreState === 'submitting' ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Updating CORE…</>
+                        ) : (
+                            <><CheckCircle2 className="h-3.5 w-3.5" /> Push Product Lines to CORE & Continue <ArrowRight className="h-3.5 w-3.5" /></>
+                        )}
                     </button>
                 </div>
             )}
 
-            {applied && (
-                <div className="flex items-center gap-2 text-xs text-success font-medium animate-in fade-in duration-300">
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    NYPD-0394 · 3 lines validated · pricing applied in CORE
+            {/* Toast · visible 3s after product lines pushed to CORE — mirrors labor toast in BFIDocumentReviewModal */}
+            {coreState === 'confirmed' && (
+                <div className="fixed top-6 right-6 z-[500] w-80 rounded-xl border border-success/30 bg-card shadow-2xl p-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-start gap-2.5">
+                        <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                        <div className="text-[11px] leading-relaxed">
+                            <p className="font-bold text-success text-[12px]">Product lines saved to CORE</p>
+                            <ul className="text-muted-foreground mt-1 space-y-0.5">
+                                <li>· 3 lines validated · CoNY pricing applied</li>
+                                <li>· Filing Units corrected −42.3% ($8,100 → $7,560)</li>
+                                <li>· Catalog restriction notice sent to MK designer</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             )}
 
