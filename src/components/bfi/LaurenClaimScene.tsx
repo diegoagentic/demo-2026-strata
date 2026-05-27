@@ -111,7 +111,7 @@ function ClaimDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSent: () 
     const [toEmail,   setToEmail]   = useState('claims@hermanmiller.com')
     const [ccEmail,   setCcEmail]   = useState('walter.goley@conyny.gov · CoNY PM')
     const [dateText,  setDateText]  = useState('May 11, 2026 · 9:05 AM')
-    const [subject,   setSubject]   = useState('Missing Carton · SO #GD2574 · Monitor Arm')
+    const [subject,   setSubject]   = useState('Missing Carton - SO #GD2574 - Monitor Arm')
     const [attachments, setAttachments] = useState([
         { name: 'RR-37577_BingoSheet_May11.pdf', meta: '2 pages' },
     ])

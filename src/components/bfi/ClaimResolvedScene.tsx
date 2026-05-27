@@ -181,7 +181,7 @@ function WalterNotifyDialog({ isOpen, onSent, onClose }: { isOpen: boolean; onSe
     const [toEmail,   setToEmail]   = useState('walter.goley@bfifurniture.com · BFI PM')
     const [ccEmail,   setCcEmail]   = useState('nycdoe-procurement@schools.nyc.gov')
     const [dateText,  setDateText]  = useState('May 11, 2026 · 10:15 AM')
-    const [subject,   setSubject]   = useState('DOE-2847 · SO #GD2574 · Claim resolved · Ready for install scheduling')
+    const [subject,   setSubject]   = useState('DOE-2847 - SO #GD2574 - Claim resolved - Ready for install scheduling')
     const [attachments, setAttachments] = useState(['DOE-2847-WorkOrder.pdf', 'DOE-2847-FloorPlan.pdf'])
 
     const handleSend = () => { setSent(true); setTimeout(() => onSent(), 900) }
