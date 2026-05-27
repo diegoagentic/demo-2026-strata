@@ -2056,7 +2056,9 @@ BFI Furniture · CoNY Account Manager`
                                 </div>
                             )}
 
-                            {/* Toast · z-[500] over modal · visible 3s after labor pushed to CORE */}
+                            {/* Toast · z-[500] over modal · visible 3s after labor pushed to CORE
+                                · Enriched per P43 to mirror the SIF callout's detail level
+                                · (totals, breakdown, order link, contract ref, next step) */}
                             {coreState === 'confirmed' && (
                                 <div className="fixed top-6 right-6 z-[500] w-80 rounded-xl border border-success/30 bg-card shadow-2xl p-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-start gap-2.5">
@@ -2064,8 +2066,10 @@ BFI Furniture · CoNY Account Manager`
                                         <div className="text-[11px] leading-relaxed">
                                             <p className="font-bold text-success text-[12px]">Labor figures saved to CORE</p>
                                             <ul className="text-muted-foreground mt-1 space-y-0.5">
-                                                <li>· Total: $7,640</li>
-                                                <li>· 4 categories (Teamsters · Carpenters · OT · Inside Delivery)</li>
+                                                <li>· <strong className="text-foreground tabular-nums">86 hours · $7,640</strong> total</li>
+                                                <li>· Teamsters 24h · Carpenters 50h · OT 8h · Inside Delivery 4h</li>
+                                                <li>· Linked to <strong className="font-mono text-foreground">DOE-2847 · Q-2026-0089</strong></li>
+                                                <li>· WIG quote · within Contract <strong className="font-mono text-foreground">ANT122</strong> caps</li>
                                                 <li>· Ready to compile proposal</li>
                                             </ul>
                                         </div>
