@@ -13,11 +13,12 @@
  *            bg-primary/10 · bg-success/10 · text-foreground · text-muted-foreground
  */
 
-import { Search, LayoutGrid, MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { Search, LayoutGrid, MoreHorizontal, Users } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
-import CapacityHeatmap from './shared/CapacityHeatmap'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { stepIdToColIdx } from './shared/funnelStages'
+import CapacityModal from './CapacityModal'
 
 // ─── Funnel columns (kanban-specific styling) ────────────────────────────────
 
@@ -105,6 +106,7 @@ interface Props {
 
 export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false, assignedDesigner }: Props) {
     const { currentStep } = useDemo()
+    const [capacityOpen, setCapacityOpen] = useState(false)
     const activeCol = stepIdToColIdx(currentStep?.id)
     const col = PROCESS_COLUMNS[activeCol]
     const badge = MANATT_BADGE[activeCol]
@@ -123,6 +125,16 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setCapacityOpen(true)}
+                        className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-border text-xs text-foreground hover:bg-muted/50 transition-colors"
+                        title="View Designer Capacity"
+                    >
+                        <Users className="h-3.5 w-3.5" />
+                        View capacity
+                        <span className="text-[10px] text-muted-foreground font-normal">· ~30 designers</span>
+                    </button>
                     <button
                         type="button"
                         className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
@@ -257,15 +269,13 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                     })}
                 </div>
 
-                {/* Capacity panel below kanban (sidebar in larger viewports could be future) */}
-                <div className="mt-6 pt-5 border-t border-border space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-foreground">Designer Capacity</h3>
-                        <span className="text-[10px] text-muted-foreground">~30 designers · 3 regions · live</span>
-                    </div>
-                    <CapacityHeatmap highlightName={currentStep?.id === 'sc1.0' ? 'Kimberly Tucker' : undefined} />
-                </div>
             </div>
+
+            {/* Capacity modal — opens from "View capacity" button in header.
+                Heatmap moved out of the funnel main view to keep the kanban as the
+                primary focus. Designer assignment still happens with the embedded
+                CapacityHeatmap inside IntakeAssignPanel of the Review modal. */}
+            <CapacityModal isOpen={capacityOpen} onClose={() => setCapacityOpen(false)} />
         </div>
     )
 }
