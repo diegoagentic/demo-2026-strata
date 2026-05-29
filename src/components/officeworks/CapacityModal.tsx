@@ -34,18 +34,18 @@ type RegionFilter = 'all' | 'dc' | 'ma' | 'pa'
 type StatusFilter = 'all' | UtilizationStatus
 type SortBy = 'available' | 'utilized' | 'name'
 
-const REGION_PILLS: Array<{ value: RegionFilter; label: string }> = [
-    { value: 'all', label: 'All' },
+const REGION_OPTIONS: Array<{ value: RegionFilter; label: string }> = [
+    { value: 'all', label: 'All regions' },
     { value: 'dc', label: REGION_LABELS.dc.label },
     { value: 'ma', label: REGION_LABELS.ma.label },
     { value: 'pa', label: REGION_LABELS.pa.label },
 ]
 
-const STATUS_PILLS: Array<{ value: StatusFilter; label: string; dot: string }> = [
-    { value: 'all', label: 'All', dot: '' },
-    { value: 'available', label: 'Available', dot: 'bg-success' },
-    { value: 'limited', label: 'Limited', dot: 'bg-warning' },
-    { value: 'at-capacity', label: 'At capacity', dot: 'bg-destructive' },
+const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
+    { value: 'all', label: 'All statuses' },
+    { value: 'available', label: 'Available' },
+    { value: 'limited', label: 'Limited' },
+    { value: 'at-capacity', label: 'At capacity' },
 ]
 
 const SORT_OPTIONS: Array<{ value: SortBy; label: string }> = [
@@ -53,6 +53,9 @@ const SORT_OPTIONS: Array<{ value: SortBy; label: string }> = [
     { value: 'utilized', label: 'Most utilized first' },
     { value: 'name', label: 'Name A–Z' },
 ]
+
+// Shared className for all 3 dropdowns — consistent visual language
+const SELECT_CLASS = 'text-[11px] font-semibold bg-card border border-border rounded-lg px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer hover:bg-muted/30 transition-colors'
 
 export default function CapacityModal({ isOpen, onClose }: CapacityModalProps) {
     const [regionFilter, setRegionFilter] = useState<RegionFilter>('all')
@@ -113,71 +116,56 @@ export default function CapacityModal({ isOpen, onClose }: CapacityModalProps) {
                                 </button>
                             </div>
 
-                            {/* Filter bar */}
-                            <div className="px-5 py-3 border-b border-border bg-muted/15 shrink-0 space-y-2">
-                                {/* Region pills */}
+                            {/* Filter bar — 3 dropdowns in one row + summary */}
+                            <div className="px-5 py-3 border-b border-border bg-muted/15 shrink-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-14 shrink-0">Region</span>
-                                    {REGION_PILLS.map(p => (
-                                        <button
-                                            key={p.value}
-                                            type="button"
-                                            onClick={() => setRegionFilter(p.value)}
-                                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                                                regionFilter === p.value
-                                                    ? 'bg-foreground text-background border-foreground'
-                                                    : 'bg-card text-foreground border-border hover:bg-muted/40'
-                                            }`}
-                                        >
-                                            {p.label}
-                                        </button>
-                                    ))}
-                                </div>
+                                    <select
+                                        value={regionFilter}
+                                        onChange={e => setRegionFilter(e.target.value as RegionFilter)}
+                                        aria-label="Filter by region"
+                                        className={SELECT_CLASS}
+                                    >
+                                        {REGION_OPTIONS.map(o => (
+                                            <option key={o.value} value={o.value}>{o.label}</option>
+                                        ))}
+                                    </select>
 
-                                {/* Status pills */}
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-14 shrink-0">Status</span>
-                                    {STATUS_PILLS.map(p => (
-                                        <button
-                                            key={p.value}
-                                            type="button"
-                                            onClick={() => setStatusFilter(p.value)}
-                                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                                                statusFilter === p.value
-                                                    ? 'bg-foreground text-background border-foreground'
-                                                    : 'bg-card text-foreground border-border hover:bg-muted/40'
-                                            }`}
-                                        >
-                                            {p.dot && <span className={`h-1.5 w-1.5 rounded-full ${p.dot}`} />}
-                                            {p.label}
-                                        </button>
-                                    ))}
-                                </div>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={e => setStatusFilter(e.target.value as StatusFilter)}
+                                        aria-label="Filter by status"
+                                        className={SELECT_CLASS}
+                                    >
+                                        {STATUS_OPTIONS.map(o => (
+                                            <option key={o.value} value={o.value}>{o.label}</option>
+                                        ))}
+                                    </select>
 
-                                {/* Sort + summary + reset */}
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-14 shrink-0">Sort by</span>
                                     <select
                                         value={sortBy}
                                         onChange={e => setSortBy(e.target.value as SortBy)}
-                                        className="text-[11px] font-semibold bg-card border border-border rounded-md px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                                        aria-label="Sort designers"
+                                        className={SELECT_CLASS}
                                     >
                                         {SORT_OPTIONS.map(o => (
                                             <option key={o.value} value={o.value}>{o.label}</option>
                                         ))}
                                     </select>
-                                    <span className="text-[11px] text-muted-foreground ml-auto">
-                                        Showing <strong className="text-foreground tabular-nums">{filtered.length}</strong> of {DESIGNERS.length}
-                                    </span>
-                                    {hasFilters && (
-                                        <button
-                                            type="button"
-                                            onClick={resetFilters}
-                                            className="text-[11px] font-semibold text-primary hover:underline"
-                                        >
-                                            Reset
-                                        </button>
-                                    )}
+
+                                    <div className="ml-auto flex items-center gap-3">
+                                        <span className="text-[11px] text-muted-foreground">
+                                            Showing <strong className="text-foreground tabular-nums">{filtered.length}</strong> of {DESIGNERS.length}
+                                        </span>
+                                        {hasFilters && (
+                                            <button
+                                                type="button"
+                                                onClick={resetFilters}
+                                                className="text-[11px] font-semibold text-primary hover:underline"
+                                            >
+                                                Reset
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
