@@ -15,8 +15,8 @@
  */
 
 import { Fragment, useMemo, useState } from 'react'
-import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Users } from 'lucide-react'
+import { Dialog, Transition, TransitionChild, DialogPanel, Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
+import { X, Users, Info } from 'lucide-react'
 import CapacityHeatmap, {
     DESIGNERS,
     REGION_LABELS,
@@ -33,6 +33,7 @@ interface CapacityModalProps {
 type RegionFilter = 'all' | 'dc' | 'ma' | 'pa'
 type StatusFilter = 'all' | UtilizationStatus
 type SortBy = 'available' | 'utilized' | 'name'
+type PriorClientFilter = 'all' | 'manatt' | 'no-manatt'
 
 const REGION_OPTIONS: Array<{ value: RegionFilter; label: string }> = [
     { value: 'all', label: 'All regions' },
@@ -54,6 +55,12 @@ const SORT_OPTIONS: Array<{ value: SortBy; label: string }> = [
     { value: 'name', label: 'Name A–Z' },
 ]
 
+const PRIOR_CLIENT_OPTIONS: Array<{ value: PriorClientFilter; label: string }> = [
+    { value: 'all', label: 'All clients' },
+    { value: 'manatt', label: 'Worked with MANATT' },
+    { value: 'no-manatt', label: 'No MANATT history' },
+]
+
 // Shared className for all 3 dropdowns — consistent visual language
 const SELECT_CLASS = 'text-[11px] font-semibold bg-card border border-border rounded-lg px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer hover:bg-muted/30 transition-colors'
 
@@ -61,6 +68,7 @@ export default function CapacityModal({ isOpen, onClose }: CapacityModalProps) {
     const [regionFilter, setRegionFilter] = useState<RegionFilter>('all')
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
     const [sortBy, setSortBy] = useState<SortBy>('available')
+    const [priorClientFilter, setPriorClientFilter] = useState<PriorClientFilter>('all')
 
     const filtered: Designer[] = useMemo(() => {
         const byRegion = regionFilter === 'all'
@@ -69,15 +77,25 @@ export default function CapacityModal({ isOpen, onClose }: CapacityModalProps) {
         const byStatus = statusFilter === 'all'
             ? byRegion
             : byRegion.filter(d => utilizationStatus(d.utilization) === statusFilter)
-        const sorted = [...byStatus]
+        const byPriorClient = priorClientFilter === 'all'
+            ? byStatus
+            : priorClientFilter === 'manatt'
+                ? byStatus.filter(d => d.priorMANATT === true)
+                : byStatus.filter(d => d.priorMANATT !== true)
+        const sorted = [...byPriorClient]
         if (sortBy === 'available')      sorted.sort((a, b) => a.utilization - b.utilization)
         else if (sortBy === 'utilized')  sorted.sort((a, b) => b.utilization - a.utilization)
         else /* name */                  sorted.sort((a, b) => a.name.localeCompare(b.name))
         return sorted
-    }, [regionFilter, statusFilter, sortBy])
+    }, [regionFilter, statusFilter, sortBy, priorClientFilter])
 
-    const hasFilters = regionFilter !== 'all' || statusFilter !== 'all' || sortBy !== 'available'
-    const resetFilters = () => { setRegionFilter('all'); setStatusFilter('all'); setSortBy('available') }
+    const hasFilters = regionFilter !== 'all' || statusFilter !== 'all' || sortBy !== 'available' || priorClientFilter !== 'all'
+    const resetFilters = () => {
+        setRegionFilter('all')
+        setStatusFilter('all')
+        setSortBy('available')
+        setPriorClientFilter('all')
+    }
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -105,7 +123,42 @@ export default function CapacityModal({ isOpen, onClose }: CapacityModalProps) {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="text-[13px] font-bold text-foreground">Designer Capacity</div>
-                                    <div className="text-[11px] text-muted-foreground">{DESIGNERS.length} designers · 3 regions · live utilization</div>
+                                    <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                                        <span>{DESIGNERS.length} designers · 3 regions · live utilization</span>
+                                        <Popover className="relative inline-flex">
+                                            <PopoverButton
+                                                className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 rounded"
+                                                aria-label="How capacity is computed"
+                                                title="How capacity is computed"
+                                            >
+                                                <Info className="h-3.5 w-3.5" />
+                                            </PopoverButton>
+                                            <PopoverPanel
+                                                anchor="bottom start"
+                                                className="z-[500] bg-popover border border-border rounded-lg shadow-xl p-3 mt-1.5 w-[320px]"
+                                            >
+                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">How capacity is computed</p>
+                                                <div className="space-y-2 text-[11px] text-foreground">
+                                                    <div className="font-mono bg-muted/40 border border-border rounded px-2 py-1.5 text-[10px]">
+                                                        Utilization = Committed ÷ Available
+                                                    </div>
+                                                    <ul className="space-y-1 text-muted-foreground">
+                                                        <li><strong className="text-foreground">Available</strong> = 40h − PTO / training / obligations</li>
+                                                        <li><strong className="text-foreground">Committed</strong> = Σ project hours this week</li>
+                                                    </ul>
+                                                    <div className="pt-2 border-t border-border">
+                                                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Source</div>
+                                                        <div className="font-mono text-[10px] text-foreground bg-muted/40 border border-border rounded px-2 py-1.5 break-all">
+                                                            =SUMIF('Form Responses 1'!O:O, designer, 'Form Responses 1'!P:P)
+                                                        </div>
+                                                        <div className="text-[10px] text-muted-foreground mt-1.5">
+                                                            Refreshed nightly · last sync 2026-04-15 22:00
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </PopoverPanel>
+                                        </Popover>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={onClose}
@@ -148,6 +201,17 @@ export default function CapacityModal({ isOpen, onClose }: CapacityModalProps) {
                                         className={SELECT_CLASS}
                                     >
                                         {SORT_OPTIONS.map(o => (
+                                            <option key={o.value} value={o.value}>{o.label}</option>
+                                        ))}
+                                    </select>
+
+                                    <select
+                                        value={priorClientFilter}
+                                        onChange={e => setPriorClientFilter(e.target.value as PriorClientFilter)}
+                                        aria-label="Filter by client history"
+                                        className={SELECT_CLASS}
+                                    >
+                                        {PRIOR_CLIENT_OPTIONS.map(o => (
                                             <option key={o.value} value={o.value}>{o.label}</option>
                                         ))}
                                     </select>

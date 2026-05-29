@@ -15,53 +15,38 @@
  * DS TOKENS: bg-card · bg-ai/X · text-foreground · semantic only
  */
 
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users } from 'lucide-react'
+import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2 } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { OFFICEWORKS_FUNNEL } from './shared/funnelStages'
-import BOMTable from './shared/BOMTable'
 import CapacityHeatmap from './shared/CapacityHeatmap'
+import BlueprintFloorPlan from './shared/BlueprintFloorPlan'
 import { OFFICEWORKS_PDFS } from './shared/PDFPreviewModal'
-import { findDesigner, regionLabel } from './shared/designerProfiles'
+import { findDesigner, regionLabel, computeCapacity } from './shared/designerProfiles'
+import RequestInfoDialog from '../shared/RequestInfoDialog'
 
-// 15 stages matching demo steps (see plan)
+// 16 stages matching demo steps (intake split into intake/intake-complete)
 export type OfficeworksReviewStage =
-    | 'intake' | 'kickoff' | 'design' | 'bom-gen' | 'validation' | 'field-verify'
+    | 'intake' | 'intake-complete'
+    | 'design' | 'bom-gen' | 'validation' | 'field-verify'
     | 'sq-check' | 'teknion-preview' | 'spec-gap' | 'phasing'
     | 'self-audit' | 'peer-review' | 'submission' | 'handoff' | 'ack-review'
 
 // Stage → funnel column index (5 cols: intake / design / spec-check / submission / ack)
 const STAGE_TO_COL: Record<OfficeworksReviewStage, number> = {
-    'intake': 0, 'kickoff': 1, 'design': 1, 'bom-gen': 1, 'validation': 1, 'field-verify': 1, 'sq-check': 1,
+    'intake': 0, 'intake-complete': 0,
+    'design': 1, 'bom-gen': 1, 'validation': 1, 'field-verify': 1, 'sq-check': 1,
     'teknion-preview': 2, 'spec-gap': 2, 'phasing': 2, 'self-audit': 2, 'peer-review': 2,
     'submission': 3, 'handoff': 3,
     'ack-review': 4,
 }
 
-const STAGE_LABELS: Record<OfficeworksReviewStage, string> = {
-    'intake':           'Intake review · CAD missing',
-    'kickoff':          'Kickoff call · scope + project size',
-    'design':           'CET design',
-    'bom-gen':          'BOM generation',
-    'validation':       'Validation document · client approval',
-    'field-verify':     'Field verification handoff',
-    'sq-check':         'SQ / price-protected check',
-    'teknion-preview':  'Teknion Order Preview',
-    'spec-gap':         'Resolve specification gaps',
-    'phasing':          'Order phasing strategy',
-    'self-audit':       'Self-audit · BOM × 6 attributes',
-    'peer-review':      'Peer review · Rebecca Warren',
-    'submission':       'BOM submission · PDF + SP4',
-    'handoff':          'Coordinator handoff · NetSuite',
-    'ack-review':       'Acknowledgment review · Gemini supercharge',
-}
-
 const STAGE_AI_BANNER: Record<OfficeworksReviewStage, string> = {
     'intake':           '75-80% of Works forms arrive incomplete · Strata detected missing CAD + blank SQ · email drafted to Caitlin',
-    'kickoff':          'Auto-transcribe + checklist of unclarified items · GW1B project size selector',
-    'design':           'CET layout · 71 lines · Flintwood 5N White Oak finish · DDP parallel optional',
+    'intake-complete':  'Caitlin replied · CAD .dwg attached · SQ #436533 confirmed · designer assignment unlocked',
+    'design':           'Scope confirmed · ~30 stations Standard/Large · Flintwood 5N White Oak · drawing in CET/CAP · upload the 149-line BOM for analysis',
     'bom-gen':          'CAP generates BOM · 71 lines across 4 Tags · List $296,228 / Net $61,464.80 · 13 CRs (25-40 days)',
     'validation':       'Google Slides auto-compiled · client approval gate · GW2A revision type sub-gateway',
     'field-verify':     'Pre-installation drawings sent to Abigail PM · field verification BEFORE Teknion order',
@@ -111,14 +96,37 @@ const DOC_TABS = [
     { id: 'bom' as const,        icon: ClipboardCheck, label: 'BOM' },
     { id: 'validation' as const, icon: FileText, label: 'Validation Doc' },
     { id: 'floor-plan' as const, icon: MapPin, label: 'Floor Plan' },
+    { id: 'attachments' as const, icon: Paperclip, label: 'Attachments' },
     { id: 'ack' as const,        icon: FileText, label: 'Acknowledgment' },
 ] as const
 
 type DocTab = typeof DOC_TABS[number]['id']
 
+// Stage-aware tab visibility. Flow 1 + Flow 2 (design through sq-check) start
+// with a 3-tab contextual base (Works Form, Floor Plan, Attachments). The BOM
+// and Validation Doc tabs are added dynamically by DefaultDocTabs once the
+// designer uploads the BOM (sc1.2) or compiles the validation doc (sc1.3) —
+// see FlowProgress.
+const STAGE_TABS: Partial<Record<OfficeworksReviewStage, DocTab[]>> = {
+    'intake': ['works-form', 'floor-plan', 'attachments'],
+    'intake-complete': ['works-form', 'floor-plan', 'attachments'],
+    'design': ['works-form', 'floor-plan', 'attachments'],
+    'validation': ['works-form', 'floor-plan', 'attachments'],
+    'sq-check': ['works-form', 'floor-plan', 'attachments'],
+}
+const DEFAULT_TAB_SET: DocTab[] = ['works-form', 'bom', 'validation', 'floor-plan', 'ack']
+
+// Flags toggled by Flow 2 panels as the designer produces artifacts.
+// Used by DefaultDocTabs to reveal the BOM / Validation Doc tabs and by
+// BOMPreview to flip from placeholder to real table.
+interface FlowProgress {
+    bomUploaded: boolean
+    validationCompiled: boolean
+}
+
 // Default doc tab per stage (which document is most relevant)
 const DEFAULT_DOC: Record<OfficeworksReviewStage, DocTab> = {
-    'intake': 'works-form', 'kickoff': 'works-form',
+    'intake': 'works-form', 'intake-complete': 'works-form',
     'design': 'floor-plan', 'bom-gen': 'bom', 'validation': 'validation', 'field-verify': 'floor-plan',
     'sq-check': 'bom', 'teknion-preview': 'bom', 'spec-gap': 'bom', 'phasing': 'bom',
     'self-audit': 'bom', 'peer-review': 'bom',
@@ -153,8 +161,21 @@ export default function OfficeworksDocumentReviewModal({
     const { isSidebarCollapsed, isDemoActive } = useDemo()
     const leftOffset = isDemoActive && !isSidebarCollapsed ? 'left-80' : 'left-0'
     const activeCol = STAGE_TO_COL[stage]
-    const label = STAGE_LABELS[stage]
     const aiBanner = STAGE_AI_BANNER[stage]
+
+    // Modal-level progress flags · drive dynamic tab visibility + BOMPreview gate
+    const [flowProgress, setFlowProgress] = useState<FlowProgress>({
+        bomUploaded: false,
+        validationCompiled: false,
+    })
+    // Defensive reset when the modal returns to a pre-Flow-2 stage (back-navigation)
+    useEffect(() => {
+        if (stage === 'intake' || stage === 'intake-complete') {
+            setFlowProgress({ bomUploaded: false, validationCompiled: false })
+        }
+    }, [stage])
+    const markBomUploaded       = () => setFlowProgress(p => ({ ...p, bomUploaded: true }))
+    const markValidationDone    = () => setFlowProgress(p => ({ ...p, validationCompiled: true }))
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -186,9 +207,6 @@ export default function OfficeworksDocumentReviewModal({
                                             <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
                                                 Document Review — MANATT 4th Floor
                                             </h3>
-                                            <p className="text-[11px] text-muted-foreground truncate">
-                                                {MANATT_ORDER_META.sqName} · {MANATT_ORDER_META.poNumber} · {label}
-                                            </p>
                                         </div>
                                     </div>
 
@@ -224,25 +242,40 @@ export default function OfficeworksDocumentReviewModal({
                                     <div className="flex-1 grid grid-cols-5 min-h-0">
                                         {/* Left: Document tabs */}
                                         <div className="col-span-3 border-r border-border flex flex-col min-h-0">
-                                            {leftPanelOverride ?? <DefaultDocTabs stage={stage} />}
+                                            {leftPanelOverride ?? <DefaultDocTabs stage={stage} flowProgress={flowProgress} />}
                                         </div>
 
                                         {/* Right: Stage-adaptive panel */}
                                         <div className="col-span-2 flex flex-col min-h-0 overflow-hidden">
-                                            {/* Intake stage: interactive IntakeAssignPanel · owns its own CTA */}
-                                            {!rightPanelOverride && stage === 'intake' ? (
-                                                <IntakeAssignPanel
-                                                    assignedDesigner={assignedDesigner ?? null}
-                                                    onAssignDesigner={onAssignDesigner}
-                                                    onValidate={onValidate}
-                                                />
-                                            ) : (
-                                                <>
-                                                    <div className="flex-1 overflow-y-auto p-5">
-                                                        {rightPanelOverride ?? <DefaultStagePanel stage={stage} onValidate={onValidate} />}
-                                                    </div>
-                                                    {/* Footer CTA */}
-                                                    {!rightPanelOverride && (
+                                            {(() => {
+                                                if (rightPanelOverride) {
+                                                    return (
+                                                        <>
+                                                            <div className="flex-1 overflow-y-auto p-5">{rightPanelOverride}</div>
+                                                        </>
+                                                    )
+                                                }
+                                                // Flow 1 · intake assign · owns its own CTA
+                                                if (stage === 'intake' || stage === 'intake-complete') {
+                                                    return (
+                                                        <IntakeAssignPanel
+                                                            stage={stage}
+                                                            assignedDesigner={assignedDesigner ?? null}
+                                                            onAssignDesigner={onAssignDesigner}
+                                                            onValidate={onValidate}
+                                                        />
+                                                    )
+                                                }
+                                                // Flow 2 · 3 interactive panels (each owns its own CTA)
+                                                if (stage === 'design')     return <DesignBOMPanel onValidate={onValidate} onBOMUploaded={markBomUploaded} bomUploaded={flowProgress.bomUploaded} />
+                                                if (stage === 'validation') return <ValidationFieldPanel onValidate={onValidate} onValidationCompiled={markValidationDone} />
+                                                if (stage === 'sq-check')   return <SQCheckPanel onValidate={onValidate} />
+                                                // Default · static description + Approve & Continue
+                                                return (
+                                                    <>
+                                                        <div className="flex-1 overflow-y-auto p-5">
+                                                            <DefaultStagePanel stage={stage} onValidate={onValidate} />
+                                                        </div>
                                                         <div className="border-t border-border px-5 py-3 bg-card shrink-0">
                                                             <button
                                                                 type="button"
@@ -253,9 +286,9 @@ export default function OfficeworksDocumentReviewModal({
                                                                 <ArrowRight className="h-4 w-4" />
                                                             </button>
                                                         </div>
-                                                    )}
-                                                </>
-                                            )}
+                                                    </>
+                                                )
+                                            })()}
                                         </div>
                                     </div>
                                 )}
@@ -270,33 +303,57 @@ export default function OfficeworksDocumentReviewModal({
 
 // ─── Default doc tabs (left panel) ─────────────────────────────────────────────
 
-function DefaultDocTabs({ stage }: { stage: OfficeworksReviewStage }) {
+function DefaultDocTabs({ stage, flowProgress }: { stage: OfficeworksReviewStage; flowProgress: FlowProgress }) {
+    const baseTabIds = STAGE_TABS[stage] ?? DEFAULT_TAB_SET
+    const visibleTabIds: DocTab[] = [...baseTabIds]
+    // Dynamic tabs · appear once their artifact exists.
+    if (flowProgress.bomUploaded && !visibleTabIds.includes('bom')) visibleTabIds.push('bom')
+    if (flowProgress.validationCompiled && !visibleTabIds.includes('validation')) visibleTabIds.push('validation')
+    const visibleTabs = DOC_TABS.filter(t => visibleTabIds.includes(t.id))
     const [activeTab, setActiveTab] = useState<DocTab>(DEFAULT_DOC[stage])
+
+    // A "View in BOM" link anywhere in the modal surfaces the BOM tab.
+    useEffect(() => {
+        const surfaceBom = () => setActiveTab('bom')
+        window.addEventListener('officeworks:bom-tab-focus', surfaceBom)
+        return () => window.removeEventListener('officeworks:bom-tab-focus', surfaceBom)
+    }, [])
 
     return (
         <>
             {/* Tab bar */}
             <div className="flex items-center gap-0 border-b border-border bg-muted/30 shrink-0 px-4 pt-2 overflow-x-auto">
-                {DOC_TABS.map(tab => (
-                    <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border-b-2 mr-1 shrink-0 transition-colors ${
-                            activeTab === tab.id
-                                ? 'border-primary text-foreground'
-                                : 'border-transparent text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        <tab.icon className="h-3 w-3" />
-                        {tab.label}
-                    </button>
-                ))}
+                {visibleTabs.map(tab => {
+                    const isDynamic = (tab.id === 'bom' && flowProgress.bomUploaded)
+                                   || (tab.id === 'validation' && flowProgress.validationCompiled)
+                    const isBaseTab = baseTabIds.includes(tab.id)
+                    const justArrived = isDynamic && !isBaseTab
+                    return (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border-b-2 mr-1 shrink-0 transition-colors ${
+                                activeTab === tab.id
+                                    ? 'border-primary text-foreground'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                            } ${justArrived ? 'animate-in fade-in slide-in-from-right-1 duration-300' : ''}`}
+                        >
+                            <tab.icon className="h-3 w-3" />
+                            {tab.label}
+                            {justArrived && (
+                                <span className="ml-1 text-[8px] font-bold uppercase tracking-wider bg-success/15 text-success border border-success/30 rounded px-1 py-0 animate-pulse">
+                                    new
+                                </span>
+                            )}
+                        </button>
+                    )
+                })}
             </div>
 
             {/* Tab content */}
             <div className="flex-1 min-h-0">
-                <DocTabContent tab={activeTab} stage={stage} />
+                <DocTabContent tab={activeTab} stage={stage} flowProgress={flowProgress} />
             </div>
         </>
     )
@@ -304,11 +361,12 @@ function DefaultDocTabs({ stage }: { stage: OfficeworksReviewStage }) {
 
 // ─── Doc tab content dispatch (real previews) ─────────────────────────────────
 
-function DocTabContent({ tab, stage }: { tab: DocTab; stage: OfficeworksReviewStage }) {
+function DocTabContent({ tab, stage, flowProgress }: { tab: DocTab; stage: OfficeworksReviewStage; flowProgress: FlowProgress }) {
     if (tab === 'works-form') return <WorksFormPreview stage={stage} />
-    if (tab === 'bom') return <BOMPreview stage={stage} />
+    if (tab === 'bom') return <BOMPreview stage={stage} bomUploaded={flowProgress.bomUploaded} />
     if (tab === 'validation') return <ValidationDocPreview stage={stage} />
-    if (tab === 'floor-plan') return <FloorPlanPreview />
+    if (tab === 'floor-plan') return <FloorPlanPreview stage={stage} />
+    if (tab === 'attachments') return <AttachmentsPreview stage={stage} />
     if (tab === 'ack') return <AckPreview stage={stage} />
     return null
 }
@@ -324,8 +382,15 @@ interface FormField {
 }
 
 function WorksFormPreview({ stage }: { stage: OfficeworksReviewStage }) {
-    // At intake: CAD missing + SQ blank. At other stages: complete (gaps resolved).
-    const isIntake = stage === 'intake'
+    // Only at sc1.0 (intake) are CAD + SQ missing. From sc1.0b (intake-complete) onward
+    // the reply arrived and the form is complete.
+    const isIntakePending = stage === 'intake'
+    const isIntakeComplete = stage === 'intake-complete'
+    const cadValue = isIntakePending
+        ? null
+        : isIntakeComplete
+            ? 'manatt-4th-floor.dwg · received 2026-04-17 11:08 from Caitlin'
+            : 'manatt-4th-floor.dwg · received 18h after submission'
 
     const fields: FormField[] = [
         { label: 'Client', value: 'Manatt Phelps & Phillips LLP', status: 'complete', required: true },
@@ -334,10 +399,10 @@ function WorksFormPreview({ stage }: { stage: OfficeworksReviewStage }) {
         { label: 'Scope', value: '~30 workstations · Standard/Large', status: 'complete', required: true },
         { label: 'Submitted by', value: 'Caitlin Barolet · DC Salesrep', status: 'complete', required: true },
         { label: 'Co-submitter', value: 'Danielle Dunlap', status: 'complete', required: false },
-        { label: 'CAD file (.dwg)', value: isIntake ? null : 'manatt-4th-floor.dwg · received 18h after submission', status: isIntake ? 'missing' : 'complete', required: true, note: isIntake ? 'Required to start design in CET' : undefined },
+        { label: 'CAD file (.dwg)', value: cadValue, status: isIntakePending ? 'missing' : 'complete', required: true, note: isIntakePending ? 'Required to start design in CET' : undefined },
         { label: 'PDF floor plan', value: 'manatt-4th-floor-floorplan.pdf', status: 'complete', required: false },
-        { label: 'SQ number (price-protected)', value: isIntake ? null : `#${MANATT_ORDER_META.specialQuote}`, status: isIntake ? 'missing' : 'complete', required: true, note: isIntake ? 'GSA client · price protection required' : undefined },
-        { label: 'Catalog effective', value: isIntake ? 'Strata suggests 2025' : '2025', status: 'complete', required: true },
+        { label: 'SQ number (price-protected)', value: isIntakePending ? null : `#${MANATT_ORDER_META.specialQuote}`, status: isIntakePending ? 'missing' : 'complete', required: true, note: isIntakePending ? 'GSA client · price protection required' : undefined },
+        { label: 'Catalog effective', value: isIntakePending ? 'Strata suggests 2025' : '2025', status: 'complete', required: true },
         { label: 'Due date', value: '2026-03-20 (Sched Ship)', status: 'complete', required: true },
     ]
 
@@ -353,15 +418,20 @@ function WorksFormPreview({ stage }: { stage: OfficeworksReviewStage }) {
                         <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Google Form · Works Intake</div>
                         <div className="text-[10px] text-muted-foreground mt-0.5">Submitted 2026-04-16 · auto-routed to 3 design managers</div>
                     </div>
-                    {isIntake && missingCount > 0 && (
+                    {isIntakePending && missingCount > 0 && (
                         <span className="text-[10px] font-bold uppercase tracking-wider bg-warning/10 text-warning border border-warning/20 rounded-md px-2 py-1 animate-pulse">
                             {missingCount} missing
+                        </span>
+                    )}
+                    {isIntakeComplete && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded-md px-2 py-1">
+                            Complete
                         </span>
                     )}
                 </div>
 
                 {/* AI helper line at intake */}
-                {isIntake && missingCount > 0 && (
+                {isIntakePending && missingCount > 0 && (
                     <div className="px-4 py-2 bg-ai/5 border-b border-ai/20 flex items-start gap-2">
                         <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
                         <div className="text-[11px] text-ai">
@@ -416,12 +486,10 @@ function WorksFormPreview({ stage }: { stage: OfficeworksReviewStage }) {
 
 // ─── BOM tab ──────────────────────────────────────────────────────────────────
 
-function BOMPreview({ stage }: { stage: OfficeworksReviewStage }) {
-    // BOM not generated yet for stages before bom-gen
-    const preBOMStages: OfficeworksReviewStage[] = ['intake', 'kickoff', 'design']
-    const notGenerated = preBOMStages.includes(stage)
-
-    if (notGenerated) {
+function BOMPreview({ bomUploaded }: { stage: OfficeworksReviewStage; bomUploaded: boolean }) {
+    // BOM tab is invisible until the designer uploads (see DefaultDocTabs), but
+    // if the tab is forced open (e.g., via dev), show a clear placeholder.
+    if (!bomUploaded) {
         return (
             <div className="h-full flex items-center justify-center p-6 bg-muted/20">
                 <div className="bg-card border border-dashed border-border rounded-xl p-8 max-w-md text-center space-y-3">
@@ -429,10 +497,9 @@ function BOMPreview({ stage }: { stage: OfficeworksReviewStage }) {
                         <ClipboardCheck className="h-6 w-6" />
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-foreground">BOM not yet generated</h4>
+                        <h4 className="text-sm font-semibold text-foreground">BOM not yet uploaded</h4>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Bill of Materials will be exported from CET → CAP after the design phase completes.
-                            Currently at stage <span className="font-mono">{stage}</span>.
+                            The designer builds the BOM externally in CET / CAP and uploads the file (.pdf, .sp4, .xlsx) to Strata. Awaiting upload in the right panel.
                         </p>
                     </div>
                 </div>
@@ -441,8 +508,19 @@ function BOMPreview({ stage }: { stage: OfficeworksReviewStage }) {
     }
 
     return (
-        <div className="h-full overflow-y-auto p-4 bg-muted/20">
-            <BOMTable compact />
+        <div className="h-full flex flex-col bg-muted/20">
+            <div className="px-4 py-2.5 border-b border-border bg-muted/40 flex items-center gap-2 shrink-0">
+                <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    MANATT-4F_BOM_v1.pdf · 149 line items · $1,541,392 List
+                </div>
+                <span className="ml-auto text-[10px] text-success font-medium">Uploaded</span>
+            </div>
+            <iframe
+                src={OFFICEWORKS_PDFS.manattBOM}
+                title="MANATT 4F BOM"
+                className="flex-1 w-full border-0 bg-card"
+            />
         </div>
     )
 }
@@ -450,7 +528,7 @@ function BOMPreview({ stage }: { stage: OfficeworksReviewStage }) {
 // ─── Validation Doc tab ───────────────────────────────────────────────────────
 
 function ValidationDocPreview({ stage }: { stage: OfficeworksReviewStage }) {
-    const preValidationStages: OfficeworksReviewStage[] = ['intake', 'kickoff', 'design', 'bom-gen']
+    const preValidationStages: OfficeworksReviewStage[] = ['intake', 'design', 'bom-gen']
     const notCompiled = preValidationStages.includes(stage)
 
     if (notCompiled) {
@@ -508,94 +586,127 @@ function ValidationDocPreview({ stage }: { stage: OfficeworksReviewStage }) {
     )
 }
 
-// ─── Floor Plan tab · simple SVG mock ─────────────────────────────────────────
+// ─── Floor Plan tab · BlueprintFloorPlan shared SVG (lifted from BFI) ─────────
 
-function FloorPlanPreview() {
+function FloorPlanPreview({ stage }: { stage: OfficeworksReviewStage }) {
+    const isIntakePending = stage === 'intake'
+    const isIntakeComplete = stage === 'intake-complete'
+    const headerLabel = isIntakePending
+        ? 'PDF Floor Plan · manatt-4th-floor-floorplan.pdf'
+        : isIntakeComplete
+            ? 'PDF Floor Plan + CAD · manatt-4th-floor.dwg attached'
+            : 'CAD Floor Plan'
     return (
         <div className="h-full overflow-y-auto p-4 bg-muted/20">
             <div className="bg-card border border-border rounded-xl overflow-hidden max-w-3xl mx-auto">
                 <div className="px-4 py-3 border-b border-border bg-muted/40 flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
                     <div className="flex-1">
-                        <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">CAD Floor Plan</div>
+                        <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                            {headerLabel}
+                        </div>
                         <div className="text-[10px] text-muted-foreground mt-0.5">MANATT 4th Floor · 71 stations · WS-01(10) + WS-02(6)×2 + WS-02.A(8)</div>
                     </div>
-                    <span className="text-[10px] text-success font-medium">CAD verified ✓</span>
+                    {isIntakePending && (
+                        <span className="text-[10px] text-muted-foreground font-medium">PDF · 4 pages · 2.1 MB</span>
+                    )}
+                    {isIntakeComplete && (
+                        <span className="text-[10px] text-success font-medium">PDF + .dwg received ✓</span>
+                    )}
+                    {!isIntakePending && !isIntakeComplete && (
+                        <span className="text-[10px] text-success font-medium">CAD verified ✓</span>
+                    )}
                 </div>
                 <div className="p-4 bg-muted/10">
-                    <svg viewBox="0 0 400 280" className="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
-                        {/* Floor outline */}
-                        <rect x="10" y="10" width="380" height="260" fill="none" stroke="currentColor" className="text-border" strokeWidth="2" />
-
-                        {/* Internal walls */}
-                        <line x1="200" y1="10" x2="200" y2="170" stroke="currentColor" className="text-border" strokeWidth="1" />
-                        <line x1="10" y1="170" x2="200" y2="170" stroke="currentColor" className="text-border" strokeWidth="1" />
-
-                        {/* Workstation pictograms · WS-01 (10) bottom-left */}
-                        <text x="20" y="195" fill="currentColor" className="text-[8px] fill-current text-muted-foreground" fontSize="8">WS-01 (10)</text>
-                        {Array.from({ length: 10 }).map((_, i) => {
-                            const col = i % 5
-                            const row = Math.floor(i / 5)
-                            return (
-                                <rect
-                                    key={`ws1-${i}`}
-                                    x={20 + col * 32}
-                                    y={205 + row * 24}
-                                    width="28" height="20"
-                                    className="fill-primary/30 stroke-primary"
-                                    strokeWidth="1"
-                                    rx="2"
-                                />
-                            )
-                        })}
-
-                        {/* WS-02 (6+6) top-left */}
-                        <text x="20" y="30" fill="currentColor" className="text-[8px] fill-current text-muted-foreground" fontSize="8">WS-02 (12)</text>
-                        {Array.from({ length: 12 }).map((_, i) => {
-                            const col = i % 6
-                            const row = Math.floor(i / 6)
-                            return (
-                                <rect
-                                    key={`ws2-${i}`}
-                                    x={20 + col * 28}
-                                    y={40 + row * 22}
-                                    width="24" height="18"
-                                    className="fill-info/30 stroke-info"
-                                    strokeWidth="1"
-                                    rx="2"
-                                />
-                            )
-                        })}
-
-                        {/* WS-02.A (8) right side */}
-                        <text x="220" y="30" fill="currentColor" className="text-[8px] fill-current text-muted-foreground" fontSize="8">WS-02.A (8)</text>
-                        {Array.from({ length: 8 }).map((_, i) => {
-                            const col = i % 4
-                            const row = Math.floor(i / 4)
-                            return (
-                                <rect
-                                    key={`ws2a-${i}`}
-                                    x={220 + col * 38}
-                                    y={40 + row * 26}
-                                    width="34" height="22"
-                                    className="fill-warning/30 stroke-warning"
-                                    strokeWidth="1"
-                                    rx="2"
-                                />
-                            )
-                        })}
-
-                        {/* Common area · right bottom */}
-                        <text x="240" y="195" fill="currentColor" className="text-[8px] fill-current text-muted-foreground" fontSize="8">Conference + Break</text>
-                        <rect x="220" y="200" width="160" height="60" className="fill-muted stroke-border" strokeWidth="1" rx="3" />
-
-                        {/* Compass */}
-                        <text x="370" y="22" className="text-[10px] fill-current text-muted-foreground" fontSize="10">N ↑</text>
-                    </svg>
+                    <BlueprintFloorPlan
+                        locationLabel="Architectural Layout · MANATT 4th Floor"
+                        zoneALabel="ZONE A · WORKSTATIONS WS-01/WS-02 ×22"
+                        zoneBLabel="ZONE B · CONFERENCE + BREAK"
+                        zoneCLabel="ZONE C · WS-02.A ×8 + STORAGE"
+                        footerLabel={`Manatt Phelps & Phillips LLP · ${MANATT_ORDER_META.poNumber} · by Caitlin Barolet`}
+                    />
                 </div>
                 <div className="px-4 py-2.5 bg-muted/30 border-t border-border text-[10px] text-muted-foreground text-center">
                     {MANATT_ORDER_META.sqName} · {MANATT_ORDER_META.poNumber} · DC market · 4th Floor
                 </div>
+            </div>
+        </div>
+    )
+}
+
+// ─── Attachments tab · file list with status (intake-only) ────────────────────
+
+function AttachmentsPreview({ stage }: { stage: OfficeworksReviewStage }) {
+    const isIntakePending = stage === 'intake'
+    const files = [
+        {
+            name: 'manatt-4th-floor-floorplan.pdf',
+            kind: 'PDF',
+            meta: 'Received with form · 2026-04-16 · 2.1 MB',
+            status: 'attached' as const,
+        },
+        {
+            name: 'manatt-4th-floor.dwg',
+            kind: 'CAD',
+            meta: isIntakePending
+                ? 'Required to start design in CET (Task 3)'
+                : 'Received from Caitlin · 2026-04-17 11:08 · 4.8 MB',
+            status: (isIntakePending ? 'missing' : 'attached') as 'missing' | 'attached',
+        },
+    ]
+    return (
+        <div className="h-full overflow-y-auto p-4 bg-muted/20">
+            <div className="bg-card border border-border rounded-xl overflow-hidden max-w-2xl mx-auto">
+                <div className="px-4 py-3 border-b border-border bg-muted/40 flex items-center gap-2">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                        <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Attachments</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Files submitted with the Works form · auto-routed for review</div>
+                    </div>
+                </div>
+
+                <div className="divide-y divide-border">
+                    {files.map(f => (
+                        <div key={f.name} className={`px-4 py-3 flex items-center gap-3 ${f.status === 'missing' ? 'bg-warning/5' : ''}`}>
+                            <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
+                                f.status === 'missing' ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'
+                            }`}>
+                                {f.status === 'missing' ? <AlertCircle className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm font-semibold text-foreground truncate">
+                                    {f.name}
+                                </div>
+                                <div className={`text-[10px] mt-0.5 ${f.status === 'missing' ? 'text-warning italic' : 'text-muted-foreground'}`}>
+                                    {f.meta}
+                                </div>
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider rounded px-2 py-1 shrink-0 ${
+                                f.status === 'missing'
+                                    ? 'bg-warning/10 text-warning border border-warning/30 animate-pulse'
+                                    : 'bg-success/10 text-success border border-success/30'
+                            }`}>
+                                {f.status === 'missing' ? 'Missing' : 'Attached'}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
+                {isIntakePending ? (
+                    <div className="px-4 py-3 bg-ai/5 border-t border-ai/20 flex items-start gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
+                        <div className="text-[11px] text-ai">
+                            <span className="font-bold">Clarification email drafted to Caitlin Barolet.</span> CAD must arrive before design can start in CET (Task 3).
+                        </div>
+                    </div>
+                ) : (
+                    <div className="px-4 py-3 bg-success/5 border-t border-success/20 flex items-start gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
+                        <div className="text-[11px] text-success">
+                            <span className="font-bold">Caitlin replied · CAD and SQ resolved.</span> Form is complete · proceed to designer assignment.
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -650,17 +761,9 @@ function DefaultStagePanel({ stage }: PanelProps) {
             headline: 'Form completeness · Assign designer',
             body: <>
                 <p>Caitlin Barolet submitted the Works form for MANATT 4th Floor. <span className="text-warning font-medium">CAD file missing</span>, <span className="text-warning font-medium">SQ blank</span>.</p>
-                <p className="mt-2">Strata drafted a clarifying email to Caitlin and surfaced the capacity heatmap. Felicia can assign now or proceed to kickoff in parallel (GW1 soft check).</p>
+                <p className="mt-2">Strata drafted a clarifying email to Caitlin and surfaced the capacity heatmap. Felicia reviews the form and assigns the designer (GW1 soft check).</p>
             </>,
             cta: 'Request CAD + assign designer',
-        },
-        'kickoff': {
-            headline: 'Kickoff scope + project size (GW1B)',
-            body: <>
-                <p>Kimberly + Caitlin · scope checklist auto-populated from form gaps. Audio transcribed.</p>
-                <p className="mt-2">Project size: <span className="font-medium text-foreground">Standard/Large</span> (~30 stations) → full flow. Small (1-5 stations) would bypass Tasks 3, 5, 6, 7.</p>
-            </>,
-            cta: 'Confirm scope · continue',
         },
         'design': {
             headline: 'CET layout in progress',
@@ -729,99 +832,904 @@ function DefaultStagePanel({ stage }: PanelProps) {
     )
 }
 
-// ─── IntakeAssignPanel · interactive · CapacityHeatmap embedded ────────────────
+// ─── IntakeAssignPanel · stage-aware: sc1.0 = send clarification · sc1.0b = assign ─
 
 interface IntakeAssignPanelProps {
+    stage: OfficeworksReviewStage
     assignedDesigner: string | null
     onAssignDesigner?: (name: string) => void
     onValidate: () => void
 }
 
-function IntakeAssignPanel({ assignedDesigner, onAssignDesigner, onValidate }: IntakeAssignPanelProps) {
+const REQUEST_MESSAGE = `Hi Caitlin,
+
+Thanks for submitting the Works form for the MANATT 4th Floor build-out. To start the design in CET we need two items before we can route to a designer:
+
+  · CAD floor plan (.dwg) · required for layout in CET (Task 3)
+  · SQ number for the GSA price-protected client · Strata suggests #${MANATT_ORDER_META.specialQuote} (catalog 2025) · please confirm
+
+The rest of the form is complete. As soon as the CAD arrives we'll assign and kick off.
+
+— Strata (drafted on behalf of Felicia Miano-Poles · EVP Design & PM)
+strata-ai@officeworks.com`
+
+function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValidate }: IntakeAssignPanelProps) {
+    const isIntakePending = stage === 'intake'
+    const isIntakeComplete = stage === 'intake-complete'
     const designerProfile = assignedDesigner ? findDesigner(assignedDesigner) : null
+    const [dialogOpen, setDialogOpen] = useState(false)
 
     return (
         <>
             <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
-                {/* Form completeness summary */}
+                {/* Form completeness summary · adapts to stage */}
                 <div>
                     <h4 className="text-base font-semibold text-foreground">Form completeness</h4>
-                    <ul className="mt-2 space-y-1.5">
-                        <li className="flex items-start gap-2 text-xs text-warning">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            <span><span className="font-semibold">CAD file missing</span> · Strata drafted email to Caitlin Barolet</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-warning">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            <span><span className="font-semibold">SQ blank</span> · GSA price-protected · Strata suggests SQ #{MANATT_ORDER_META.specialQuote} · catalog 2025</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-success">
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            <span>All other fields complete · proceed in parallel (GW1 soft check)</span>
-                        </li>
-                    </ul>
+                    {isIntakePending ? (
+                        <ul className="mt-2 space-y-1.5">
+                            <li className="flex items-start gap-2 text-xs text-warning">
+                                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <span><span className="font-semibold">CAD file missing</span> · Strata drafted email to Caitlin Barolet</span>
+                            </li>
+                            <li className="flex items-start gap-2 text-xs text-warning">
+                                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <span><span className="font-semibold">SQ blank</span> · GSA price-protected · Strata suggests SQ #{MANATT_ORDER_META.specialQuote} · catalog 2025</span>
+                            </li>
+                            <li className="flex items-start gap-2 text-xs text-success">
+                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <span>All other fields complete · proceed in parallel (GW1 soft check)</span>
+                            </li>
+                        </ul>
+                    ) : (
+                        <ul className="mt-2 space-y-1.5">
+                            <li className="flex items-start gap-2 text-xs text-success">
+                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <span><span className="font-semibold">CAD .dwg received</span> · 4.8 MB · from Caitlin · 2026-04-17 11:08</span>
+                            </li>
+                            <li className="flex items-start gap-2 text-xs text-success">
+                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <span><span className="font-semibold">SQ #{MANATT_ORDER_META.specialQuote} confirmed</span> · GSA price-protected · catalog 2025</span>
+                            </li>
+                            <li className="flex items-start gap-2 text-xs text-success">
+                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <span>All required fields satisfied · ready for designer assignment</span>
+                            </li>
+                        </ul>
+                    )}
                 </div>
 
-                {/* Assign designer section */}
-                <div className="border-t border-border pt-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            Assign designer
-                        </h4>
-                        {!assignedDesigner && (
+                {/* sc1.0 · send clarification block */}
+                {isIntakePending && (
+                    <div className="border-t border-border pt-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                Missing required information
+                            </h4>
                             <span className="text-[10px] uppercase tracking-wider font-bold bg-warning/10 text-warning border border-warning/20 rounded px-2 py-0.5 animate-pulse">
                                 Required
                             </span>
-                        )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                        Click any designer below to assign. Felicia recommends <span className="font-medium text-foreground">Kimberly Tucker</span> (PA · 65% utilized · prior MANATT · cross-market).
-                    </p>
-
-                    <CapacityHeatmap
-                        onSelect={onAssignDesigner}
-                        selectedName={assignedDesigner}
-                    />
-
-                    {/* Selected designer summary */}
-                    {designerProfile && (
-                        <div className="mt-3 bg-primary/5 border border-primary/20 rounded-lg p-3 text-xs space-y-1 animate-in fade-in slide-in-from-top-1 duration-300">
-                            <div className="flex items-center justify-between">
-                                <span className="font-semibold text-foreground flex items-center gap-1.5">
-                                    <UserCheck className="h-3.5 w-3.5 text-primary" />
-                                    Assigning to {designerProfile.name}
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">{designerProfile.seniority}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Strata drafted a clarification email to <span className="font-medium text-foreground">Caitlin Barolet</span> requesting the CAD file (.dwg) and SQ number. Designer assignment unlocks once the response arrives.
+                        </p>
+                        <div className="bg-muted/40 border border-border rounded-lg p-3 text-xs space-y-1">
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                <FileText className="h-3 w-3" />
+                                Email preview
                             </div>
-                            <div className="text-muted-foreground grid grid-cols-2 gap-2">
-                                <div><span className="text-[10px] uppercase">Region · </span>{regionLabel(designerProfile.region)}</div>
-                                <div><span className="text-[10px] uppercase">Utilization · </span>{designerProfile.utilization}%</div>
-                                <div><span className="text-[10px] uppercase">Active · </span>{designerProfile.projects.active.length} projects</div>
-                                <div><span className="text-[10px] uppercase">YTD · </span>{designerProfile.projects.completedYTD} completed</div>
+                            <div className="text-foreground"><span className="text-muted-foreground">To: </span>caitlin.barolet@manatt.com</div>
+                            <div className="text-foreground"><span className="text-muted-foreground">Subject: </span>MANATT 4th Floor · clarification needed · CAD file + SQ number</div>
+                            <div className="text-muted-foreground line-clamp-2 pt-1">Thanks for submitting the Works form for the MANATT 4th Floor build-out. To start the design in CET we need two items before we can route to a designer…</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* sc1.0b · resolved · designer list */}
+                {isIntakeComplete && (() => {
+                    const kim = findDesigner('Kimberly Tucker')
+                    const kimCap = kim ? computeCapacity(kim) : null
+                    const kimRationale = kimCap
+                        ? `${kimCap.freeHours}h free this week / ${kimCap.availableHours}h available · prior MANATT · cross-market`
+                        : 'prior MANATT · cross-market'
+                    return (
+                    <div className="border-t border-border pt-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                            <div className="text-xs">
+                                <div className="font-semibold text-success">Caitlin replied with CAD + SQ confirmed · received 2026-04-17 11:08</div>
+                                <div className="text-muted-foreground">Ready to assign · Felicia recommends Kimberly Tucker · {kimRationale}</div>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                                Assign designer
+                            </h4>
+                            {!assignedDesigner && (
+                                <span className="text-[10px] uppercase tracking-wider font-bold bg-warning/10 text-warning border border-warning/20 rounded px-2 py-0.5 animate-pulse">
+                                    Required
+                                </span>
+                            )}
+                        </div>
+
+                        <CapacityHeatmap
+                            onSelect={onAssignDesigner}
+                            selectedName={assignedDesigner}
+                            highlightName="Kimberly Tucker"
+                            priorClientHighlight={{
+                                label: 'Worked with MANATT',
+                                predicate: d => !!d.priorMANATT,
+                            }}
+                            compact
+                        />
+
+                        {designerProfile && (
+                            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-xs space-y-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                                        <UserCheck className="h-3.5 w-3.5 text-foreground/70" />
+                                        Assigning to {designerProfile.name}
+                                    </span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-foreground bg-primary/25 rounded px-1.5 py-0.5">{designerProfile.seniority}</span>
+                                </div>
+                                <div className="text-muted-foreground grid grid-cols-2 gap-2">
+                                    <div><span className="text-[10px] uppercase">Region · </span>{regionLabel(designerProfile.region)}</div>
+                                    <div><span className="text-[10px] uppercase">Utilization · </span>{designerProfile.utilization}%</div>
+                                    <div><span className="text-[10px] uppercase">Active · </span>{designerProfile.projects.active.length} projects</div>
+                                    <div><span className="text-[10px] uppercase">YTD · </span>{designerProfile.projects.completedYTD} completed</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    )
+                })()}
             </div>
 
-            {/* Footer CTA · enabled only when designer selected */}
+            {/* Footer CTA · stage-aware */}
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
-                <button
-                    type="button"
-                    onClick={onValidate}
-                    disabled={!assignedDesigner}
-                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {assignedDesigner ? (
-                        <>
-                            Approve & Assign · Continue to Kickoff
-                            <ArrowRight className="h-4 w-4" />
-                        </>
-                    ) : (
-                        'Select a designer to continue'
-                    )}
-                </button>
+                {isIntakePending && (
+                    <button
+                        type="button"
+                        onClick={() => setDialogOpen(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                    >
+                        Open & send message
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                )}
+                {isIntakeComplete && (
+                    <button
+                        type="button"
+                        onClick={onValidate}
+                        disabled={!assignedDesigner}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {assignedDesigner ? (
+                            <>
+                                Approve & Assign · Continue to Kickoff
+                                <ArrowRight className="h-4 w-4" />
+                            </>
+                        ) : (
+                            'Select a designer to continue'
+                        )}
+                    </button>
+                )}
+            </div>
+
+            {/* RequestInfoDialog · only used in sc1.0; on send → advance demo to sc1.0b */}
+            {isIntakePending && (
+                <RequestInfoDialog
+                    isOpen={dialogOpen}
+                    onSent={() => { setDialogOpen(false); onValidate() }}
+                    onClose={() => setDialogOpen(false)}
+                    headerAvatar="CB"
+                    headerLabel="Caitlin Barolet · DC Salesrep"
+                    headerSubtitle="caitlin.barolet@manatt.com · Clarification Request"
+                    defaults={{
+                        from: 'strata-ai@officeworks.com',
+                        to: 'caitlin.barolet@manatt.com',
+                        cc: 'felicia.miano-poles@officeworks.com · EVP Design & PM',
+                        date: '2026-04-16 · 10:48 AM',
+                        subject: 'MANATT 4th Floor · clarification needed · CAD file + SQ number',
+                        message: REQUEST_MESSAGE,
+                        attachments: [{ name: 'manatt-works-form-summary.pdf', meta: '1 page · auto-generated' }],
+                        alertTitle: 'Missing Required Information',
+                        alertRows: [
+                            { label: 'Client',  value: 'Manatt Phelps & Phillips LLP' },
+                            { label: 'Project', value: 'MANATT · 4th Floor · ~30 stations' },
+                            { label: 'Missing 1', value: 'CAD floor plan (.dwg)' },
+                            { label: 'Missing 2', value: `SQ number · GSA price-protected (Strata suggests #${MANATT_ORDER_META.specialQuote})` },
+                        ],
+                        successTitle: 'Clarification request sent to Caitlin',
+                        successSubtitle: 'Awaiting CAD attachment + SQ confirmation',
+                    }}
+                />
+            )}
+        </>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Flow 2 panels · sc1.2 DesignBOMPanel · sc1.3 ValidationFieldPanel ·
+//                 sc1.4 SQCheckPanel
+// Modal stays open across these three stages (handled in OfficeworksPage).
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── sc1.2 DesignBOMPanel · PP2 capacity ledger + BOM upload narrative + PP1 ──
+
+interface DesignBOMPanelProps {
+    onValidate: () => void
+    onBOMUploaded: () => void
+    bomUploaded: boolean
+}
+
+const LEDGER_EVENTS = [
+    { text: 'CET session opened · Kimberly · 11:14 AM', delay: 400 },
+    { text: '+6h committed to Kimberly · this week', delay: 900 },
+    { text: 'Revision cycle started · WS-02.A typicals',  delay: 1400 },
+    { text: 'Capacity ledger sync · 18h committed / 40h available', delay: 1900 },
+]
+
+const UPLOAD_BULLETS = [
+    'Parsing PDF · 149 line items extracted · 15 pages · Teknion T25',
+    '11 areas tagged (WS-01/02/02.A · Office_WO.1/.2/.3 · Office_IO.1/.4 · Focus RM · Wellness · Reception)',
+    '22 Custom Requests flagged for spec-check verification',
+    'Cross-referencing finish codes · 1 inconsistency surfaced (Item 73 · XS Storm White vs area XG Very White)',
+    'Pricing parsed · $1,541,392 List · catalog effective Sep 2025 + Oct 2025 mix',
+    'AI BOM Validator queued · 149 × 6 = 894 attribute checks pending',
+]
+
+const RELATED_PROCESSES = [
+    { label: 'AI BOM Validator', detail: '894 checks queued for self-audit (sc1.6) · PP1 SC2' },
+    { label: 'Validation document', detail: 'Google Slides template auto-populated · 11 area sheets ready to compile' },
+    { label: 'Pre-install drawings', detail: 'Dimensions + blocking + floor cores per area · ready for Abigail (PM)' },
+    { label: 'Capacity ledger', detail: '18h committed updated · feeding live capacity board (PP2 SC5)' },
+]
+
+/**
+ * Findings derived from the REAL MANATT-4F_BOM_v1.pdf (149 line items, 11
+ * areas, 22 CRs, $1.54M list). Each finding has an actual page/item citation
+ * the user can verify by clicking "View in BOM" — the iframe of the real PDF
+ * loads in the BOM tab and the user can navigate to the cited page.
+ */
+interface BOMFinding {
+    id: string
+    severity: 'warning' | 'ai'
+    title: string
+    detail: string
+    source: string
+    answer: string
+    citation: string
+    primary: { label: string; tone: 'success' | 'ai' }
+    secondary: string
+}
+
+const BOM_FINDINGS: BOMFinding[] = [
+    {
+        id: 'finish-mismatch',
+        severity: 'warning',
+        title: 'Item 73 · Office_WO.3 panel finish mismatch',
+        detail: 'Source Laminate XS Storm White vs the area\'s XG Very White pattern · BMWOOH7224BTNN (CR 2090148)',
+        source: 'Source: BOM page 9 · Item 73 · Office_WO.3 area',
+        answer: 'Likely typo · the rest of Office_WO.3 panels use Source Laminate XG Very White. Confirm with Caitlin before submission · resubmitting with XS would visibly clash with adjacent panels.',
+        citation: 'Citation: KB-OW-FINISH-014 · MANATT spec book p.12 · area finish hierarchy',
+        primary: { label: 'Flag for resubmit', tone: 'success' },
+        secondary: 'Override · keep XS',
+    },
+    {
+        id: 'cr-2046138',
+        severity: 'ai',
+        title: 'CR 2046138 · Solid Add-On Screen · WS-02',
+        detail: 'Custom flintwood finish White Oak 5N · qty 1 · $1,406 list',
+        source: 'Source: BOM page 13 · Item 118 · WS-02 (6) area',
+        answer: 'Standard pattern for MANATT DC market · 4 prior approvals exist for this exact CR. Lead-time impact: +18 days (within Teknion 25-40d band). No PM escalation needed.',
+        citation: 'Citation: KB-OW-CR-2046138 · prior approvals · 4 historic MANATT orders',
+        primary: { label: 'Accept · proceed', tone: 'success' },
+        secondary: 'Open Create platform',
+    },
+    {
+        id: 'cr-2090148',
+        severity: 'ai',
+        title: 'CR 2090148 · Wall Panel shelf placement · ×5 occurrences',
+        detail: 'Items 10, 31, 52, 62, 73 · IO.1 + IO.4 + WO.1 + WO.2 + WO.3 · $427 × 5 = $2,135 list',
+        source: 'Source: BOM pages 2-9 · multiple line items',
+        answer: 'High-frequency custom across 5 areas · candidate for catalog formalization with Teknion. Strata flagged this for the next quarterly catalog review (PP1 input). Lead-time impact: +10 days per occurrence.',
+        citation: 'Citation: KB-OW-CR-2090148 · usage analytics · catalog formalization queue',
+        primary: { label: 'Accept · proceed', tone: 'success' },
+        secondary: 'Bulk override',
+    },
+]
+
+/** Surface the BOM tab from anywhere in the modal · listened by DefaultDocTabs */
+const focusBOMTab = () => window.dispatchEvent(new CustomEvent('officeworks:bom-tab-focus'))
+
+/**
+ * Renders the 3 real BOM_FINDINGS in the analyzed phase · same interaction
+ * idiom as the checklist rows (expand → "Strata answers" KB popover → Accept marks
+ * resolved). Each finding cites a real page/item in the PDF and offers a
+ * "View in BOM" link that surfaces the iframe tab via focusBOMTab().
+ */
+function BOMFindings() {
+    const [resolved, setResolved] = useState<Set<string>>(new Set())
+    const [expanded, setExpanded] = useState<string | null>(null)
+
+    const accept = (id: string) => {
+        setResolved(prev => new Set(prev).add(id))
+        setExpanded(null)
+    }
+
+    return (
+        <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-ai" />
+                    Strata findings · {BOM_FINDINGS.length} flagged
+                </div>
+                {resolved.size < BOM_FINDINGS.length && (
+                    <span className="text-[10px] uppercase tracking-wider font-bold bg-warning/10 text-warning border border-warning/20 rounded px-2 py-0.5">
+                        {BOM_FINDINGS.length - resolved.size} to review
+                    </span>
+                )}
+            </div>
+
+            {BOM_FINDINGS.map(f => {
+                const isResolved = resolved.has(f.id)
+                const isExpanded = expanded === f.id
+                const SeverityIcon = f.severity === 'warning' ? AlertCircle : Sparkles
+                const severityColor = f.severity === 'warning' ? 'text-warning' : 'text-ai'
+                const restingBorder = f.severity === 'warning' ? 'border-warning/30 bg-warning/5' : 'border-ai/20 bg-ai/5'
+                return (
+                    <div key={f.id} className={`rounded-lg border ${isResolved ? 'border-success/30 bg-success/5' : restingBorder}`}>
+                        <button
+                            type="button"
+                            onClick={() => !isResolved && setExpanded(isExpanded ? null : f.id)}
+                            disabled={isResolved}
+                            className="w-full flex items-start gap-2 px-3 py-2.5 text-left"
+                        >
+                            {isResolved
+                                ? <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                                : <SeverityIcon className={`h-4 w-4 ${severityColor} shrink-0 mt-0.5`} />}
+                            <div className="flex-1 min-w-0">
+                                <div className={`text-xs font-semibold ${isResolved ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                    {f.title}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5">{f.detail}</div>
+                                <div className="text-[10px] italic text-muted-foreground mt-0.5">{f.source}</div>
+                            </div>
+                            {!isResolved && (
+                                <span className="text-[10px] font-bold text-foreground bg-primary/20 rounded px-1.5 py-0.5 shrink-0">
+                                    {isExpanded ? 'Hide' : 'Strata answers'} {isExpanded ? '▴' : '▾'}
+                                </span>
+                            )}
+                        </button>
+                        {isExpanded && !isResolved && (
+                            <div className="border-t border-border/60 px-3 py-2.5 space-y-2 animate-in fade-in duration-200">
+                                <div className="text-xs text-foreground">{f.answer}</div>
+                                <div className="text-[10px] text-muted-foreground italic">{f.citation}</div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <button
+                                        type="button"
+                                        onClick={() => accept(f.id)}
+                                        className={`inline-flex items-center gap-1.5 rounded-md text-[11px] font-bold px-2.5 py-1 border transition-colors ${
+                                            f.primary.tone === 'ai'
+                                                ? 'bg-ai/15 text-ai border-ai/30 hover:bg-ai/20'
+                                                : 'bg-success/15 text-success border-success/30 hover:bg-success/20'
+                                        }`}
+                                    >
+                                        <CheckCircle2 className="h-3 w-3" /> {f.primary.label}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => accept(f.id)}
+                                        className="inline-flex items-center rounded-md text-[11px] font-medium px-2.5 py-1 border border-border text-muted-foreground hover:bg-muted/50 transition-colors"
+                                    >
+                                        {f.secondary}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={focusBOMTab}
+                                        className="ml-auto text-[10px] font-bold text-foreground bg-primary/20 rounded px-1.5 py-0.5 hover:bg-primary/30 transition-colors"
+                                    >
+                                        View in BOM ↗
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+function DesignBOMPanel({ onValidate, onBOMUploaded, bomUploaded }: DesignBOMPanelProps) {
+    type Phase = 'waiting-upload' | 'processing-upload' | 'analyzed'
+    const [phase, setPhase] = useState<Phase>(bomUploaded ? 'analyzed' : 'waiting-upload')
+    const [ledgerCount, setLedgerCount] = useState(0)
+    const [ddpEnabled, setDdpEnabled] = useState(false)
+    const [uploadCount, setUploadCount] = useState(0)
+    const timeoutsRef = useRef<number[]>([])
+
+    // Phase 'waiting-upload': progressive ledger events
+    useEffect(() => {
+        if (phase !== 'waiting-upload') return
+        setLedgerCount(0)
+        LEDGER_EVENTS.forEach((ev, i) => {
+            const id = window.setTimeout(() => setLedgerCount(i + 1), ev.delay)
+            timeoutsRef.current.push(id)
+        })
+        return () => {
+            timeoutsRef.current.forEach(id => window.clearTimeout(id))
+            timeoutsRef.current = []
+        }
+    }, [phase])
+
+    // Phase 'processing-upload': progressive bullets · then advance to 'analyzed' and notify modal
+    useEffect(() => {
+        if (phase !== 'processing-upload') return
+        setUploadCount(0)
+        UPLOAD_BULLETS.forEach((_, i) => {
+            const id = window.setTimeout(() => setUploadCount(i + 1), 500 * (i + 1))
+            timeoutsRef.current.push(id)
+        })
+        const doneId = window.setTimeout(() => {
+            setPhase('analyzed')
+            onBOMUploaded()
+        }, 500 * UPLOAD_BULLETS.length + 400)
+        timeoutsRef.current.push(doneId)
+        return () => {
+            timeoutsRef.current.forEach(id => window.clearTimeout(id))
+            timeoutsRef.current = []
+        }
+    }, [phase, onBOMUploaded])
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                {/* Capacity ledger ticker · PP2 */}
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-muted-foreground" />
+                        <h4 className="text-base font-semibold text-foreground">Live capacity ledger</h4>
+                        <span className="text-[10px] text-muted-foreground">· events from CET</span>
+                    </div>
+                    <div className="bg-muted/30 border border-border rounded-lg p-3 text-xs space-y-1.5 min-h-[120px]">
+                        {LEDGER_EVENTS.slice(0, ledgerCount).map((ev, i) => (
+                            <div key={i} className="flex items-start gap-2 text-foreground animate-in fade-in slide-in-from-left-1 duration-300">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
+                                <span>{ev.text}</span>
+                            </div>
+                        ))}
+                        {phase === 'waiting-upload' && ledgerCount < LEDGER_EVENTS.length && (
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground italic pt-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-ai animate-pulse" />
+                                Waiting for next event…
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Waiting for BOM upload · drop zone + DDP toggle */}
+                {phase === 'waiting-upload' && (
+                    <>
+                        <div className="border-t border-border pt-4 space-y-2">
+                            <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
+                                <Paperclip className="h-4 w-4 text-muted-foreground" />
+                                Awaiting BOM upload
+                            </h4>
+                            <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 flex items-start gap-2">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
+                                <span className="text-[11px] text-muted-foreground">
+                                    Scope confirmed on the kickoff call · ~30 stations · <span className="font-medium text-foreground">Standard/Large</span> (GW1B) · finishes locked.
+                                </span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">
+                                Kimberly builds the BOM externally in <span className="font-medium text-foreground">CET / CAP</span> and uploads the file to Strata for analysis. Supported: .pdf · .sp4 · .xlsx
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => setPhase('processing-upload')}
+                                className="w-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 rounded-lg p-5 flex flex-col items-center justify-center gap-2 transition-colors"
+                            >
+                                <div className="h-10 w-10 rounded-xl bg-muted/60 flex items-center justify-center">
+                                    <Paperclip className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                                <div className="text-xs font-semibold text-foreground">Drop BOM file here · or click to browse</div>
+                                <div className="text-[10px] text-muted-foreground italic">Demo · click to simulate the upload of MANATT-4F_BOM_v1.sp4 (212 KB)</div>
+                            </button>
+                        </div>
+                        <div>
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={ddpEnabled}
+                                    onChange={e => setDdpEnabled(e.target.checked)}
+                                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                                />
+                                <div>
+                                    <div className="text-sm font-semibold text-foreground">Optional · DDP parallel</div>
+                                    <div className="text-[11px] text-muted-foreground">Prepare Deep Discounting BOM in parallel for RFP volume negotiation.</div>
+                                </div>
+                            </label>
+                        </div>
+                    </>
+                )}
+
+                {/* Processing upload · progressive bullets */}
+                {phase === 'processing-upload' && (
+                    <div className="border-t border-border pt-4 space-y-2 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 text-foreground animate-spin" />
+                            <h4 className="text-base font-semibold text-foreground">Strata processing BOM upload…</h4>
+                        </div>
+                        <ul className="space-y-1.5">
+                            {UPLOAD_BULLETS.slice(0, uploadCount).map((b, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-foreground animate-in fade-in slide-in-from-left-1 duration-300">
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
+                                    <span>{b}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Analyzed · success + BOM findings + related processes */}
+                {phase === 'analyzed' && (
+                    <div className="border-t border-border pt-4 space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                            <div className="text-xs">
+                                <div className="font-semibold text-success">BOM uploaded · 149 line items · $1,541,392 list</div>
+                                <div className="text-muted-foreground">
+                                    MANATT-4F_BOM_v1.pdf · Teknion T25 · 11 areas · 22 CRs · largest: Office_WO.1 (20 units · $419,660){ddpEnabled ? ' · DDP parallel queued' : ''}
+                                    <button type="button" onClick={focusBOMTab} className="ml-2 text-[10px] font-bold text-foreground bg-primary/20 rounded px-1.5 py-0.5 hover:bg-primary/30 transition-colors">
+                                        View in BOM ↗
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* BOM Findings · derived from real PDF content · each with citation + KB popover */}
+                        <BOMFindings />
+
+                        <div className="space-y-1.5">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                <Sparkles className="h-3 w-3 text-ai" />
+                                Related processes ready
+                            </div>
+                            {RELATED_PROCESSES.map(p => (
+                                <div key={p.label} className="rounded-lg border border-ai/20 bg-ai/5 px-3 py-2">
+                                    <div className="text-[11px] font-semibold text-foreground">{p.label}</div>
+                                    <div className="text-[10px] text-muted-foreground mt-0.5">{p.detail}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="text-[10px] text-muted-foreground italic">
+                            Tip · click the <strong>BOM</strong> tab on the left to scroll through the real 15-page PDF · each finding above cites a page + item.
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="border-t border-border px-5 py-3 bg-card shrink-0">
+                {phase === 'waiting-upload' && (
+                    <button
+                        type="button"
+                        disabled
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground text-sm font-medium opacity-60 cursor-not-allowed"
+                    >
+                        Upload BOM to continue
+                    </button>
+                )}
+                {phase === 'processing-upload' && (
+                    <button type="button" disabled className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground text-sm font-medium opacity-60 cursor-not-allowed">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing upload…
+                    </button>
+                )}
+                {phase === 'analyzed' && (
+                    <button
+                        type="button"
+                        onClick={onValidate}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
+                    >
+                        Continue to validation
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                )}
+            </div>
+        </>
+    )
+}
+
+// ─── sc1.3 ValidationFieldPanel · PP4 (SLA timers) ────────────────────────────
+
+interface ValidationFieldPanelProps {
+    onValidate: () => void
+    onValidationCompiled: () => void
+}
+
+const VALIDATION_MESSAGE = `Hi Caitlin,
+
+Attaching the validation document for MANATT 4th Floor — 2D/3D drawings, finishes, electrical and wire management. Please confirm or request revisions.
+
+— Kimberly Tucker
+Officeworks · Design`
+
+const FIELD_MESSAGE = `Hi Abigail,
+
+Pre-installation drawings attached (hold-to dimensions, blocking, floor cores). Please schedule the GC walk-through and confirm no field discrepancies before we release the order to Teknion.
+
+— Kimberly Tucker`
+
+function ValidationFieldPanel({ onValidate, onValidationCompiled }: ValidationFieldPanelProps) {
+    type Phase = 'send-validation' | 'awaiting-client' | 'send-field' | 'awaiting-field' | 'complete'
+    const [phase, setPhase] = useState<Phase>('send-validation')
+    const [validationDialog, setValidationDialog] = useState(false)
+    const [fieldDialog, setFieldDialog] = useState(false)
+    const timeoutRef = useRef<number | null>(null)
+
+    useEffect(() => {
+        if (phase === 'awaiting-client') {
+            const id = window.setTimeout(() => {
+                setPhase('send-field')
+                // The validation doc is now compiled & approved · surface the tab
+                onValidationCompiled()
+            }, 2200)
+            timeoutRef.current = id
+        }
+        if (phase === 'awaiting-field') {
+            const id = window.setTimeout(() => setPhase('complete'), 2200)
+            timeoutRef.current = id
+        }
+        return () => { if (timeoutRef.current) window.clearTimeout(timeoutRef.current) }
+    }, [phase, onValidationCompiled])
+
+    const StepRow = ({ done, active, label, sub }: { done: boolean; active: boolean; label: string; sub: string }) => (
+        <div className={`rounded-lg border px-3 py-2 flex items-start gap-2 ${
+            done ? 'border-success/30 bg-success/5' : active ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'
+        }`}>
+            {done ? <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" /> : active ? <Loader2 className="h-4 w-4 text-foreground animate-spin shrink-0 mt-0.5" /> : <span className="h-4 w-4 rounded-full border border-muted-foreground/40 shrink-0 mt-0.5" />}
+            <div className="flex-1 min-w-0">
+                <div className={`text-xs font-semibold ${done ? 'text-success' : 'text-foreground'}`}>{label}</div>
+                <div className="text-[10px] text-muted-foreground">{sub}</div>
+            </div>
+        </div>
+    )
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                {/* PP4 · auto-stamped phase timeline */}
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                        <h4 className="text-base font-semibold text-foreground">Two SLA gates · auto-stamped</h4>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Validation doc to MANATT (5d SLA) · then pre-install packet to Abigail (2d SLA). Phase entry/exit timestamps feed the KPI dashboard.</p>
+                </div>
+
+                {/* Phase steps */}
+                <div className="space-y-2">
+                    <StepRow
+                        done={phase !== 'send-validation' && phase !== 'awaiting-client'}
+                        active={phase === 'awaiting-client'}
+                        label="Validation doc · Caitlin (MANATT)"
+                        sub={
+                            phase === 'send-validation' ? 'Pending · click to open & send' :
+                            phase === 'awaiting-client' ? 'Sent · SLA 5d · awaiting approval' :
+                            'Approved · 0d 18m elapsed (well under SLA)'
+                        }
+                    />
+                    <StepRow
+                        done={phase === 'complete'}
+                        active={phase === 'awaiting-field'}
+                        label="Pre-install packet · Abigail (PM)"
+                        sub={
+                            phase === 'send-validation' || phase === 'awaiting-client' ? 'Blocked until validation approval' :
+                            phase === 'send-field' ? 'Ready · click to open & send' :
+                            phase === 'awaiting-field' ? 'Sent · SLA 2d · awaiting field verification' :
+                            'Verified · 0d 14m elapsed'
+                        }
+                    />
+                </div>
+
+                {/* Completion banner */}
+                {phase === 'complete' && (
+                    <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                            <div className="font-semibold text-success">Both gates cleared · client approval + field verification</div>
+                            <div className="text-muted-foreground">Phase events saved · cycle time 0d 32m (target 7d) · proceed to SQ check</div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="border-t border-border px-5 py-3 bg-card shrink-0">
+                {phase === 'send-validation' && (
+                    <button
+                        type="button"
+                        onClick={() => setValidationDialog(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                    >
+                        Open & send validation doc
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                )}
+                {phase === 'awaiting-client' && (
+                    <button type="button" disabled className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground text-sm font-medium opacity-60 cursor-not-allowed">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Awaiting MANATT approval…
+                    </button>
+                )}
+                {phase === 'send-field' && (
+                    <button
+                        type="button"
+                        onClick={() => setFieldDialog(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                    >
+                        Open & send pre-install packet
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                )}
+                {phase === 'awaiting-field' && (
+                    <button type="button" disabled className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground text-sm font-medium opacity-60 cursor-not-allowed">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Awaiting field verification…
+                    </button>
+                )}
+                {phase === 'complete' && (
+                    <button
+                        type="button"
+                        onClick={onValidate}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
+                    >
+                        Both confirmed · proceed to SQ check
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                )}
+            </div>
+
+            <RequestInfoDialog
+                isOpen={validationDialog}
+                onSent={() => { setValidationDialog(false); setPhase('awaiting-client') }}
+                onClose={() => setValidationDialog(false)}
+                headerAvatar="CB"
+                headerLabel="Caitlin Barolet · MANATT (DC)"
+                headerSubtitle="caitlin.barolet@manatt.com · Validation Document"
+                defaults={{
+                    from: 'kimberly.tucker@officeworks.com',
+                    to: 'caitlin.barolet@manatt.com',
+                    cc: 'felicia.miano-poles@officeworks.com',
+                    date: '2026-04-22 · 2:15 PM',
+                    subject: 'MANATT 4th Floor · Validation Document · approval requested',
+                    message: VALIDATION_MESSAGE,
+                    attachments: [{ name: 'MANATT-4F_validation-v1.pdf', meta: '6 slides · Google Slides export' }],
+                    alertTitle: 'SLA · client approval gate (GW2A)',
+                    alertRows: [
+                        { label: 'Project', value: 'MANATT · 4th Floor · ~30 stations' },
+                        { label: 'Doc',     value: 'Validation v1 · 2D/3D + finishes + electrical' },
+                        { label: 'SLA',     value: '5 days · breach escalates to Felicia' },
+                    ],
+                    successTitle: 'Validation doc sent to MANATT',
+                    successSubtitle: 'SLA timer armed · awaiting Caitlin approval',
+                }}
+            />
+            <RequestInfoDialog
+                isOpen={fieldDialog}
+                onSent={() => { setFieldDialog(false); setPhase('awaiting-field') }}
+                onClose={() => setFieldDialog(false)}
+                headerAvatar="AB"
+                headerLabel="Abigail · PM Team"
+                headerSubtitle="abigail.pm@officeworks.com · Field Verification"
+                defaults={{
+                    from: 'kimberly.tucker@officeworks.com',
+                    to: 'abigail.pm@officeworks.com',
+                    cc: 'caitlin.barolet@manatt.com',
+                    date: '2026-04-22 · 2:33 PM',
+                    subject: 'MANATT 4th Floor · pre-install drawings · schedule field verification',
+                    message: FIELD_MESSAGE,
+                    attachments: [
+                        { name: 'MANATT-4F_pre-install_dims.pdf', meta: '4 pages · dims + blocking' },
+                        { name: 'MANATT-4F_floor-cores.pdf',     meta: '2 pages · cores + electrical' },
+                    ],
+                    alertTitle: 'SLA · field verification (GW2B)',
+                    alertRows: [
+                        { label: 'PM',         value: 'Abigail · Officeworks PM team' },
+                        { label: 'Packet',     value: 'Dimensions + blocking + floor cores' },
+                        { label: 'SLA',        value: '2 days · breach blocks Teknion order release' },
+                    ],
+                    successTitle: 'Pre-install packet sent to Abigail',
+                    successSubtitle: 'SLA timer armed · awaiting field verification',
+                }}
+            />
+        </>
+    )
+}
+
+// ─── sc1.4 SQCheckPanel · PP3 (Knowledge Assistant peak) ──────────────────────
+
+interface SQCheckPanelProps { onValidate: () => void }
+
+function SQCheckPanel({ onValidate }: SQCheckPanelProps) {
+    const [confirmed, setConfirmed] = useState(false)
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-base font-semibold text-foreground">Strata Knowledge Assistant · SQ lookup</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground">PP3 · Captured-knowledge assistant answers the SQ / catalog / GSA question inline · no senior interrupt needed.</p>
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Question</span>
+                        <span className="text-xs text-foreground">Is MANATT GSA price-protected? Which catalog applies?</span>
+                    </div>
+                    <div className="px-4 py-3 space-y-2.5">
+                        <div>
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Answer</div>
+                            <div className="text-xs text-foreground">
+                                <strong className="text-success">YES · GSA price-protected.</strong> 2025 catalog applies (effective 2025-01-01 → 2025-12-31). SQ #436533 is valid through 2026-12-31.
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/60">
+                            <div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Source</div>
+                                <div className="text-[11px] text-foreground mt-0.5">GSA contract HR-25-0814</div>
+                                <div className="text-[10px] text-muted-foreground italic">renewed 2025-01-01</div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Catalog</div>
+                                <div className="text-[11px] text-foreground mt-0.5">2025 · effective dates set</div>
+                                <div className="text-[10px] text-muted-foreground italic">PZ Description verified</div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Confidence</div>
+                                <div className="text-[11px] text-foreground mt-0.5"><strong>98%</strong> · 12 prior MANATT references</div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">KB entry</div>
+                                <div className="text-[11px] text-foreground font-medium underline decoration-primary decoration-2 underline-offset-2 mt-0.5">KB-OW-SQ-0042 ↗</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {confirmed && (
+                    <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                            <div className="font-semibold text-success">SQ #436533 confirmed · 2025 catalog locked</div>
+                            <div className="text-muted-foreground">Knowledge base updated · proceed to Teknion Order Preview</div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="border-t border-border px-5 py-3 bg-card shrink-0">
+                {!confirmed ? (
+                    <button
+                        type="button"
+                        onClick={() => setConfirmed(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                    >
+                        <CheckCircle2 className="h-4 w-4" /> Confirm SQ · use 2025 catalog
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={onValidate}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
+                    >
+                        Proceed to Teknion Order Preview
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                )}
             </div>
         </>
     )

@@ -12,8 +12,7 @@
 //            13 gateways + 3 end events) in 5 swimlanes
 //
 //   Group 1 — Intake & Assignment       sc1.0, sc1.0b
-//   Group 2 — Design & Validation       sc1.1, sc1.1-bypass, sc1.2, sc1.2b,
-//                                       sc1.3, sc1.3b, sc1.4
+//   Group 2 — Design & Validation       sc1.2 (CET+CAP), sc1.3 (valid+field), sc1.4
 //   Group 3 — Teknion Order Preview     sc1.5, sc1.5b, sc1.5c
 //   Group 4 — Spec Check  ⭐ HEROES     sc1.6 (SC2+SC3), sc1.7 (SC7)
 //   Group 5 — Submission & Confirm      sc1.8, sc1.8b, sc1.9 ⭐ (Gemini)
@@ -37,8 +36,17 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
         id: 'sc1.0',
         groupId: 1,
         groupTitle: 'Intake & Assignment',
-        title: 'Form arrives · review & assign designer',
-        description: 'Felicia (EVP Design & PM) opens the new MANATT intake. Caitlin Barolet (DC) submitted the Works form but the required CAD is missing and the SQ for the price-protected GSA client is blank. Strata drafted the clarifying email to Caitlin and surfaced the capacity heatmap. Felicia analyzes form completeness and assigns a designer in one move · Strata recommends Kimberly Tucker (PA · 65% utilized · prior MANATT · cross-market).',
+        title: 'Form arrives · review & send clarification',
+        description: 'Felicia (EVP Design & PM) opens the new MANATT intake. Caitlin Barolet (DC) submitted the Works form but the required CAD is missing and the SQ for the price-protected GSA client is blank. Strata drafted the clarifying email to Caitlin · Felicia reviews and sends it. Designer assignment is blocked until the reply arrives.',
+        app: 'officeworks-intake',
+        role: 'Design Manager',
+    },
+    {
+        id: 'sc1.0b',
+        groupId: 1,
+        groupTitle: 'Intake & Assignment',
+        title: 'Reply received · review form & assign designer',
+        description: 'Caitlin replied to the clarification email with the missing CAD (manatt-4th-floor.dwg) attached and confirmed SQ #436533. Form is now complete · Felicia reviews the updated intake and assigns the designer. Strata recommends Kimberly Tucker (PA · 22h free this week / 40h available · prior MANATT · cross-market).',
         app: 'officeworks-intake',
         role: 'Design Manager',
     },
@@ -47,29 +55,11 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
     // GROUP 2: Design & Validation
     // ═══════════════════════════════════════════
     {
-        id: 'sc1.1',
-        groupId: 2,
-        groupTitle: 'Design & Validation',
-        title: 'Kickoff call · scope + project size',
-        description: 'Kimberly schedules a kickoff with Caitlin. Strata auto-generates the unclarified-items checklist from the form gaps and transcribes the call. The project-size gateway (GW1B) determines the path: Small (1-5 stations bypass) or Standard/Large (full flow).',
-        app: 'officeworks-intake',
-        role: 'Designer',
-    },
-    {
         id: 'sc1.2',
         groupId: 2,
         groupTitle: 'Design & Validation',
-        title: 'Draw furniture plan in CET',
-        description: 'Kimberly draws the furniture layout in CET — workstations, finishes, CRs. Optional parallel task surfaces: "Prepare Deep Discounting BOM" for volume discount negotiations (DDP).',
-        app: 'officeworks-design',
-        role: 'Designer',
-    },
-    {
-        id: 'sc1.2b',
-        groupId: 2,
-        groupTitle: 'Design & Validation',
-        title: 'Export BOM CET → CAP',
-        description: 'CAP generates the Bill of Materials — 71 line items across 4 tags. Specifications documentation and electrical coordination are embedded here, not standalone steps.',
+        title: 'Design BOM · CET → CAP',
+        description: 'Kimberly draws the furniture layout in CET while the live capacity ledger tracks committed hours from CET session events (PP2 · SC5). Optional Deep Discounting BOM (DDP) parallel toggle. When ready, BOM exports to CAP — 71 line items across 4 tags · Specifications + electrical embedded here, not standalone. AI Validator queues 426 attribute checks ahead of the self-audit hero step.',
         app: 'officeworks-design',
         role: 'Designer',
     },
@@ -77,17 +67,8 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
         id: 'sc1.3',
         groupId: 2,
         groupTitle: 'Design & Validation',
-        title: 'Validation document + client approval',
-        description: 'The validation document compiles in Google Slides — 2D/3D drawings, finishes, electrical specs. Sent to MANATT for approval. If revisions requested, sub-gateway determines: layout change (Task 3 loop) or BOM-only change (Task 4 loop).',
-        app: 'officeworks-submission',
-        role: 'Designer',
-    },
-    {
-        id: 'sc1.3b',
-        groupId: 2,
-        groupTitle: 'Design & Validation',
-        title: 'Field verification handoff',
-        description: 'Pre-installation drawings (2D dimensions + blocking + electrical/floor cores) hand off to Abigail\'s PM team. Field verification happens BEFORE order placed with Teknion — confirms GC built space to spec.',
+        title: 'Validation doc + field verification',
+        description: 'The validation document compiles in Google Slides (2D/3D drawings, finishes, electrical specs) and goes to MANATT for approval — SLA timer auto-stamped on the client approval gate (PP4 · SC6). Once approved, pre-installation drawings hand off to Abigail\'s PM team for field verification — second SLA timer.',
         app: 'officeworks-submission',
         role: 'Designer',
     },
@@ -190,12 +171,10 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
 // ─── STEP BEHAVIOR (presenter guide · action-forward) ────────────────────────
 
 export const OFFICEWORKS_STEP_BEHAVIOR: Record<string, StepBehavior> = {
-    'sc1.0':  { mode: 'interactive', userAction: 'Click the Strata notification → review the form (CAD missing · SQ blank) · click Kimberly Tucker in the heatmap → Approve & Assign' },
-    'sc1.1':  { mode: 'interactive', userAction: 'Run through the kickoff checklist · pick Project Size (Standard/Large for MANATT) · confirm scope' },
-    'sc1.2':  { mode: 'interactive', userAction: 'Watch CET fill in typicals · optionally enable DDP parallel · export to CAP' },
-    'sc1.2b': { mode: 'interactive', userAction: 'Watch the 71-line BOM populate · review subtotals by Tag (WS-01/02/02/02.A) · continue to validation' },
-    'sc1.3':  { mode: 'interactive', userAction: 'Preview the validation doc · send to MANATT · simulate approval (or trigger a revision loop)' },
-    'sc1.3b': { mode: 'interactive', userAction: 'Send pre-install drawings to Abigail · field verification scheduled · resolve any GC discrepancies' },
+    'sc1.0':  { mode: 'interactive', userAction: 'Click the Strata notification → review the form (CAD missing · SQ blank) · open & send the clarification email to Caitlin' },
+    'sc1.0b': { mode: 'interactive', userAction: 'Open the reply notification · review the completed form (CAD attached · SQ confirmed) · click Kimberly Tucker → Approve & Assign' },
+    'sc1.2':  { mode: 'interactive', userAction: 'Watch the capacity ledger from CET events · optionally enable DDP parallel · drop the BOM file · review Strata\'s 3 findings on the real 149-line MANATT BOM' },
+    'sc1.3':  { mode: 'interactive', userAction: 'Send the validation doc to MANATT (SLA timer arms) · once approved, send pre-install drawings to Abigail · both confirmations land before SQ check' },
     'sc1.4':  { mode: 'interactive', userAction: 'GW2C: SQ required (yes for MANATT) · open Create inline · verify SQ #436533 + 2025 catalog' },
     'sc1.5':  { mode: 'interactive', userAction: 'Submit Order Preview · wait for Tifani · pick GW3 outcome (clean / spec gap / timeline conflict)' },
     'sc1.5b': { mode: 'interactive', userAction: 'Accept Strata\'s spec gap fix · resubmit preview' },
@@ -215,39 +194,31 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
         'Scanning attachments · CAD file required: not found',
         'GSA client detected · SQ number required: not provided',
         'Drafting clarification email back to Caitlin Barolet',
+        'Designer assignment blocked until reply with CAD + SQ',
+    ],
+    'sc1.0b': [
+        'Reply received from Caitlin Barolet · 2026-04-17 11:08',
+        'CAD attachment parsed · manatt-4th-floor.dwg · 4.8 MB',
+        'SQ #436533 confirmed · GSA price-protected · catalog 2025',
+        'Form completeness · all required fields satisfied',
         'Pulling designer capacity across 3 regions',
         'Cross-referencing prior MANATT assignments',
-        'Match: Kimberly Tucker · 65% utilized · resource-share PA→DC',
-    ],
-    'sc1.1': [
-        'Scheduling kickoff with Caitlin Barolet',
-        'Auto-populating scope checklist from form',
-        'GW1B: project size · ~30 stations · Standard/Large path',
-        'Timeline template loaded · OW_Awarded Design Timeline',
     ],
     'sc1.2': [
-        'Loading Teknion part library · 30-year catalog',
-        'Suggesting typicals from MANATT brief',
-        'Optional DDP parallel: Deep Discounting BOM for RFP',
-        'Workstation tagging by Level 4 + Tag (WS-01/02)',
-    ],
-    'sc1.2b': [
-        'Exporting CET → CAP',
-        'Generating 71 line items · 13 CRs · 4 tags',
-        'Subtotals by Alias 1 · Level 4 · running total $296,228.13 List',
-        'Specs + electrical coordination embedded · ready for validation',
+        'Designer building BOM externally in CET / CAP',
+        'Capacity ledger · CET session opened · +6h committed to Kimberly',
+        'BOM uploaded · parsing PDF · 149 line items · 15 pages · Teknion T25',
+        '11 areas tagged · 22 Custom Requests flagged for spec-check',
+        '1 finish inconsistency surfaced · Item 73 · XS vs area XG Very White',
+        'Pricing parsed · $1,541,392 List · AI Validator queued · 894 checks',
     ],
     'sc1.3': [
         'Compiling Validation Document · Google Slides',
         '2D/3D drawings · finishes · electrical wiring · wire mgmt',
-        'Sent to MANATT contact for approval',
-        'GW2A: awaiting response · client approval is primary delay driver',
-    ],
-    'sc1.3b': [
-        'Pre-install drawings: hold-to dimensions · blocking · floor cores',
-        'Sent to Abigail\'s team · field verification scheduled',
-        'GW2B: verifying space matches drawings · no GC discrepancy',
-        'Field verification complete · proceed to SQ check',
+        'Sent to MANATT contact for approval · SLA timer armed · 5d',
+        'GW2A: client approved · sending pre-install packet to Abigail (PM)',
+        'Field verification scheduled · SLA timer · 2d',
+        'Both gates cleared · proceed to SQ check',
     ],
     'sc1.4': [
         'GW2C: client = MANATT · GSA contract · SQ required',
@@ -314,6 +285,6 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const OFFICEWORKS_SELF_INDICATED: string[] = [
-    'sc1.0', 'sc1.1', 'sc1.2', 'sc1.2b', 'sc1.3', 'sc1.3b', 'sc1.4',
+    'sc1.0', 'sc1.0b', 'sc1.2', 'sc1.3', 'sc1.4',
     'sc1.5', 'sc1.5b', 'sc1.5c', 'sc1.6', 'sc1.7', 'sc1.8', 'sc1.8b', 'sc1.9',
 ];

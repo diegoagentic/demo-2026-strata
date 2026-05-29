@@ -31,11 +31,9 @@ import AckReviewScene from './AckReviewScene'
 function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
     switch (stepId) {
         case 'sc1.0':   return 'intake'
-        case 'sc1.1':   return 'kickoff'
+        case 'sc1.0b':  return 'intake-complete'
         case 'sc1.2':   return 'design'
-        case 'sc1.2b':  return 'bom-gen'
         case 'sc1.3':   return 'validation'
-        case 'sc1.3b':  return 'field-verify'
         case 'sc1.4':   return 'sq-check'
         case 'sc1.5':   return 'teknion-preview'
         case 'sc1.5b':  return 'spec-gap'
@@ -49,13 +47,17 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
     }
 }
 
+// When validating these steps, keep the modal open so Flow 2 plays as a
+// continuous in-modal journey (Design BOM → Validation+Field → SQ).
+const STAYS_OPEN_WITHIN_FLOW2 = new Set(['sc1.2', 'sc1.3'])
+
 // ─── Officeworks notification events (dispatched by ActionCenter) ─────────────
 // Per P52 contract: every officeworks: custom event opens the review modal.
 // The notification configs live in src/components/notifications/ActionCenter.tsx
 // (OFFICEWORKS_STEP_NOTIFICATIONS + OFFICEWORKS_SC10_NOTIFICATIONS).
 const OFFICEWORKS_NOTIF_EVENTS = [
     'officeworks:intake-ingest',
-    'officeworks:kickoff-open',
+    'officeworks:intake-reply-open',
     'officeworks:cet-open',
     'officeworks:bom-open',
     'officeworks:field-open',
@@ -112,6 +114,13 @@ export default function OfficeworksPage() {
     const handleClose = () => setIsModalOpen(false)
 
     const handleValidate = () => {
+        const id = currentStep?.id ?? ''
+        if (STAYS_OPEN_WITHIN_FLOW2.has(id)) {
+            // Flow 2 continuity · advance step without closing the modal · the
+            // right panel and AI banner re-render with the next stage.
+            nextStep()
+            return
+        }
         setIsModalOpen(false)
         // brief pause so user sees modal close before next step renders
         setTimeout(() => nextStep(), 200)

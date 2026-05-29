@@ -145,36 +145,15 @@ const BFI_A11_NOTIFICATIONS: Notification[] = [
 type OwStepNotif = BfiStepNotif
 
 const OFFICEWORKS_STEP_NOTIFICATIONS: Record<string, OwStepNotif> = {
-    'sc1.1': {
+    'sc1.2': {
         badge: '1 new', badgeColor: 'ai',
         title: 'Assignment received · MANATT 4th Floor',
-        desc: 'Felicia assigned you the MANATT 4th Floor project. Kickoff with Caitlin Barolet pending · scope confirmation needed before CET drawing can start.',
+        desc: 'Felicia assigned you MANATT 4th Floor · scope confirmed (~30 stations · Standard/Large · Flintwood 5N White Oak). Build the BOM in CET/CAP and upload it to Strata for analysis.',
         sender: 'Felicia Miano-Poles · EVP Design & PM',
-        re: 'MANATT 4th Floor · scope confirmation needed',
-        cta: 'Open kickoff briefing →',
-        event: 'officeworks:kickoff-open',
-        footerText: 'Kickoff scheduling pending',
-    },
-    'sc1.2': {
-        badge: '1 new', badgeColor: 'success',
-        title: 'Kickoff complete · ready for CET design',
-        desc: 'Scope confirmed · ~30 stations · Standard/Large · Flintwood 5N White Oak finishes. Optional DDP parallel BOM available for RFP volume discount.',
-        sender: 'Caitlin Barolet · MANATT (DC)',
-        re: 'Kickoff confirmed · scope locked · ready for CET',
+        re: 'MANATT 4th Floor · start CET design + BOM',
         cta: 'Open CET workspace →',
         event: 'officeworks:cet-open',
         footerText: 'CET design pending',
-    },
-    'sc1.2b': {
-        badge: '1 new', badgeColor: 'ai',
-        title: 'BOM generated · CET → CAP export complete',
-        desc: '71 line items across 4 tags (WS-01/02/02.A) · Running total $296,228.13 List · specs + electrical embedded · ready for validation.',
-        sender: 'CAP · Bill of Materials',
-        re: 'MANATT 4th Floor · BOM ready (71 lines)',
-        attachment: 'MANATT-4F_BOM_v1.xlsx',
-        cta: 'Review BOM →',
-        event: 'officeworks:bom-open',
-        footerText: 'BOM review pending',
     },
     'sc1.3': {
         badge: '1 new', badgeColor: 'success',
@@ -185,16 +164,6 @@ const OFFICEWORKS_STEP_NOTIFICATIONS: Record<string, OwStepNotif> = {
         cta: 'Open field verification handoff →',
         event: 'officeworks:field-open',
         footerText: 'Field verification pending',
-    },
-    'sc1.3b': {
-        badge: '1 new', badgeColor: 'ai',
-        title: 'Field verification scheduled · GC walk-through',
-        desc: 'Abigail confirmed field verification for May 8. Pre-install drawings (dimensions + blocking + floor cores) sent to GC. No discrepancies reported so far.',
-        sender: 'Abigail · PM team',
-        re: 'Field verification · MANATT 4th Floor · May 8',
-        cta: 'Continue to SQ check →',
-        event: 'officeworks:sq-open',
-        footerText: 'SQ verification pending',
     },
     'sc1.4': {
         badge: '1 new', badgeColor: 'success',
@@ -298,9 +267,31 @@ const OFFICEWORKS_SC10_NOTIFICATIONS: Notification[] = [
 
 const SC10_INGEST_LINES = [
     { text: 'Works form parsed · 12 fields extracted',                                               isWarning: false },
-    { text: 'CAD file expected · MISSING — clarification email drafted to Caitlin',                  isWarning: true  },
-    { text: 'GSA client detected · SQ #436533 suggested · catalog 2025',                             isWarning: false },
-    { text: 'Designer capacity loaded · Kimberly Tucker recommended (PA · 65% · prior MANATT)',      isWarning: false },
+    { text: 'PDF floor plan attached · manatt-4th-floor-floorplan.pdf',                              isWarning: false },
+    { text: 'CAD file (.dwg) expected · MISSING — clarification email drafted to Caitlin',           isWarning: true  },
+    { text: 'SQ blank · GSA price-protected · Strata suggests #436533 (catalog 2025)',               isWarning: true  },
+]
+
+// Officeworks Step sc1.0b — Caitlin replied with CAD + SQ
+const OFFICEWORKS_SC10B_NOTIFICATIONS: Notification[] = [
+    {
+        id: 'ow-sc10b-manatt-reply',
+        type: 'quote_update',
+        priority: 'high',
+        title: 'Caitlin replied · CAD attached',
+        message: 'Re: MANATT 4th Floor clarification · CAD floor plan (.dwg, 4.8 MB) attached and SQ #436533 confirmed. Form is complete · designer assignment unlocked.',
+        meta: 'caitlin.barolet@manatt.com · 2026-04-17 · 11:08 AM',
+        timestamp: '2026-04-17 · 11:08 AM',
+        unread: true,
+        actions: [{ label: 'Open reply', primary: true }],
+    },
+];
+
+const SC10B_INGEST_LINES = [
+    { text: 'Reply parsed from caitlin.barolet@manatt.com',                  isWarning: false },
+    { text: 'CAD attachment received · manatt-4th-floor.dwg · 4.8 MB',       isWarning: false },
+    { text: 'SQ #436533 confirmed · GSA price-protected · catalog 2025',     isWarning: false },
+    { text: 'Form completeness · all required fields satisfied',             isWarning: false },
 ]
 
 // Flow 1 notification for Step 1.10 — single focused notification
@@ -333,6 +324,11 @@ export default function ActionCenter() {
     const [sc10PanelClosed,  setSc10PanelClosed]  = useState(false);
     const [sc10IngestState,  setSc10IngestState]  = useState<'idle' | 'ingesting' | 'ready'>('idle');
     const [sc10IngestCount,  setSc10IngestCount]  = useState(0);
+    // Officeworks Step sc1.0b · reply-received ingest pattern
+    const isStepSc10b = isDemoActive && currentStep?.id === 'sc1.0b';
+    const [sc10bPanelClosed,  setSc10bPanelClosed]  = useState(false);
+    const [sc10bIngestState,  setSc10bIngestState]  = useState<'idle' | 'ingesting' | 'ready'>('idle');
+    const [sc10bIngestCount,  setSc10bIngestCount]  = useState(0);
     // Officeworks generic step panel (sc1.1 .. sc1.9)
     const [owPanelClosed, setOwPanelClosed] = useState(false);
     // Delay before any notification panel appears (2s after step loads)
@@ -346,6 +342,9 @@ export default function ActionCenter() {
         setSc10PanelClosed(false);
         setSc10IngestState('idle');
         setSc10IngestCount(0);
+        setSc10bPanelClosed(false);
+        setSc10bIngestState('idle');
+        setSc10bIngestCount(0);
         setOwPanelClosed(false);
         setNotifDelayReady(false);
         const cancel = pauseAwareTimeout(() => setNotifDelayReady(true), 2000);
@@ -467,17 +466,37 @@ export default function ActionCenter() {
         }, 2900);
     };
 
+    // Officeworks sc1.0b reply-ingest handler (4 lines · paralelo a sc1.0)
+    const handleSc10bIngest = () => {
+        setSc10bIngestState('ingesting');
+        pauseAwareTimeout(() => setSc10bIngestCount(1), 600);
+        pauseAwareTimeout(() => setSc10bIngestCount(2), 1200);
+        pauseAwareTimeout(() => setSc10bIngestCount(3), 1800);
+        pauseAwareTimeout(() => setSc10bIngestCount(4), 2400);
+        pauseAwareTimeout(() => {
+            setSc10bIngestState('ready');
+            window.dispatchEvent(new CustomEvent('officeworks:intake-reply-open'));
+            pauseAwareTimeout(() => setSc10bPanelClosed(true), 800);
+        }, 2900);
+    };
+
     const bfiStepConfig = isDemoActive ? BFI_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
     const isBfiStepActive = !!bfiStepConfig && !bfiPanelClosed && notifDelayReady;
 
     const owStepConfig = isDemoActive ? OFFICEWORKS_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
-    const isOwStepActive = !!owStepConfig && !owPanelClosed && notifDelayReady;
+    // Suppress notif panel for Flow 2 in-modal steps where the user is already
+    // working inside the Document Review modal (sc1.3 = validation).
+    // sc1.2 (Flow 2 entry) + sc1.4 still surface their notifs to bridge between flows.
+    const SUPPRESS_OW_AC = new Set(['sc1.3']);
+    const isOwStepActive = !!owStepConfig && !owPanelClosed && notifDelayReady
+        && !SUPPRESS_OW_AC.has(currentStep?.id ?? '');
 
     const isStepAutoOpen =
         isStep19 || isStep27 ||
         (isStepA11 && !a11PanelClosed && notifDelayReady) ||
         isBfiStepActive ||
         (isStepSc10 && !sc10PanelClosed && notifDelayReady) ||
+        (isStepSc10b && !sc10bPanelClosed && notifDelayReady) ||
         isOwStepActive;
 
     return (
@@ -972,6 +991,132 @@ export default function ActionCenter() {
                             <p className="text-xs font-bold text-ai flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
                                 Awaiting ingest
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+
+        {/* Officeworks Step sc1.0b: Caitlin replied · CAD + SQ arrived (parallel to sc1.0) */}
+        {isStepSc10b && !sc10bPanelClosed && notifDelayReady && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
+
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-3 shrink-0">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                                {sc10bIngestState === 'idle' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/10 text-foreground font-bold">1 new · reply</span>
+                                )}
+                                {sc10bIngestState === 'ingesting' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-ai/15 text-ai font-bold animate-pulse">Reading reply…</span>
+                                )}
+                                {sc10bIngestState === 'ready' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">Ready</span>
+                                )}
+                            </div>
+                            {sc10bIngestState === 'idle' && (
+                                <button onClick={() => setSc10bPanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                    <XMarkIcon className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Body — depends on ingest state */}
+                    <div className="px-5 pb-5 space-y-3">
+
+                        {/* idle: incoming reply notification */}
+                        {sc10bIngestState === 'idle' && (
+                            <div className="relative rounded-2xl ring-2 ring-success shadow-lg shadow-success/20 animate-in fade-in duration-500">
+                                <span className="absolute -top-2 right-4 text-[9px] font-black text-success-foreground bg-success px-2 py-0.5 rounded-full shadow-sm z-10">
+                                    REPLY
+                                </span>
+                                <NotificationItem
+                                    notification={OFFICEWORKS_SC10B_NOTIFICATIONS[0]}
+                                    onActionClick={(action) => {
+                                        if (action === 'Open reply') handleSc10bIngest()
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* reading: progressive bullets */}
+                        {sc10bIngestState === 'ingesting' && (
+                            <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border p-5 space-y-4 animate-in fade-in duration-300">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+                                        <SparklesIcon className="w-4 h-4 text-success animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-foreground">Reading Caitlin's reply…</p>
+                                        <p className="text-[11px] text-muted-foreground">MANATT 4th Floor · CAD + SQ verification</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {SC10B_INGEST_LINES.slice(0, sc10bIngestCount).map((line, i) => (
+                                        <div key={i} className="flex items-center gap-2 text-[11px] text-success animate-in fade-in duration-300">
+                                            <CheckCircleIcon className="w-3.5 h-3.5 shrink-0" />
+                                            {line.text}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-success rounded-full transition-all duration-700"
+                                        style={{ width: `${Math.round((sc10bIngestCount / SC10B_INGEST_LINES.length) * 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ready: reply detail card */}
+                        {sc10bIngestState === 'ready' && (
+                            <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden animate-in fade-in duration-400">
+                                <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                                    <SparklesIcon className="w-4 h-4 text-success shrink-0" />
+                                    <span className="text-sm font-semibold text-foreground flex-1">Re: MANATT 4th Floor · clarification (CAD + SQ attached)</span>
+                                    <span className="text-[10px] text-muted-foreground shrink-0">2026-04-17 · 11:08 AM</span>
+                                </div>
+                                <div className="px-4 py-3 space-y-1 border-b border-border">
+                                    {[
+                                        { label: 'From', value: 'Caitlin Barolet · MANATT (DC)' },
+                                        { label: 'Re',   value: 'MANATT 4th Floor · clarification needed · CAD file + SQ number' },
+                                    ].map(f => (
+                                        <div key={f.label} className="flex gap-2 text-[11px]">
+                                            <span className="text-muted-foreground w-8 shrink-0">{f.label}</span>
+                                            <span className="text-foreground font-medium">{f.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 flex-wrap">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Attachments:</span>
+                                    <span className="flex items-center gap-1 text-[10px] text-success font-medium px-2 py-0.5 rounded bg-success/10 border border-success/20">
+                                        <DocumentTextIcon className="w-3 h-3" /> manatt-4th-floor.dwg · 4.8 MB
+                                    </span>
+                                </div>
+                                <div className="px-4 py-3 space-y-2">
+                                    {SC10B_INGEST_LINES.map((line, i) => (
+                                        <div key={i} className="flex items-center gap-2 text-[11px] text-success">
+                                            <CheckCircleIcon className="w-3.5 h-3.5 shrink-0" />
+                                            {line.text}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    {sc10bIngestState === 'idle' && (
+                        <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                            <p className="text-xs font-bold text-success flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                                Awaiting open
                             </p>
                         </div>
                     )}

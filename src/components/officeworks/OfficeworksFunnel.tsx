@@ -13,7 +13,7 @@
  *            bg-primary/10 · bg-success/10 · text-foreground · text-muted-foreground
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, LayoutGrid, MoreHorizontal, Users } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
@@ -40,12 +40,23 @@ const MANATT_BADGE: Record<number, { label: string; className: string }> = {
     4: { label: 'Ack received',    className: 'bg-success/10 text-success border border-success/20' },
 }
 
+// Per-step overrides on MANATT card badge/subtitle (when the funnel column alone
+// doesn't capture the state — e.g. sc1.0b shares the Intake column with sc1.0
+// but represents a different moment in the arc).
+const MANATT_BADGE_BY_STEP: Record<string, { label: string; className: string }> = {
+    'sc1.0b': { label: 'Pending', className: 'bg-warning/10 text-warning border border-warning/20' },
+}
+
 const MANATT_SUBTITLE: Record<number, string> = {
     0: 'Form received · CAD missing · GSA SQ blank',
     1: 'CET layout · 71 lines · 13 CRs · Flintwood 5N',
     2: 'Kimberly self-audit · Rebecca peer review · Felicia oversight',
     3: 'SP4 uploaded to NetSuite · 79% discount applied · PO released',
     4: 'Teknion ack PO-DC-0009642 · diff scan in progress',
+}
+
+const MANATT_SUBTITLE_BY_STEP: Record<string, string> = {
+    'sc1.0b': 'Form complete · CAD received · awaiting designer assignment',
 }
 
 // ─── Context projects (3 fixed cards in other columns) ────────────────────────
@@ -89,8 +100,8 @@ const CONTEXT_CARDS: ContextCard[] = [
 // ─── MANATT designer per current step ─────────────────────────────────────────
 
 function getMANATTDesigner(stepId: string | undefined): string {
-    // sc1.0 is the manager-review + assign moment · designer not yet committed
-    if (!stepId || stepId === 'sc1.0') return 'Pending assignment'
+    // sc1.0 + sc1.0b are the manager-review moments · designer not yet committed
+    if (!stepId || stepId === 'sc1.0' || stepId === 'sc1.0b') return 'Pending assignment'
     return 'Kimberly Tucker (PA · cross-market)'
 }
 
@@ -109,10 +120,28 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
     const [capacityOpen, setCapacityOpen] = useState(false)
     const activeCol = stepIdToColIdx(currentStep?.id)
     const col = PROCESS_COLUMNS[activeCol]
-    const badge = MANATT_BADGE[activeCol]
-    const subtitle = MANATT_SUBTITLE[activeCol]
+    const stepKey = currentStep?.id ?? ''
+    const badge = MANATT_BADGE_BY_STEP[stepKey] ?? MANATT_BADGE[activeCol]
+    const subtitle = MANATT_SUBTITLE_BY_STEP[stepKey] ?? MANATT_SUBTITLE[activeCol]
     const designer = assignedDesigner ?? getMANATTDesigner(currentStep?.id)
     const isJustArrived = currentStep?.id === 'sc1.0'
+
+    // sc1.0 gate · MANATT card is hidden in Intake until ActionCenter finishes
+    // the ingest animation (which dispatches officeworks:intake-ingest).
+    const [manattIngested, setManattIngested] = useState(() => currentStep?.id !== 'sc1.0')
+
+    useEffect(() => {
+        if (currentStep?.id === 'sc1.0') {
+            setManattIngested(false)
+            const onIngest = () => setManattIngested(true)
+            window.addEventListener('officeworks:intake-ingest', onIngest)
+            return () => window.removeEventListener('officeworks:intake-ingest', onIngest)
+        } else {
+            setManattIngested(true)
+        }
+    }, [currentStep?.id])
+
+    const manattVisible = currentStep?.id !== 'sc1.0' || manattIngested
 
     return (
         <div className="bg-card border border-border rounded-2xl">
@@ -129,7 +158,7 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                         type="button"
                         onClick={() => setCapacityOpen(true)}
                         className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-border text-xs text-foreground hover:bg-muted/50 transition-colors"
-                        title="View Designer Capacity"
+                        title="Designer capacity · weekly committed/available hours · refreshed nightly"
                     >
                         <Users className="h-3.5 w-3.5" />
                         View capacity
@@ -157,7 +186,7 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
             <div className="p-5">
                 <div className="grid grid-cols-5 gap-3">
                     {PROCESS_COLUMNS.map((c, colIdx) => {
-                        const isManattCol = colIdx === activeCol
+                        const isManattCol = colIdx === activeCol && manattVisible
                         const colCards = CONTEXT_CARDS.filter(card => card.colIdx === colIdx)
                         const count = (isManattCol ? 1 : 0) + colCards.length
 
@@ -190,7 +219,7 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between gap-1 mb-0.5">
-                                                    <span className="text-sm font-bold text-foreground">MANATT</span>
+                                                    <span className="text-sm font-bold text-foreground truncate min-w-0">MANATT</span>
                                                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
                                                         {badge.label}
                                                     </span>
