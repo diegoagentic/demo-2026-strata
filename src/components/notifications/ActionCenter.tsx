@@ -138,6 +138,171 @@ const BFI_A11_NOTIFICATIONS: Notification[] = [
     },
 ];
 
+// ─── Officeworks · step notifications (P52: parallel to BFI pattern) ──────────
+// Shape mirrors BfiStepNotif. Contract for future notifications: add an entry
+// here, then have the relevant scene listen for `event` via window.addEventListener.
+
+type OwStepNotif = BfiStepNotif
+
+const OFFICEWORKS_STEP_NOTIFICATIONS: Record<string, OwStepNotif> = {
+    'sc1.1': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'Assignment received · MANATT 4th Floor',
+        desc: 'Felicia assigned you the MANATT 4th Floor project. Kickoff with Caitlin Barolet pending · scope confirmation needed before CET drawing can start.',
+        sender: 'Felicia Miano-Poles · EVP Design & PM',
+        re: 'MANATT 4th Floor · scope confirmation needed',
+        cta: 'Open kickoff briefing →',
+        event: 'officeworks:kickoff-open',
+        footerText: 'Kickoff scheduling pending',
+    },
+    'sc1.2': {
+        badge: '1 new', badgeColor: 'success',
+        title: 'Kickoff complete · ready for CET design',
+        desc: 'Scope confirmed · ~30 stations · Standard/Large · Flintwood 5N White Oak finishes. Optional DDP parallel BOM available for RFP volume discount.',
+        sender: 'Caitlin Barolet · MANATT (DC)',
+        re: 'Kickoff confirmed · scope locked · ready for CET',
+        cta: 'Open CET workspace →',
+        event: 'officeworks:cet-open',
+        footerText: 'CET design pending',
+    },
+    'sc1.2b': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'BOM generated · CET → CAP export complete',
+        desc: '71 line items across 4 tags (WS-01/02/02.A) · Running total $296,228.13 List · specs + electrical embedded · ready for validation.',
+        sender: 'CAP · Bill of Materials',
+        re: 'MANATT 4th Floor · BOM ready (71 lines)',
+        attachment: 'MANATT-4F_BOM_v1.xlsx',
+        cta: 'Review BOM →',
+        event: 'officeworks:bom-open',
+        footerText: 'BOM review pending',
+    },
+    'sc1.3': {
+        badge: '1 new', badgeColor: 'success',
+        title: 'Validation document approved · MANATT 4th Floor',
+        desc: 'Caitlin approved the 2D/3D drawings + finishes + electrical. No revisions requested. Proceed with pre-install handoff to Abigail.',
+        sender: 'Caitlin Barolet · MANATT (DC)',
+        re: 'Validation doc approved · proceed to field verification',
+        cta: 'Open field verification handoff →',
+        event: 'officeworks:field-open',
+        footerText: 'Field verification pending',
+    },
+    'sc1.3b': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'Field verification scheduled · GC walk-through',
+        desc: 'Abigail confirmed field verification for May 8. Pre-install drawings (dimensions + blocking + floor cores) sent to GC. No discrepancies reported so far.',
+        sender: 'Abigail · PM team',
+        re: 'Field verification · MANATT 4th Floor · May 8',
+        cta: 'Continue to SQ check →',
+        event: 'officeworks:sq-open',
+        footerText: 'SQ verification pending',
+    },
+    'sc1.4': {
+        badge: '1 new', badgeColor: 'success',
+        title: 'SQ verified · GSA price-protected catalog 2025',
+        desc: 'Strata embedded Create platform inline · SQ #436533 confirmed · PZ Description column verified vs current catalog. No catalog drift.',
+        sender: 'Teknion Create · SQ lookup',
+        re: 'MANATT · GSA SQ #436533 · catalog 2025 verified',
+        cta: 'Submit Order Preview →',
+        event: 'officeworks:preview-open',
+        footerText: 'Order Preview submission pending',
+    },
+    'sc1.5': {
+        badge: '1 new', badgeColor: 'warning',
+        title: 'Order Preview returned · #OP-2025-0001605',
+        desc: 'Tifani returned the preview · timeline conflict detected on 40-day CRs · GW3 gateway: resolve spec gaps or phase the order.',
+        sender: 'Tifani · Teknion Order Preview team',
+        re: 'OP-2025-0001605 · MANATT 4th Floor · GW3 timeline conflict',
+        attachment: 'OP-2025-0001605-preview.pdf',
+        cta: 'Open preview response →',
+        event: 'officeworks:preview-response-open',
+        footerText: 'Gateway GW3 decision pending',
+    },
+    'sc1.5b': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'Spec gap fix ready · CR 2046138 lead time',
+        desc: 'Strata drafted the spec gap fix · CR 2046138 phasing recommendation · BOM revised · ready to resubmit preview.',
+        sender: 'Strata AI · Spec Gap Resolver',
+        re: 'CR 2046138 · phasing recommendation · BOM revised',
+        cta: 'Resubmit preview →',
+        event: 'officeworks:preview-resubmit-open',
+        footerText: 'Preview resubmit pending',
+    },
+    'sc1.5c': {
+        badge: '1 new', badgeColor: 'warning',
+        title: '3-way phasing huddle · timeline alignment',
+        desc: 'Teknion can\'t hit the date. Phasing plan drafted with Designer + PM + Salesperson. GW3A: phasing changes order structure · new preview needed.',
+        sender: 'Strata AI · Phasing Coordinator',
+        re: 'MANATT · 3-way phasing · GW3A new preview required',
+        cta: 'Open phasing plan →',
+        event: 'officeworks:phasing-open',
+        footerText: 'Phasing decision pending',
+    },
+    'sc1.7': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'Peer review request · Rebecca Warren assigned',
+        desc: 'Kimberly\'s self-audit complete · 3 issues resolved. Peer assigned: Rebecca Warren (MA/NY/NJ) · delta summary focuses on CRs + electrical layout.',
+        sender: 'Kimberly Tucker · Designer (PA)',
+        re: 'MANATT 4th Floor · self-audit complete · peer review request',
+        cta: 'Open peer audit →',
+        event: 'officeworks:peer-open',
+        footerText: 'Peer review pending',
+    },
+    'sc1.8': {
+        badge: '1 new', badgeColor: 'success',
+        title: 'Peer audit complete · BOM ready for submission',
+        desc: 'Rebecca\'s peer audit complete · 2 new rules saved to Officeworks knowledge base · BOM approved for submission to Caitlin + Sales Coordinator.',
+        sender: 'Rebecca Warren · Peer reviewer (MA)',
+        re: 'MANATT · peer audit complete · BOM approved · SP4 ready',
+        attachment: 'MANATT-4F_BOM_final.pdf + SP4',
+        cta: 'Review BOM submission email →',
+        event: 'officeworks:submission-open',
+        footerText: 'BOM submission pending',
+    },
+    'sc1.8b': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'PO released to Teknion · PO-DC-0009642',
+        desc: 'Sales Coordinator uploaded SP4 to NetSuite · 79% discount applied · Salesperson Caitlin released PO to Teknion. PO-DC-0009642 generated.',
+        sender: 'Caitlin Barolet · MANATT Salesperson',
+        re: 'PO-DC-0009642 released to Teknion · awaiting acknowledgement',
+        cta: 'Track Teknion ack →',
+        event: 'officeworks:po-tracking-open',
+        footerText: 'Awaiting Teknion acknowledgement',
+    },
+    'sc1.9': {
+        badge: '1 new', badgeColor: 'success',
+        title: 'Acknowledgement received · Universal #2-10468963',
+        desc: 'Teknion acknowledgement received for PO-DC-0009642 · 11 pages · Gemini cross-reference across 71 lines + 13 CRs · 70/71 match · 1 discrepancy on shipping date.',
+        sender: 'Teknion · Order Acknowledgement',
+        re: 'PO-DC-0009642 · Universal #2-10468963 · 70/71 lines match',
+        attachment: 'PO-DC-0009642-ack.pdf',
+        cta: 'Review acknowledgement →',
+        event: 'officeworks:ack-open',
+        footerText: 'Acknowledgement review pending',
+    },
+}
+
+// Officeworks Step sc1.0 — MANATT intake (parallel to BFI a1.1 ingest pattern)
+const OFFICEWORKS_SC10_NOTIFICATIONS: Notification[] = [
+    {
+        id: 'ow-sc10-manatt-intake',
+        type: 'quote_update',
+        priority: 'high',
+        title: 'New project intake · MANATT 4th Floor',
+        message: 'Caitlin Barolet (DC) submitted the Works form for MANATT 4th Floor build-out · CAD file missing · SQ blank for GSA price-protected client',
+        meta: 'caitlin.barolet@manatt.com · May 6 · 9:42 AM',
+        timestamp: 'May 6 · 9:42 AM',
+        unread: true,
+        actions: [{ label: 'Ingest with Strata', primary: true }],
+    },
+];
+
+const SC10_INGEST_LINES = [
+    { text: 'Works form parsed · 12 fields extracted',                                               isWarning: false },
+    { text: 'CAD file expected · MISSING — clarification email drafted to Caitlin',                  isWarning: true  },
+    { text: 'GSA client detected · SQ #436533 suggested · catalog 2025',                             isWarning: false },
+    { text: 'Designer capacity loaded · Kimberly Tucker recommended (PA · 65% · prior MANATT)',      isWarning: false },
+]
+
 // Flow 1 notification for Step 1.10 — single focused notification
 const FLOW1_NOTIFICATIONS: Notification[] = [
     {
@@ -163,14 +328,25 @@ export default function ActionCenter() {
     const [a11IngestCount,  setA11IngestCount]  = useState(0);
     // BFI generic step panel (a1.2d / a1.2e / a1.2f / a1.3b)
     const [bfiPanelClosed, setBfiPanelClosed] = useState(false);
-    // Delay before any BFI notification panel appears (2s after step loads)
+    // Officeworks Step sc1.0 · ingest pattern (parallel to a1.1)
+    const isStepSc10 = isDemoActive && currentStep?.id === 'sc1.0';
+    const [sc10PanelClosed,  setSc10PanelClosed]  = useState(false);
+    const [sc10IngestState,  setSc10IngestState]  = useState<'idle' | 'ingesting' | 'ready'>('idle');
+    const [sc10IngestCount,  setSc10IngestCount]  = useState(0);
+    // Officeworks generic step panel (sc1.1 .. sc1.9)
+    const [owPanelClosed, setOwPanelClosed] = useState(false);
+    // Delay before any notification panel appears (2s after step loads)
     const [notifDelayReady, setNotifDelayReady] = useState(false);
-    // Reset all BFI panels when step changes, then reveal after 2s (pause-aware)
+    // Reset all panels when step changes, then reveal after 2s (pause-aware)
     useEffect(() => {
         setA11PanelClosed(false);
         setA11IngestState('idle');
         setA11IngestCount(0);
         setBfiPanelClosed(false);
+        setSc10PanelClosed(false);
+        setSc10IngestState('idle');
+        setSc10IngestCount(0);
+        setOwPanelClosed(false);
         setNotifDelayReady(false);
         const cancel = pauseAwareTimeout(() => setNotifDelayReady(true), 2000);
         return () => cancel?.();
@@ -277,10 +453,32 @@ export default function ActionCenter() {
         }, 2300);
     };
 
+    // Officeworks sc1.0 ingest handler (4 lines · parallel to BFI a1.1)
+    const handleSc10Ingest = () => {
+        setSc10IngestState('ingesting');
+        pauseAwareTimeout(() => setSc10IngestCount(1), 600);
+        pauseAwareTimeout(() => setSc10IngestCount(2), 1200);
+        pauseAwareTimeout(() => setSc10IngestCount(3), 1800);
+        pauseAwareTimeout(() => setSc10IngestCount(4), 2400);
+        pauseAwareTimeout(() => {
+            setSc10IngestState('ready');
+            window.dispatchEvent(new CustomEvent('officeworks:intake-ingest'));
+            pauseAwareTimeout(() => setSc10PanelClosed(true), 800);
+        }, 2900);
+    };
+
     const bfiStepConfig = isDemoActive ? BFI_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
     const isBfiStepActive = !!bfiStepConfig && !bfiPanelClosed && notifDelayReady;
 
-    const isStepAutoOpen = isStep19 || isStep27 || (isStepA11 && !a11PanelClosed && notifDelayReady) || isBfiStepActive;
+    const owStepConfig = isDemoActive ? OFFICEWORKS_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
+    const isOwStepActive = !!owStepConfig && !owPanelClosed && notifDelayReady;
+
+    const isStepAutoOpen =
+        isStep19 || isStep27 ||
+        (isStepA11 && !a11PanelClosed && notifDelayReady) ||
+        isBfiStepActive ||
+        (isStepSc10 && !sc10PanelClosed && notifDelayReady) ||
+        isOwStepActive;
 
     return (
         <>
@@ -636,6 +834,233 @@ export default function ActionCenter() {
                         <p className="text-xs font-bold text-ai flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
                             {bfiStepConfig.footerText}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Officeworks Step sc1.0: MANATT intake · ingesting animation (parallel to BFI a1.1) */}
+        {isStepSc10 && !sc10PanelClosed && notifDelayReady && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] max-h-[85vh] lg:w-[600px] p-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[80vh]">
+
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-3 shrink-0">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                                {sc10IngestState === 'idle' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/10 text-foreground font-bold">1 new</span>
+                                )}
+                                {sc10IngestState === 'ingesting' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-ai/15 text-ai font-bold animate-pulse">Ingesting…</span>
+                                )}
+                                {sc10IngestState === 'ready' && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">Ready</span>
+                                )}
+                            </div>
+                            {sc10IngestState === 'idle' && (
+                                <button onClick={() => setSc10PanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                                    <XMarkIcon className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Body — depends on ingest state */}
+                    <div className="px-5 pb-5 space-y-3">
+
+                        {/* idle: incoming notification card */}
+                        {sc10IngestState === 'idle' && (
+                            <div className="relative rounded-2xl ring-2 ring-primary shadow-lg shadow-primary/20 animate-in fade-in duration-500">
+                                <span className="absolute -top-2 right-4 text-[9px] font-black text-primary-foreground bg-primary px-2 py-0.5 rounded-full shadow-sm z-10">
+                                    INCOMING
+                                </span>
+                                <NotificationItem
+                                    notification={OFFICEWORKS_SC10_NOTIFICATIONS[0]}
+                                    onActionClick={(action) => {
+                                        if (action === 'Ingest with Strata') handleSc10Ingest()
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* ingesting: processing animation */}
+                        {sc10IngestState === 'ingesting' && (
+                            <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border p-5 space-y-4 animate-in fade-in duration-300">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 rounded-xl bg-ai/10 flex items-center justify-center shrink-0">
+                                        <SparklesIcon className="w-4 h-4 text-ai animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-foreground">Ingesting with Strata AI…</p>
+                                        <p className="text-[11px] text-muted-foreground">MANATT 4th Floor · Caitlin Barolet intake</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {SC10_INGEST_LINES.slice(0, sc10IngestCount).map((line, i) => (
+                                        <div key={i} className={`flex items-center gap-2 text-[11px] animate-in fade-in duration-300 ${line.isWarning ? 'text-warning' : 'text-success'}`}>
+                                            {line.isWarning
+                                                ? <ExclamationTriangleIcon className="w-3.5 h-3.5 shrink-0" />
+                                                : <CheckCircleIcon className="w-3.5 h-3.5 shrink-0" />
+                                            }
+                                            {line.text}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-ai rounded-full transition-all duration-700"
+                                        style={{ width: `${Math.round((sc10IngestCount / SC10_INGEST_LINES.length) * 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ready: email detail + all results */}
+                        {sc10IngestState === 'ready' && (
+                            <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden animate-in fade-in duration-400">
+                                {/* Email header */}
+                                <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                                    <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
+                                    <span className="text-sm font-semibold text-foreground flex-1">New project intake · MANATT 4th Floor</span>
+                                    <span className="text-[10px] text-muted-foreground shrink-0">May 6 · 9:42 AM</span>
+                                </div>
+                                {/* Email meta */}
+                                <div className="px-4 py-3 space-y-1 border-b border-border">
+                                    {[
+                                        { label: 'From', value: 'Caitlin Barolet · MANATT (DC)' },
+                                        { label: 'Re',   value: 'MANATT 4th Floor build-out · Works form submission' },
+                                    ].map(f => (
+                                        <div key={f.label} className="flex gap-2 text-[11px]">
+                                            <span className="text-muted-foreground w-8 shrink-0">{f.label}</span>
+                                            <span className="text-foreground font-medium">{f.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Attachments */}
+                                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 flex-wrap">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Attachments:</span>
+                                    <span className="flex items-center gap-1 text-[10px] text-ai font-medium px-2 py-0.5 rounded bg-ai/10 border border-ai/20">
+                                        <DocumentTextIcon className="w-3 h-3" /> Works_form_MANATT_4F.pdf
+                                    </span>
+                                    <span className="flex items-center gap-1 text-[10px] text-warning font-medium px-2 py-0.5 rounded bg-warning/10 border border-warning/20">
+                                        <ExclamationTriangleIcon className="w-3 h-3" /> CAD missing
+                                    </span>
+                                </div>
+                                {/* AI results */}
+                                <div className="px-4 py-3 border-b border-border space-y-2">
+                                    {SC10_INGEST_LINES.map((line, i) => (
+                                        <div key={i} className={`flex items-center gap-2 text-[11px] ${line.isWarning ? 'text-warning' : 'text-success'}`}>
+                                            {line.isWarning
+                                                ? <ExclamationTriangleIcon className="w-3.5 h-3.5 shrink-0" />
+                                                : <CheckCircleIcon className="w-3.5 h-3.5 shrink-0" />
+                                            }
+                                            {line.text}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    {sc10IngestState === 'idle' && (
+                        <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between shrink-0">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                            <p className="text-xs font-bold text-ai flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
+                                Awaiting ingest
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+
+        {/* Officeworks Steps sc1.1 .. sc1.9: Generic incoming-event notification panel */}
+        {isOwStepActive && owStepConfig && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] lg:w-[520px] z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden">
+
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                owStepConfig.badgeColor === 'warning' ? 'bg-warning/15 text-warning' :
+                                owStepConfig.badgeColor === 'success' ? 'bg-success/15 text-success' :
+                                'bg-foreground/10 text-foreground'
+                            }`}>{owStepConfig.badge}</span>
+                        </div>
+                        <button onClick={() => setOwPanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Body */}
+                    <div className="px-5 pb-5">
+                        <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden">
+                            {/* Email subject line */}
+                            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                                <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
+                                <span className="text-sm font-semibold text-foreground flex-1">{owStepConfig.title}</span>
+                                <span className="text-[10px] text-muted-foreground shrink-0">May 6 · 9:30 AM</span>
+                            </div>
+                            {/* Email meta */}
+                            <div className="px-4 py-3 border-b border-border space-y-1">
+                                <div className="flex gap-2 text-[11px]">
+                                    <span className="text-muted-foreground w-10 shrink-0">From</span>
+                                    <span className="text-foreground font-medium">{owStepConfig.sender}</span>
+                                </div>
+                                {owStepConfig.re ? (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Re</span>
+                                        <span className="text-foreground">{owStepConfig.re}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Info</span>
+                                        <span className="text-foreground">{owStepConfig.desc}</span>
+                                    </div>
+                                )}
+                            </div>
+                            {/* Attachment chip */}
+                            {owStepConfig.attachment && (
+                                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide shrink-0">Attachment:</span>
+                                    <span className="flex items-center gap-1 text-[10px] text-success font-medium px-2 py-0.5 rounded bg-success/10 border border-success/20">
+                                        <DocumentTextIcon className="w-3 h-3" /> {owStepConfig.attachment}
+                                    </span>
+                                </div>
+                            )}
+                            {/* Body excerpt */}
+                            {owStepConfig.re && (
+                                <div className="px-4 py-3 border-b border-border">
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{owStepConfig.desc}</p>
+                                </div>
+                            )}
+                            <div className="px-4 py-4">
+                                <button
+                                    onClick={() => {
+                                        setOwPanelClosed(true);
+                                        window.dispatchEvent(new CustomEvent(owStepConfig.event));
+                                    }}
+                                    className="w-full py-2.5 text-[12px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                >
+                                    {owStepConfig.cta}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                        <p className="text-xs font-bold text-ai flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
+                            {owStepConfig.footerText}
                         </p>
                     </div>
                 </div>

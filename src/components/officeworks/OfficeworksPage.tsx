@@ -12,7 +12,7 @@
  * OfficeworksDashboardPage: standalone export for the persistent Dashboard navbar tab.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pencil, LayoutDashboard, ClipboardCheck, Send, Inbox } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
 import { useDemo } from '../../context/DemoContext'
@@ -20,7 +20,6 @@ import { useDemo } from '../../context/DemoContext'
 import OfficeworksFunnel from './OfficeworksFunnel'
 import OfficeworksDocumentReviewModal, { type OfficeworksReviewStage } from './OfficeworksDocumentReviewModal'
 import OfficeworksDashboardScene from './OfficeworksDashboardScene'
-import OfficeworksStepNotification from './OfficeworksStepNotification'
 
 // Hero scenes used as fullContent inside the modal at their stages
 import SelfAuditScene from './SelfAuditScene'
@@ -50,25 +49,26 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
     }
 }
 
-// ─── Step-start notifications (early-funnel steps only) ───────────────────────
-
-const STEP_NOTIFICATIONS: Record<string, { title: string; desc: string; cta: string }> = {
-    'sc1.0': {
-        title: 'New project intake · MANATT 4th Floor',
-        desc: 'Caitlin Barolet (DC) submitted the Works form · CAD file missing · SQ blank for the GSA client. Strata drafted the clarifying email and surfaced the capacity heatmap for assignment.',
-        cta: 'Review & assign designer',
-    },
-    'sc1.1': {
-        title: 'Assignment received · MANATT 4th Floor',
-        desc: 'Felicia assigned you the project · kickoff with Caitlin Barolet ready to schedule · scope confirmation needed before CET drawing can start.',
-        cta: 'Open kickoff briefing',
-    },
-    'sc1.2': {
-        title: 'Kickoff complete · ready for CET design',
-        desc: 'Scope confirmed · ~30 stations · Standard/Large · Flintwood 5N White Oak finishes. Optional DDP parallel BOM available for RFP volume discount.',
-        cta: 'Open CET workspace',
-    },
-}
+// ─── Officeworks notification events (dispatched by ActionCenter) ─────────────
+// Per P52 contract: every officeworks: custom event opens the review modal.
+// The notification configs live in src/components/notifications/ActionCenter.tsx
+// (OFFICEWORKS_STEP_NOTIFICATIONS + OFFICEWORKS_SC10_NOTIFICATIONS).
+const OFFICEWORKS_NOTIF_EVENTS = [
+    'officeworks:intake-ingest',
+    'officeworks:kickoff-open',
+    'officeworks:cet-open',
+    'officeworks:bom-open',
+    'officeworks:field-open',
+    'officeworks:sq-open',
+    'officeworks:preview-open',
+    'officeworks:preview-response-open',
+    'officeworks:preview-resubmit-open',
+    'officeworks:phasing-open',
+    'officeworks:peer-open',
+    'officeworks:submission-open',
+    'officeworks:po-tracking-open',
+    'officeworks:ack-open',
+] as const
 
 const STEP_ICONS_BY_APP: Record<string, React.ReactElement> = {
     'officeworks-intake':      <Inbox className="h-5 w-5" />,
@@ -90,13 +90,11 @@ const STEP_TITLES_BY_APP: Record<string, string> = {
 
 export default function OfficeworksPage() {
     const { currentStep, nextStep } = useDemo()
-    // Funnel-first: modal opens only when user clicks "Review →" in the MANATT card
-    // or the step notification CTA. Manager-driven (not auto-driven).
+    // Funnel-first: modal opens via the MANATT card's "Review →" button OR
+    // when any officeworks:* notification CTA is dispatched from ActionCenter.
     const [isModalOpen, setIsModalOpen] = useState(false)
     // Active designer assignment for MANATT · selected via IntakeAssignPanel or Dashboard
     const [assignedDesigner, setAssignedDesigner] = useState<string | null>(null)
-    // Track which step's notification was dismissed (re-arms when stepId changes)
-    const [dismissedStepNotif, setDismissedStepNotif] = useState<string | null>(null)
 
     const stepId = currentStep?.id
     const stage = stepIdToStage(stepId)
@@ -104,8 +102,12 @@ export default function OfficeworksPage() {
     const icon = STEP_ICONS_BY_APP[app] ?? <ClipboardCheck className="h-5 w-5" />
     const pageTitle = STEP_TITLES_BY_APP[app] ?? 'Spec Check'
 
-    const stepNotif = stepId ? STEP_NOTIFICATIONS[stepId] : undefined
-    const showNotif = !!stepNotif && stepId !== dismissedStepNotif && !isModalOpen
+    // Listen for all officeworks notification CTA events to open the modal
+    useEffect(() => {
+        const open = () => setIsModalOpen(true)
+        OFFICEWORKS_NOTIF_EVENTS.forEach(evt => window.addEventListener(evt, open))
+        return () => OFFICEWORKS_NOTIF_EVENTS.forEach(evt => window.removeEventListener(evt, open))
+    }, [])
 
     const handleClose = () => setIsModalOpen(false)
 
@@ -113,15 +115,6 @@ export default function OfficeworksPage() {
         setIsModalOpen(false)
         // brief pause so user sees modal close before next step renders
         setTimeout(() => nextStep(), 200)
-    }
-
-    const handleNotifAction = () => {
-        if (stepId) setDismissedStepNotif(stepId)
-        setIsModalOpen(true)
-    }
-
-    const handleNotifDismiss = () => {
-        if (stepId) setDismissedStepNotif(stepId)
     }
 
     // Pick hero scene as fullContent when at hero stages
@@ -142,18 +135,9 @@ export default function OfficeworksPage() {
             icon={icon}
         >
             <div className="space-y-4 animate-in fade-in duration-500">
-                {/* Step notification banner · auto-shows on entry for sc1.0/sc1.1/sc1.2 */}
-                {showNotif && stepNotif && stepId && (
-                    <OfficeworksStepNotification
-                        key={stepId}
-                        title={stepNotif.title}
-                        desc={stepNotif.desc}
-                        cta={stepNotif.cta}
-                        onAction={handleNotifAction}
-                        onDismiss={handleNotifDismiss}
-                    />
-                )}
-
+                {/* Notifications now come from ActionCenter (bell icon in navbar).
+                    Each officeworks step has an entry in OFFICEWORKS_STEP_NOTIFICATIONS;
+                    the CTA dispatches an officeworks:* custom event that opens the modal. */}
                 <OfficeworksFunnel
                     onOpenReview={() => setIsModalOpen(true)}
                     hideReviewCta={isModalOpen}
