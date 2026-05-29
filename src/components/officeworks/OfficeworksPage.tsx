@@ -33,7 +33,6 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
         case 'sc1.0':   return 'intake'
         case 'sc1.0b':  return 'intake-complete'
         case 'sc1.2':   return 'design'
-        case 'sc1.3':   return 'validation'
         case 'sc1.4':   return 'sq-check'
         case 'sc1.5':   return 'teknion-preview'
         case 'sc1.5b':  return 'spec-gap'
@@ -48,8 +47,8 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
 }
 
 // When validating these steps, keep the modal open so Flow 2 plays as a
-// continuous in-modal journey (Design BOM → Validation+Field → SQ).
-const STAYS_OPEN_WITHIN_FLOW2 = new Set(['sc1.2', 'sc1.3'])
+// continuous in-modal journey (Design BOM + send validation → SQ).
+const STAYS_OPEN_WITHIN_FLOW2 = new Set(['sc1.2'])
 
 // ─── Officeworks notification events (dispatched by ActionCenter) ─────────────
 // Per P52 contract: every officeworks: custom event opens the review modal.
@@ -60,7 +59,6 @@ const OFFICEWORKS_NOTIF_EVENTS = [
     'officeworks:intake-reply-open',
     'officeworks:cet-open',
     'officeworks:bom-open',
-    'officeworks:field-open',
     'officeworks:sq-open',
     'officeworks:preview-open',
     'officeworks:preview-response-open',

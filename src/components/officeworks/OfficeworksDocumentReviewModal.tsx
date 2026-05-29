@@ -16,8 +16,9 @@
  */
 
 import { Fragment, useEffect, useRef, useState } from 'react'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2 } from 'lucide-react'
+import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { OFFICEWORKS_FUNNEL } from './shared/funnelStages'
@@ -46,7 +47,7 @@ const STAGE_TO_COL: Record<OfficeworksReviewStage, number> = {
 const STAGE_AI_BANNER: Record<OfficeworksReviewStage, string> = {
     'intake':           '75-80% of Works forms arrive incomplete · Strata detected missing CAD + blank SQ · email drafted to Caitlin',
     'intake-complete':  'Caitlin replied · CAD .dwg attached · SQ #436533 confirmed · designer assignment unlocked',
-    'design':           'Scope confirmed · ~30 stations Standard/Large · Flintwood 5N White Oak · drawing in CET/CAP · upload the 149-line BOM for analysis',
+    'design':           'Export the CET layout → CAP · upload the 149-line BOM · Strata analyzes + flags findings · then send the validation doc to MANATT for client approval',
     'bom-gen':          'CAP generates BOM · 71 lines across 4 Tags · List $296,228 / Net $61,464.80 · 13 CRs (25-40 days)',
     'validation':       'Google Slides auto-compiled · client approval gate · GW2A revision type sub-gateway',
     'field-verify':     'Pre-installation drawings sent to Abigail PM · field verification BEFORE Teknion order',
@@ -267,8 +268,7 @@ export default function OfficeworksDocumentReviewModal({
                                                     )
                                                 }
                                                 // Flow 2 · 3 interactive panels (each owns its own CTA)
-                                                if (stage === 'design')     return <DesignBOMPanel onValidate={onValidate} onBOMUploaded={markBomUploaded} bomUploaded={flowProgress.bomUploaded} />
-                                                if (stage === 'validation') return <ValidationFieldPanel onValidate={onValidate} onValidationCompiled={markValidationDone} />
+                                                if (stage === 'design')     return <DesignBOMPanel onValidate={onValidate} onBOMUploaded={markBomUploaded} onValidationCompiled={markValidationDone} bomUploaded={flowProgress.bomUploaded} />
                                                 if (stage === 'sq-check')   return <SQCheckPanel onValidate={onValidate} />
                                                 // Default · static description + Approve & Continue
                                                 return (
@@ -312,11 +312,22 @@ function DefaultDocTabs({ stage, flowProgress }: { stage: OfficeworksReviewStage
     const visibleTabs = DOC_TABS.filter(t => visibleTabIds.includes(t.id))
     const [activeTab, setActiveTab] = useState<DocTab>(DEFAULT_DOC[stage])
 
-    // A "View in BOM" link anywhere in the modal surfaces the BOM tab.
+    // Auto-surface the BOM tab the moment the upload completes (bomUploaded → true).
+    // Deterministic: fires on the same render the 'bom' tab becomes visible.
+    useEffect(() => {
+        if (flowProgress.bomUploaded) setActiveTab('bom')
+    }, [flowProgress.bomUploaded])
+
+    // "View in BOM" / "View floor plan" links anywhere in the modal surface their tab.
     useEffect(() => {
         const surfaceBom = () => setActiveTab('bom')
+        const surfaceFloorPlan = () => setActiveTab('floor-plan')
         window.addEventListener('officeworks:bom-tab-focus', surfaceBom)
-        return () => window.removeEventListener('officeworks:bom-tab-focus', surfaceBom)
+        window.addEventListener('officeworks:floor-plan-focus', surfaceFloorPlan)
+        return () => {
+            window.removeEventListener('officeworks:bom-tab-focus', surfaceBom)
+            window.removeEventListener('officeworks:floor-plan-focus', surfaceFloorPlan)
+        }
     }, [])
 
     return (
@@ -364,7 +375,7 @@ function DefaultDocTabs({ stage, flowProgress }: { stage: OfficeworksReviewStage
 function DocTabContent({ tab, stage, flowProgress }: { tab: DocTab; stage: OfficeworksReviewStage; flowProgress: FlowProgress }) {
     if (tab === 'works-form') return <WorksFormPreview stage={stage} />
     if (tab === 'bom') return <BOMPreview stage={stage} bomUploaded={flowProgress.bomUploaded} />
-    if (tab === 'validation') return <ValidationDocPreview stage={stage} />
+    if (tab === 'validation') return <ValidationDocPreview validationCompiled={flowProgress.validationCompiled} />
     if (tab === 'floor-plan') return <FloorPlanPreview stage={stage} />
     if (tab === 'attachments') return <AttachmentsPreview stage={stage} />
     if (tab === 'ack') return <AckPreview stage={stage} />
@@ -517,7 +528,8 @@ function BOMPreview({ bomUploaded }: { stage: OfficeworksReviewStage; bomUploade
                 <span className="ml-auto text-[10px] text-success font-medium">Uploaded</span>
             </div>
             <iframe
-                src={OFFICEWORKS_PDFS.manattBOM}
+                // #navpanes=0 hides the native thumbnail sidebar · view=FitH fits page width
+                src={`${OFFICEWORKS_PDFS.manattBOM}#navpanes=0&view=FitH`}
                 title="MANATT 4F BOM"
                 className="flex-1 w-full border-0 bg-card"
             />
@@ -527,11 +539,8 @@ function BOMPreview({ bomUploaded }: { stage: OfficeworksReviewStage; bomUploade
 
 // ─── Validation Doc tab ───────────────────────────────────────────────────────
 
-function ValidationDocPreview({ stage }: { stage: OfficeworksReviewStage }) {
-    const preValidationStages: OfficeworksReviewStage[] = ['intake', 'design', 'bom-gen']
-    const notCompiled = preValidationStages.includes(stage)
-
-    if (notCompiled) {
+function ValidationDocPreview({ validationCompiled }: { validationCompiled: boolean }) {
+    if (!validationCompiled) {
         return (
             <div className="h-full flex items-center justify-center p-6 bg-muted/20">
                 <div className="bg-card border border-dashed border-border rounded-xl p-8 max-w-md text-center space-y-3">
@@ -539,10 +548,10 @@ function ValidationDocPreview({ stage }: { stage: OfficeworksReviewStage }) {
                         <FileText className="h-6 w-6" />
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-foreground">Validation document not yet compiled</h4>
+                        <h4 className="text-sm font-semibold text-foreground">Validation document not yet sent</h4>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Google Slides validation doc auto-compiles after BOM is generated.
-                            Currently at stage <span className="font-mono">{stage}</span>.
+                            Strata auto-compiles the Google Slides validation doc after the BOM is analyzed.
+                            Send it to MANATT from the right panel to populate this tab.
                         </p>
                     </div>
                 </div>
@@ -1052,9 +1061,9 @@ function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValida
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Flow 2 panels · sc1.2 DesignBOMPanel · sc1.3 ValidationFieldPanel ·
+// Flow 2 panels · sc1.2 DesignBOMPanel (BOM upload + analysis + send validation) ·
 //                 sc1.4 SQCheckPanel
-// Modal stays open across these three stages (handled in OfficeworksPage).
+// Modal stays open across these stages (handled in OfficeworksPage).
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ─── sc1.2 DesignBOMPanel · PP2 capacity ledger + BOM upload narrative + PP1 ──
@@ -1062,8 +1071,17 @@ function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValida
 interface DesignBOMPanelProps {
     onValidate: () => void
     onBOMUploaded: () => void
+    onValidationCompiled: () => void
     bomUploaded: boolean
 }
+
+// Email body for the validation document sent to the MANATT client.
+const VALIDATION_MESSAGE = `Hi Caitlin,
+
+Attaching the validation document for MANATT 4th Floor — 2D/3D drawings, finishes, electrical and wire management. Please confirm or request revisions.
+
+— Kimberly Tucker
+Officeworks · Design`
 
 const LEDGER_EVENTS = [
     { text: 'CET session opened · Kimberly · 11:14 AM', delay: 400 },
@@ -1079,6 +1097,14 @@ const UPLOAD_BULLETS = [
     'Cross-referencing finish codes · 1 inconsistency surfaced (Item 73 · XS Storm White vs area XG Very White)',
     'Pricing parsed · $1,541,392 List · catalog effective Sep 2025 + Oct 2025 mix',
     'AI BOM Validator queued · 149 × 6 = 894 attribute checks pending',
+]
+
+// Conversion/export simulation shown before the send modal opens.
+const EXPORT_BULLETS = [
+    'Converting CET layout → CAP BOM worksheet · 149 lines',
+    'Exporting SP4 file for order placement',
+    'Compiling validation document · 2D/3D · finishes · electrical',
+    'Packaging attachments · ready to send',
 ]
 
 const RELATED_PROCESSES = [
@@ -1113,8 +1139,8 @@ const BOM_FINDINGS: BOMFinding[] = [
         title: 'Item 73 · Office_WO.3 panel finish mismatch',
         detail: 'Source Laminate XS Storm White vs the area\'s XG Very White pattern · BMWOOH7224BTNN (CR 2090148)',
         source: 'Source: BOM page 9 · Item 73 · Office_WO.3 area',
-        answer: 'Likely typo · the rest of Office_WO.3 panels use Source Laminate XG Very White. Confirm with Caitlin before submission · resubmitting with XS would visibly clash with adjacent panels.',
-        citation: 'Citation: KB-OW-FINISH-014 · MANATT spec book p.12 · area finish hierarchy',
+        answer: 'The other Office_WO.3 panels in the BOM use Source Laminate XG Very White · Item 73 alone uses XS Storm White. Likely a typo — confirm against the floor plan and with Caitlin before submission.',
+        citation: 'Detected in the BOM · Item 73 finish vs the other Office_WO.3 panels · confirm against the floor plan',
         primary: { label: 'Flag for resubmit', tone: 'success' },
         secondary: 'Override · keep XS',
     },
@@ -1124,8 +1150,8 @@ const BOM_FINDINGS: BOMFinding[] = [
         title: 'CR 2046138 · Solid Add-On Screen · WS-02',
         detail: 'Custom flintwood finish White Oak 5N · qty 1 · $1,406 list',
         source: 'Source: BOM page 13 · Item 118 · WS-02 (6) area',
-        answer: 'Standard pattern for MANATT DC market · 4 prior approvals exist for this exact CR. Lead-time impact: +18 days (within Teknion 25-40d band). No PM escalation needed.',
-        citation: 'Citation: KB-OW-CR-2046138 · prior approvals · 4 historic MANATT orders',
+        answer: 'Custom Request found on this line · look up CR 2046138 in Teknion Create to confirm the part, finish, and lead-time before submission.',
+        citation: 'Teknion Create · CR 2046138 lookup',
         primary: { label: 'Accept · proceed', tone: 'success' },
         secondary: 'Open Create platform',
     },
@@ -1135,8 +1161,8 @@ const BOM_FINDINGS: BOMFinding[] = [
         title: 'CR 2090148 · Wall Panel shelf placement · ×5 occurrences',
         detail: 'Items 10, 31, 52, 62, 73 · IO.1 + IO.4 + WO.1 + WO.2 + WO.3 · $427 × 5 = $2,135 list',
         source: 'Source: BOM pages 2-9 · multiple line items',
-        answer: 'High-frequency custom across 5 areas · candidate for catalog formalization with Teknion. Strata flagged this for the next quarterly catalog review (PP1 input). Lead-time impact: +10 days per occurrence.',
-        citation: 'Citation: KB-OW-CR-2090148 · usage analytics · catalog formalization queue',
+        answer: 'The same CR appears on 5 line items across IO.1/IO.4/WO.1/WO.2/WO.3. Confirm each instance is intended on the floor plan and look up CR 2090148 in Teknion Create.',
+        citation: 'Detected in the BOM · CR 2090148 on items 10/31/52/62/73 · verify in Teknion Create',
         primary: { label: 'Accept · proceed', tone: 'success' },
         secondary: 'Bulk override',
     },
@@ -1151,6 +1177,9 @@ const focusBOMTab = () => window.dispatchEvent(new CustomEvent('officeworks:bom-
  * resolved). Each finding cites a real page/item in the PDF and offers a
  * "View in BOM" link that surfaces the iframe tab via focusBOMTab().
  */
+/** Surface the Floor Plan tab · listened by DefaultDocTabs */
+const focusFloorPlanTab = () => window.dispatchEvent(new CustomEvent('officeworks:floor-plan-focus'))
+
 function BOMFindings() {
     const [resolved, setResolved] = useState<Set<string>>(new Set())
     const [expanded, setExpanded] = useState<string | null>(null)
@@ -1172,6 +1201,20 @@ function BOMFindings() {
                         {BOM_FINDINGS.length - resolved.size} to review
                     </span>
                 )}
+            </div>
+
+            {/* Source of truth · the BOM is checked against the floor plan (AS-IS · Felicia 0:33) */}
+            <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 flex items-start gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-bold text-foreground">Verified against · Floor Plan (CET design)</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                        Strata checks the 149 BOM lines against the parts, quantities, finishes &amp; CRs drawn in CET.
+                    </div>
+                    <button type="button" onClick={focusFloorPlanTab} className="mt-1 text-[10px] font-bold text-foreground bg-primary/20 rounded px-1.5 py-0.5 hover:bg-primary/30 transition-colors">
+                        View floor plan ↗
+                    </button>
+                </div>
             </div>
 
             {BOM_FINDINGS.map(f => {
@@ -1244,12 +1287,14 @@ function BOMFindings() {
     )
 }
 
-function DesignBOMPanel({ onValidate, onBOMUploaded, bomUploaded }: DesignBOMPanelProps) {
-    type Phase = 'waiting-upload' | 'processing-upload' | 'analyzed'
+function DesignBOMPanel({ onValidate, onBOMUploaded, onValidationCompiled, bomUploaded }: DesignBOMPanelProps) {
+    type Phase = 'waiting-upload' | 'processing-upload' | 'analyzed' | 'exporting' | 'sent'
     const [phase, setPhase] = useState<Phase>(bomUploaded ? 'analyzed' : 'waiting-upload')
     const [ledgerCount, setLedgerCount] = useState(0)
     const [ddpEnabled, setDdpEnabled] = useState(false)
     const [uploadCount, setUploadCount] = useState(0)
+    const [exportCount, setExportCount] = useState(0)
+    const [validationDialog, setValidationDialog] = useState(false)
     const timeoutsRef = useRef<number[]>([])
 
     // Phase 'waiting-upload': progressive ledger events
@@ -1276,7 +1321,7 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, bomUploaded }: DesignBOMPan
         })
         const doneId = window.setTimeout(() => {
             setPhase('analyzed')
-            onBOMUploaded()
+            onBOMUploaded()  // flips flowProgress.bomUploaded → DefaultDocTabs auto-switches to the BOM tab
         }, 500 * UPLOAD_BULLETS.length + 400)
         timeoutsRef.current.push(doneId)
         return () => {
@@ -1284,6 +1329,22 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, bomUploaded }: DesignBOMPan
             timeoutsRef.current = []
         }
     }, [phase, onBOMUploaded])
+
+    // Phase 'exporting': convert/package the BOM, then open the send modal with the file ready
+    useEffect(() => {
+        if (phase !== 'exporting') return
+        setExportCount(0)
+        EXPORT_BULLETS.forEach((_, i) => {
+            const id = window.setTimeout(() => setExportCount(i + 1), 450 * (i + 1))
+            timeoutsRef.current.push(id)
+        })
+        const openId = window.setTimeout(() => setValidationDialog(true), 450 * EXPORT_BULLETS.length + 350)
+        timeoutsRef.current.push(openId)
+        return () => {
+            timeoutsRef.current.forEach(id => window.clearTimeout(id))
+            timeoutsRef.current = []
+        }
+    }, [phase])
 
     return (
         <>
@@ -1375,17 +1436,40 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, bomUploaded }: DesignBOMPan
                     </div>
                 )}
 
+                {/* Exporting · converting/packaging the BOM before the send modal opens */}
+                {phase === 'exporting' && (
+                    <div className="border-t border-border pt-4 space-y-2 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 text-foreground animate-spin" />
+                            <h4 className="text-base font-semibold text-foreground">Exporting BOM · preparing files to send…</h4>
+                        </div>
+                        <ul className="space-y-1.5">
+                            {EXPORT_BULLETS.slice(0, exportCount).map((b, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-foreground animate-in fade-in slide-in-from-left-1 duration-300">
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
+                                    <span>{b}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Analyzed · success + BOM findings + related processes */}
                 {phase === 'analyzed' && (
                     <div className="border-t border-border pt-4 space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
                         <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                            <div className="text-xs">
+                            <div className="text-xs flex-1 min-w-0">
                                 <div className="font-semibold text-success">BOM uploaded · 149 line items · $1,541,392 list</div>
                                 <div className="text-muted-foreground">
                                     MANATT-4F_BOM_v1.pdf · Teknion T25 · 11 areas · 22 CRs · largest: Office_WO.1 (20 units · $419,660){ddpEnabled ? ' · DDP parallel queued' : ''}
-                                    <button type="button" onClick={focusBOMTab} className="ml-2 text-[10px] font-bold text-foreground bg-primary/20 rounded px-1.5 py-0.5 hover:bg-primary/30 transition-colors">
+                                </div>
+                                <div className="flex items-center gap-2 mt-1.5">
+                                    <button type="button" onClick={focusBOMTab} className="text-[10px] font-bold text-foreground bg-primary/20 rounded px-1.5 py-0.5 hover:bg-primary/30 transition-colors">
                                         View in BOM ↗
+                                    </button>
+                                    <button type="button" onClick={() => setPhase('waiting-upload')} className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 hover:bg-muted/50 transition-colors">
+                                        <Paperclip className="h-3 w-3" /> Replace file
                                     </button>
                                 </div>
                             </div>
@@ -1412,6 +1496,24 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, bomUploaded }: DesignBOMPan
                         </div>
                     </div>
                 )}
+
+                {/* Validation sent · client approval requested */}
+                {phase === 'sent' && (
+                    <div className="border-t border-border pt-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                            <div className="text-xs">
+                                <div className="font-semibold text-success">Validation document sent to MANATT</div>
+                                <div className="text-muted-foreground">
+                                    2D/3D drawings · finishes · electrical sent to Caitlin Barolet for client approval. Pre-install drawings hand off to the PM team for field verification in parallel.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground italic">
+                            Once approved, Strata moves the order to the price-protected SQ check.
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -1433,160 +1535,26 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, bomUploaded }: DesignBOMPan
                 {phase === 'analyzed' && (
                     <button
                         type="button"
-                        onClick={onValidate}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
-                    >
-                        Continue to validation
-                        <ArrowRight className="h-4 w-4" />
-                    </button>
-                )}
-            </div>
-        </>
-    )
-}
-
-// ─── sc1.3 ValidationFieldPanel · PP4 (SLA timers) ────────────────────────────
-
-interface ValidationFieldPanelProps {
-    onValidate: () => void
-    onValidationCompiled: () => void
-}
-
-const VALIDATION_MESSAGE = `Hi Caitlin,
-
-Attaching the validation document for MANATT 4th Floor — 2D/3D drawings, finishes, electrical and wire management. Please confirm or request revisions.
-
-— Kimberly Tucker
-Officeworks · Design`
-
-const FIELD_MESSAGE = `Hi Abigail,
-
-Pre-installation drawings attached (hold-to dimensions, blocking, floor cores). Please schedule the GC walk-through and confirm no field discrepancies before we release the order to Teknion.
-
-— Kimberly Tucker`
-
-function ValidationFieldPanel({ onValidate, onValidationCompiled }: ValidationFieldPanelProps) {
-    type Phase = 'send-validation' | 'awaiting-client' | 'send-field' | 'awaiting-field' | 'complete'
-    const [phase, setPhase] = useState<Phase>('send-validation')
-    const [validationDialog, setValidationDialog] = useState(false)
-    const [fieldDialog, setFieldDialog] = useState(false)
-    const timeoutRef = useRef<number | null>(null)
-
-    useEffect(() => {
-        if (phase === 'awaiting-client') {
-            const id = window.setTimeout(() => {
-                setPhase('send-field')
-                // The validation doc is now compiled & approved · surface the tab
-                onValidationCompiled()
-            }, 2200)
-            timeoutRef.current = id
-        }
-        if (phase === 'awaiting-field') {
-            const id = window.setTimeout(() => setPhase('complete'), 2200)
-            timeoutRef.current = id
-        }
-        return () => { if (timeoutRef.current) window.clearTimeout(timeoutRef.current) }
-    }, [phase, onValidationCompiled])
-
-    const StepRow = ({ done, active, label, sub }: { done: boolean; active: boolean; label: string; sub: string }) => (
-        <div className={`rounded-lg border px-3 py-2 flex items-start gap-2 ${
-            done ? 'border-success/30 bg-success/5' : active ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'
-        }`}>
-            {done ? <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" /> : active ? <Loader2 className="h-4 w-4 text-foreground animate-spin shrink-0 mt-0.5" /> : <span className="h-4 w-4 rounded-full border border-muted-foreground/40 shrink-0 mt-0.5" />}
-            <div className="flex-1 min-w-0">
-                <div className={`text-xs font-semibold ${done ? 'text-success' : 'text-foreground'}`}>{label}</div>
-                <div className="text-[10px] text-muted-foreground">{sub}</div>
-            </div>
-        </div>
-    )
-
-    return (
-        <>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
-                {/* PP4 · auto-stamped phase timeline */}
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-                        <h4 className="text-base font-semibold text-foreground">Two SLA gates · auto-stamped</h4>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">Validation doc to MANATT (5d SLA) · then pre-install packet to Abigail (2d SLA). Phase entry/exit timestamps feed the KPI dashboard.</p>
-                </div>
-
-                {/* Phase steps */}
-                <div className="space-y-2">
-                    <StepRow
-                        done={phase !== 'send-validation' && phase !== 'awaiting-client'}
-                        active={phase === 'awaiting-client'}
-                        label="Validation doc · Caitlin (MANATT)"
-                        sub={
-                            phase === 'send-validation' ? 'Pending · click to open & send' :
-                            phase === 'awaiting-client' ? 'Sent · SLA 5d · awaiting approval' :
-                            'Approved · 0d 18m elapsed (well under SLA)'
-                        }
-                    />
-                    <StepRow
-                        done={phase === 'complete'}
-                        active={phase === 'awaiting-field'}
-                        label="Pre-install packet · Abigail (PM)"
-                        sub={
-                            phase === 'send-validation' || phase === 'awaiting-client' ? 'Blocked until validation approval' :
-                            phase === 'send-field' ? 'Ready · click to open & send' :
-                            phase === 'awaiting-field' ? 'Sent · SLA 2d · awaiting field verification' :
-                            'Verified · 0d 14m elapsed'
-                        }
-                    />
-                </div>
-
-                {/* Completion banner */}
-                {phase === 'complete' && (
-                    <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
-                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                        <div className="text-xs">
-                            <div className="font-semibold text-success">Both gates cleared · client approval + field verification</div>
-                            <div className="text-muted-foreground">Phase events saved · cycle time 0d 32m (target 7d) · proceed to SQ check</div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            <div className="border-t border-border px-5 py-3 bg-card shrink-0">
-                {phase === 'send-validation' && (
-                    <button
-                        type="button"
-                        onClick={() => setValidationDialog(true)}
+                        onClick={() => setPhase('exporting')}
                         className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
                     >
-                        Open & send validation doc
+                        Export and send
                         <ArrowRight className="h-4 w-4" />
                     </button>
                 )}
-                {phase === 'awaiting-client' && (
+                {phase === 'exporting' && (
                     <button type="button" disabled className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground text-sm font-medium opacity-60 cursor-not-allowed">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Awaiting MANATT approval…
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Exporting…
                     </button>
                 )}
-                {phase === 'send-field' && (
-                    <button
-                        type="button"
-                        onClick={() => setFieldDialog(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
-                    >
-                        Open & send pre-install packet
-                        <ArrowRight className="h-4 w-4" />
-                    </button>
-                )}
-                {phase === 'awaiting-field' && (
-                    <button type="button" disabled className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground text-sm font-medium opacity-60 cursor-not-allowed">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Awaiting field verification…
-                    </button>
-                )}
-                {phase === 'complete' && (
+                {phase === 'sent' && (
                     <button
                         type="button"
                         onClick={onValidate}
                         className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
                     >
-                        Both confirmed · proceed to SQ check
+                        Continue to SQ check
                         <ArrowRight className="h-4 w-4" />
                     </button>
                 )}
@@ -1594,8 +1562,8 @@ function ValidationFieldPanel({ onValidate, onValidationCompiled }: ValidationFi
 
             <RequestInfoDialog
                 isOpen={validationDialog}
-                onSent={() => { setValidationDialog(false); setPhase('awaiting-client') }}
-                onClose={() => setValidationDialog(false)}
+                onSent={() => { setValidationDialog(false); setPhase('sent'); onValidationCompiled() }}
+                onClose={() => { setValidationDialog(false); setPhase('analyzed') }}
                 headerAvatar="CB"
                 headerLabel="Caitlin Barolet · MANATT (DC)"
                 headerSubtitle="caitlin.barolet@manatt.com · Validation Document"
@@ -1607,42 +1575,14 @@ function ValidationFieldPanel({ onValidate, onValidationCompiled }: ValidationFi
                     subject: 'MANATT 4th Floor · Validation Document · approval requested',
                     message: VALIDATION_MESSAGE,
                     attachments: [{ name: 'MANATT-4F_validation-v1.pdf', meta: '6 slides · Google Slides export' }],
-                    alertTitle: 'SLA · client approval gate (GW2A)',
+                    alertTitle: 'Client approval gate (GW2A)',
                     alertRows: [
                         { label: 'Project', value: 'MANATT · 4th Floor · ~30 stations' },
                         { label: 'Doc',     value: 'Validation v1 · 2D/3D + finishes + electrical' },
-                        { label: 'SLA',     value: '5 days · breach escalates to Felicia' },
+                        { label: 'Sent to', value: 'Caitlin Barolet · MANATT (DC)' },
                     ],
                     successTitle: 'Validation doc sent to MANATT',
-                    successSubtitle: 'SLA timer armed · awaiting Caitlin approval',
-                }}
-            />
-            <RequestInfoDialog
-                isOpen={fieldDialog}
-                onSent={() => { setFieldDialog(false); setPhase('awaiting-field') }}
-                onClose={() => setFieldDialog(false)}
-                headerAvatar="AB"
-                headerLabel="Abigail · PM Team"
-                headerSubtitle="abigail.pm@officeworks.com · Field Verification"
-                defaults={{
-                    from: 'kimberly.tucker@officeworks.com',
-                    to: 'abigail.pm@officeworks.com',
-                    cc: 'caitlin.barolet@manatt.com',
-                    date: '2026-04-22 · 2:33 PM',
-                    subject: 'MANATT 4th Floor · pre-install drawings · schedule field verification',
-                    message: FIELD_MESSAGE,
-                    attachments: [
-                        { name: 'MANATT-4F_pre-install_dims.pdf', meta: '4 pages · dims + blocking' },
-                        { name: 'MANATT-4F_floor-cores.pdf',     meta: '2 pages · cores + electrical' },
-                    ],
-                    alertTitle: 'SLA · field verification (GW2B)',
-                    alertRows: [
-                        { label: 'PM',         value: 'Abigail · Officeworks PM team' },
-                        { label: 'Packet',     value: 'Dimensions + blocking + floor cores' },
-                        { label: 'SLA',        value: '2 days · breach blocks Teknion order release' },
-                    ],
-                    successTitle: 'Pre-install packet sent to Abigail',
-                    successSubtitle: 'SLA timer armed · awaiting field verification',
+                    successSubtitle: 'Awaiting Caitlin approval · field verification runs in parallel',
                 }}
             />
         </>
@@ -1650,6 +1590,37 @@ function ValidationFieldPanel({ onValidate, onValidationCompiled }: ValidationFi
 }
 
 // ─── sc1.4 SQCheckPanel · PP3 (Knowledge Assistant peak) ──────────────────────
+
+/**
+ * Inline tooltip that surfaces the business rule behind a value + its source.
+ * Same dark Radix tooltip used by DataSourcesBar. Renders the wrapped term with
+ * a small help icon; rule + source appear on hover/focus.
+ */
+function RuleTooltip({ children, rule, source }: { children: React.ReactNode; rule: string; source: string }) {
+    return (
+        <TooltipPrimitive.Provider delayDuration={150}>
+            <TooltipPrimitive.Root>
+                <TooltipPrimitive.Trigger asChild>
+                    <span className="inline-flex items-center gap-0.5 cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+                        {children}
+                        <HelpCircle className="h-2.5 w-2.5 opacity-50 shrink-0" />
+                    </span>
+                </TooltipPrimitive.Trigger>
+                <TooltipPrimitive.Portal>
+                    <TooltipPrimitive.Content
+                        side="top"
+                        sideOffset={6}
+                        className="z-[60] max-w-[280px] rounded-lg bg-zinc-900 px-3 py-2 text-[11px] leading-snug text-zinc-100 shadow-lg animate-in fade-in-0 zoom-in-95"
+                    >
+                        <div>{rule}</div>
+                        <div className="text-zinc-400 mt-1 italic">{source}</div>
+                        <TooltipPrimitive.Arrow className="fill-zinc-900" />
+                    </TooltipPrimitive.Content>
+                </TooltipPrimitive.Portal>
+            </TooltipPrimitive.Root>
+        </TooltipPrimitive.Provider>
+    )
+}
 
 interface SQCheckPanelProps { onValidate: () => void }
 
@@ -1674,27 +1645,51 @@ function SQCheckPanel({ onValidate }: SQCheckPanelProps) {
                         <div>
                             <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Answer</div>
                             <div className="text-xs text-foreground">
-                                <strong className="text-success">YES · GSA price-protected.</strong> 2025 catalog applies (effective 2025-01-01 → 2025-12-31). SQ #436533 is valid through 2026-12-31.
+                                <strong className="text-success">YES · </strong>
+                                <RuleTooltip
+                                    rule="GSA / government clients are price-protected and require a Special Quote (SQ) lookup. ~20% of all orders need this — ~50% of DC orders for GSA accounts."
+                                    source="Source: Spec Check AS-IS · 'Exception: Price-Protected Orders'"
+                                >
+                                    <strong className="text-success">GSA price-protected</strong>
+                                </RuleTooltip>
+                                . The{' '}
+                                <RuleTooltip
+                                    rule="The price catalog effective date must be confirmed — using the wrong price zone / catalog is a documented spec-check error that sends incorrect pricing to the client."
+                                    source="Source: Spec Check AS-IS · Error Profile"
+                                >
+                                    2025 catalog
+                                </RuleTooltip>
+                                {' '}applies for{' '}
+                                <RuleTooltip
+                                    rule="A Special Quote number is the manufacturer's price-protection reference for this client / project. Verified in Teknion Create together with the manufacturer's special pricing form."
+                                    source="Source: Spec Check AS-IS · Tools (Create = CR / SQ verification)"
+                                >
+                                    SQ #436533
+                                </RuleTooltip>
+                                .
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/60">
                             <div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Source</div>
-                                <div className="text-[11px] text-foreground mt-0.5">GSA contract HR-25-0814</div>
-                                <div className="text-[10px] text-muted-foreground italic">renewed 2025-01-01</div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Price protection</div>
+                                <div className="text-[11px] text-foreground mt-0.5">YES · GSA client</div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Special Quote</div>
+                                <div className="text-[11px] text-foreground mt-0.5">SQ #436533</div>
                             </div>
                             <div>
                                 <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Catalog</div>
-                                <div className="text-[11px] text-foreground mt-0.5">2025 · effective dates set</div>
-                                <div className="text-[10px] text-muted-foreground italic">PZ Description verified</div>
+                                <div className="text-[11px] text-foreground mt-0.5">2025 · confirm effective dates</div>
                             </div>
                             <div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Confidence</div>
-                                <div className="text-[11px] text-foreground mt-0.5"><strong>98%</strong> · 12 prior MANATT references</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">KB entry</div>
-                                <div className="text-[11px] text-foreground font-medium underline decoration-primary decoration-2 underline-offset-2 mt-0.5">KB-OW-SQ-0042 ↗</div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Verified in</div>
+                                <RuleTooltip
+                                    rule="SQ and price-protection are looked up in Teknion's Create platform together with the manufacturer's special pricing form — a manual step today, run inline here by Strata."
+                                    source="Source: Spec Check AS-IS · Tools + 'Exception: Price-Protected Orders'"
+                                >
+                                    <span className="text-[11px] text-foreground mt-0.5">Teknion Create + special pricing form</span>
+                                </RuleTooltip>
                             </div>
                         </div>
                     </div>

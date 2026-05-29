@@ -12,7 +12,7 @@
 //            13 gateways + 3 end events) in 5 swimlanes
 //
 //   Group 1 — Intake & Assignment       sc1.0, sc1.0b
-//   Group 2 — Design & Validation       sc1.2 (CET+CAP), sc1.3 (valid+field), sc1.4
+//   Group 2 — Design & Validation       sc1.2 (BOM export + send validation), sc1.4 (SQ)
 //   Group 3 — Teknion Order Preview     sc1.5, sc1.5b, sc1.5c
 //   Group 4 — Spec Check  ⭐ HEROES     sc1.6 (SC2+SC3), sc1.7 (SC7)
 //   Group 5 — Submission & Confirm      sc1.8, sc1.8b, sc1.9 ⭐ (Gemini)
@@ -58,18 +58,9 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
         id: 'sc1.2',
         groupId: 2,
         groupTitle: 'Design & Validation',
-        title: 'Design BOM · CET → CAP',
-        description: 'Kimberly draws the furniture layout in CET while the live capacity ledger tracks committed hours from CET session events (PP2 · SC5). Optional Deep Discounting BOM (DDP) parallel toggle. When ready, BOM exports to CAP — 71 line items across 4 tags · Specifications + electrical embedded here, not standalone. AI Validator queues 426 attribute checks ahead of the self-audit hero step.',
+        title: 'Design BOM · export & send validation',
+        description: 'Kimberly draws the layout in CET and exports the BOM to CAP — the real 149-line MANATT BOM uploads to Strata, which parses it, surfaces 3 findings, and queues the AI Validator. Kimberly then sends the validation document (2D/3D drawings, finishes, electrical) to MANATT for client approval before the order moves forward.',
         app: 'officeworks-design',
-        role: 'Designer',
-    },
-    {
-        id: 'sc1.3',
-        groupId: 2,
-        groupTitle: 'Design & Validation',
-        title: 'Validation doc + field verification',
-        description: 'The validation document compiles in Google Slides (2D/3D drawings, finishes, electrical specs) and goes to MANATT for approval — SLA timer auto-stamped on the client approval gate (PP4 · SC6). Once approved, pre-installation drawings hand off to Abigail\'s PM team for field verification — second SLA timer.',
-        app: 'officeworks-submission',
         role: 'Designer',
     },
     {
@@ -173,8 +164,7 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
 export const OFFICEWORKS_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'sc1.0':  { mode: 'interactive', userAction: 'Click the Strata notification → review the form (CAD missing · SQ blank) · open & send the clarification email to Caitlin' },
     'sc1.0b': { mode: 'interactive', userAction: 'Open the reply notification · review the completed form (CAD attached · SQ confirmed) · click Kimberly Tucker → Approve & Assign' },
-    'sc1.2':  { mode: 'interactive', userAction: 'Watch the capacity ledger from CET events · optionally enable DDP parallel · drop the BOM file · review Strata\'s 3 findings on the real 149-line MANATT BOM' },
-    'sc1.3':  { mode: 'interactive', userAction: 'Send the validation doc to MANATT (SLA timer arms) · once approved, send pre-install drawings to Abigail · both confirmations land before SQ check' },
+    'sc1.2':  { mode: 'interactive', userAction: 'Drop the BOM file · review Strata\'s 3 findings on the real 149-line MANATT BOM · then send the validation doc to MANATT for client approval' },
     'sc1.4':  { mode: 'interactive', userAction: 'GW2C: SQ required (yes for MANATT) · open Create inline · verify SQ #436533 + 2025 catalog' },
     'sc1.5':  { mode: 'interactive', userAction: 'Submit Order Preview · wait for Tifani · pick GW3 outcome (clean / spec gap / timeline conflict)' },
     'sc1.5b': { mode: 'interactive', userAction: 'Accept Strata\'s spec gap fix · resubmit preview' },
@@ -211,14 +201,8 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
         '11 areas tagged · 22 Custom Requests flagged for spec-check',
         '1 finish inconsistency surfaced · Item 73 · XS vs area XG Very White',
         'Pricing parsed · $1,541,392 List · AI Validator queued · 894 checks',
-    ],
-    'sc1.3': [
-        'Compiling Validation Document · Google Slides',
-        '2D/3D drawings · finishes · electrical wiring · wire mgmt',
-        'Sent to MANATT contact for approval · SLA timer armed · 5d',
-        'GW2A: client approved · sending pre-install packet to Abigail (PM)',
-        'Field verification scheduled · SLA timer · 2d',
-        'Both gates cleared · proceed to SQ check',
+        'Compiling Validation Document · 2D/3D · finishes · electrical',
+        'Validation doc sent to MANATT · client approval requested',
     ],
     'sc1.4': [
         'GW2C: client = MANATT · GSA contract · SQ required',
@@ -285,6 +269,6 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const OFFICEWORKS_SELF_INDICATED: string[] = [
-    'sc1.0', 'sc1.0b', 'sc1.2', 'sc1.3', 'sc1.4',
+    'sc1.0', 'sc1.0b', 'sc1.2', 'sc1.4',
     'sc1.5', 'sc1.5b', 'sc1.5c', 'sc1.6', 'sc1.7', 'sc1.8', 'sc1.8b', 'sc1.9',
 ];

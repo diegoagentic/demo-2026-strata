@@ -155,16 +155,6 @@ const OFFICEWORKS_STEP_NOTIFICATIONS: Record<string, OwStepNotif> = {
         event: 'officeworks:cet-open',
         footerText: 'CET design pending',
     },
-    'sc1.3': {
-        badge: '1 new', badgeColor: 'success',
-        title: 'Validation document approved · MANATT 4th Floor',
-        desc: 'Caitlin approved the 2D/3D drawings + finishes + electrical. No revisions requested. Proceed with pre-install handoff to Abigail.',
-        sender: 'Caitlin Barolet · MANATT (DC)',
-        re: 'Validation doc approved · proceed to field verification',
-        cta: 'Open field verification handoff →',
-        event: 'officeworks:field-open',
-        footerText: 'Field verification pending',
-    },
     'sc1.4': {
         badge: '1 new', badgeColor: 'success',
         title: 'SQ verified · GSA price-protected catalog 2025',
@@ -484,10 +474,9 @@ export default function ActionCenter() {
     const isBfiStepActive = !!bfiStepConfig && !bfiPanelClosed && notifDelayReady;
 
     const owStepConfig = isDemoActive ? OFFICEWORKS_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
-    // Suppress notif panel for Flow 2 in-modal steps where the user is already
-    // working inside the Document Review modal (sc1.3 = validation).
-    // sc1.2 (Flow 2 entry) + sc1.4 still surface their notifs to bridge between flows.
-    const SUPPRESS_OW_AC = new Set(['sc1.3']);
+    // Flow 2 is now a single in-modal step (sc1.2 = Design BOM + send validation).
+    // sc1.2 (Flow 2 entry) + sc1.4 surface their notifs to bridge between flows.
+    const SUPPRESS_OW_AC = new Set<string>([]);
     const isOwStepActive = !!owStepConfig && !owPanelClosed && notifDelayReady
         && !SUPPRESS_OW_AC.has(currentStep?.id ?? '');
 
