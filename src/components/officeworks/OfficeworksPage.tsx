@@ -36,7 +36,6 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
         case 'sc1.4':   return 'sq-check'
         case 'sc1.5':   return 'teknion-preview'
         case 'sc1.5b':  return 'spec-gap'
-        case 'sc1.5c':  return 'phasing'
         case 'sc1.6':   return 'self-audit'
         case 'sc1.7':   return 'peer-review'
         case 'sc1.8':   return 'submission'
@@ -47,7 +46,7 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
 }
 
 // When validating these steps, keep the modal open so Flow 2 plays as a
-// continuous in-modal journey (Design BOM + send validation → SQ).
+// continuous in-modal journey (Design BOM + Validation Doc + client approval → SQ).
 const STAYS_OPEN_WITHIN_FLOW2 = new Set(['sc1.2'])
 
 // ─── Officeworks notification events (dispatched by ActionCenter) ─────────────

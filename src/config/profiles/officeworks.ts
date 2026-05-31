@@ -13,7 +13,7 @@
 //
 //   Group 1 — Intake & Assignment       sc1.0, sc1.0b
 //   Group 2 — Design & Validation       sc1.2 (BOM export + send validation), sc1.4 (SQ)
-//   Group 3 — Teknion Order Preview     sc1.5, sc1.5b, sc1.5c
+//   Group 3 — Teknion Order Preview     sc1.5, sc1.5b (phasing folded into sc1.5b post-resubmit)
 //   Group 4 — Spec Check  ⭐ HEROES     sc1.6 (SC2+SC3), sc1.7 (SC7)
 //   Group 5 — Submission & Confirm      sc1.8, sc1.8b, sc1.9 ⭐ (Gemini)
 //
@@ -58,8 +58,8 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
         id: 'sc1.2',
         groupId: 2,
         groupTitle: 'Design & Validation',
-        title: 'Design BOM · export & send validation',
-        description: 'Kimberly draws the layout in CET and exports the BOM to CAP — the real 149-line MANATT BOM uploads to Strata, which parses it, surfaces 3 findings, and queues the AI Validator. Kimberly then sends the validation document (2D/3D drawings, finishes, electrical) to MANATT for client approval before the order moves forward.',
+        title: 'Design BOM + Validation Doc · send for client approval',
+        description: 'Three sub-steps in one flow. (1) Kimberly uploads the 149-line MANATT BOM exported from CET/CAP — Strata parses it, surfaces 3 findings, and queues the AI Validator. (2) Kimberly attaches the PowerPoint validation deck (floor plan, 2D/3D drawings, finishes, wire mgmt, electrical) — Strata reads 24 slides and detects 6 sections. (3) Kimberly sends the proposal to Caitlin (Sales) with both documents attached for client sign-off — GW2A gate blocks SQ verification + Teknion submission until Felicia approves.',
         app: 'officeworks-design',
         role: 'Designer',
     },
@@ -94,16 +94,6 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
         app: 'officeworks-spec-check',
         role: 'Designer',
     },
-    {
-        id: 'sc1.5c',
-        groupId: 3,
-        groupTitle: 'Teknion Order Preview',
-        title: 'Strategize order phasing',
-        description: 'Teknion can\'t hit the date. 3-way huddle (Designer + PM + Salesperson) drafts the phasing plan. GW3A: does the revised plan require a new preview?',
-        app: 'officeworks-spec-check',
-        role: 'Designer',
-    },
-
     // ═══════════════════════════════════════════
     // GROUP 4: Spec Check ⭐ HERO FLOWS
     // ═══════════════════════════════════════════
@@ -164,11 +154,10 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
 export const OFFICEWORKS_STEP_BEHAVIOR: Record<string, StepBehavior> = {
     'sc1.0':  { mode: 'interactive', userAction: 'Click the Strata notification → review the form (CAD missing · SQ blank) · open & send the clarification email to Caitlin' },
     'sc1.0b': { mode: 'interactive', userAction: 'Open the reply notification · review the completed form (CAD attached · SQ confirmed) · click Kimberly Tucker → Approve & Assign' },
-    'sc1.2':  { mode: 'interactive', userAction: 'Drop the BOM file · review Strata\'s 3 findings on the real 149-line MANATT BOM · then send the validation doc to MANATT for client approval' },
+    'sc1.2':  { mode: 'interactive', userAction: '(1) Drop the BOM file · review Strata\'s 3 findings · (2) Attach the PowerPoint validation deck · Strata reads 6 sections · (3) Send proposal to Caitlin (BOM + Validation Doc) for client approval · GW2A gate clears on sign-off' },
     'sc1.4':  { mode: 'interactive', userAction: 'GW2C: SQ required (yes for MANATT) · open Create inline · verify SQ #436533 + 2025 catalog' },
     'sc1.5':  { mode: 'interactive', userAction: 'Submit Order Preview · wait for Tifani · pick GW3 outcome (clean / spec gap / timeline conflict)' },
     'sc1.5b': { mode: 'interactive', userAction: 'Accept Strata\'s spec gap fix · resubmit preview' },
-    'sc1.5c': { mode: 'interactive', userAction: 'Open 3-way phasing card · review revised plan · GW3A: new preview or proceed' },
     'sc1.6':  { mode: 'interactive', userAction: 'Toggle Current State (paper) → Strata digital · run the 5-step audit · resolve issues · click any CR to lookup in Create inline · send to peer' },
     'sc1.7':  { mode: 'interactive', userAction: 'Read Rebecca\'s annotations · save Felicia\'s tacit knowledge as rules · approve · send BOM submission' },
     'sc1.8':  { mode: 'interactive', userAction: 'Review the BOM Submission email · send to Caitlin + Coordinator' },
@@ -201,8 +190,11 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
         '11 areas tagged · 22 Custom Requests flagged for spec-check',
         '1 finish inconsistency surfaced · Item 73 · XS vs area XG Very White',
         'Pricing parsed · $1,541,392 List · AI Validator queued · 894 checks',
-        'Compiling Validation Document · 2D/3D · finishes · electrical',
-        'Validation doc sent to MANATT · client approval requested',
+        'Validation deck attached · MANATT-Validation-Doc-v1.pptx · 24 slides',
+        'Strata read 6 sections · floor plan · 2D · 3D · finishes · wire mgmt · electrical',
+        'Proposal sent to Caitlin Barolet · BOM PDF + Validation Doc attached',
+        'GW2A gate · SQ + Teknion submission blocked until client sign-off',
+        'Felicia Miano-Poles approved · proposal locked · proceed to SQ check',
     ],
     'sc1.4': [
         'GW2C: client = MANATT · GSA contract · SQ required',
@@ -220,12 +212,6 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
         'Highlighting spec gap on line · CR 2046138 leadtime',
         'Drafting fix · phasing recommendation',
         'BOM revised · resubmitting preview',
-    ],
-    'sc1.5c': [
-        'Drafting 3-way phasing plan',
-        'Notifying Caitlin (Salesperson) + Abigail (PM)',
-        'GW3A: phasing changes order structure · new preview needed',
-        'Proceed to self-audit · phased BOM',
     ],
     'sc1.6': [
         'AUDIT: assumption that errors WILL exist · find them!',
@@ -270,5 +256,5 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
 
 export const OFFICEWORKS_SELF_INDICATED: string[] = [
     'sc1.0', 'sc1.0b', 'sc1.2', 'sc1.4',
-    'sc1.5', 'sc1.5b', 'sc1.5c', 'sc1.6', 'sc1.7', 'sc1.8', 'sc1.8b', 'sc1.9',
+    'sc1.5', 'sc1.5b', 'sc1.6', 'sc1.7', 'sc1.8', 'sc1.8b', 'sc1.9',
 ];
