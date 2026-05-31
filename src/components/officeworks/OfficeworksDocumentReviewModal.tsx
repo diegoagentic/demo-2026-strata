@@ -18,7 +18,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle } from 'lucide-react'
+import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, Search, DollarSign, Send } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { OFFICEWORKS_FUNNEL } from './shared/funnelStages'
@@ -867,6 +867,7 @@ function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValida
     const isIntakeComplete = stage === 'intake-complete'
     const designerProfile = assignedDesigner ? findDesigner(assignedDesigner) : null
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [sizeConfirmed, setSizeConfirmed] = useState(false)
 
     return (
         <>
@@ -951,6 +952,33 @@ function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValida
                             </div>
                         </div>
 
+                        {/* Strata project-size identification (GW1B) · DM confirms before assigning */}
+                        <div className="rounded-lg border border-ai/20 bg-ai/5 px-3 py-2.5 space-y-2">
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                <Sparkles className="h-3 w-3 text-ai" />
+                                Strata · project size (GW1B)
+                            </div>
+                            <div className="text-xs text-foreground">
+                                Identified as{' '}
+                                <RuleTooltip
+                                    rule="GW1B project-size gateway: Small projects (1-5 stations) bypass several design tasks; Standard/Large run the full flow. MANATT is ~30 stations → Standard/Large."
+                                    source="Source: officeworks-sot.md (project size) + BPMN gateway GW1B"
+                                >
+                                    <strong>Standard / Large</strong>
+                                </RuleTooltip>
+                                {' '}· ~30 stations · full design flow.
+                            </div>
+                            <label className="flex items-start gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={sizeConfirmed}
+                                    onChange={e => setSizeConfirmed(e.target.checked)}
+                                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                                />
+                                <span className="text-[11px] text-foreground">Confirm project size · Standard / Large</span>
+                            </label>
+                        </div>
+
                         <div className="flex items-center justify-between">
                             <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -1012,16 +1040,18 @@ function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValida
                     <button
                         type="button"
                         onClick={onValidate}
-                        disabled={!assignedDesigner}
+                        disabled={!assignedDesigner || !sizeConfirmed}
                         className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {assignedDesigner ? (
+                        {assignedDesigner && sizeConfirmed ? (
                             <>
-                                Approve & Assign · Continue to Kickoff
+                                Approve & Assign · Continue to Design
                                 <ArrowRight className="h-4 w-4" />
                             </>
-                        ) : (
+                        ) : !assignedDesigner ? (
                             'Select a designer to continue'
+                        ) : (
+                            'Confirm project size to continue'
                         )}
                     </button>
                 )}
@@ -1136,35 +1166,35 @@ const BOM_FINDINGS: BOMFinding[] = [
     {
         id: 'finish-mismatch',
         severity: 'warning',
-        title: 'Item 73 · Office_WO.3 panel finish mismatch',
-        detail: 'Source Laminate XS Storm White vs the area\'s XG Very White pattern · BMWOOH7224BTNN (CR 2090148)',
-        source: 'Source: BOM page 9 · Item 73 · Office_WO.3 area',
-        answer: 'The other Office_WO.3 panels in the BOM use Source Laminate XG Very White · Item 73 alone uses XS Storm White. Likely a typo — confirm against the floor plan and with Caitlin before submission.',
-        citation: 'Detected in the BOM · Item 73 finish vs the other Office_WO.3 panels · confirm against the floor plan',
-        primary: { label: 'Flag for resubmit', tone: 'success' },
-        secondary: 'Override · keep XS',
+        title: 'One panel has the wrong finish · Item 73',
+        detail: 'This wall-office panel says "Storm White" but the other 9 panels in the same office area are "Very White". Likely a typo at order entry.',
+        source: 'Source: BOM · page 9 · Item 73',
+        answer: 'All other panels in this wall office are "Source Laminate · Very White". Item 73 is the only one using "Storm White". Very likely a copy-paste slip when the BOM was generated. Worth confirming with Caitlin before the order goes to Teknion — a wrong finish ships and has to be replaced at install.',
+        citation: 'Compared Item 73 against the other 9 panels in the same wall-office area',
+        primary: { label: 'Flag for revision', tone: 'success' },
+        secondary: 'Keep as-is',
     },
     {
         id: 'cr-2046138',
         severity: 'ai',
-        title: 'CR 2046138 · Solid Add-On Screen · WS-02',
-        detail: 'Custom flintwood finish White Oak 5N · qty 1 · $1,406 list',
-        source: 'Source: BOM page 13 · Item 118 · WS-02 (6) area',
-        answer: 'Custom Request found on this line · look up CR 2046138 in Teknion Create to confirm the part, finish, and lead-time before submission.',
+        title: 'Custom-made screen needs a quick check · CR 2046138',
+        detail: 'A workstation includes a custom solid screen in flintwood White Oak finish · 1 unit · $1,406.',
+        source: 'Source: BOM · page 13 · Item 118',
+        answer: 'Custom parts from Teknion always need an extra look before sending the order. Open this one in Teknion Create to confirm the design matches what was quoted, the finish is right, and the lead-time fits the install date.',
         citation: 'Teknion Create · CR 2046138 lookup',
-        primary: { label: 'Accept · proceed', tone: 'success' },
-        secondary: 'Open Create platform',
+        primary: { label: 'Verified · proceed', tone: 'success' },
+        secondary: 'Open in Teknion Create',
     },
     {
         id: 'cr-2090148',
         severity: 'ai',
-        title: 'CR 2090148 · Wall Panel shelf placement · ×5 occurrences',
-        detail: 'Items 10, 31, 52, 62, 73 · IO.1 + IO.4 + WO.1 + WO.2 + WO.3 · $427 × 5 = $2,135 list',
-        source: 'Source: BOM pages 2-9 · multiple line items',
-        answer: 'The same CR appears on 5 line items across IO.1/IO.4/WO.1/WO.2/WO.3. Confirm each instance is intended on the floor plan and look up CR 2090148 in Teknion Create.',
-        citation: 'Detected in the BOM · CR 2090148 on items 10/31/52/62/73 · verify in Teknion Create',
-        primary: { label: 'Accept · proceed', tone: 'success' },
-        secondary: 'Bulk override',
+        title: 'Same custom shelf appears in 5 different offices · CR 2090148',
+        detail: 'Items 10, 31, 52, 62, 73 — 5 different private offices · $427 each, $2,135 total.',
+        source: 'Source: BOM · pages 2-9 · 5 line items',
+        answer: 'The same custom shelf modification is repeated across 5 rooms. Worth a quick floor-plan check that each room genuinely needs it (sometimes one room gets duplicated by mistake), then a single lookup in Teknion Create covers all 5 since they share the same part.',
+        citation: 'BOM · CR 2090148 on items 10 / 31 / 52 / 62 / 73',
+        primary: { label: 'All 5 verified · proceed', tone: 'success' },
+        secondary: 'Open in Teknion Create',
     },
 ]
 
@@ -1622,13 +1652,231 @@ function RuleTooltip({ children, rule, source }: { children: React.ReactNode; ru
     )
 }
 
+// ─── SQ Confirmation Email Dialog ─────────────────────────────────────────────
+// Clone of BFI PatriciaDialog · sent by the designer (Kimberly) after she
+// confirms the SQ inline · closes the loop on SC4 (no built-in trigger today).
+// Recipients per Spec Check AS-IS · §Section 9 BOM Submission flow.
+
+const SQ_EMAIL_FROM = 'kimberly.tucker@officeworksinc.com'
+const SQ_EMAIL_TO   = 'caitlin.barolet@officeworksinc.com'
+const SQ_EMAIL_CC   = 'felicia.miano-poles@officeworksinc.com, dc-coordinator@officeworksinc.com'
+
+function buildSQEmailSubject(): string {
+    return `SQ #${MANATT_ORDER_META.specialQuote} Confirmed · MANATT 4th Floor · Price Protected · 2025 Catalog`
+}
+
+function buildSQEmailBody(): string {
+    const discountPct = Math.round((MANATT_ORDER_META.discountTotal / MANATT_ORDER_META.listTotal) * 100)
+    return `Hi Caitlin,
+
+Confirming pricing protection for MANATT 4th Floor before I submit the Order Preview to Teknion. Sharing for your records and so you can align with the client.
+
+· SQ #${MANATT_ORDER_META.specialQuote} (${MANATT_ORDER_META.sqName})
+· Catalog: 2025 · effective dates valid through Sched Ship ${MANATT_ORDER_META.schedShipDate}
+· List Total: $${MANATT_ORDER_META.listTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+· Net Total: $${MANATT_ORDER_META.netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+· Discount: ~${discountPct}% off list
+
+Verification trail (cross-referenced by Strata):
+  ✓ Teknion Create platform · SQ lookup ACTIVE
+  ✓ Officeworks-DC special pricing form · on file (filed at intake)
+  ✓ Prior acknowledgment ${MANATT_ORDER_META.poNumber} · terms consistent
+  ✓ Catalog 2025 effective dates · valid
+
+The 4 documented risk checks (PZ column · all 71 items on SQ · Service Fees/T-code surcharges · catalog effective date) are all confirmed.
+
+Next step: submitting the Order Preview to Tifani at Teknion. I'll notify you when she returns the preview number.
+
+— Kimberly Tucker
+   Design Manager · PA · cross-market to DC
+   Officeworks Inc.`
+}
+
+interface SQEmailMetaRow {
+    label: string
+    value: string
+    onChange?: (v: string) => void
+    muted?: boolean
+}
+
+function SQEmailMetadataBlock({ rows, disabled }: { rows: SQEmailMetaRow[]; disabled: boolean }) {
+    return (
+        <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
+            {rows.map(r => (
+                <div key={r.label} className="flex items-center gap-2 px-3 py-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-12 shrink-0">{r.label}</span>
+                    {r.onChange ? (
+                        <input
+                            type="text"
+                            value={r.value}
+                            onChange={e => r.onChange!(e.target.value)}
+                            disabled={disabled}
+                            className={`flex-1 bg-transparent text-[11px] focus:outline-none ${r.muted ? 'text-muted-foreground' : 'text-foreground'} disabled:opacity-60`}
+                        />
+                    ) : (
+                        <span className={`flex-1 text-[11px] truncate ${r.muted ? 'text-muted-foreground' : 'text-foreground'}`}>{r.value}</span>
+                    )}
+                </div>
+            ))}
+        </div>
+    )
+}
+
+interface SQConfirmationDialogProps {
+    isOpen: boolean
+    onSent: () => void
+    onCancel: () => void
+}
+
+function SQConfirmationDialog({ isOpen, onSent, onCancel }: SQConfirmationDialogProps) {
+    const [subject, setSubject] = useState(buildSQEmailSubject())
+    const [message, setMessage] = useState(buildSQEmailBody())
+    const [attachments, setAttachments] = useState([
+        { name: `MANATT-SQ-${MANATT_ORDER_META.specialQuote}-confirmation.pdf`, size: '240 KB', badge: 'Auto-generated' },
+        { name: 'verification-trail.json', size: '8 KB', badge: 'Sources log' },
+    ])
+    const [sending, setSending] = useState(false)
+    const [sent, setSent] = useState(false)
+
+    const handleSend = () => {
+        setSending(true)
+        setTimeout(() => {
+            setSending(false)
+            setSent(true)
+            setTimeout(() => onSent(), 900)
+        }, 800)
+    }
+
+    const removeAttachment = (name: string) =>
+        setAttachments(prev => prev.filter(a => a.name !== name))
+
+    const metaRows: SQEmailMetaRow[] = [
+        { label: 'From', value: SQ_EMAIL_FROM },
+        { label: 'To',   value: SQ_EMAIL_TO },
+        { label: 'CC',   value: SQ_EMAIL_CC, muted: true },
+        { label: 'Subj', value: subject, onChange: setSubject },
+    ]
+
+    return (
+        <Transition show={isOpen} as={Fragment}>
+            <Dialog onClose={() => { if (!sending && !sent) onCancel() }} className="relative z-[400]">
+                <TransitionChild as={Fragment}
+                    enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                    leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+                </TransitionChild>
+                <div className="fixed inset-0 flex items-center justify-center p-6">
+                    <TransitionChild as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0 scale-95 translate-y-2" enterTo="opacity-100 scale-100 translate-y-0"
+                        leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                    >
+                        <DialogPanel className="w-full max-w-lg bg-card rounded-2xl shadow-2xl flex flex-col max-h-[88vh] border border-border overflow-hidden">
+                            {/* Header */}
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
+                                <div className="h-8 w-8 rounded-full bg-ai/10 flex items-center justify-center shrink-0">
+                                    <span className="text-[11px] font-black text-ai">ST</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] font-bold text-foreground">SQ Confirmation · MANATT 4th Floor</p>
+                                    <p className="text-[10px] text-muted-foreground">Strata drafted on your behalf · review and send</p>
+                                </div>
+                                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                                {/* Attachments — removable */}
+                                {attachments.map(a => (
+                                    <div key={a.name} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-success/30 bg-success/5">
+                                        <Paperclip className="h-3.5 w-3.5 text-success shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-semibold text-foreground truncate">{a.name}</div>
+                                            <div className="text-[9px] text-muted-foreground">{a.size}</div>
+                                        </div>
+                                        <span className="text-[9px] font-bold text-success bg-success/10 border border-success/20 px-1.5 py-0.5 rounded shrink-0">{a.badge}</span>
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                        {!sent && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachment(a.name)}
+                                                className="p-0.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                                                aria-label={`Remove ${a.name}`}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Email metadata (From/To/CC read-only · Subject editable) */}
+                                <SQEmailMetadataBlock rows={metaRows} disabled={sent} />
+
+                                {/* Editable body */}
+                                <textarea
+                                    value={message}
+                                    onChange={e => setMessage(e.target.value)}
+                                    rows={16}
+                                    disabled={sent}
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-[11px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 transition-colors font-mono disabled:opacity-60"
+                                />
+                            </div>
+
+                            <div className="px-5 py-4 border-t border-border shrink-0 flex items-center gap-2">
+                                {sent ? (
+                                    <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-success/10 border border-success/20">
+                                        <CheckCircle2 className="h-4 w-4 text-success" />
+                                        <span className="text-[12px] font-bold text-success">Sent · Caitlin notified · Felicia & Coordinator CC'd</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={onCancel}
+                                            disabled={sending}
+                                            className="h-10 px-3 rounded-xl border border-border bg-card hover:bg-muted text-xs font-medium text-foreground transition-colors disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleSend}
+                                            disabled={sending}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-ai text-white text-[12px] font-bold hover:opacity-90 transition-all disabled:opacity-60"
+                                        >
+                                            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                                            {sending ? 'Sending…' : 'Send →'}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </Transition>
+    )
+}
+
 interface SQCheckPanelProps { onValidate: () => void }
 
 function SQCheckPanel({ onValidate }: SQCheckPanelProps) {
     const [confirmed, setConfirmed] = useState(false)
+    const [emailDialogOpen, setEmailDialogOpen] = useState(false)
+
+    const handleEmailSent = () => {
+        setEmailDialogOpen(false)
+        setConfirmed(true)
+    }
+
+    const discountPct = Math.round((MANATT_ORDER_META.discountTotal / MANATT_ORDER_META.listTotal) * 100)
 
     return (
         <>
+            <SQConfirmationDialog
+                isOpen={emailDialogOpen}
+                onSent={handleEmailSent}
+                onCancel={() => setEmailDialogOpen(false)}
+            />
             <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
                 <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-muted-foreground" />
@@ -1636,71 +1884,130 @@ function SQCheckPanel({ onValidate }: SQCheckPanelProps) {
                 </div>
                 <p className="text-[11px] text-muted-foreground">PP3 · Captured-knowledge assistant answers the SQ / catalog / GSA question inline · no senior interrupt needed.</p>
 
+                {/* ── Section 1 · Question + Answer (existing · keep) ── */}
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Question</span>
                         <span className="text-xs text-foreground">Is MANATT GSA price-protected? Which catalog applies?</span>
                     </div>
-                    <div className="px-4 py-3 space-y-2.5">
-                        <div>
-                            <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Answer</div>
-                            <div className="text-xs text-foreground">
-                                <strong className="text-success">YES · </strong>
-                                <RuleTooltip
-                                    rule="GSA / government clients are price-protected and require a Special Quote (SQ) lookup. ~20% of all orders need this — ~50% of DC orders for GSA accounts."
-                                    source="Source: Spec Check AS-IS · 'Exception: Price-Protected Orders'"
-                                >
-                                    <strong className="text-success">GSA price-protected</strong>
-                                </RuleTooltip>
-                                . The{' '}
-                                <RuleTooltip
-                                    rule="The price catalog effective date must be confirmed — using the wrong price zone / catalog is a documented spec-check error that sends incorrect pricing to the client."
-                                    source="Source: Spec Check AS-IS · Error Profile"
-                                >
-                                    2025 catalog
-                                </RuleTooltip>
-                                {' '}applies for{' '}
-                                <RuleTooltip
-                                    rule="A Special Quote number is the manufacturer's price-protection reference for this client / project. Verified in Teknion Create together with the manufacturer's special pricing form."
-                                    source="Source: Spec Check AS-IS · Tools (Create = CR / SQ verification)"
-                                >
-                                    SQ #436533
-                                </RuleTooltip>
-                                .
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/60">
-                            <div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Price protection</div>
-                                <div className="text-[11px] text-foreground mt-0.5">YES · GSA client</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Special Quote</div>
-                                <div className="text-[11px] text-foreground mt-0.5">SQ #436533</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Catalog</div>
-                                <div className="text-[11px] text-foreground mt-0.5">2025 · confirm effective dates</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Verified in</div>
-                                <RuleTooltip
-                                    rule="SQ and price-protection are looked up in Teknion's Create platform together with the manufacturer's special pricing form — a manual step today, run inline here by Strata."
-                                    source="Source: Spec Check AS-IS · Tools + 'Exception: Price-Protected Orders'"
-                                >
-                                    <span className="text-[11px] text-foreground mt-0.5">Teknion Create + special pricing form</span>
-                                </RuleTooltip>
-                            </div>
+                    <div className="px-4 py-3">
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Answer</div>
+                        <div className="text-xs text-foreground">
+                            <strong className="text-success">YES · </strong>
+                            <RuleTooltip
+                                rule="GSA / government clients are price-protected and require a Special Quote (SQ) lookup. ~20% of all orders need this — ~50% of DC orders for GSA accounts."
+                                source="Source: Spec Check AS-IS · 'Exception: Price-Protected Orders'"
+                            >
+                                <strong className="text-success">GSA price-protected</strong>
+                            </RuleTooltip>
+                            . The{' '}
+                            <RuleTooltip
+                                rule="The price catalog effective date must be confirmed — using the wrong price zone / catalog is a documented spec-check error that sends incorrect pricing to the client."
+                                source="Source: Spec Check AS-IS · Error Profile"
+                            >
+                                2025 catalog
+                            </RuleTooltip>
+                            {' '}applies for{' '}
+                            <RuleTooltip
+                                rule="A Special Quote number is the manufacturer's price-protection reference for this client / project. Verified in Teknion Create together with the manufacturer's special pricing form."
+                                source="Source: Spec Check AS-IS · Tools (Create = CR / SQ verification)"
+                            >
+                                SQ #436533
+                            </RuleTooltip>
+                            .
                         </div>
                     </div>
+                </div>
+
+                {/* ── Section 2 · Pricing terms (real PO numbers) ── */}
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-foreground" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Pricing terms locked under SQ #{MANATT_ORDER_META.specialQuote}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-px bg-border">
+                        <div className="bg-card px-3 py-2.5">
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">List Total</div>
+                            <div className="text-base text-foreground tabular-nums mt-0.5">${MANATT_ORDER_META.listTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                        </div>
+                        <div className="bg-card px-3 py-2.5">
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Net Total</div>
+                            <div className="text-base font-bold text-success tabular-nums mt-0.5">${MANATT_ORDER_META.netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                        </div>
+                        <div className="bg-card px-3 py-2.5">
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Discount Total</div>
+                            <div className="text-base text-foreground tabular-nums mt-0.5">${MANATT_ORDER_META.discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                        </div>
+                        <div className="bg-card px-3 py-2.5">
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Implied %</div>
+                            <div className="text-base font-bold text-success tabular-nums mt-0.5">~{discountPct}% off list</div>
+                        </div>
+                    </div>
+                    <div className="px-4 py-2.5 bg-muted/20 border-t border-border text-[11px] text-foreground/70">
+                        Valid for items on the SQ schedule. Service Fees and T-code surcharges may apply differently.
+                    </div>
+                </div>
+
+                {/* ── Section 4 · Verification trail (NEW · sources with timestamps) ── */}
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Verification trail · 4 sources cross-referenced</span>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {[
+                            {
+                                title: 'Teknion Create platform',
+                                detail: `SQ #${MANATT_ORDER_META.specialQuote} lookup`,
+                                badge: 'ACTIVE',
+                                badgeClass: 'bg-success/10 text-success border-success/20',
+                                meta: 'verified just now',
+                            },
+                            {
+                                title: 'Officeworks-DC special pricing form',
+                                detail: 'on file · filed by Caitlin Barolet at intake',
+                                badge: 'ON FILE',
+                                badgeClass: 'bg-success/10 text-success border-success/20',
+                                meta: '18h ago',
+                            },
+                            {
+                                title: `Prior acknowledgment ${MANATT_ORDER_META.poNumber}`,
+                                detail: 'terms consistent · Universal #' + MANATT_ORDER_META.universal,
+                                badge: 'MATCH',
+                                badgeClass: 'bg-success/10 text-success border-success/20',
+                                meta: MANATT_ORDER_META.orderReceipt,
+                            },
+                            {
+                                title: 'Catalog 2025 effective dates',
+                                detail: `Sched Ship ${MANATT_ORDER_META.schedShipDate} within window`,
+                                badge: 'VALID',
+                                badgeClass: 'bg-success/10 text-success border-success/20',
+                                meta: 'verified just now',
+                            },
+                        ].map((src, i) => (
+                            <li key={i} className="px-4 py-2 flex items-center gap-2.5">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs text-foreground font-medium truncate">{src.title}</div>
+                                    <div className="text-[10px] text-muted-foreground truncate">{src.detail}</div>
+                                </div>
+                                <div className="flex flex-col items-end gap-0.5 shrink-0">
+                                    <span className={`text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 border ${src.badgeClass}`}>{src.badge}</span>
+                                    <span className="text-[9px] text-muted-foreground">{src.meta}</span>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
                 {confirmed && (
                     <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                         <div className="text-xs">
-                            <div className="font-semibold text-success">SQ #436533 confirmed · 2025 catalog locked</div>
-                            <div className="text-muted-foreground">Knowledge base updated · proceed to Teknion Order Preview</div>
+                            <div className="font-semibold text-success">SQ #{MANATT_ORDER_META.specialQuote} confirmed · 2025 catalog locked</div>
+                            <div className="text-muted-foreground">
+                                <strong className="text-foreground">Caitlin notified</strong> · Felicia &amp; Coordinator CC'd · proceed to Teknion Order Preview
+                            </div>
                         </div>
                     </div>
                 )}
@@ -1710,10 +2017,11 @@ function SQCheckPanel({ onValidate }: SQCheckPanelProps) {
                 {!confirmed ? (
                     <button
                         type="button"
-                        onClick={() => setConfirmed(true)}
+                        onClick={() => setEmailDialogOpen(true)}
                         className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
                     >
-                        <CheckCircle2 className="h-4 w-4" /> Confirm SQ · use 2025 catalog
+                        <Mail className="h-4 w-4" />
+                        Confirm SQ &amp; notify Caitlin →
                     </button>
                 ) : (
                     <button
