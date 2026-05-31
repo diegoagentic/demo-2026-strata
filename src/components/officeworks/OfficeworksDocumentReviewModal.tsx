@@ -18,7 +18,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send } from 'lucide-react'
+import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send, Calendar, Layers } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { OFFICEWORKS_FUNNEL } from './shared/funnelStages'
@@ -111,7 +111,7 @@ type DocTab = typeof DOC_TABS[number]['id']
 const STAGE_TABS: Partial<Record<OfficeworksReviewStage, DocTab[]>> = {
     'intake': ['works-form', 'floor-plan', 'attachments'],
     'intake-complete': ['works-form', 'floor-plan', 'attachments'],
-    'design': ['works-form', 'validation', 'floor-plan', 'attachments'],
+    'design': ['works-form', 'floor-plan', 'attachments'],
     'sq-check': ['works-form', 'floor-plan', 'attachments'],
 }
 const DEFAULT_TAB_SET: DocTab[] = ['works-form', 'bom', 'validation', 'floor-plan', 'ack']
@@ -119,8 +119,12 @@ const DEFAULT_TAB_SET: DocTab[] = ['works-form', 'bom', 'validation', 'floor-pla
 // Flags toggled by Flow 2 panels as the designer produces artifacts.
 // Used by DefaultDocTabs to reveal the BOM / Validation Doc tabs and by
 // BOMPreview to flip from placeholder to real table.
+// `validationStarted` flips at sub-step 2 (designer clicks "Attach validation
+// deck") so the tab appears as an empty placeholder · `validationCompiled`
+// flips at the end of processing so the tab fills with the file + sections.
 interface FlowProgress {
     bomUploaded: boolean
+    validationStarted: boolean
     validationCompiled: boolean
     clientApproved: boolean
 }
@@ -167,6 +171,7 @@ export default function OfficeworksDocumentReviewModal({
     // Modal-level progress flags · drive dynamic tab visibility + BOMPreview gate
     const [flowProgress, setFlowProgress] = useState<FlowProgress>({
         bomUploaded: false,
+        validationStarted: false,
         validationCompiled: false,
         clientApproved: false,
     })
@@ -174,10 +179,11 @@ export default function OfficeworksDocumentReviewModal({
     // The DesignBOMPanel owns its own state machine for the 3 sub-steps in sc1.2.
     useEffect(() => {
         if (stage === 'intake' || stage === 'intake-complete') {
-            setFlowProgress({ bomUploaded: false, validationCompiled: false, clientApproved: false })
+            setFlowProgress({ bomUploaded: false, validationStarted: false, validationCompiled: false, clientApproved: false })
         }
     }, [stage])
     const markBomUploaded       = () => setFlowProgress(p => ({ ...p, bomUploaded: true }))
+    const markValidationStarted = () => setFlowProgress(p => ({ ...p, validationStarted: true }))
     const markValidationDone    = () => setFlowProgress(p => ({ ...p, validationCompiled: true }))
     const markClientApproved    = () => setFlowProgress(p => ({ ...p, clientApproved: true }))
 
@@ -271,7 +277,7 @@ export default function OfficeworksDocumentReviewModal({
                                                     )
                                                 }
                                                 // Flow 2 · interactive panels (each owns its own CTA)
-                                                if (stage === 'design')     return <DesignBOMPanel onValidate={onValidate} onBOMUploaded={markBomUploaded} onValidationCompiled={markValidationDone} onClientApproved={markClientApproved} bomUploaded={flowProgress.bomUploaded} />
+                                                if (stage === 'design')     return <DesignBOMPanel onValidate={onValidate} onBOMUploaded={markBomUploaded} onValidationStarted={markValidationStarted} onValidationCompiled={markValidationDone} onClientApproved={markClientApproved} bomUploaded={flowProgress.bomUploaded} />
                                                 if (stage === 'sq-check')   return <SQCheckPanel onValidate={onValidate} />
                                                 // Flow 3 · 2 interactive panels
                                                 if (stage === 'teknion-preview') return <TeknionPreviewPanel onValidate={onValidate} />
@@ -314,7 +320,7 @@ function DefaultDocTabs({ stage, flowProgress }: { stage: OfficeworksReviewStage
     const visibleTabIds: DocTab[] = [...baseTabIds]
     // Dynamic tabs · appear once their artifact exists.
     if (flowProgress.bomUploaded && !visibleTabIds.includes('bom')) visibleTabIds.push('bom')
-    if (flowProgress.validationCompiled && !visibleTabIds.includes('validation')) visibleTabIds.push('validation')
+    if ((flowProgress.validationStarted || flowProgress.validationCompiled) && !visibleTabIds.includes('validation')) visibleTabIds.push('validation')
     const visibleTabs = DOC_TABS.filter(t => visibleTabIds.includes(t.id))
     const [activeTab, setActiveTab] = useState<DocTab>(DEFAULT_DOC[stage])
 
@@ -1213,6 +1219,7 @@ function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValida
 interface DesignBOMPanelProps {
     onValidate: () => void
     onBOMUploaded: () => void
+    onValidationStarted: () => void
     onValidationCompiled: () => void
     onClientApproved: () => void
     bomUploaded: boolean
@@ -1437,7 +1444,7 @@ function BOMFindings() {
     )
 }
 
-function DesignBOMPanel({ onValidate, onBOMUploaded, onValidationCompiled, onClientApproved, bomUploaded }: DesignBOMPanelProps) {
+function DesignBOMPanel({ onValidate, onBOMUploaded, onValidationStarted, onValidationCompiled, onClientApproved, bomUploaded }: DesignBOMPanelProps) {
     type Phase =
         | 'waiting-bom'
         | 'processing-bom'
@@ -1813,7 +1820,7 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, onValidationCompiled, onCli
                 {phase === 'bom-analyzed' && (
                     <button
                         type="button"
-                        onClick={() => setPhase('waiting-validation')}
+                        onClick={() => { onValidationStarted(); focusValidationTab(); setPhase('waiting-validation') }}
                         className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
                     >
                         Attach validation deck
@@ -2441,29 +2448,155 @@ Please let me know if you spot any spec gaps. Targeting your typical 1-2 week tu
                     </ul>
                 </div>
 
-                {/* Section 2 · Submission destination */}
+                {/* Section 2 · Order economics · SQ-locked */}
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
-                        <Send className="h-4 w-4 text-foreground" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Submission destination</span>
+                        <DollarSign className="h-4 w-4 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Order economics · SQ-locked</span>
                     </div>
-                    <div className="px-4 py-3 space-y-1.5 text-xs">
-                        <div className="flex justify-between gap-3">
-                            <span className="text-muted-foreground">To</span>
-                            <span className="text-foreground font-mono">tifani.cooper@teknion.com</span>
+                    <div className="grid grid-cols-2 gap-px bg-border">
+                        <div className="bg-card px-3 py-2.5">
+                            <RuleTooltip
+                                rule="List Total is the full Teknion catalog price before SQ discount. Used as the baseline for the implied % off."
+                                source="Source: MANATT-4F_BOM_v1 · 149 lines"
+                            >
+                                <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">List Total</span>
+                            </RuleTooltip>
+                            <div className="text-base text-foreground tabular-nums mt-0.5">${MANATT_ORDER_META.listTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                         </div>
-                        <div className="flex justify-between gap-3">
-                            <span className="text-muted-foreground">Project</span>
-                            <span className="text-foreground">{MANATT_ORDER_META.poNumber} · MANATT 4th Floor</span>
+                        <div className="bg-card px-3 py-2.5">
+                            <RuleTooltip
+                                rule="Net Total is what Officeworks Inc. pays Teknion after the SQ contract discount. Confirmed against the SQ schedule at Step 6A."
+                                source="Source: SQ #436533 · effective May 26, 2025"
+                            >
+                                <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Net Total</span>
+                            </RuleTooltip>
+                            <div className="text-base font-bold text-success tabular-nums mt-0.5">${MANATT_ORDER_META.netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                         </div>
-                        <div className="flex justify-between gap-3">
-                            <span className="text-muted-foreground">Lines / CRs</span>
-                            <span className="text-foreground tabular-nums">71 · 13</span>
+                        <div className="bg-card px-3 py-2.5">
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Discount Total</span>
+                            <div className="text-base text-foreground tabular-nums mt-0.5">${MANATT_ORDER_META.discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                         </div>
-                        <div className="flex justify-between gap-3">
+                        <div className="bg-card px-3 py-2.5">
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Implied %</span>
+                            <div className="text-base font-bold text-success tabular-nums mt-0.5">~{Math.round((MANATT_ORDER_META.discountTotal / MANATT_ORDER_META.listTotal) * 100)}% off list</div>
+                        </div>
+                    </div>
+                    <div className="px-4 py-2.5 bg-muted/20 border-t border-border text-[11px] text-foreground/70">
+                        SQ #{MANATT_ORDER_META.specialQuote} · catalog effective May 26, 2025 · 71 lines covered · PO amount ${MANATT_ORDER_META.poAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </div>
+                </div>
+
+                {/* Section 3 · Order composition */}
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Layers className="h-4 w-4 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Order composition</span>
+                    </div>
+                    <ul className="divide-y divide-border text-xs">
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">Line items</span>
+                            <span className="text-foreground tabular-nums">71</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <RuleTooltip
+                                rule="Custom Requests are non-catalog items requiring Teknion factory quoting. Longest leadtime drives the GW3 timeline-conflict risk."
+                                source="Source: Spec Check AS-IS · §Step 8 · CR ledger"
+                            >
+                                <span className="text-muted-foreground">Custom Requests</span>
+                            </RuleTooltip>
+                            <span className="text-foreground tabular-nums">13 · longest 40d (CR 2046138 Flintwood)</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">Workstation groups</span>
+                            <span className="text-foreground tabular-nums">4 · 30 stations (WS-01 ×10 · WS-02 ×6 · WS-02 ×6 · WS-02.A ×8)</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">BOM sub-categories</span>
+                            <span className="text-foreground">9 · panels · glass · electrical · storage · hat · office · conference · accessory · screen</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">Largest tag</span>
+                            <span className="text-foreground">Office_WO.1 · 20 units</span>
+                        </li>
+                    </ul>
+                </div>
+
+                {/* Section 4 · Timeline & buffer */}
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Timeline &amp; buffer</span>
+                    </div>
+                    <ul className="divide-y divide-border text-xs">
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">Order receipt</span>
+                            <span className="text-foreground tabular-nums">{MANATT_ORDER_META.orderReceipt}</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <RuleTooltip
+                                rule="No-change-after date locks the BOM for Teknion factory planning. Changes after this date trigger rework + leadtime extension."
+                                source="Source: PO-DC-0009642 contract terms"
+                            >
+                                <span className="text-muted-foreground">Lockdown (no-change-after)</span>
+                            </RuleTooltip>
+                            <span className="text-foreground tabular-nums">{MANATT_ORDER_META.noChangeAfter}</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
                             <span className="text-muted-foreground">Sched Ship</span>
                             <span className="text-foreground tabular-nums">{MANATT_ORDER_META.schedShipDate}</span>
-                        </div>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">Longest CR leadtime</span>
+                            <span className="text-foreground tabular-nums">40 days · CR 2046138</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground font-medium">Buffer at Sched Ship</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5 tabular-nums">~40 days · healthy</span>
+                        </li>
+                    </ul>
+                    <div className="px-4 py-2.5 bg-muted/20 border-t border-border text-[11px] text-foreground/70">
+                        Strata recomputes the buffer if Tifani returns a leadtime adjustment.
+                    </div>
+                </div>
+
+                {/* Section 5 · GW3 outcome forecast · Strata read */}
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-ai" aria-hidden="true" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">GW3 outcome forecast · Strata read</span>
+                    </div>
+                    <ul className="divide-y divide-border text-xs">
+                        <li className="px-4 py-2.5 flex items-start gap-2.5">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                            <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-success">Clean</div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5">
+                                    All pre-flight checks pass · all 13 CRs spec&apos;d · 71 part numbers valid · catalog matches SQ.
+                                </div>
+                            </div>
+                        </li>
+                        <li className="px-4 py-2.5 flex items-start gap-2.5">
+                            <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                            <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-warning">Spec gap</div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5">
+                                    Low risk · finishes documented at sc1.7 peer review · grain direction confirmed on 5 Flintwood CRs · cross-referenced with validation doc.
+                                </div>
+                            </div>
+                        </li>
+                        <li className="px-4 py-2.5 flex items-start gap-2.5">
+                            <AlertCircle className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                            <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-foreground">Timeline conflict</div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5">
+                                    Low risk · longest CR (40 days) fits within the ~40-day Sched Ship buffer · monitor Tifani&apos;s response for factory queue updates.
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div className="px-4 py-2.5 bg-muted/20 border-t border-border text-[11px] text-foreground/70 italic">
+                        Strata derives these reads from pre-flight + leadtime ledger + CR catalog cross-check · not a guarantee.
                     </div>
                 </div>
 

@@ -59,7 +59,7 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Design & Validation',
         title: 'Design BOM + Validation Doc · send for client approval',
-        description: 'Three sub-steps in one flow. (1) Kimberly uploads the 149-line MANATT BOM exported from CET/CAP — Strata parses it, surfaces 3 findings, and queues the AI Validator. (2) Kimberly attaches the PowerPoint validation deck (floor plan, 2D/3D drawings, finishes, wire mgmt, electrical) — Strata reads 24 slides and detects 6 sections. (3) Kimberly sends the proposal to Caitlin (Sales) with both documents attached for client sign-off — GW2A gate blocks SQ verification + Teknion submission until Felicia approves.',
+        description: 'Three sub-steps: upload the BOM, attach the validation deck, and send the proposal to the client for sign-off (GW2A gate).',
         app: 'officeworks-design',
         role: 'Designer',
     },
