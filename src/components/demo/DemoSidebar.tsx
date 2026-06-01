@@ -25,6 +25,7 @@ const HERO_STEP_IDS = new Set<string>([
 ]);
 import { useDemoProfile } from '../../context/useDemoProfile';
 import { WORKSPACES_DATA_THREADS } from '../../config/profiles/workspaces';
+import { useOfficeworksVertical, writeVertical } from '../officeworks/shared/verticalSignal';
 
 // Apps belonging to Expert Hub — System steps in these show as "Expert"
 const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quote-detail'];
@@ -169,6 +170,13 @@ export default function DemoSidebar() {
         }
         return { specCheck: s, laborDelivery: l };
     }, [steps, isOfficeworks]);
+
+    // L&D vertical sub-toggle (Furniture vs Walls) · only meaningful inside L&D tab.
+    const activeVertical = useOfficeworksVertical()
+    const handleVerticalSwitch = (vertical: 'furniture' | 'walls') => {
+        if (vertical === activeVertical) return
+        writeVertical(vertical)
+    }
 
     const handleFlowSwitch = (flow: 'spec-check' | 'labor-delivery') => {
         if (flow === activeFlow) return;
@@ -366,6 +374,36 @@ export default function DemoSidebar() {
                         >
                             <span className="block leading-tight">Labor &</span>
                             <span className="block leading-tight text-[9px] opacity-70">Delivery · {flowCounts.laborDelivery}</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* Officeworks · L&D vertical sub-toggle (Furniture ↔ Walls) */}
+                {isOfficeworks && activeFlow === 'labor-delivery' && (
+                    <div className="mt-2 flex gap-1 p-0.5 rounded-md bg-zinc-900/5 dark:bg-white/5">
+                        <button
+                            type="button"
+                            onClick={() => handleVerticalSwitch('furniture')}
+                            aria-pressed={activeVertical === 'furniture'}
+                            className={`flex-1 px-2 py-1 rounded text-[10px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                                activeVertical === 'furniture'
+                                    ? `${c.bgBadgeActive} ${c.textBadgeActive}`
+                                    : `${c.textMuted} hover:opacity-80`
+                            }`}
+                        >
+                            Furniture · 80%
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleVerticalSwitch('walls')}
+                            aria-pressed={activeVertical === 'walls'}
+                            className={`flex-1 px-2 py-1 rounded text-[10px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                                activeVertical === 'walls'
+                                    ? `${c.bgBadgeActive} ${c.textBadgeActive}`
+                                    : `${c.textMuted} hover:opacity-80`
+                            }`}
+                        >
+                            Walls · 20%
                         </button>
                     </div>
                 )}

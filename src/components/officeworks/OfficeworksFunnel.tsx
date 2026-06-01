@@ -19,10 +19,11 @@ import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { stepIdToColIdx } from './shared/funnelStages'
 import {
-    MANATT_LD_RFP, FINAL_QUOTE,
+    MANATT_LD_RFP, FINAL_QUOTE, WALLS_FINAL_QUOTE,
     LD_CONTEXT_PROJECTS, MANATT_LD_BADGE, MANATT_LD_BADGE_BY_STEP,
     MANATT_LD_SUBTITLE, MANATT_LD_SUBTITLE_BY_STEP,
 } from './shared/manattLaborData'
+import { useOfficeworksVertical } from './shared/verticalSignal'
 import CapacityModal from './CapacityModal'
 
 // ─── Funnel columns · per flow ────────────────────────────────────────────────
@@ -127,10 +128,22 @@ const HEADER_BY_FLOW = {
     },
 } as const
 
+// Walls vertical override · same title but Paul Egan + Walls metrics
+const HEADER_WALLS = {
+    title: 'Labor & Delivery · Pipeline',
+    sub: 'Paul Egan · Head of Ops · Walls · ~60 estimates/mo · NJ + PA + MA · centralized governance',
+    capacityLabel: 'View installers',
+    capacityCount: '3 approved Walls',
+} as const
+
 // ─── MANATT card · owner per step + flow ─────────────────────────────────────
 
-function getMANATTOwner(stepId: string | undefined, flowId: 'spec-check' | 'labor-delivery'): string {
+function getMANATTOwner(stepId: string | undefined, flowId: 'spec-check' | 'labor-delivery', vertical: 'furniture' | 'walls' = 'furniture'): string {
     if (flowId === 'labor-delivery') {
+        if (vertical === 'walls') {
+            if (!stepId || stepId === 'sc-LD.0') return 'Paul Egan · routing'
+            return 'Paul Egan · Head of Ops'
+        }
         if (!stepId || stepId === 'sc-LD.0') return 'Alan McPhee · routing'
         return 'Alan McPhee · Sr Operations'
     }
@@ -159,6 +172,8 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
     const { currentStep } = useDemo()
     const [capacityOpen, setCapacityOpen] = useState(false)
     const isLD = flowId === 'labor-delivery'
+    const vertical = useOfficeworksVertical()
+    const isWalls = isLD && vertical === 'walls'
 
     // Active arrays per flow · same shape, different content.
     const PROCESS_COLUMNS = isLD ? LD_COLUMNS : SPEC_COLUMNS
@@ -167,14 +182,16 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
     const SUBTITLE       = isLD ? MANATT_LD_SUBTITLE : SPEC_SUBTITLE
     const SUBTITLE_BY_STEP = isLD ? MANATT_LD_SUBTITLE_BY_STEP : SPEC_SUBTITLE_BY_STEP
     const CONTEXT_CARDS  = isLD ? LD_CONTEXT_PROJECTS : SPEC_CONTEXT_CARDS
-    const header         = HEADER_BY_FLOW[flowId]
+    const header         = isWalls ? HEADER_WALLS : HEADER_BY_FLOW[flowId]
 
     const activeCol = stepIdToColIdx(currentStep?.id)
     const col = PROCESS_COLUMNS[activeCol]
     const stepKey = currentStep?.id ?? ''
     const badge = BADGE_BY_STEP[stepKey] ?? BADGE[activeCol]
     const subtitle = SUBTITLE_BY_STEP[stepKey] ?? SUBTITLE[activeCol]
-    const owner = assignedDesigner ?? getMANATTOwner(currentStep?.id, flowId)
+    const owner = assignedDesigner ?? getMANATTOwner(currentStep?.id, flowId, vertical)
+    // Quote amount for MANATT card · uses Walls FQ when Walls vertical is active.
+    const ldQuotedTotal = isWalls ? WALLS_FINAL_QUOTE.quotedTotal : FINAL_QUOTE.quotedTotal
 
     const firstStepId = isLD ? 'sc-LD.0' : 'sc1.0'
     const ingestEvent = isLD ? 'officeworks:ld-rfp-ingest' : 'officeworks:intake-ingest'
@@ -292,7 +309,7 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-muted-foreground">{isLD ? 'Quote' : 'Net'}</span>
                                                 <span className="font-semibold text-foreground">
-                                                    ${isLD ? FINAL_QUOTE.quotedTotal.toLocaleString() : MANATT_ORDER_META.netTotal.toLocaleString()}
+                                                    ${isLD ? ldQuotedTotal.toLocaleString() : MANATT_ORDER_META.netTotal.toLocaleString()}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between text-xs">

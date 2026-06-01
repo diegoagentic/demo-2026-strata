@@ -18,14 +18,20 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send, Calendar, Layers, Pencil, Inbox, Building2, Truck, ChevronDown, ChevronRight as ChevronRightIcon, Save, Edit3 } from 'lucide-react'
+import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send, Calendar, Layers, Pencil, Inbox, Building2, Truck, ChevronDown, ChevronRight as ChevronRightIcon, Save, Edit3, Target, TrendingUp } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import {
     MANATT_LD_RFP, MANATT_TAKEOFF, TAKEOFF_BULLETS, MANATT_BUILDING_CONDITIONS,
     APPROVED_INSTALLERS_DC, BID_RESPONSES, INTERNAL_BENCHMARK, FINAL_QUOTE,
     PORTAL_UPLOAD_BULLETS, HISTORICAL_RECEIPTS, LD_VOLUME_FACTS, ALAN_MCPHEE,
+    WALLS_TAKEOFF,
+    COVER_LETTER_BODY, SIF_FURNITURE, SIF_WALLS,
+    BID_REQUEST_EMAIL_FURNITURE, WALLS_BID_REQUEST_SECTIONS_A_G,
+    NOTIFICATION_DRAFTS, PORTAL_STATUS,
+    getActiveVerticalData,
 } from './shared/manattLaborData'
+import { useOfficeworksVertical } from './shared/verticalSignal'
 import { OFFICEWORKS_FUNNEL } from './shared/funnelStages'
 import CapacityHeatmap from './shared/CapacityHeatmap'
 import BlueprintFloorPlan from './shared/BlueprintFloorPlan'
@@ -140,6 +146,19 @@ const DOC_TABS = [
     { id: 'floor-plan' as const, icon: MapPin, label: 'Floor Plan' },
     { id: 'attachments' as const, icon: Paperclip, label: 'Attachments' },
     { id: 'ack' as const,        icon: FileText, label: 'Acknowledgment' },
+    // ─── L&D flow tabs ──────────────────────────────────────────────────────
+    { id: 'ld-sif' as const,                 icon: FileText,       label: 'SIF' },
+    { id: 'ld-cover-letter' as const,        icon: Mail,           label: 'Cover Letter' },
+    { id: 'ld-takeoff-report' as const,      icon: ClipboardCheck, label: 'Takeoff Report' },
+    { id: 'ld-conditions-record' as const,   icon: Building2,      label: 'Conditions Record' },
+    { id: 'ld-vendor-pool' as const,         icon: Users,          label: 'Vendor Pool' },
+    { id: 'ld-bid-request' as const,         icon: Send,           label: 'Bid Request' },
+    { id: 'ld-internal-benchmark' as const,  icon: Target,         label: 'Internal Benchmark' },
+    { id: 'ld-bids-received' as const,       icon: DollarSign,     label: 'Bids Received' },
+    { id: 'ld-scorecard' as const,           icon: TrendingUp,     label: 'Scorecard' },
+    { id: 'ld-notifications' as const,       icon: Mail,           label: 'Notifications' },
+    { id: 'ld-excel-quote' as const,         icon: FileText,       label: 'Excel Quote' },
+    { id: 'ld-portal-status' as const,       icon: CheckCircle2,   label: 'Portal Status' },
 ] as const
 
 type DocTab = typeof DOC_TABS[number]['id']
@@ -154,6 +173,15 @@ const STAGE_TABS: Partial<Record<OfficeworksReviewStage, DocTab[]>> = {
     'intake-complete': ['works-form', 'floor-plan', 'attachments'],
     'design': ['works-form', 'floor-plan', 'attachments'],
     'sq-check': ['works-form', 'floor-plan', 'attachments'],
+    // ─── L&D flow tabs per stage ────────────────────────────────────────────
+    'ld-rfp-intake':     ['floor-plan', 'ld-sif', 'ld-cover-letter'],
+    'ld-takeoff':        ['floor-plan', 'ld-takeoff-report'],
+    'ld-conditions':     ['floor-plan', 'ld-conditions-record'],
+    'ld-vendor-pool':    ['ld-vendor-pool'],
+    'ld-bid-send':       ['ld-bid-request', 'floor-plan'],
+    'ld-bid-compare':    ['ld-internal-benchmark', 'ld-bids-received'],
+    'ld-winner-select':  ['ld-scorecard', 'ld-notifications'],
+    'ld-final-upload':   ['ld-excel-quote', 'ld-portal-status'],
 }
 const DEFAULT_TAB_SET: DocTab[] = ['works-form', 'bom', 'validation', 'floor-plan', 'ack']
 
@@ -178,13 +206,15 @@ const DEFAULT_DOC: Record<OfficeworksReviewStage, DocTab> = {
     'self-audit': 'bom', 'peer-review': 'bom',
     'submission': 'bom', 'handoff': 'bom',
     'ack-review': 'ack',
-    // L&D stages render as full-pane panels · the doc tabs are unused; this is
-    // only here to satisfy the exhaustive Record type. 'floor-plan' fits best
-    // since the L&D flow operates off the same drawing as the design flow.
-    'ld-rfp-intake': 'floor-plan', 'ld-takeoff': 'floor-plan',
-    'ld-conditions': 'floor-plan', 'ld-vendor-pool': 'attachments',
-    'ld-bid-send': 'attachments', 'ld-bid-compare': 'attachments',
-    'ld-winner-select': 'attachments', 'ld-final-upload': 'attachments',
+    // L&D stages · each opens at its primary document tab.
+    'ld-rfp-intake':     'floor-plan',
+    'ld-takeoff':        'floor-plan',
+    'ld-conditions':     'ld-conditions-record',
+    'ld-vendor-pool':    'ld-vendor-pool',
+    'ld-bid-send':       'ld-bid-request',
+    'ld-bid-compare':    'ld-internal-benchmark',
+    'ld-winner-select':  'ld-scorecard',
+    'ld-final-upload':   'ld-excel-quote',
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -480,6 +510,19 @@ function DocTabContent({ tab, stage, flowProgress }: { tab: DocTab; stage: Offic
     if (tab === 'floor-plan') return <FloorPlanPreview stage={stage} />
     if (tab === 'attachments') return <AttachmentsPreview stage={stage} />
     if (tab === 'ack') return <AckPreview stage={stage} />
+    // ─── L&D doc previews ──────────────────────────────────────────────────
+    if (tab === 'ld-sif')                return <LDSifPreview />
+    if (tab === 'ld-cover-letter')       return <LDCoverLetterPreview />
+    if (tab === 'ld-takeoff-report')     return <LDTakeoffReportPreview />
+    if (tab === 'ld-conditions-record')  return <LDConditionsRecordPreview />
+    if (tab === 'ld-vendor-pool')        return <LDVendorPoolPreview />
+    if (tab === 'ld-bid-request')        return <LDBidRequestPreview />
+    if (tab === 'ld-internal-benchmark') return <LDInternalBenchmarkPreview />
+    if (tab === 'ld-bids-received')      return <LDBidsReceivedPreview />
+    if (tab === 'ld-scorecard')          return <LDScorecardPreview />
+    if (tab === 'ld-notifications')      return <LDNotificationsPreview />
+    if (tab === 'ld-excel-quote')        return <LDExcelQuotePreview />
+    if (tab === 'ld-portal-status')      return <LDPortalStatusPreview />
     return null
 }
 
@@ -1238,7 +1281,7 @@ function IntakeAssignPanel({ stage, assignedDesigner, onAssignDesigner, onValida
                     <button
                         type="button"
                         onClick={() => setDialogOpen(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
                     >
                         Open & send message
                         <ArrowRight className="h-4 w-4" />
@@ -1911,7 +1954,7 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, onValidationStarted, onVali
                     <button
                         type="button"
                         onClick={() => { onValidationStarted(); focusValidationTab(); setPhase('waiting-validation') }}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
                     >
                         Attach validation deck
                         <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -1936,7 +1979,7 @@ function DesignBOMPanel({ onValidate, onBOMUploaded, onValidationStarted, onVali
                     <button
                         type="button"
                         onClick={() => setProposalDialog(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
                     >
                         <Send className="h-4 w-4" aria-hidden="true" />
                         Send proposal to client →
@@ -2414,7 +2457,7 @@ function SQCheckPanel({ onValidate }: SQCheckPanelProps) {
                     <button
                         type="button"
                         onClick={() => setEmailDialogOpen(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
                     >
                         <Mail className="h-4 w-4" />
                         Confirm SQ →
@@ -2743,7 +2786,7 @@ Please let me know if you spot any spec gaps. Targeting your typical 1-2 week tu
                     <button
                         type="button"
                         onClick={() => setEmailDialogOpen(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
                     >
                         <Mail className="h-4 w-4" />
                         Submit Order Preview →
@@ -3217,7 +3260,7 @@ No other changes to the BOM. Resubmitting for your review · same Sched Ship tar
                     <button
                         type="button"
                         onClick={() => setEmailDialogOpen(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
                     >
                         <Mail className="h-4 w-4" aria-hidden="true" />
                         Resubmit preview to Tifani →
@@ -3411,7 +3454,7 @@ function SubmissionEmailPanel({ onValidate }: SubmissionEmailPanelProps) {
                     <button
                         type="button"
                         onClick={() => setEmailDialogOpen(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
                     >
                         <Mail className="h-4 w-4" aria-hidden="true" />
                         Send BOM submission →
@@ -3689,7 +3732,7 @@ function HandoffPanel({ onValidate }: HandoffPanelProps) {
                                         type="button"
                                         onClick={() => setStep('step-3-review')}
                                         aria-label="Apply 79% discount in NetSuite"
-                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1"
+                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1"
                                     >
                                         <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
                                         Apply 79% discount
@@ -3773,7 +3816,7 @@ function HandoffPanel({ onValidate }: HandoffPanelProps) {
                                             type="button"
                                             onClick={() => setStep('step-3-releasing')}
                                             aria-label="Review and release PO to Teknion"
-                                            className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1"
+                                            className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1"
                                         >
                                             <Send className="h-3.5 w-3.5" aria-hidden="true" />
                                             Release PO to Teknion →
@@ -3854,8 +3897,8 @@ function PainpointChip({ text }: { text: string }) {
 // ─── Shared L&D building block: AI-grounded source line ─────────────────────
 function SourceCite({ source }: { source: string }) {
     return (
-        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground italic">
-            <Sparkles className="h-2.5 w-2.5 text-ai shrink-0" aria-hidden="true" />
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground italic">
+            <Sparkles className="h-3 w-3 text-ai shrink-0" aria-hidden="true" />
             <span>{source}</span>
         </span>
     )
@@ -3947,13 +3990,16 @@ function RFPIntakePanel({ onValidate }: LDPanelProps) {
                     </div>
                 </div>
 
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text={`Today: RFPs scattered across 7 intake formats · no tracking. ${LD_VOLUME_FACTS.outboundEmailsPerMonth} bid request emails/month manually. ${LD_VOLUME_FACTS.furniturePct}% of ${LD_VOLUME_FACTS.estimatesPerMonth} estimates/mo are Furniture · ${LD_VOLUME_FACTS.wallsPct}% Walls.`} />
+
                 {/* Acknowledge action + SLA */}
                 {!acknowledged ? (
                     <button
                         type="button"
                         onClick={() => setAcknowledged(true)}
                         aria-label="Acknowledge & route RFP"
-                        className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                         <Inbox className="h-4 w-4" aria-hidden="true" />
                         Acknowledge & route · start SLA
@@ -3968,7 +4014,6 @@ function RFPIntakePanel({ onValidate }: LDPanelProps) {
                     </div>
                 )}
 
-                <PainpointChip text={`Today: RFPs scattered across 7 intake formats · no tracking. ${LD_VOLUME_FACTS.outboundEmailsPerMonth} bid request emails/month manually.`} />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -3991,10 +4036,15 @@ function RFPIntakePanel({ onValidate }: LDPanelProps) {
 
 // ─── sc-LD.1 · TakeoffPanel ─────────────────────────────────────────────────
 function TakeoffPanel({ onValidate }: LDPanelProps) {
+    const vertical = useOfficeworksVertical()
+    const { takeoff: VERTICAL_TAKEOFF, takeoffBullets: VERTICAL_BULLETS, scopeUnitLabel, scopeUnitValue, scopeSecondary } = getActiveVerticalData(vertical)
     type Phase = 'idle' | 'running' | 'done'
     const [phase, setPhase] = useState<Phase>('idle')
     const [bulletCount, setBulletCount] = useState(0)
-    const [overrideCount, setOverrideCount] = useState<number>(MANATT_TAKEOFF.workstationCount)
+    // Override count tracks the primary scope unit (workstations for Furniture,
+    // linear feet for Walls). We default to the takeoff's primary value.
+    const primaryScopeValue = 'workstationCount' in VERTICAL_TAKEOFF ? VERTICAL_TAKEOFF.workstationCount : VERTICAL_TAKEOFF.linearFeet
+    const [overrideCount, setOverrideCount] = useState<number>(primaryScopeValue)
     const [overrideTouched, setOverrideTouched] = useState(false)
     const timeoutsRef = useRef<number[]>([])
 
@@ -4005,11 +4055,11 @@ function TakeoffPanel({ onValidate }: LDPanelProps) {
 
     useEffect(() => {
         if (phase !== 'running') return
-        TAKEOFF_BULLETS.forEach((_, i) => {
-            const id = window.setTimeout(() => setBulletCount(i + 1), 280 * (i + 1))
+        VERTICAL_BULLETS.forEach((_, i) => {
+            const id = window.setTimeout(() => setBulletCount(i + 1), 350 * (i + 1))
             timeoutsRef.current.push(id)
         })
-        const doneId = window.setTimeout(() => setPhase('done'), 280 * TAKEOFF_BULLETS.length + 200)
+        const doneId = window.setTimeout(() => setPhase('done'), 350 * VERTICAL_BULLETS.length + 200)
         timeoutsRef.current.push(doneId)
     }, [phase])
 
@@ -4021,10 +4071,13 @@ function TakeoffPanel({ onValidate }: LDPanelProps) {
                     <div className="flex-1 min-w-0 text-xs">
                         <div className="font-semibold text-foreground">Scope takeoff · the single most time-consuming step</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Today: ~{MANATT_TAKEOFF.bluebeamTimeManualMin / 60}h manual count in Bluebeam (Alan + Paul · ~42:00). With Strata: {MANATT_TAKEOFF.strataTimeSec}s read of {MANATT_LD_RFP.drawingFile}.
+                            Today: ~{VERTICAL_TAKEOFF.bluebeamTimeManualMin / 60}h manual count in Bluebeam (Alan + Paul · ~42:00). With Strata: {VERTICAL_TAKEOFF.strataTimeSec}s read of {MANATT_LD_RFP.drawingFile}.
                         </div>
                     </div>
                 </div>
+
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text={`Today: ${LD_VOLUME_FACTS.bluebeamManualNote}. With Strata: 18s + reviewable overrides.`} />
 
                 {/* Drawing thumbnail + AI takeoff button */}
                 {phase === 'idle' && (
@@ -4045,10 +4098,10 @@ function TakeoffPanel({ onValidate }: LDPanelProps) {
                     <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-2" role="status" aria-busy="true">
                         <div className="flex items-center gap-2">
                             <Loader2 className="h-4 w-4 text-foreground animate-spin" aria-hidden="true" />
-                            <span className="text-xs font-semibold text-foreground">AI takeoff in progress · {MANATT_TAKEOFF.strataTimeSec}s</span>
+                            <span className="text-xs font-semibold text-foreground">AI takeoff in progress · {VERTICAL_TAKEOFF.strataTimeSec}s</span>
                         </div>
                         <ul className="space-y-1.5">
-                            {TAKEOFF_BULLETS.slice(0, bulletCount).map((b, i) => (
+                            {VERTICAL_BULLETS.slice(0, bulletCount).map((b, i) => (
                                 <li key={i} className="flex items-start gap-2 text-xs text-foreground animate-in fade-in slide-in-from-left-1 duration-200">
                                     <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" aria-hidden="true" />
                                     <span>{b}</span>
@@ -4061,10 +4114,12 @@ function TakeoffPanel({ onValidate }: LDPanelProps) {
                     <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         <div className="grid grid-cols-2 gap-2.5">
                             {[
-                                { label: 'Workstations', value: overrideCount, editable: true },
-                                { label: 'CRs',          value: MANATT_TAKEOFF.crCount, editable: false },
-                                { label: 'Labor hours',  value: `${MANATT_TAKEOFF.estimatedLaborHours} h`, editable: false },
-                                { label: 'Delivery stops', value: MANATT_TAKEOFF.estimatedDeliveryStops, editable: false },
+                                { label: scopeUnitLabel, value: overrideCount, editable: true },
+                                vertical === 'walls'
+                                    ? { label: 'Doors', value: 'doorCount' in VERTICAL_TAKEOFF ? VERTICAL_TAKEOFF.doorCount : 0, editable: false }
+                                    : { label: 'CRs', value: 'crCount' in VERTICAL_TAKEOFF ? VERTICAL_TAKEOFF.crCount : 0, editable: false },
+                                { label: 'Labor hours',  value: `${VERTICAL_TAKEOFF.estimatedLaborHours} h`, editable: false },
+                                { label: 'Delivery stops', value: VERTICAL_TAKEOFF.estimatedDeliveryStops, editable: false },
                             ].map(m => (
                                 <div key={m.label} className="rounded-lg border border-border bg-card px-3 py-2.5">
                                     <div className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground">{m.label}</div>
@@ -4073,10 +4128,10 @@ function TakeoffPanel({ onValidate }: LDPanelProps) {
                                             <input
                                                 type="number"
                                                 min={1}
-                                                max={999}
+                                                max={9999}
                                                 value={overrideCount}
-                                                onChange={e => { setOverrideCount(Math.max(1, Math.min(999, parseInt(e.target.value) || MANATT_TAKEOFF.workstationCount))); setOverrideTouched(true) }}
-                                                aria-label="Override workstation count"
+                                                onChange={e => { setOverrideCount(Math.max(1, Math.min(9999, parseInt(e.target.value) || primaryScopeValue))); setOverrideTouched(true) }}
+                                                aria-label={`Override ${scopeUnitLabel.toLowerCase()}`}
                                                 className="w-16 text-lg font-bold text-foreground bg-transparent border-b border-border focus:outline-none focus:border-primary tabular-nums"
                                             />
                                             <Edit3 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
@@ -4087,7 +4142,10 @@ function TakeoffPanel({ onValidate }: LDPanelProps) {
                                 </div>
                             ))}
                         </div>
-                        {overrideTouched && overrideCount !== MANATT_TAKEOFF.workstationCount && (
+                        {vertical === 'walls' && (
+                            <div className="text-[10px] text-muted-foreground italic">Wall heights · {scopeSecondary}</div>
+                        )}
+                        {overrideTouched && overrideCount !== primaryScopeValue && (
                             <div className="rounded-lg border border-info/30 bg-info/5 px-3 py-2 flex items-center gap-2 text-[11px] animate-in fade-in duration-150">
                                 <Save className="h-3.5 w-3.5 text-info shrink-0" aria-hidden="true" />
                                 <span className="text-foreground">Override saved · Strata learns from this for future takeoffs.</span>
@@ -4096,7 +4154,6 @@ function TakeoffPanel({ onValidate }: LDPanelProps) {
                     </div>
                 )}
 
-                <PainpointChip text={`Today: ${LD_VOLUME_FACTS.bluebeamManualNote}. With Strata: 18s + reviewable overrides.`} />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -4147,6 +4204,19 @@ function ConditionsChecklistPanel({ onValidate }: LDPanelProps) {
                         </div>
                     </div>
                 </div>
+
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text={LD_VOLUME_FACTS.nowhereCurrentlyQuote} />
+
+                {/* GW-F3 escalation hint · BPMN path "No" by default · would route to F3a Sr Ops resolution if confidence drops */}
+                {!allConfirmed && (
+                    <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 flex items-start gap-2 text-[11px] animate-in fade-in duration-200">
+                        <AlertCircle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                        <div className="text-foreground leading-relaxed">
+                            <strong>GW-F3 gateway</strong> · {mediumIds.length - mediumIds.filter(id => confirmedIds.has(id)).length} medium-confidence condition(s) pending. If left unconfirmed, Strata escalates to <strong>Sr Operations</strong> for resolution (F3a path) before vendor pool selection unlocks.
+                        </div>
+                    </div>
+                )}
 
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
@@ -4205,7 +4275,6 @@ function ConditionsChecklistPanel({ onValidate }: LDPanelProps) {
                     </ul>
                 </div>
 
-                <PainpointChip text={LD_VOLUME_FACTS.nowhereCurrentlyQuote} />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -4233,12 +4302,14 @@ interface VendorPoolSelectorProps extends LDPanelProps {
 }
 
 function VendorPoolSelector({ onValidate, selectedVendorIds, onSelectVendors }: VendorPoolSelectorProps) {
+    const vertical = useOfficeworksVertical()
+    const { installers, governance } = getActiveVerticalData(vertical)
     // Default: all 3 pre-selected (Alan's default behavior · he can deselect)
     const initialSelection = useMemo(
         () => selectedVendorIds && selectedVendorIds.length > 0
             ? new Set(selectedVendorIds)
-            : new Set(APPROVED_INSTALLERS_DC.map(v => v.id)),
-        [selectedVendorIds]
+            : new Set(installers.map(v => v.id)),
+        [selectedVendorIds, installers]
     )
     const [selection, setSelection] = useState<Set<string>>(initialSelection)
 
@@ -4261,14 +4332,24 @@ function VendorPoolSelector({ onValidate, selectedVendorIds, onSelectVendors }: 
                 <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3 flex items-start gap-2.5">
                     <Sparkles className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-xs">
-                        <div className="font-semibold text-foreground">DC installer pool · consolidated May/2026</div>
+                        <div className="font-semibold text-foreground">
+                            {vertical === 'walls' ? 'Walls installer pool · centralized governance' : 'DC installer pool · consolidated May/2026'}
+                        </div>
                         <div className="text-muted-foreground mt-0.5">
-                            {LD_VOLUME_FACTS.vendorConsolidationNote}. Strata flags capacity + scorecard per vendor.
+                            {vertical === 'walls'
+                                ? `${governance?.contrastNote}. Paul actively workload-balances · structured PDF Section A-G.`
+                                : `${LD_VOLUME_FACTS.vendorConsolidationNote}. Strata flags capacity + scorecard per vendor.`}
                         </div>
                     </div>
                 </div>
 
-                {APPROVED_INSTALLERS_DC.map(v => {
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text={vertical === 'walls'
+                    ? "Walls already workload-balanced (Paul selects centrally) · contrast vs Furniture decentralized. With Strata: same scorecard surface, same audit trail across both verticals."
+                    : "Today: PMs select freely · no capacity check · multi-million job to same vendor 3x in a row possible (Alan, ~32:19). With Strata: capacity-aware + scorecard-backed."
+                } />
+
+                {installers.map(v => {
                     const isSelected = selection.has(v.id)
                     return (
                         <div
@@ -4313,14 +4394,27 @@ function VendorPoolSelector({ onValidate, selectedVendorIds, onSelectVendors }: 
                                                 v.headroomTone === 'warning' ? 'text-warning' :
                                                 'text-foreground'
                                             }`}>{v.headroom}</div>
+                                            <div className="text-[9px] text-muted-foreground tabular-nums">{v.activeJobsCount} active · {v.crewCapacityRemaining}h crew left</div>
                                         </div>
                                         <div className="text-center">
                                             <div className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground">On-time</div>
-                                            <div className="text-[11px] font-bold text-foreground tabular-nums">{v.onTimeRate}%</div>
+                                            <div className="text-[11px] font-bold text-foreground tabular-nums flex items-center justify-center gap-0.5">
+                                                {v.onTimeRate}%
+                                                {v.onTimeTrend === 'up' && <span className="text-success" aria-label="trending up">↑</span>}
+                                                {v.onTimeTrend === 'down' && <span className="text-warning" aria-label="trending down">↓</span>}
+                                                {v.onTimeTrend === 'flat' && <span className="text-muted-foreground" aria-label="flat">→</span>}
+                                            </div>
+                                            <div className="text-[9px] text-muted-foreground tabular-nums">past 12mo: {v.past12moJobs} jobs</div>
                                         </div>
                                         <div className="text-center">
                                             <div className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground">CO rate</div>
-                                            <div className="text-[11px] font-bold text-foreground tabular-nums">{v.changeOrderRate}%</div>
+                                            <div className="text-[11px] font-bold text-foreground tabular-nums flex items-center justify-center gap-0.5">
+                                                {v.changeOrderRate}%
+                                                {v.changeOrderTrend === 'up' && <span className="text-warning" aria-label="trending up">↑</span>}
+                                                {v.changeOrderTrend === 'down' && <span className="text-success" aria-label="trending down">↓</span>}
+                                                {v.changeOrderTrend === 'flat' && <span className="text-muted-foreground" aria-label="flat">→</span>}
+                                            </div>
+                                            <div className="text-[9px] text-muted-foreground italic">{v.changeOrderTrend === 'down' ? 'improving' : v.changeOrderTrend === 'up' ? 'watch' : 'stable'}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -4329,7 +4423,6 @@ function VendorPoolSelector({ onValidate, selectedVendorIds, onSelectVendors }: 
                     )
                 })}
 
-                <PainpointChip text="Today: PMs select freely · no capacity check · multi-million job to same vendor 3x in a row possible (Alan, ~32:19). With Strata: capacity-aware + scorecard-backed." />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -4356,7 +4449,9 @@ interface BidRequestPanelProps extends LDPanelProps {
 }
 
 function BidRequestPanel({ onValidate, selectedVendorIds }: BidRequestPanelProps) {
-    const selectedVendors = APPROVED_INSTALLERS_DC.filter(v =>
+    const vertical = useOfficeworksVertical()
+    const { installers, actor } = getActiveVerticalData(vertical)
+    const selectedVendors = installers.filter(v =>
         selectedVendorIds && selectedVendorIds.length > 0 ? selectedVendorIds.includes(v.id) : true
     )
     const [sent, setSent] = useState(false)
@@ -4368,6 +4463,9 @@ function BidRequestPanel({ onValidate, selectedVendorIds }: BidRequestPanelProps
     return (
         <>
             <div className="flex-1 overflow-y-auto p-5 space-y-3 text-sm">
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text={`~${LD_VOLUME_FACTS.outboundEmailsPerMonth} outbound emails/month manually today. With Strata: 1-click + tracked SLA per recipient.`} />
+
                 {/* Email composer header */}
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
@@ -4377,7 +4475,7 @@ function BidRequestPanel({ onValidate, selectedVendorIds }: BidRequestPanelProps
                     <div className="px-4 py-3 space-y-2.5 text-xs">
                         <div className="grid grid-cols-[60px_1fr] gap-2 items-start">
                             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground pt-0.5">From</span>
-                            <span className="text-foreground">{ALAN_MCPHEE.fullName} &lt;{ALAN_MCPHEE.email}&gt;</span>
+                            <span className="text-foreground">{actor.fullName} &lt;{actor.email}&gt;</span>
                         </div>
                         <div className="grid grid-cols-[60px_1fr] gap-2 items-start">
                             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground pt-0.5">To</span>
@@ -4398,7 +4496,7 @@ function BidRequestPanel({ onValidate, selectedVendorIds }: BidRequestPanelProps
                                 <p>Team,</p>
                                 <p>We have a labor + delivery RFP for {MANATT_LD_RFP.projectName} ({MANATT_LD_RFP.market} market · {MANATT_LD_RFP.buildingAddress}). Scope summary attached + drawings.</p>
                                 <p>
-                                    <strong>Scope</strong>: {MANATT_TAKEOFF.workstationCount} workstations · {MANATT_TAKEOFF.estimatedLaborHours}h estimated labor · {MANATT_TAKEOFF.estimatedDeliveryStops} delivery stops. Building is IBEW Local 26 union, dock-with-leveler, straight-time only.
+                                    <strong>Scope</strong>: {vertical === 'walls' ? `${WALLS_TAKEOFF.linearFeet} linear feet · ${WALLS_TAKEOFF.doorCount} doors · ${WALLS_TAKEOFF.wallHeights}` : `${MANATT_TAKEOFF.workstationCount} workstations · ${MANATT_TAKEOFF.crCount} CRs`} · {(vertical === 'walls' ? WALLS_TAKEOFF : MANATT_TAKEOFF).estimatedLaborHours}h estimated labor · {(vertical === 'walls' ? WALLS_TAKEOFF : MANATT_TAKEOFF).estimatedDeliveryStops} delivery stops. Building is IBEW Local 26 union, dock-with-leveler, straight-time only.
                                 </p>
                                 <p>
                                     <strong>Deadline</strong>: respond by {MANATT_LD_RFP.slaDeadlineAt} ({MANATT_LD_RFP.slaDeadlineHours}h MSA window). Please separate labor and delivery in your quote.
@@ -4442,14 +4540,13 @@ function BidRequestPanel({ onValidate, selectedVendorIds }: BidRequestPanelProps
                         type="button"
                         onClick={handleSend}
                         aria-label={`Send bid request to ${selectedVendors.length} installers`}
-                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                         <Send className="h-4 w-4" aria-hidden="true" />
                         Send to {selectedVendors.length} installer{selectedVendors.length > 1 ? 's' : ''}
                     </button>
                 )}
 
-                <PainpointChip text={`~${LD_VOLUME_FACTS.outboundEmailsPerMonth} outbound emails/month manually today. With Strata: 1-click + tracked SLA per recipient.`} />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -4472,9 +4569,11 @@ function BidRequestPanel({ onValidate, selectedVendorIds }: BidRequestPanelProps
 
 // ─── sc-LD.5 · BidComparisonPanel ───────────────────────────────────────────
 function BidComparisonPanel({ onValidate }: LDPanelProps) {
+    const vertical = useOfficeworksVertical()
+    const { installers, bids: VERTICAL_BIDS, benchmark } = getActiveVerticalData(vertical)
     type VendorPhase = 'waiting' | 'received'
     const [phases, setPhases] = useState<Record<string, VendorPhase>>(() =>
-        Object.fromEntries(APPROVED_INSTALLERS_DC.map(v => [v.id, 'waiting']))
+        Object.fromEntries(installers.map(v => [v.id, 'waiting']))
     )
     const timeoutsRef = useRef<number[]>([])
 
@@ -4484,21 +4583,21 @@ function BidComparisonPanel({ onValidate }: LDPanelProps) {
     }, [])
 
     useEffect(() => {
-        BID_RESPONSES.forEach(bid => {
+        VERTICAL_BIDS.forEach(bid => {
             const id = window.setTimeout(() => {
                 setPhases(prev => ({ ...prev, [bid.vendorId]: 'received' }))
             }, bid.arrivalDelayMs)
             timeoutsRef.current.push(id)
         })
-    }, [])
+    }, [VERTICAL_BIDS])
 
     const allReceived = Object.values(phases).every(p => p === 'received')
 
-    const bidsWithVariance = BID_RESPONSES.map(bid => {
-        const variance = Math.round(((bid.total - INTERNAL_BENCHMARK.totalBaseline) / INTERNAL_BENCHMARK.totalBaseline) * 100)
+    const bidsWithVariance = VERTICAL_BIDS.map(bid => {
+        const variance = Math.round(((bid.total - benchmark.totalBaseline) / benchmark.totalBaseline) * 100)
         const tone: 'success' | 'warning' | 'danger' =
             Math.abs(variance) < 5 ? 'success' :
-            Math.abs(variance) < INTERNAL_BENCHMARK.varianceThresholdPct ? 'warning' :
+            Math.abs(variance) < benchmark.varianceThresholdPct ? 'warning' :
             'danger'
         return { ...bid, variance, tone }
     })
@@ -4506,19 +4605,30 @@ function BidComparisonPanel({ onValidate }: LDPanelProps) {
     return (
         <>
             <div className="flex-1 overflow-y-auto p-5 space-y-3 text-sm">
-                <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3 flex items-start gap-2.5">
-                    <Sparkles className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
-                    <div className="flex-1 min-w-0 text-xs">
-                        <div className="font-semibold text-foreground">Internal benchmark · ${INTERNAL_BENCHMARK.totalBaseline.toLocaleString()}</div>
-                        <div className="text-muted-foreground mt-0.5">
-                            {INTERNAL_BENCHMARK.formulaText}. Variance threshold {INTERNAL_BENCHMARK.varianceThresholdPct}% · auto-flag outliers.
+                {/* Strata Internal Number · hero card · matches Alan's vision (~46:32) */}
+                <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3.5 space-y-2">
+                    <div className="flex items-start gap-2.5">
+                        <Sparkles className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                        <div className="flex-1 min-w-0 text-xs">
+                            <div className="font-semibold text-foreground">Strata Internal Number · computed before bids arrive</div>
+                            <div className="text-muted-foreground mt-0.5">
+                                {benchmark.formulaText}. Variance threshold {benchmark.varianceThresholdPct}% · auto-flag outliers when bids land.
+                            </div>
                         </div>
+                    </div>
+                    <div className="flex items-baseline gap-2 pt-1.5 border-t border-ai/20">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Benchmark</span>
+                        <span className="text-2xl font-bold text-ai tabular-nums">${benchmark.totalBaseline.toLocaleString()}</span>
+                        <span className="text-[11px] text-muted-foreground italic ml-auto">→ comparing against this when 3 bids return</span>
                     </div>
                 </div>
 
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text="Today: Alan/Paul compare in their heads · no automated variance detection. With Strata: 15% threshold + flag outliers + reconcile suggestions." />
+
                 {/* Vendor arrival cards (staggered) */}
                 <div className="space-y-2">
-                    {APPROVED_INSTALLERS_DC.map(v => {
+                    {installers.map(v => {
                         const phase = phases[v.id]
                         const bid = bidsWithVariance.find(b => b.vendorId === v.id)
                         return (
@@ -4555,7 +4665,7 @@ function BidComparisonPanel({ onValidate }: LDPanelProps) {
                         <div className="rounded-xl border border-border bg-card overflow-hidden animate-in fade-in slide-in-from-top-1 duration-300">
                             <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
                                 <ClipboardCheck className="h-3.5 w-3.5 text-foreground shrink-0" aria-hidden="true" />
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Variance vs internal benchmark · {INTERNAL_BENCHMARK.varianceThresholdPct}% threshold</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Variance vs internal benchmark · {benchmark.varianceThresholdPct}% threshold</span>
                             </div>
                             <table className="w-full text-[11px]">
                                 <thead className="bg-muted/20">
@@ -4567,7 +4677,7 @@ function BidComparisonPanel({ onValidate }: LDPanelProps) {
                                 </thead>
                                 <tbody>
                                     {bidsWithVariance.map(b => {
-                                        const v = APPROVED_INSTALLERS_DC.find(i => i.id === b.vendorId)!
+                                        const v = installers.find(i => i.id === b.vendorId)!
                                         return (
                                             <tr key={b.vendorId} className="border-t border-border">
                                                 <td className="px-3 py-1.5 text-foreground">{v.name}</td>
@@ -4586,7 +4696,7 @@ function BidComparisonPanel({ onValidate }: LDPanelProps) {
                                     })}
                                     <tr className="border-t border-border bg-muted/30">
                                         <td className="px-3 py-1.5 text-muted-foreground italic">Internal benchmark</td>
-                                        <td className="px-3 py-1.5 text-foreground tabular-nums text-right">${INTERNAL_BENCHMARK.totalBaseline.toLocaleString()}</td>
+                                        <td className="px-3 py-1.5 text-foreground tabular-nums text-right">${benchmark.totalBaseline.toLocaleString()}</td>
                                         <td className="px-3 py-1.5 text-muted-foreground text-right">baseline</td>
                                     </tr>
                                 </tbody>
@@ -4603,7 +4713,6 @@ function BidComparisonPanel({ onValidate }: LDPanelProps) {
                     </>
                 )}
 
-                <PainpointChip text="Today: Alan/Paul compare in their heads · no automated variance detection. With Strata: 15% threshold + flag outliers + reconcile suggestions." />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -4631,6 +4740,8 @@ interface WinnerSelectPanelProps extends LDPanelProps {
 }
 
 function WinnerSelectPanel({ onValidate, winnerVendorId, onSelectWinner }: WinnerSelectPanelProps) {
+    const vertical = useOfficeworksVertical()
+    const { installers, bids: VERTICAL_BIDS } = getActiveVerticalData(vertical)
     const [confirmed, setConfirmed] = useState<boolean>(winnerVendorId !== null)
     const [hoveredId, setHoveredId] = useState<string | null>(null)
 
@@ -4638,6 +4749,7 @@ function WinnerSelectPanel({ onValidate, winnerVendorId, onSelectWinner }: Winne
         onSelectWinner(id)
         setConfirmed(true)
     }
+    const recommendedVendor = installers.find(v => v.flagText === 'Strata recommends')
 
     return (
         <>
@@ -4645,15 +4757,20 @@ function WinnerSelectPanel({ onValidate, winnerVendorId, onSelectWinner }: Winne
                 <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3 flex items-start gap-2.5">
                     <Sparkles className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-xs">
-                        <div className="font-semibold text-foreground">Strata recommends TriState Labor Solutions</div>
+                        <div className="font-semibold text-foreground">
+                            Strata recommends {recommendedVendor?.name ?? installers[0]?.name}
+                        </div>
                         <div className="text-muted-foreground mt-0.5">
-                            Lowest price ($20,900) · highest on-time (96%) · lowest CO rate (2%) · high headroom. Drafts winner + 2 loser notifications.
+                            Best mix of price, on-time and change-order rate across the {installers.length}-vendor pool. Drafts winner + {installers.length - 1} loser notifications.
                         </div>
                     </div>
                 </div>
 
-                {APPROVED_INSTALLERS_DC.map(v => {
-                    const bid = BID_RESPONSES.find(b => b.vendorId === v.id)!
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text="Today: PM picks · no scorecard data · history lives in Alan/Paul's heads. With Strata: scorecard-backed recommendation + audit trail." />
+
+                {installers.map(v => {
+                    const bid = VERTICAL_BIDS.find(b => b.vendorId === v.id)!
                     const isWinner = winnerVendorId === v.id
                     const isLoser = winnerVendorId !== null && !isWinner
                     return (
@@ -4698,7 +4815,7 @@ function WinnerSelectPanel({ onValidate, winnerVendorId, onSelectWinner }: Winne
                                         aria-label={`Select ${v.name} as winner`}
                                         className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                                             v.flagText === 'Strata recommends'
-                                                ? 'bg-brand-400 hover:bg-brand-300 text-zinc-900'
+                                                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                                                 : 'bg-muted text-foreground hover:bg-muted/80'
                                         }`}
                                     >
@@ -4717,8 +4834,8 @@ function WinnerSelectPanel({ onValidate, winnerVendorId, onSelectWinner }: Winne
                             <span className="text-xs font-semibold text-foreground">3 emails queued · drafted by Strata · sent by Alan</span>
                         </div>
                         <ul className="space-y-1 pl-6 text-[11px] text-foreground">
-                            <li>Winner notify · {APPROVED_INSTALLERS_DC.find(v => v.id === winnerVendorId)?.name}</li>
-                            {APPROVED_INSTALLERS_DC.filter(v => v.id !== winnerVendorId).map(v => (
+                            <li>Winner notify · {installers.find(v => v.id === winnerVendorId)?.name}</li>
+                            {installers.filter(v => v.id !== winnerVendorId).map(v => (
                                 <li key={v.id}>Decline notify · {v.name}</li>
                             ))}
                         </ul>
@@ -4726,7 +4843,6 @@ function WinnerSelectPanel({ onValidate, winnerVendorId, onSelectWinner }: Winne
                     </div>
                 )}
 
-                <PainpointChip text="Today: PM picks · no scorecard data · history lives in Alan/Paul's heads. With Strata: scorecard-backed recommendation + audit trail." />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -4757,9 +4873,12 @@ function fqStepNumberOf(s: FinalQuoteStep): 1 | 2 | 3 {
 }
 
 function FinalQuotePanel({ onValidate }: LDPanelProps) {
+    const vertical = useOfficeworksVertical()
+    const { finalQuote, bids: VERTICAL_BIDS } = getActiveVerticalData(vertical)
     const [step, setStep] = useState<FinalQuoteStep>('step-1-margin')
-    const [marginPct, setMarginPct] = useState(FINAL_QUOTE.owMarginPct * 100)
+    const [marginPct, setMarginPct] = useState(finalQuote.owMarginPct * 100)
     const [bulletCount, setBulletCount] = useState(0)
+    const [seniorReview, setSeniorReview] = useState(false)
     const timeoutsRef = useRef<number[]>([])
 
     useEffect(() => () => {
@@ -4778,8 +4897,8 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
     }, [step])
 
     const currentStepNum = fqStepNumberOf(step)
-    const marginAmount = Math.round(FINAL_QUOTE.vendorNet * (marginPct / 100))
-    const quotedTotal = FINAL_QUOTE.vendorNet + marginAmount
+    const marginAmount = Math.round(finalQuote.vendorNet * (marginPct / 100))
+    const quotedTotal = finalQuote.vendorNet + marginAmount
     const canContinue = step === 'step-3-done'
 
     const disabledCopy =
@@ -4794,12 +4913,20 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                 <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3 flex items-start gap-2.5">
                     <Sparkles className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-xs">
-                        <div className="font-semibold text-foreground">Final quote · 3 sequential sub-steps</div>
+                        <div className="font-semibold text-foreground flex items-center gap-2">
+                            <span>Final quote · 3 sequential sub-steps</span>
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-warning/10 text-warning border border-warning/20 rounded px-1.5 py-0.5 shrink-0">
+                                GW3 · Quote due in 8h
+                            </span>
+                        </div>
                         <div className="text-muted-foreground mt-0.5">
-                            Apply OW margin → preview Excel cells → upload to Building Connected portal. GC deadline imminent.
+                            Apply OW margin → preview Excel cells in the GC quote template → upload to the GC portal. GC deadline imminent.
                         </div>
                     </div>
                 </div>
+
+                {/* Painpoint hero · why this step matters */}
+                <PainpointChip text="Today: manual Excel copy-validate-re-enter · formula errors in both client + OW files · IQ ERP identified as future installer-side backbone but not in use today. With Strata: cell-level audit + automated population." />
 
                 {/* STEP 1 · Apply margin */}
                 {(() => {
@@ -4817,7 +4944,7 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                 <DollarSign className="h-4 w-4 text-foreground shrink-0" aria-hidden="true" />
                                 <div className="flex-1 min-w-0">
                                     <div className="text-xs font-bold uppercase tracking-wider text-foreground truncate">Apply OW margin</div>
-                                    <div className="text-[10px] text-muted-foreground truncate">Vendor net ${FINAL_QUOTE.vendorNet.toLocaleString()}</div>
+                                    <div className="text-[10px] text-muted-foreground truncate">Vendor net ${finalQuote.vendorNet.toLocaleString()}</div>
                                 </div>
                                 <StatusChip variant={variant} />
                             </div>
@@ -4839,7 +4966,7 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                     <ul className="divide-y divide-border text-[11px] rounded-lg border border-border overflow-hidden">
                                         <li className="px-3 py-1.5 flex items-center justify-between gap-3">
                                             <span className="text-muted-foreground">Vendor net (TriState)</span>
-                                            <span className="text-foreground tabular-nums">${FINAL_QUOTE.vendorNet.toLocaleString()}</span>
+                                            <span className="text-foreground tabular-nums">${finalQuote.vendorNet.toLocaleString()}</span>
                                         </li>
                                         <li className="px-3 py-1.5 flex items-center justify-between gap-3">
                                             <span className="text-muted-foreground">OW margin · {marginPct.toFixed(0)}%</span>
@@ -4854,7 +4981,7 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                         type="button"
                                         onClick={() => setStep('step-2-excel')}
                                         aria-label="Confirm pricing"
-                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                     >
                                         Confirm pricing
                                     </button>
@@ -4888,7 +5015,7 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                 <FileText className="h-4 w-4 text-foreground shrink-0" aria-hidden="true" />
                                 <div className="flex-1 min-w-0">
                                     <div className="text-xs font-bold uppercase tracking-wider text-foreground truncate">Excel cell preview</div>
-                                    <div className="text-[10px] text-muted-foreground truncate">{FINAL_QUOTE.excelTemplate}</div>
+                                    <div className="text-[10px] text-muted-foreground truncate">{finalQuote.excelTemplate}</div>
                                 </div>
                                 <StatusChip variant={variant} />
                             </div>
@@ -4896,10 +5023,10 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                 <div className="px-4 py-3 space-y-2.5">
                                     <ul className="divide-y divide-border text-[11px] rounded-lg border border-border overflow-hidden font-mono">
                                         {[
-                                            { cell: FINAL_QUOTE.excelCells.labor,        label: 'Labor',            value: `$${BID_RESPONSES.find(b => b.vendorId === FINAL_QUOTE.winnerVendorId)!.laborTotal.toLocaleString()}` },
-                                            { cell: FINAL_QUOTE.excelCells.delivery,     label: 'Delivery',         value: `$${BID_RESPONSES.find(b => b.vendorId === FINAL_QUOTE.winnerVendorId)!.deliveryTotal.toLocaleString()}` },
-                                            { cell: FINAL_QUOTE.excelCells.owTotal,      label: 'OW total',         value: `$${quotedTotal.toLocaleString()}` },
-                                            { cell: FINAL_QUOTE.excelCells.owMarginPct,  label: 'OW margin %',      value: `${marginPct.toFixed(0)}%` },
+                                            { cell: finalQuote.excelCells.labor,        label: 'Labor',            value: `$${VERTICAL_BIDS.find(b => b.vendorId === finalQuote.winnerVendorId)!.laborTotal.toLocaleString()}` },
+                                            { cell: finalQuote.excelCells.delivery,     label: 'Delivery',         value: `$${VERTICAL_BIDS.find(b => b.vendorId === finalQuote.winnerVendorId)!.deliveryTotal.toLocaleString()}` },
+                                            { cell: finalQuote.excelCells.owTotal,      label: 'OW total',         value: `$${quotedTotal.toLocaleString()}` },
+                                            { cell: finalQuote.excelCells.owMarginPct,  label: 'OW margin %',      value: `${marginPct.toFixed(0)}%` },
                                         ].map(row => (
                                             <li key={row.cell} className="px-3 py-1.5 flex items-center gap-3">
                                                 <span className="text-info font-bold tabular-nums shrink-0">{row.cell}</span>
@@ -4912,20 +5039,36 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                         <ShieldCheck className="h-3 w-3 text-info shrink-0 mt-0.5" aria-hidden="true" />
                                         <span className="text-foreground">All 4 cells balanced · no formula errors detected · Strata cell-level audit.</span>
                                     </div>
+                                    {/* Optional Senior Review toggle (BPMN Optional Senior Review step) */}
+                                    <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-card px-3 py-2 text-[11px] hover:bg-muted/30 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={seniorReview}
+                                            onChange={e => setSeniorReview(e.target.checked)}
+                                            aria-label="Request optional senior review before upload"
+                                            className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
+                                        />
+                                        <span className="text-foreground flex-1">Request optional Senior Review before upload</span>
+                                        {seniorReview && (
+                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-warning/10 text-warning border border-warning/20 rounded px-1.5 py-0.5 shrink-0">
+                                                Queued · Sr Ops
+                                            </span>
+                                        )}
+                                    </label>
                                     <button
                                         type="button"
                                         onClick={() => setStep('step-3-upload')}
                                         aria-label="Approve Excel and continue"
-                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                     >
-                                        Approve & continue
+                                        {seniorReview ? 'Approve · pending Sr review' : 'Approve & continue'}
                                     </button>
                                 </div>
                             )}
                             {variant === 'done' && (
                                 <div className="px-4 py-2.5 text-xs text-foreground flex items-center gap-2">
                                     <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" aria-hidden="true" />
-                                    <span><strong>4 cells</strong> populated + audited · {FINAL_QUOTE.excelTemplate}</span>
+                                    <span><strong>4 cells</strong> populated + audited · {finalQuote.excelTemplate}</span>
                                 </div>
                             )}
                             {variant === 'pending' && (
@@ -4953,7 +5096,7 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                 <Truck className="h-4 w-4 text-foreground shrink-0" aria-hidden="true" />
                                 <div className="flex-1 min-w-0">
                                     <div className="text-xs font-bold uppercase tracking-wider text-foreground truncate">Upload to {MANATT_LD_RFP.gcPortal} portal</div>
-                                    <div className="text-[10px] text-muted-foreground truncate">Ref {FINAL_QUOTE.portalRef}</div>
+                                    <div className="text-[10px] text-muted-foreground truncate">Ref {finalQuote.portalRef}</div>
                                 </div>
                                 <StatusChip variant={variant} />
                             </div>
@@ -4964,7 +5107,7 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                         type="button"
                                         onClick={() => setStep('step-3-uploading')}
                                         aria-label="Upload to portal"
-                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                     >
                                         <Send className="h-3.5 w-3.5" aria-hidden="true" />
                                         Upload to {MANATT_LD_RFP.gcPortal}
@@ -4991,9 +5134,9 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                                 <div className="px-4 py-2.5 text-xs text-foreground space-y-1">
                                     <div className="flex items-center gap-2">
                                         <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" aria-hidden="true" />
-                                        <span><strong>EE1 · Quote submitted</strong> · ref {FINAL_QUOTE.portalRef}</span>
+                                        <span><strong>EE1 · Quote submitted</strong> · ref {finalQuote.portalRef}</span>
                                     </div>
-                                    <div className="pl-5 text-[11px] text-muted-foreground">Submitted at {FINAL_QUOTE.portalSubmittedAt} · before GC deadline.</div>
+                                    <div className="pl-5 text-[11px] text-muted-foreground">Submitted at {finalQuote.portalSubmittedAt} · before GC deadline.</div>
                                 </div>
                             )}
                             {variant === 'pending' && (
@@ -5009,7 +5152,6 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                     </div>
                 )}
 
-                <PainpointChip text="Today: manual Excel copy-validate-re-enter · formula errors in both client + OW files. With Strata: cell-level audit + automated population." />
             </div>
 
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
@@ -5029,6 +5171,489 @@ function FinalQuotePanel({ onValidate }: LDPanelProps) {
                 )}
             </div>
         </>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// L&D DOC PREVIEWS · 12 components for the modal left-panel
+// All use fidelidad-media: header + summary + body table/section list.
+// Vertical-aware via useOfficeworksVertical() where applicable.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function LDPreviewShell({ icon: Icon, filename, size, statusBadge, children }: {
+    icon: React.ComponentType<{ className?: string }>
+    filename: string
+    size?: string
+    statusBadge?: { label: string; tone: 'success' | 'warning' | 'neutral' | 'info' }
+    children: React.ReactNode
+}) {
+    const toneClass = statusBadge?.tone === 'success' ? 'bg-success/10 text-success border border-success/20'
+                    : statusBadge?.tone === 'warning' ? 'bg-warning/10 text-warning border border-warning/20'
+                    : statusBadge?.tone === 'info'    ? 'bg-info/10 text-info border border-info/20'
+                    : 'bg-muted text-muted-foreground border border-border'
+    return (
+        <div className="h-full flex flex-col bg-muted/20">
+            <div className="px-4 py-2.5 border-b border-border bg-muted/40 flex items-center gap-2 shrink-0">
+                <Icon className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                <div className="text-[11px] font-bold uppercase tracking-wide text-foreground">{filename}</div>
+                {size && <span className="text-[10px] text-muted-foreground">· {size}</span>}
+                {statusBadge && (
+                    <span className={`ml-auto inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 ${toneClass}`}>
+                        {statusBadge.label}
+                    </span>
+                )}
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+                {children}
+            </div>
+        </div>
+    )
+}
+
+// ─── ld-sif · Scope of Information File ─────────────────────────────────────
+function LDSifPreview() {
+    const vertical = useOfficeworksVertical()
+    const sif = vertical === 'walls' ? SIF_WALLS : SIF_FURNITURE
+    return (
+        <LDPreviewShell icon={FileText} filename="manatt-sif.pdf" size="92 KB" statusBadge={{ label: 'GC attached', tone: 'info' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{sif.title}</div>
+                    <div className="text-sm font-bold text-foreground mt-0.5">{sif.project}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{sif.deliveryAddress} · Market: {sif.market}</div>
+                </div>
+                <ul className="divide-y divide-border">
+                    {sif.scope.map(item => (
+                        <li key={item.label} className="px-4 py-2 flex items-start gap-3 text-[11px]">
+                            <span className="text-muted-foreground w-32 shrink-0">{item.label}</span>
+                            <span className="text-foreground flex-1">{item.value}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div className="text-[10px] text-muted-foreground italic px-1">Source: CBRE Construction Management · {MANATT_LD_RFP.gcContact}</div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-cover-letter · GC RFP cover letter email ────────────────────────────
+function LDCoverLetterPreview() {
+    const cl = COVER_LETTER_BODY
+    return (
+        <LDPreviewShell icon={Mail} filename="cbre-rfp-cover.pdf" size="184 KB" statusBadge={{ label: 'Received', tone: 'success' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border space-y-1">
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">From</span>
+                        <span className="text-foreground"><strong>{cl.from}</strong> · {cl.fromTitle}</span>
+                    </div>
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">To</span>
+                        <span className="text-foreground"><strong>{cl.to}</strong> · {cl.toTitle}</span>
+                    </div>
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">Subject</span>
+                        <span className="text-foreground font-medium">{cl.subject}</span>
+                    </div>
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[10px] text-muted-foreground">
+                        <span>Received</span>
+                        <span>{cl.receivedAt}</span>
+                    </div>
+                </div>
+                <div className="px-4 py-3 space-y-2 text-[11px] text-foreground leading-relaxed">
+                    {cl.body.map((line, i) => <p key={i}>{line}</p>)}
+                </div>
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-takeoff-report · AI takeoff output ──────────────────────────────────
+function LDTakeoffReportPreview() {
+    const vertical = useOfficeworksVertical()
+    const { takeoff } = getActiveVerticalData(vertical)
+    const isWalls = vertical === 'walls'
+    return (
+        <LDPreviewShell icon={ClipboardCheck} filename="takeoff-report-manatt-4f.pdf" size="48 KB" statusBadge={{ label: 'AI · 18s', tone: 'success' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Strata AI Takeoff Report</div>
+                    <div className="text-sm font-bold text-foreground mt-0.5">Source: {takeoff.takeoffSourceFile}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">Today: ~{takeoff.bluebeamTimeManualMin / 60}h manual count in Bluebeam · With Strata: {takeoff.strataTimeSec}s</div>
+                </div>
+                <ul className="divide-y divide-border">
+                    {isWalls ? (
+                        <>
+                            <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Linear feet</span><span className="text-foreground font-bold tabular-nums">{WALLS_TAKEOFF.linearFeet} lf</span></li>
+                            <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Door openings</span><span className="text-foreground font-bold tabular-nums">{WALLS_TAKEOFF.doorCount}</span></li>
+                            <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Wall heights</span><span className="text-foreground tabular-nums">{WALLS_TAKEOFF.wallHeights}</span></li>
+                        </>
+                    ) : (
+                        <>
+                            <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Workstations</span><span className="text-foreground font-bold tabular-nums">{MANATT_TAKEOFF.workstationCount}</span></li>
+                            <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Configurable items (CRs)</span><span className="text-foreground font-bold tabular-nums">{MANATT_TAKEOFF.crCount}</span></li>
+                        </>
+                    )}
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Estimated labor hours</span><span className="text-foreground font-bold tabular-nums">{takeoff.estimatedLaborHours} h</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Delivery stops</span><span className="text-foreground font-bold tabular-nums">{takeoff.estimatedDeliveryStops}</span></li>
+                </ul>
+            </div>
+            <div className="rounded-lg border border-info/30 bg-info/5 px-3 py-2 text-[10px] text-foreground flex items-start gap-2">
+                <Sparkles className="h-3 w-3 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                <span>Strata confidence high · all measurements auto-extracted · Alan can override any value before continuing.</span>
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-conditions-record · Building KB record ──────────────────────────────
+function LDConditionsRecordPreview() {
+    return (
+        <LDPreviewShell icon={Building2} filename="building-kb-1551-k-st-nw.pdf" size="24 KB" statusBadge={{ label: 'KB · 5 prior projects', tone: 'success' }}>
+            <div className="rounded-xl border border-ai/30 bg-ai/5 px-3 py-2 flex items-start gap-2 text-[11px]">
+                <Sparkles className="h-3.5 w-3.5 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="text-foreground leading-relaxed">
+                    Pulled from Building Knowledge Base · {MANATT_LD_RFP.buildingAddress} · {MANATT_LD_RFP.priorProjectsAtAddress} prior projects indexed.
+                </div>
+            </div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/30 border-b border-border">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-foreground">12 Building & workforce conditions</div>
+                </div>
+                <ul className="divide-y divide-border">
+                    {MANATT_BUILDING_CONDITIONS.map(cond => (
+                        <li key={cond.id} className="px-4 py-2 flex items-start gap-3 text-[11px]">
+                            <span className="text-muted-foreground w-32 shrink-0">{cond.label}</span>
+                            <span className="text-foreground flex-1">{cond.value}</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 shrink-0 ${
+                                cond.confidence === 'high'   ? 'bg-success/10 text-success border border-success/20' :
+                                cond.confidence === 'medium' ? 'bg-warning/10 text-warning border border-warning/20' :
+                                'bg-muted text-muted-foreground border border-border'
+                            }`}>{cond.confidence}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-vendor-pool · Approved installer pool ───────────────────────────────
+function LDVendorPoolPreview() {
+    const vertical = useOfficeworksVertical()
+    const { installers } = getActiveVerticalData(vertical)
+    const label = vertical === 'walls' ? 'Walls pool (NJ + PA + MA)' : 'DC installer pool (consolidated May/2026)'
+    return (
+        <LDPreviewShell icon={Users} filename="approved-installers.pdf" size="36 KB" statusBadge={{ label: `${installers.length} active`, tone: 'success' }}>
+            <div className="text-[11px] text-muted-foreground">{label} · with scorecards from the past 12 months</div>
+            <div className="space-y-2">
+                {installers.map(v => (
+                    <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                        <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                            <span className="text-xs font-bold text-foreground truncate flex-1 min-w-0">{v.name}</span>
+                            {v.flagText && (
+                                <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 shrink-0 ${
+                                    v.flagTone === 'success' ? 'bg-success/10 text-success border border-success/20' :
+                                    v.flagTone === 'warning' ? 'bg-warning/10 text-warning border border-warning/20' :
+                                    'bg-muted text-muted-foreground border border-border'
+                                }`}>{v.flagText}</span>
+                            )}
+                        </div>
+                        <div className="px-4 py-2 text-[11px] text-muted-foreground">{v.markets} · {v.msaRate} · {v.unionStatus}</div>
+                        <div className="px-4 py-2 grid grid-cols-3 gap-2 text-[11px] border-t border-border">
+                            <div><span className="text-muted-foreground">On-time</span><div className="text-foreground font-bold tabular-nums">{v.onTimeRate}%</div></div>
+                            <div><span className="text-muted-foreground">CO rate</span><div className="text-foreground font-bold tabular-nums">{v.changeOrderRate}%</div></div>
+                            <div><span className="text-muted-foreground">12mo jobs</span><div className="text-foreground font-bold tabular-nums">{v.past12moJobs}</div></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-bid-request · Bid request form / email (vertical swap) ──────────────
+function LDBidRequestPreview() {
+    const vertical = useOfficeworksVertical()
+    if (vertical === 'walls') {
+        return (
+            <LDPreviewShell icon={FileText} filename="bid-request-form-A-G.pdf" size="68 KB" statusBadge={{ label: 'Walls · structured', tone: 'success' }}>
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                        <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{WALLS_BID_REQUEST_SECTIONS_A_G.template}</div>
+                        <div className="text-sm font-bold text-foreground mt-0.5">{WALLS_BID_REQUEST_SECTIONS_A_G.title}</div>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {WALLS_BID_REQUEST_SECTIONS_A_G.sections.map(s => (
+                            <li key={s.id} className="px-4 py-2.5">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="h-5 w-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center shrink-0" aria-hidden="true">{s.id}</span>
+                                    <span className="text-[11px] font-bold text-foreground">{s.label}</span>
+                                </div>
+                                <ul className="pl-7 space-y-0.5">
+                                    {s.fields.map(f => (
+                                        <li key={f} className="text-[10px] text-muted-foreground">· {f}</li>
+                                    ))}
+                                </ul>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </LDPreviewShell>
+        )
+    }
+    const e = BID_REQUEST_EMAIL_FURNITURE
+    return (
+        <LDPreviewShell icon={Mail} filename="bid-request-draft.eml" size="12 KB" statusBadge={{ label: 'Furniture · free-form', tone: 'warning' }}>
+            <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-[10px] text-foreground flex items-start gap-2">
+                <AlertCircle className="h-3 w-3 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                <span>~{LD_VOLUME_FACTS.outboundEmailsPerMonth} outbound bid requests/month today · all composed manually.</span>
+            </div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border space-y-1">
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">From</span>
+                        <span className="text-foreground">{e.from}</span>
+                    </div>
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">Subject</span>
+                        <span className="text-foreground font-medium">{e.subject}</span>
+                    </div>
+                </div>
+                <div className="px-4 py-3 space-y-2 text-[11px] text-foreground leading-relaxed">
+                    {e.body.map((line, i) => <p key={i}>{line}</p>)}
+                </div>
+                <div className="border-t border-border px-4 py-2 bg-muted/20">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Pre-flight checks</div>
+                    <ul className="space-y-0.5">
+                        {e.preFlight.map(c => (
+                            <li key={c} className="flex items-center gap-2 text-[10px] text-foreground">
+                                <CheckCircle2 className="h-3 w-3 text-success shrink-0" aria-hidden="true" />
+                                {c}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-internal-benchmark · Strata methodology card ────────────────────────
+function LDInternalBenchmarkPreview() {
+    const vertical = useOfficeworksVertical()
+    const { benchmark } = getActiveVerticalData(vertical)
+    return (
+        <LDPreviewShell icon={Target} filename="internal-benchmark.pdf" size="18 KB" statusBadge={{ label: 'Strata methodology', tone: 'info' }}>
+            <div className="rounded-xl border border-ai/30 bg-ai/5 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                    <div className="flex-1 min-w-0 text-xs">
+                        <div className="font-semibold text-foreground">Strata Internal Number</div>
+                        <div className="text-muted-foreground mt-0.5">{benchmark.formulaText}</div>
+                    </div>
+                </div>
+                <div className="flex items-baseline gap-2 pt-2 border-t border-ai/20">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Benchmark</span>
+                    <span className="text-2xl font-bold text-ai tabular-nums">${benchmark.totalBaseline.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] pt-2 border-t border-ai/20">
+                    <span className="text-muted-foreground">Variance threshold</span>
+                    <span className="text-foreground font-bold tabular-nums">{benchmark.varianceThresholdPct}%</span>
+                </div>
+            </div>
+            <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-[10px] text-foreground flex items-start gap-2">
+                <AlertCircle className="h-3 w-3 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                <span>Today this benchmark only exists in Alan/Paul's heads · Alan ~46:32 · "AI would do an internal number first."</span>
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-bids-received · 3 vendor bids stacked ───────────────────────────────
+function LDBidsReceivedPreview() {
+    const vertical = useOfficeworksVertical()
+    const { installers, bids, benchmark } = getActiveVerticalData(vertical)
+    return (
+        <LDPreviewShell icon={DollarSign} filename="bids-received.pdf" size="40 KB" statusBadge={{ label: '3/3 received', tone: 'success' }}>
+            <div className="text-[11px] text-muted-foreground">3 bid emails received within the 48h MSA window · variance vs ${benchmark.totalBaseline.toLocaleString()} benchmark</div>
+            <div className="space-y-2">
+                {bids.map(b => {
+                    const v = installers.find(i => i.id === b.vendorId)
+                    const variance = Math.round(((b.total - benchmark.totalBaseline) / benchmark.totalBaseline) * 100)
+                    const tone = Math.abs(variance) < 5 ? 'success' : Math.abs(variance) < benchmark.varianceThresholdPct ? 'warning' : 'danger'
+                    return (
+                        <div key={b.vendorId} className="rounded-xl border border-border bg-card overflow-hidden">
+                            <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                                <span className="text-xs font-bold text-foreground truncate flex-1">{v?.name}</span>
+                                <span className={`inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 shrink-0 ${
+                                    tone === 'success' ? 'bg-success/10 text-success border border-success/20' :
+                                    tone === 'warning' ? 'bg-warning/10 text-warning border border-warning/20' :
+                                    'bg-destructive/10 text-destructive border border-destructive/20'
+                                }`}>{variance > 0 ? '+' : ''}{variance}%</span>
+                            </div>
+                            <div className="px-4 py-2 grid grid-cols-3 gap-2 text-[11px]">
+                                <div><span className="text-muted-foreground">Labor</span><div className="text-foreground tabular-nums">${b.laborTotal.toLocaleString()}</div></div>
+                                <div><span className="text-muted-foreground">Delivery</span><div className="text-foreground tabular-nums">${b.deliveryTotal.toLocaleString()}</div></div>
+                                <div><span className="text-muted-foreground">Total</span><div className="text-foreground font-bold tabular-nums">${b.total.toLocaleString()}</div></div>
+                            </div>
+                            <div className="px-4 py-1.5 border-t border-border text-[10px] text-muted-foreground">Received {b.receivedAt}</div>
+                        </div>
+                    )
+                })}
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-scorecard · Vendor comparison table ─────────────────────────────────
+function LDScorecardPreview() {
+    const vertical = useOfficeworksVertical()
+    const { installers } = getActiveVerticalData(vertical)
+    return (
+        <LDPreviewShell icon={TrendingUp} filename="vendor-scorecard.pdf" size="22 KB" statusBadge={{ label: 'Past 12 months', tone: 'info' }}>
+            <div className="text-[11px] text-muted-foreground">Comparing the {installers.length}-vendor pool on price, on-time and change-order history.</div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <table className="w-full text-[11px]">
+                    <thead className="bg-muted/30">
+                        <tr className="text-left">
+                            <th className="px-3 py-2 font-semibold text-muted-foreground">Vendor</th>
+                            <th className="px-3 py-2 font-semibold text-muted-foreground text-right">On-time</th>
+                            <th className="px-3 py-2 font-semibold text-muted-foreground text-right">CO rate</th>
+                            <th className="px-3 py-2 font-semibold text-muted-foreground text-right">12mo jobs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {installers.map(v => (
+                            <tr key={v.id} className="border-t border-border">
+                                <td className="px-3 py-2">
+                                    <div className="text-foreground font-medium">{v.name}</div>
+                                    <div className="text-[10px] text-muted-foreground">{v.markets}</div>
+                                </td>
+                                <td className="px-3 py-2 text-right tabular-nums text-foreground">{v.onTimeRate}%</td>
+                                <td className="px-3 py-2 text-right tabular-nums text-foreground">{v.changeOrderRate}%</td>
+                                <td className="px-3 py-2 text-right tabular-nums text-foreground">{v.past12moJobs}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-notifications · 3 drafts (winner + 2 losers) ────────────────────────
+function LDNotificationsPreview() {
+    const vertical = useOfficeworksVertical()
+    const { installers } = getActiveVerticalData(vertical)
+    const winner = installers.find(v => v.flagText === 'Strata recommends') ?? installers[0]
+    const losers = installers.filter(v => v.id !== winner?.id)
+    return (
+        <LDPreviewShell icon={Mail} filename="notification-drafts.pdf" size="14 KB" statusBadge={{ label: 'Drafts · review before send', tone: 'warning' }}>
+            <div className="rounded-lg border border-info/30 bg-info/5 px-3 py-2 text-[10px] text-foreground flex items-start gap-2">
+                <ShieldCheck className="h-3 w-3 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                <span>Strata never auto-sends · Alan reviews and confirms each draft (CLAUDE.md rule).</span>
+            </div>
+            <div className="rounded-xl border border-success/30 bg-success/5 overflow-hidden">
+                <div className="px-4 py-2.5 bg-success/10 border-b border-success/20 flex items-center gap-2">
+                    <span className="text-xs font-bold text-foreground">Winner notify · {winner?.name}</span>
+                    <span className="ml-auto text-[9px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5">Awarded</span>
+                </div>
+                <div className="px-4 py-2 text-[11px] text-foreground font-medium">{NOTIFICATION_DRAFTS.winner.subject}</div>
+                <div className="px-4 py-2 border-t border-border space-y-1 text-[11px] text-foreground leading-relaxed">
+                    {NOTIFICATION_DRAFTS.winner.body.map((line, i) => <p key={i}>{line}</p>)}
+                </div>
+            </div>
+            {losers.map((v, idx) => {
+                const draft = idx === 0 ? NOTIFICATION_DRAFTS.loserPinnacle : NOTIFICATION_DRAFTS.loserNortheast
+                return (
+                    <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                        <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                            <span className="text-xs font-bold text-foreground">Decline · {v.name}</span>
+                            <span className="ml-auto text-[9px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border rounded px-1.5 py-0.5">Not awarded</span>
+                        </div>
+                        <div className="px-4 py-2 text-[11px] text-foreground font-medium">{draft.subject}</div>
+                        <div className="px-4 py-2 border-t border-border space-y-1 text-[11px] text-foreground leading-relaxed">
+                            {draft.body.map((line, i) => <p key={i}>{line}</p>)}
+                        </div>
+                    </div>
+                )
+            })}
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-excel-quote · GC quote template preview ─────────────────────────────
+function LDExcelQuotePreview() {
+    const vertical = useOfficeworksVertical()
+    const { finalQuote, bids } = getActiveVerticalData(vertical)
+    const winnerBid = bids.find(b => b.vendorId === finalQuote.winnerVendorId)
+    const marginAmount = Math.round(finalQuote.vendorNet * finalQuote.owMarginPct)
+    const quotedTotal = finalQuote.vendorNet + marginAmount
+    return (
+        <LDPreviewShell icon={FileText} filename={finalQuote.excelTemplate} size="58 KB" statusBadge={{ label: 'Cell-level audit', tone: 'info' }}>
+            <div className="text-[11px] text-muted-foreground">Strata populated 4 cells in the GC quote template · margin {Math.round(finalQuote.owMarginPct * 100)}% on vendor net ${finalQuote.vendorNet.toLocaleString()}.</div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                    <FileText className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Cell-level audit</span>
+                </div>
+                <ul className="divide-y divide-border text-[11px] font-mono">
+                    <li className="px-4 py-2 flex items-center gap-3">
+                        <span className="text-info font-bold tabular-nums shrink-0">{finalQuote.excelCells.labor}</span>
+                        <span className="text-muted-foreground flex-1 font-sans">Labor</span>
+                        <span className="text-foreground tabular-nums">${winnerBid?.laborTotal.toLocaleString()}</span>
+                    </li>
+                    <li className="px-4 py-2 flex items-center gap-3">
+                        <span className="text-info font-bold tabular-nums shrink-0">{finalQuote.excelCells.delivery}</span>
+                        <span className="text-muted-foreground flex-1 font-sans">Delivery</span>
+                        <span className="text-foreground tabular-nums">${winnerBid?.deliveryTotal.toLocaleString()}</span>
+                    </li>
+                    <li className="px-4 py-2 flex items-center gap-3 bg-muted/30">
+                        <span className="text-info font-bold tabular-nums shrink-0">{finalQuote.excelCells.owTotal}</span>
+                        <span className="text-muted-foreground flex-1 font-sans">Officeworks total</span>
+                        <span className="text-success font-bold tabular-nums">${quotedTotal.toLocaleString()}</span>
+                    </li>
+                    <li className="px-4 py-2 flex items-center gap-3">
+                        <span className="text-info font-bold tabular-nums shrink-0">{finalQuote.excelCells.owMarginPct}</span>
+                        <span className="text-muted-foreground flex-1 font-sans">OW margin %</span>
+                        <span className="text-foreground tabular-nums">{Math.round(finalQuote.owMarginPct * 100)}%</span>
+                    </li>
+                </ul>
+            </div>
+            <div className="rounded-lg border border-info/30 bg-info/5 px-3 py-2 text-[10px] text-foreground flex items-start gap-2">
+                <ShieldCheck className="h-3 w-3 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                <span>All 4 cells balanced · no formula errors · Strata cell-level audit before upload.</span>
+            </div>
+        </LDPreviewShell>
+    )
+}
+
+// ─── ld-portal-status · GC portal submission confirmation ───────────────────
+function LDPortalStatusPreview() {
+    const vertical = useOfficeworksVertical()
+    const { finalQuote } = getActiveVerticalData(vertical)
+    return (
+        <LDPreviewShell icon={CheckCircle2} filename={`portal-confirmation-${finalQuote.portalRef}.pdf`} size="8 KB" statusBadge={{ label: PORTAL_STATUS.status, tone: 'success' }}>
+            <div className="rounded-xl border border-success/30 bg-success/5 p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                    <div>
+                        <div className="text-sm font-bold text-foreground">Submitted to {PORTAL_STATUS.portal}</div>
+                        <div className="text-[11px] text-muted-foreground">{PORTAL_STATUS.timeBeforeDeadline} before GC deadline</div>
+                    </div>
+                </div>
+            </div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <ul className="divide-y divide-border text-[11px]">
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Portal</span><span className="text-foreground">{PORTAL_STATUS.portal}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Reference number</span><span className="text-foreground font-mono">{finalQuote.portalRef}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Submitted at</span><span className="text-foreground tabular-nums">{finalQuote.portalSubmittedAt}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Deadline</span><span className="text-foreground tabular-nums">{PORTAL_STATUS.deadline}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Quoted total</span><span className="text-success font-bold tabular-nums">${finalQuote.quotedTotal.toLocaleString()}</span></li>
+                </ul>
+            </div>
+        </LDPreviewShell>
     )
 }
 

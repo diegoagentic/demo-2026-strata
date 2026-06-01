@@ -422,10 +422,11 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'sc-LD.7': [
         'OW margin applied · 18% · vendor net $20,900',
-        'Quoted total $24,662 to CBRE',
-        'Excel template loaded · CBRE-Quote-Template-v3.xlsx',
+        'Quoted total $24,662 to GC',
+        'GC quote template loaded · CBRE-Quote-Template-v3.xlsx',
         'Cell-level audit · B12/B13/B14/D17 populated',
-        'Uploading to Building Connected · BC-RFP-882041',
+        'IQ ERP-compatible export available · future installer integration',
+        'Uploading to GC portal · ref BC-RFP-882041',
         'EE1 · customer quote submitted · 16:42',
     ],
 };

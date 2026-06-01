@@ -20,6 +20,7 @@ import { useTenant } from '../TenantContext'
 import { useAuth } from '../context/AuthContext'
 import { useDemo } from '../context/DemoContext'
 import { useDemoProfile } from '../context/useDemoProfile'
+import { readVertical, useOfficeworksVertical } from './officeworks/shared/verticalSignal';
 
 import ActionCenter from './notifications/ActionCenter';
 
@@ -140,6 +141,11 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Sr Operations · Furniture',
         photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face',
     },
+    'Officeworks Head of Ops Walls': {
+        name: 'Paul Egan',
+        role: 'Head of Ops · Walls',
+        photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
@@ -159,7 +165,12 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
         if (role === 'Designer')          return 'Officeworks Designer';
         if (role === 'Sales Coordinator') return 'Officeworks Sales Coordinator';
         if (role === 'Peer Reviewer')     return 'Officeworks Peer Reviewer';
-        if (role === 'Sr Operations')     return 'Officeworks Sr Operations';
+        if (role === 'Sr Operations') {
+            // L&D Sr Operations role splits into Furniture (Alan) / Walls (Paul)
+            // by the active vertical sub-toggle set in the sidebar.
+            const v = readVertical();
+            return v === 'walls' ? 'Officeworks Head of Ops Walls' : 'Officeworks Sr Operations';
+        }
         return 'Officeworks Design Manager';
     }
     if (role === 'Expert') return 'Expert';
@@ -231,6 +242,9 @@ export default function Navbar({
     const { isDemoActive, currentStep, isSidebarCollapsed } = useDemo()
     const { activeProfile, profiles, switchProfile } = useDemoProfile()
     const sidebarExpanded = isDemoActive && !isSidebarCollapsed
+    // Subscribe to the Officeworks vertical signal so the avatar updates
+    // when the sidebar sub-toggle switches Furniture ↔ Walls.
+    useOfficeworksVertical()
 
     // Demo profile — always show a profile (default to Dealer for initial screen)
     const demoProfile = isDemoActive ? DEMO_PROFILES[resolveProfileKey(currentStep?.role, currentStep?.app)] : DEMO_PROFILES['Dealer'];
