@@ -137,6 +137,47 @@ export default function DemoSidebar() {
     const isDupler = activeProfile.id === 'dupler';
     const isWRG = activeProfile.id === 'wrg';
     const isLeland = activeProfile.id === 'leland';
+    const isOfficeworks = activeProfile.id === 'officeworks';
+
+    // Officeworks runs two flows in parallel (Spec Check & Design ↔ Labor &
+    // Delivery). Tab toggle filters the sidebar to one flow at a time.
+    const [activeFlow, setActiveFlow] = React.useState<'spec-check' | 'labor-delivery'>('spec-check');
+
+    // If the user lands directly on a step from the other flow (e.g. resumed
+    // session), sync the tab so the active step is visible.
+    React.useEffect(() => {
+        if (!isOfficeworks) return;
+        const curr = steps[currentStepIndex];
+        const f = (curr?.flowId ?? 'spec-check') as 'spec-check' | 'labor-delivery';
+        if (f !== activeFlow) setActiveFlow(f);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOfficeworks, activeProfile.id]);
+
+    // Filtered + original-index-preserving step list for the render loop.
+    const displayedSteps = React.useMemo(() => {
+        const indexed = steps.map((step, originalIndex) => ({ step, originalIndex }));
+        if (!isOfficeworks) return indexed;
+        return indexed.filter(({ step }) => (step.flowId ?? 'spec-check') === activeFlow);
+    }, [steps, isOfficeworks, activeFlow]);
+
+    const flowCounts = React.useMemo(() => {
+        if (!isOfficeworks) return { specCheck: 0, laborDelivery: 0 };
+        let s = 0, l = 0;
+        for (const step of steps) {
+            const f = step.flowId ?? 'spec-check';
+            if (f === 'spec-check') s++; else l++;
+        }
+        return { specCheck: s, laborDelivery: l };
+    }, [steps, isOfficeworks]);
+
+    const handleFlowSwitch = (flow: 'spec-check' | 'labor-delivery') => {
+        if (flow === activeFlow) return;
+        setActiveFlow(flow);
+        // Jump to first step of the target flow so currentStepIndex points to a
+        // visible row · avoids stale-active-state when the flow changes.
+        const firstIdx = steps.findIndex(s => (s.flowId ?? 'spec-check') === flow);
+        if (firstIdx >= 0) goToStep(firstIdx);
+    };
     const isWorkspaces = activeProfile.id === 'workspaces';
     const isBFI = activeProfile.id === 'bfi';
     const hasDataThreads = isContinua || isDupler || isWRG || isLeland || isWorkspaces || isBFI;
@@ -296,18 +337,53 @@ export default function DemoSidebar() {
                     </div>
                 </div>
                 <p className={`text-xs ${c.textDim}`}>Guided Experience Simulation</p>
+
+                {/* Officeworks · Flow tab toggle (Spec Check ↔ Labor & Delivery) */}
+                {isOfficeworks && (
+                    <div className="mt-4 flex gap-1 p-1 rounded-lg bg-zinc-900/5 dark:bg-white/5">
+                        <button
+                            type="button"
+                            onClick={() => handleFlowSwitch('spec-check')}
+                            aria-pressed={activeFlow === 'spec-check'}
+                            className={`flex-1 px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                                activeFlow === 'spec-check'
+                                    ? `${c.bgBadgeActive} ${c.textBadgeActive} shadow-sm`
+                                    : `${c.textMuted} hover:opacity-80`
+                            }`}
+                        >
+                            <span className="block leading-tight">Spec Check</span>
+                            <span className="block leading-tight text-[9px] opacity-70">& Design · {flowCounts.specCheck}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleFlowSwitch('labor-delivery')}
+                            aria-pressed={activeFlow === 'labor-delivery'}
+                            className={`flex-1 px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                                activeFlow === 'labor-delivery'
+                                    ? `${c.bgBadgeActive} ${c.textBadgeActive} shadow-sm`
+                                    : `${c.textMuted} hover:opacity-80`
+                            }`}
+                        >
+                            <span className="block leading-tight">Labor &</span>
+                            <span className="block leading-tight text-[9px] opacity-70">Delivery · {flowCounts.laborDelivery}</span>
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Steps List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1 pt-6 scrollbar-micro">
-                {steps.map((step, index) => {
-                    const isActive = index === currentStepIndex;
-                    const isCompleted = index < currentStepIndex;
-                    const showGroupHeader = index === 0 || steps[index - 1].groupId !== step.groupId;
-                    // Compute sequential display number from group position
-                    const groupIds = [...new Set(steps.map(s => s.groupId))];
-                    const groupSteps = steps.filter(s => s.groupId === step.groupId);
-                    const posInGroup = groupSteps.findIndex(s => s.id === step.id);
+                {displayedSteps.map(({ step, originalIndex }, displayIndex) => {
+                    const isActive = originalIndex === currentStepIndex;
+                    const isCompleted = originalIndex < currentStepIndex;
+                    const prevDisplayed = displayIndex > 0 ? displayedSteps[displayIndex - 1] : null;
+                    const nextDisplayed = displayIndex < displayedSteps.length - 1 ? displayedSteps[displayIndex + 1] : null;
+                    const showGroupHeader = displayIndex === 0 || prevDisplayed!.step.groupId !== step.groupId;
+                    // Compute sequential display number from group position WITHIN the
+                    // displayed (filtered) array so numbering looks contiguous per tab.
+                    const groupIds = [...new Set(displayedSteps.map(d => d.step.groupId))];
+                    const groupSteps = displayedSteps.filter(d => d.step.groupId === step.groupId);
+                    const posInGroup = groupSteps.findIndex(d => d.step.id === step.id);
                     const groupDisplayNum = groupIds.indexOf(step.groupId) + 1;
                     const displayNumber = `${groupDisplayNum}.${posInGroup + 1}`;
 
@@ -319,11 +395,11 @@ export default function DemoSidebar() {
                                 </div>
                             )}
                             <div
-                                onClick={() => goToStep(index)}
+                                onClick={() => goToStep(originalIndex)}
                                 className={`relative flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-all ${isActive ? `${c.bgStepActive} border-l-2 ${c.activeBorder}` : 'hover:opacity-80'}`}
                             >
-                                {/* Connector Line */}
-                                {index < steps.length - 1 && steps[index + 1].groupId === step.groupId && (
+                                {/* Connector Line · only when next displayed step is in same group */}
+                                {nextDisplayed && nextDisplayed.step.groupId === step.groupId && (
                                     <div className={`absolute left-[22px] top-11 w-0.5 h-8 ${isCompleted ? c.connectorDone : c.connectorPending}`} />
                                 )}
 

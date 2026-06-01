@@ -14,15 +14,20 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Search, LayoutGrid, MoreHorizontal, Users } from 'lucide-react'
+import { Search, LayoutGrid, MoreHorizontal, Users, Truck } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { stepIdToColIdx } from './shared/funnelStages'
+import {
+    MANATT_LD_RFP, FINAL_QUOTE,
+    LD_CONTEXT_PROJECTS, MANATT_LD_BADGE, MANATT_LD_BADGE_BY_STEP,
+    MANATT_LD_SUBTITLE, MANATT_LD_SUBTITLE_BY_STEP,
+} from './shared/manattLaborData'
 import CapacityModal from './CapacityModal'
 
-// ─── Funnel columns (kanban-specific styling) ────────────────────────────────
+// ─── Funnel columns · per flow ────────────────────────────────────────────────
 
-const PROCESS_COLUMNS = [
+const SPEC_COLUMNS = [
     { id: 'intake',     label: 'Intake',         color: 'text-ai',      border: 'border-ai/30',      pill: 'bg-ai/10 text-ai border border-ai/20' },
     { id: 'design',     label: 'Design',         color: 'text-info',    border: 'border-info/30',    pill: 'bg-info/10 text-info border border-info/20' },
     { id: 'spec-check', label: 'Spec Check',     color: 'text-warning', border: 'border-warning/30', pill: 'bg-warning/10 text-warning border border-warning/20' },
@@ -30,9 +35,17 @@ const PROCESS_COLUMNS = [
     { id: 'ack',        label: 'Acknowledgment', color: 'text-success', border: 'border-success/30', pill: 'bg-success/10 text-success border border-success/20' },
 ] as const
 
-// ─── MANATT contextual content per column ─────────────────────────────────────
+const LD_COLUMNS = [
+    { id: 'ld-intake',     label: 'RFP Intake',  color: 'text-ai',      border: 'border-ai/30',      pill: 'bg-ai/10 text-ai border border-ai/20' },
+    { id: 'ld-conditions', label: 'Conditions',  color: 'text-info',    border: 'border-info/30',    pill: 'bg-info/10 text-info border border-info/20' },
+    { id: 'ld-bid',        label: 'Vendor Bid',  color: 'text-warning', border: 'border-warning/30', pill: 'bg-warning/10 text-warning border border-warning/20' },
+    { id: 'ld-eval',       label: 'Bid Eval',    color: 'text-primary', border: 'border-primary/30', pill: 'bg-primary/10 text-primary border border-primary/20' },
+    { id: 'ld-quote',      label: 'Final Quote', color: 'text-success', border: 'border-success/30', pill: 'bg-success/10 text-success border border-success/20' },
+] as const
 
-const MANATT_BADGE: Record<number, { label: string; className: string }> = {
+// ─── MANATT contextual content per column · Spec Check flow ──────────────────
+
+const SPEC_BADGE: Record<number, { label: string; className: string }> = {
     0: { label: 'New Form',        className: 'bg-ai/10 text-ai border border-ai/20' },
     1: { label: 'In Design',       className: 'bg-info/10 text-info border border-info/20' },
     2: { label: 'Self + Peer',     className: 'bg-warning/10 text-warning border border-warning/20' },
@@ -43,11 +56,11 @@ const MANATT_BADGE: Record<number, { label: string; className: string }> = {
 // Per-step overrides on MANATT card badge/subtitle (when the funnel column alone
 // doesn't capture the state — e.g. sc1.0b shares the Intake column with sc1.0
 // but represents a different moment in the arc).
-const MANATT_BADGE_BY_STEP: Record<string, { label: string; className: string }> = {
+const SPEC_BADGE_BY_STEP: Record<string, { label: string; className: string }> = {
     'sc1.0b': { label: 'Pending', className: 'bg-warning/10 text-warning border border-warning/20' },
 }
 
-const MANATT_SUBTITLE: Record<number, string> = {
+const SPEC_SUBTITLE: Record<number, string> = {
     0: 'Form received · CAD missing · GSA SQ blank',
     1: 'CET layout · 71 lines · 13 CRs · Flintwood 5N',
     2: 'Kimberly self-audit · Rebecca peer review · Felicia oversight',
@@ -55,7 +68,7 @@ const MANATT_SUBTITLE: Record<number, string> = {
     4: 'Teknion ack PO-DC-0009642 · diff scan in progress',
 }
 
-const MANATT_SUBTITLE_BY_STEP: Record<string, string> = {
+const SPEC_SUBTITLE_BY_STEP: Record<string, string> = {
     'sc1.0b': 'Form complete · CAD received · awaiting designer assignment',
 }
 
@@ -73,7 +86,7 @@ interface ContextCard {
     designer: string
 }
 
-const CONTEXT_CARDS: ContextCard[] = [
+const SPEC_CONTEXT_CARDS: ContextCard[] = [
     {
         code: 'NYC-DOH-2847', initials: 'DOH', client: 'NYC Dept. of Health · Brooklyn',
         value: '$148,200', colIdx: 0,
@@ -97,10 +110,31 @@ const CONTEXT_CARDS: ContextCard[] = [
     },
 ]
 
-// ─── MANATT designer per current step ─────────────────────────────────────────
+// ─── Header text + actor info per flow ───────────────────────────────────────
 
-function getMANATTDesigner(stepId: string | undefined): string {
-    // sc1.0 + sc1.0b are the manager-review moments · designer not yet committed
+const HEADER_BY_FLOW = {
+    'spec-check': {
+        title: 'Spec Check & Design · Pipeline',
+        sub: 'Felicia Miano-Poles · EVP Design & PM · ~30 designers across 3 regions',
+        capacityLabel: 'View capacity',
+        capacityCount: '~30 designers',
+    },
+    'labor-delivery': {
+        title: 'Labor & Delivery · Pipeline',
+        sub: 'Alan McPhee · Sr Operations · Furniture · ~240 estimates/mo · DC + NoVA + MD',
+        capacityLabel: 'View installers',
+        capacityCount: '6 approved DC',
+    },
+} as const
+
+// ─── MANATT card · owner per step + flow ─────────────────────────────────────
+
+function getMANATTOwner(stepId: string | undefined, flowId: 'spec-check' | 'labor-delivery'): string {
+    if (flowId === 'labor-delivery') {
+        if (!stepId || stepId === 'sc-LD.0') return 'Alan McPhee · routing'
+        return 'Alan McPhee · Sr Operations'
+    }
+    // Spec Check (sin cambio)
     if (!stepId || stepId === 'sc1.0' || stepId === 'sc1.0b') return 'Pending assignment'
     return 'Kimberly Tucker (PA · cross-market)'
 }
@@ -111,46 +145,66 @@ interface Props {
     onOpenReview: () => void
     /** Optional: hide the "Review" CTA on the MANATT card (used when modal already open) */
     hideReviewCta?: boolean
-    /** Currently assigned designer for MANATT · overrides the default getMANATTDesigner() inference */
+    /** Currently assigned designer for MANATT · overrides the default getMANATTOwner() inference */
     assignedDesigner?: string | null
+    /**
+     * Active flow · Officeworks runs Spec Check & Design and Labor & Delivery
+     * in parallel per the AS-IS BPMN. The funnel renders 5 columns + 3 context
+     * cards + the MANATT card consistently across both, but the data swaps.
+     */
+    flowId?: 'spec-check' | 'labor-delivery'
 }
 
-export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false, assignedDesigner }: Props) {
+export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false, assignedDesigner, flowId = 'spec-check' }: Props) {
     const { currentStep } = useDemo()
     const [capacityOpen, setCapacityOpen] = useState(false)
+    const isLD = flowId === 'labor-delivery'
+
+    // Active arrays per flow · same shape, different content.
+    const PROCESS_COLUMNS = isLD ? LD_COLUMNS : SPEC_COLUMNS
+    const BADGE          = isLD ? MANATT_LD_BADGE : SPEC_BADGE
+    const BADGE_BY_STEP  = isLD ? MANATT_LD_BADGE_BY_STEP : SPEC_BADGE_BY_STEP
+    const SUBTITLE       = isLD ? MANATT_LD_SUBTITLE : SPEC_SUBTITLE
+    const SUBTITLE_BY_STEP = isLD ? MANATT_LD_SUBTITLE_BY_STEP : SPEC_SUBTITLE_BY_STEP
+    const CONTEXT_CARDS  = isLD ? LD_CONTEXT_PROJECTS : SPEC_CONTEXT_CARDS
+    const header         = HEADER_BY_FLOW[flowId]
+
     const activeCol = stepIdToColIdx(currentStep?.id)
     const col = PROCESS_COLUMNS[activeCol]
     const stepKey = currentStep?.id ?? ''
-    const badge = MANATT_BADGE_BY_STEP[stepKey] ?? MANATT_BADGE[activeCol]
-    const subtitle = MANATT_SUBTITLE_BY_STEP[stepKey] ?? MANATT_SUBTITLE[activeCol]
-    const designer = assignedDesigner ?? getMANATTDesigner(currentStep?.id)
-    const isJustArrived = currentStep?.id === 'sc1.0'
+    const badge = BADGE_BY_STEP[stepKey] ?? BADGE[activeCol]
+    const subtitle = SUBTITLE_BY_STEP[stepKey] ?? SUBTITLE[activeCol]
+    const owner = assignedDesigner ?? getMANATTOwner(currentStep?.id, flowId)
 
-    // sc1.0 gate · MANATT card is hidden in Intake until ActionCenter finishes
-    // the ingest animation (which dispatches officeworks:intake-ingest).
-    const [manattIngested, setManattIngested] = useState(() => currentStep?.id !== 'sc1.0')
+    const firstStepId = isLD ? 'sc-LD.0' : 'sc1.0'
+    const ingestEvent = isLD ? 'officeworks:ld-rfp-ingest' : 'officeworks:intake-ingest'
+    const isJustArrived = currentStep?.id === firstStepId
+
+    // First-step gate · MANATT card is hidden until ActionCenter finishes the
+    // ingest animation (dispatches officeworks:intake-ingest or :ld-rfp-ingest).
+    const [manattIngested, setManattIngested] = useState(() => currentStep?.id !== firstStepId)
 
     useEffect(() => {
-        if (currentStep?.id === 'sc1.0') {
+        if (currentStep?.id === firstStepId) {
             setManattIngested(false)
             const onIngest = () => setManattIngested(true)
-            window.addEventListener('officeworks:intake-ingest', onIngest)
-            return () => window.removeEventListener('officeworks:intake-ingest', onIngest)
+            window.addEventListener(ingestEvent, onIngest)
+            return () => window.removeEventListener(ingestEvent, onIngest)
         } else {
             setManattIngested(true)
         }
-    }, [currentStep?.id])
+    }, [currentStep?.id, firstStepId, ingestEvent])
 
-    const manattVisible = currentStep?.id !== 'sc1.0' || manattIngested
+    const manattVisible = currentStep?.id !== firstStepId || manattIngested
 
     return (
         <div className="bg-card border border-border rounded-2xl">
             {/* Header */}
             <div className="border-b border-border px-5 py-4 flex items-center justify-between">
                 <div>
-                    <h2 className="text-base font-semibold text-foreground">Spec Check & Design · Pipeline</h2>
+                    <h2 className="text-base font-semibold text-foreground">{header.title}</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                        Felicia Miano-Poles · EVP Design & PM · ~30 designers across 3 regions
+                        {header.sub}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -158,11 +212,11 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                         type="button"
                         onClick={() => setCapacityOpen(true)}
                         className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-border text-xs text-foreground hover:bg-muted/50 transition-colors"
-                        title="Designer capacity · weekly committed/available hours · refreshed nightly"
+                        title={isLD ? 'Approved installer pool · per market · MSA-locked' : 'Designer capacity · weekly committed/available hours · refreshed nightly'}
                     >
-                        <Users className="h-3.5 w-3.5" />
-                        View capacity
-                        <span className="text-[10px] text-muted-foreground font-normal">· ~30 designers</span>
+                        {isLD ? <Truck className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
+                        {header.capacityLabel}
+                        <span className="text-[10px] text-muted-foreground font-normal">· {header.capacityCount}</span>
                     </button>
                     <button
                         type="button"
@@ -224,7 +278,9 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                                                         {badge.label}
                                                     </span>
                                                 </div>
-                                                <span className="text-[11px] text-muted-foreground block truncate">Manatt Phelps & Phillips LLP · DC</span>
+                                                <span className="text-[11px] text-muted-foreground block truncate">
+                                                    {isLD ? `Manatt Phelps & Phillips · 4F · ${MANATT_LD_RFP.market}` : 'Manatt Phelps & Phillips LLP · DC'}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -234,12 +290,14 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                                                 <span className="font-medium text-foreground font-mono">{MANATT_ORDER_META.poNumber}</span>
                                             </div>
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-muted-foreground">Net</span>
-                                                <span className="font-semibold text-foreground">${MANATT_ORDER_META.netTotal.toLocaleString()}</span>
+                                                <span className="text-muted-foreground">{isLD ? 'Quote' : 'Net'}</span>
+                                                <span className="font-semibold text-foreground">
+                                                    ${isLD ? FINAL_QUOTE.quotedTotal.toLocaleString() : MANATT_ORDER_META.netTotal.toLocaleString()}
+                                                </span>
                                             </div>
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-muted-foreground">Designer</span>
-                                                <span className="font-medium text-foreground truncate ml-1">{designer}</span>
+                                                <span className="text-muted-foreground">{isLD ? 'Owner' : 'Designer'}</span>
+                                                <span className="font-medium text-foreground truncate ml-1">{owner}</span>
                                             </div>
                                         </div>
 
@@ -247,7 +305,9 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
 
                                         {!hideReviewCta && (
                                             <div className="pt-2 border-t border-border flex items-center justify-between">
-                                                <span className="text-[10px] text-muted-foreground">SQ #{MANATT_ORDER_META.specialQuote}</span>
+                                                <span className="text-[10px] text-muted-foreground">
+                                                    {isLD ? `Portal ${MANATT_LD_RFP.gcPortalRef}` : `SQ #${MANATT_ORDER_META.specialQuote}`}
+                                                </span>
                                                 <div className="relative">
                                                     <span className="absolute -inset-1 rounded-xl bg-ai/20 animate-pulse pointer-events-none" />
                                                     <button

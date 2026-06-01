@@ -27,7 +27,8 @@ export type SimulationApp =
     | 'leland-strata' | 'leland-inbox' | 'leland-seradex' | 'leland-review'
     | 'bfi-agency-fee' | 'bfi-receiving'
     | 'workspaces-submit' | 'workspaces-approval' | 'workspaces-ap' | 'workspaces-reporting'
-    | 'officeworks-intake' | 'officeworks-design' | 'officeworks-spec-check' | 'officeworks-submission' | 'officeworks-dashboard';
+    | 'officeworks-intake' | 'officeworks-design' | 'officeworks-spec-check' | 'officeworks-submission' | 'officeworks-dashboard'
+    | 'officeworks-labor';
 
 export interface DemoStep {
     id: string;
@@ -36,8 +37,14 @@ export interface DemoStep {
     title: string;
     description: string;
     app: SimulationApp;
-    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Manager' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant' | 'BFI Manager' | 'Design Manager';
+    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Manager' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant' | 'BFI Manager' | 'Design Manager' | 'Peer Reviewer' | 'Sr Operations';
     highlightId?: string;
+    /**
+     * Optional flow grouping for multi-flow profiles (Officeworks runs Spec Check
+     * and Labor & Delivery in parallel per the AS-IS BPMN). When unset, behaves as
+     * 'spec-check' for backwards-compat. Only the Officeworks profile reads this.
+     */
+    flowId?: 'spec-check' | 'labor-delivery';
 }
 
 export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks';

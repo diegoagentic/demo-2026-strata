@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Pencil, LayoutDashboard, ClipboardCheck, Send, Inbox } from 'lucide-react'
+import { Pencil, LayoutDashboard, ClipboardCheck, Send, Inbox, Truck } from 'lucide-react'
 import MBIPageShell from '../mbi/MBIPageShell'
 import { useDemo } from '../../context/DemoContext'
 
@@ -40,6 +40,15 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
         case 'sc1.8':   return 'submission'
         case 'sc1.8b':  return 'handoff'
         case 'sc1.9':   return 'ack-review'
+        // ─── L&D flow ───────────────────────────────────────────────────────
+        case 'sc-LD.0': return 'ld-rfp-intake'
+        case 'sc-LD.1': return 'ld-takeoff'
+        case 'sc-LD.2': return 'ld-conditions'
+        case 'sc-LD.3': return 'ld-vendor-pool'
+        case 'sc-LD.4': return 'ld-bid-send'
+        case 'sc-LD.5': return 'ld-bid-compare'
+        case 'sc-LD.6': return 'ld-winner-select'
+        case 'sc-LD.7': return 'ld-final-upload'
         default:        return 'intake'
     }
 }
@@ -66,6 +75,15 @@ const OFFICEWORKS_NOTIF_EVENTS = [
     'officeworks:submission-open',
     'officeworks:po-tracking-open',
     'officeworks:ack-open',
+    // Labor & Delivery flow events
+    'officeworks:ld-rfp-ingest',
+    'officeworks:ld-takeoff-open',
+    'officeworks:ld-conditions-open',
+    'officeworks:ld-vendor-pool-open',
+    'officeworks:ld-bid-send-open',
+    'officeworks:ld-bid-compare-open',
+    'officeworks:ld-winner-select-open',
+    'officeworks:ld-final-upload-open',
 ] as const
 
 const STEP_ICONS_BY_APP: Record<string, React.ReactElement> = {
@@ -74,6 +92,7 @@ const STEP_ICONS_BY_APP: Record<string, React.ReactElement> = {
     'officeworks-spec-check':  <ClipboardCheck className="h-5 w-5" />,
     'officeworks-submission':  <Send className="h-5 w-5" />,
     'officeworks-dashboard':   <LayoutDashboard className="h-5 w-5" />,
+    'officeworks-labor':       <Truck className="h-5 w-5" />,
 }
 
 const STEP_TITLES_BY_APP: Record<string, string> = {
@@ -82,6 +101,7 @@ const STEP_TITLES_BY_APP: Record<string, string> = {
     'officeworks-spec-check':  'Spec Check',
     'officeworks-submission':  'Submission',
     'officeworks-dashboard':   'Design Dashboard',
+    'officeworks-labor':       'Labor & Delivery',
 }
 
 // ─── Main page component ──────────────────────────────────────────────────────
@@ -95,12 +115,18 @@ export default function OfficeworksPage() {
     const [assignedDesigner, setAssignedDesigner] = useState<string | null>(null)
     // Peer reviewer picked at sc1.6 (SelfAuditScene → PeerAssignPopover) · propagated to sc1.7
     const [peerReviewerName, setPeerReviewerName] = useState<string | null>(null)
+    // L&D · installer pool picked at sc-LD.3 · propagated to sc-LD.4/5
+    const [selectedVendorIds, setSelectedVendorIds] = useState<string[] | null>(null)
+    // L&D · winner picked at sc-LD.6 · propagated to sc-LD.7
+    const [winnerVendorId, setWinnerVendorId] = useState<string | null>(null)
 
     const stepId = currentStep?.id
     const stage = stepIdToStage(stepId)
     const app = currentStep?.app ?? 'officeworks-spec-check'
     const icon = STEP_ICONS_BY_APP[app] ?? <ClipboardCheck className="h-5 w-5" />
     const pageTitle = STEP_TITLES_BY_APP[app] ?? 'Spec Check'
+    // Flow derived from current step · drives the funnel + page chrome.
+    const flowId = (currentStep?.flowId ?? 'spec-check') as 'spec-check' | 'labor-delivery'
 
     // Listen for all officeworks notification CTA events to open the modal
     useEffect(() => {
@@ -150,6 +176,7 @@ export default function OfficeworksPage() {
                     onOpenReview={() => setIsModalOpen(true)}
                     hideReviewCta={isModalOpen}
                     assignedDesigner={assignedDesigner}
+                    flowId={flowId}
                 />
             </div>
 
@@ -163,6 +190,10 @@ export default function OfficeworksPage() {
                 onAssignDesigner={setAssignedDesigner}
                 peerReviewerName={peerReviewerName}
                 onAssignPeerReviewer={setPeerReviewerName}
+                selectedVendorIds={selectedVendorIds}
+                onSelectVendors={setSelectedVendorIds}
+                winnerVendorId={winnerVendorId}
+                onSelectWinner={setWinnerVendorId}
             />
         </MBIPageShell>
     )

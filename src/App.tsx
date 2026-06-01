@@ -203,6 +203,7 @@ function App() {
       : currentStep.app === 'officeworks-spec-check' ? 'Spec Check AI'
       : currentStep.app === 'officeworks-submission' ? 'Submission AI'
       : currentStep.app === 'officeworks-dashboard' ? 'Design Dashboard'
+      : currentStep.app === 'officeworks-labor' ? 'Labor AI'
       : 'Spec Check AI';
     const officeworksCompany = demoProfile.companyName;
 
@@ -462,6 +463,7 @@ function App() {
       case 'officeworks-design':
       case 'officeworks-spec-check':
       case 'officeworks-submission':
+      case 'officeworks-labor':
         if (officeworksDashboardActive) return <OfficeworksDashboardPage />
         return <OfficeworksPage />;
       case 'officeworks-dashboard':
