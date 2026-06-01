@@ -204,6 +204,7 @@ function App() {
       : currentStep.app === 'officeworks-submission' ? 'Submission AI'
       : currentStep.app === 'officeworks-dashboard' ? 'Design Dashboard'
       : currentStep.app === 'officeworks-labor' ? 'Labor AI'
+      : currentStep.app === 'officeworks-sales' ? 'Sales AI'
       : 'Spec Check AI';
     const officeworksCompany = demoProfile.companyName;
 
@@ -355,6 +356,8 @@ function App() {
       'officeworks-design': 'officeworks-design',
       'officeworks-spec-check': 'officeworks-spec-check',
       'officeworks-submission': 'officeworks-submission',
+      'officeworks-labor': 'officeworks-labor',
+      'officeworks-sales': 'officeworks-sales',
     };
     if (isBFI && bfiDashboardActive) return 'bfi-dashboard'
     if (isOfficeworks && officeworksDashboardActive) return 'officeworks-dashboard'
@@ -464,6 +467,7 @@ function App() {
       case 'officeworks-spec-check':
       case 'officeworks-submission':
       case 'officeworks-labor':
+      case 'officeworks-sales':
         if (officeworksDashboardActive) return <OfficeworksDashboardPage />
         return <OfficeworksPage />;
       case 'officeworks-dashboard':

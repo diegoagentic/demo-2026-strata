@@ -49,6 +49,15 @@ function stepIdToStage(stepId: string | undefined): OfficeworksReviewStage {
         case 'sc-LD.5': return 'ld-bid-compare'
         case 'sc-LD.6': return 'ld-winner-select'
         case 'sc-LD.7': return 'ld-final-upload'
+        // ─── Sales flow ─────────────────────────────────────────────────────
+        case 'sc-S.0':  return 'sales-inbox'
+        case 'sc-S.1':  return 'sales-intake'
+        case 'sc-S.2':  return 'sales-capacity'
+        case 'sc-S.3':  return 'sales-assign'
+        case 'sc-S.4':  return 'sales-discovery'
+        case 'sc-S.5':  return 'sales-outreach'
+        case 'sc-S.6':  return 'sales-proposal'
+        case 'sc-S.7':  return 'sales-handoff'
         default:        return 'intake'
     }
 }
@@ -84,6 +93,15 @@ const OFFICEWORKS_NOTIF_EVENTS = [
     'officeworks:ld-bid-compare-open',
     'officeworks:ld-winner-select-open',
     'officeworks:ld-final-upload-open',
+    // Sales flow events
+    'officeworks:sales-inbox-ingest',
+    'officeworks:sales-intake-open',
+    'officeworks:sales-capacity-open',
+    'officeworks:sales-assign-open',
+    'officeworks:sales-discovery-open',
+    'officeworks:sales-outreach-open',
+    'officeworks:sales-proposal-open',
+    'officeworks:sales-handoff-open',
 ] as const
 
 const STEP_ICONS_BY_APP: Record<string, React.ReactElement> = {
@@ -93,6 +111,7 @@ const STEP_ICONS_BY_APP: Record<string, React.ReactElement> = {
     'officeworks-submission':  <Send className="h-5 w-5" />,
     'officeworks-dashboard':   <LayoutDashboard className="h-5 w-5" />,
     'officeworks-labor':       <Truck className="h-5 w-5" />,
+    'officeworks-sales':       <Inbox className="h-5 w-5" />,
 }
 
 const STEP_TITLES_BY_APP: Record<string, string> = {
@@ -102,6 +121,7 @@ const STEP_TITLES_BY_APP: Record<string, string> = {
     'officeworks-submission':  'Submission',
     'officeworks-dashboard':   'Design Dashboard',
     'officeworks-labor':       'Labor & Delivery',
+    'officeworks-sales':       'Sales',
 }
 
 // ─── Main page component ──────────────────────────────────────────────────────
@@ -126,7 +146,7 @@ export default function OfficeworksPage() {
     const icon = STEP_ICONS_BY_APP[app] ?? <ClipboardCheck className="h-5 w-5" />
     const pageTitle = STEP_TITLES_BY_APP[app] ?? 'Spec Check'
     // Flow derived from current step · drives the funnel + page chrome.
-    const flowId = (currentStep?.flowId ?? 'spec-check') as 'spec-check' | 'labor-delivery'
+    const flowId = (currentStep?.flowId ?? 'spec-check') as 'spec-check' | 'labor-delivery' | 'sales'
 
     // Listen for all officeworks notification CTA events to open the modal
     useEffect(() => {

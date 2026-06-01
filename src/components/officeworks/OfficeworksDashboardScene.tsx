@@ -17,6 +17,7 @@ import {
     LayoutDashboard, Activity, Clock, Target, TrendingUp, AlertTriangle, BarChart3,
     LineChart as LineChartIcon, PieChart as PieChartIcon, History,
     Briefcase, CheckCircle2, Truck, AlertCircle, Bell, Building2,
+    Mail, Inbox, Send, Award, Sparkles,
 } from 'lucide-react'
 import {
     ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid,
@@ -37,15 +38,21 @@ import {
     LD_INTAKE_FORMATS, LD_BUILDING_KB_COVERAGE, LD_VOLUME_SPLIT,
     type KPICardData,
 } from './shared/dashboardData'
+import {
+    SALES_ACTOR, SALES_KPI_SUMMARY, SALES_OPP_TREND_8WK, SALES_SLA_DISTRIBUTION,
+    SALES_AT_RISK, SALES_ENGAGEMENT_FEED, SALES_REPS, SALES_VOLUME_FACTS,
+} from './shared/manattSalesData'
 import { useOfficeworksVertical } from './shared/verticalSignal'
 
 export default function OfficeworksDashboardScene() {
     const { currentStep } = useDemo()
     const vertical = useOfficeworksVertical()
-    const flowId = (currentStep?.flowId ?? 'spec-check') as 'spec-check' | 'labor-delivery'
-    const isLD = flowId === 'labor-delivery'
+    const flowId = (currentStep?.flowId ?? 'spec-check') as 'spec-check' | 'labor-delivery' | 'sales'
 
-    if (isLD) {
+    if (flowId === 'sales') {
+        return <SalesDashboardContent />
+    }
+    if (flowId === 'labor-delivery') {
         return <LDDashboardContent vertical={vertical} />
     }
 
@@ -676,6 +683,232 @@ function KPICard({ icon: Icon, label, value, change, tone }: KPICardProps) {
             </div>
             <div className="text-2xl font-semibold text-foreground tabular-nums">{value}</div>
             <div className={`text-xs mt-1 ${changeClass}`}>{change}</div>
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SALES DASHBOARD · 4 KPI cards · trend chart · SLA distribution · at-risk + feed
+// Anchored on AS-IS Notion §11 (8842 opps / $2B) and painpoints S3/S9/S7/SC5.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function SalesDashboardContent() {
+    const kpi = SALES_KPI_SUMMARY
+    return (
+        <div className="space-y-4">
+            {/* ─── Header ─────────────────────────────────────────────────── */}
+            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-ai/10 flex items-center justify-center shrink-0">
+                        <LayoutDashboard className="h-5 w-5 text-ai" aria-hidden="true" />
+                    </div>
+                    <div>
+                        <h2 className="text-base font-semibold text-foreground">Sales · Pipeline Dashboard</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            {SALES_ACTOR.role} · {SALES_ACTOR.territoryLabel} · {SALES_ACTOR.personaSubLine}
+                        </p>
+                    </div>
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground italic">
+                    Source · Copper (read-only mock) + NetSuite catalog
+                </span>
+            </div>
+
+            {/* ─── 4 KPI cards ───────────────────────────────────────────── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <KPICard
+                    icon={Briefcase}
+                    label="Open opportunities"
+                    value={kpi.openOppsCount.toLocaleString()}
+                    change={`$${(kpi.pipelineValueUSD / 1_000_000_000).toFixed(1)}B pipeline`}
+                    tone="muted"
+                />
+                <KPICard
+                    icon={Target}
+                    label="Qualified (≥50%)"
+                    value={kpi.qualifiedCount.toLocaleString()}
+                    change={`${SALES_VOLUME_FACTS.pipelineConversionTo75Min}–${SALES_VOLUME_FACTS.pipelineConversionTo75Max}% to 75% (AS-IS)`}
+                    tone="warning"
+                />
+                <KPICard
+                    icon={Clock}
+                    label="Proposal SLA · 48h"
+                    value={`${kpi.proposalSLACompliancePct}%`}
+                    change="compliance rate (rolling 30d)"
+                    tone={kpi.proposalSLACompliancePct >= 80 ? 'success' : kpi.proposalSLACompliancePct >= 60 ? 'warning' : 'destructive'}
+                />
+                <KPICard
+                    icon={Award}
+                    label="Win rate · last 90d"
+                    value={`${kpi.winRate90dPct}%`}
+                    change={`${kpi.winRate90dDeltaPct > 0 ? '+' : ''}${kpi.winRate90dDeltaPct}% vs prior 90d`}
+                    tone={kpi.winRate90dDeltaPct >= 0 ? 'success' : 'destructive'}
+                />
+            </div>
+
+            {/* ─── SLA risk + at-risk + alerts (mirror Spec Check pattern) ─ */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-medium text-foreground">Proposal SLA risk</span>
+                    </div>
+                    <div className="text-3xl font-semibold text-foreground tabular-nums">{SALES_AT_RISK.filter(r => r.slaHoursLeft < 0).length}</div>
+                    <div className="text-xs text-destructive mt-1">overdue of {SALES_AT_RISK.length} at-risk · longest {Math.max(...SALES_AT_RISK.map(r => Math.abs(Math.min(0, r.slaHoursLeft))))}h overdue</div>
+                </div>
+                <div className="lg:col-span-2 bg-card border border-border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <AlertCircle className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-medium text-foreground">Top at-risk opportunities</span>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {SALES_AT_RISK.map(r => {
+                            const overdue = r.slaHoursLeft < 0
+                            return (
+                                <li key={r.id} className="py-2 flex items-center gap-3 text-[11px]">
+                                    <span className="text-foreground font-mono w-32 shrink-0">{r.projectCode}</span>
+                                    <span className="flex-1 text-muted-foreground truncate">{r.copperStage}</span>
+                                    <span className="tabular-nums text-foreground">${r.dollarValueK.toLocaleString()}K</span>
+                                    <span className={`text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${overdue ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
+                                        {overdue ? `${Math.abs(r.slaHoursLeft)}h overdue` : `${r.slaHoursLeft}h left`}
+                                    </span>
+                                </li>
+                            )
+                        })}
+                    </ul>
+                </div>
+            </div>
+
+            {/* ─── Trend + SLA distribution ──────────────────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <LineChartIcon className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-medium text-foreground">Pipeline · 8-week trend</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={[...SALES_OPP_TREND_8WK]} margin={{ top: 5, right: 12, left: -16, bottom: 0 }}>
+                            <CartesianGrid stroke="rgba(127,127,127,0.15)" strokeDasharray="3 3" />
+                            <XAxis dataKey="week" tick={{ fontSize: 10 }} stroke="currentColor" className="text-muted-foreground" />
+                            <YAxis tick={{ fontSize: 10 }} stroke="currentColor" className="text-muted-foreground" />
+                            <Tooltip
+                                contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 11 }}
+                            />
+                            <Line type="monotone" dataKey="open" stroke="hsl(var(--muted-foreground))" strokeWidth={1} dot={false} name="Open opps" />
+                            <Line type="monotone" dataKey="qualified" stroke="hsl(var(--info))" strokeWidth={2} dot={false} name="Qualified" />
+                            <Line type="monotone" dataKey="won" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 2 }} name="Won" />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <BarChart3 className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-medium text-foreground">Proposal SLA · response distribution</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={SALES_SLA_DISTRIBUTION} margin={{ top: 5, right: 12, left: -16, bottom: 0 }}>
+                            <CartesianGrid stroke="rgba(127,127,127,0.15)" strokeDasharray="3 3" />
+                            <XAxis dataKey="bucket" tick={{ fontSize: 10 }} stroke="currentColor" className="text-muted-foreground" />
+                            <YAxis tick={{ fontSize: 10 }} stroke="currentColor" className="text-muted-foreground" />
+                            <Tooltip contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 11 }} />
+                            <ReferenceLine x="48-72h" stroke="hsl(var(--warning))" strokeDasharray="2 2" />
+                            <Bar dataKey="count" fill="hsl(var(--ai))" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                    <div className="text-[10px] text-muted-foreground mt-2 italic">48h target line · today {kpi.proposalSLACompliancePct}% inside SLA</div>
+                </div>
+            </div>
+
+            {/* ─── Rep scorecard ─────────────────────────────────────────── */}
+            <div className="bg-card border border-border rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                    <Briefcase className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                    <span className="text-xs font-medium text-foreground">Rep scorecard · Mid-Atlantic</span>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-[11px]">
+                        <thead className="bg-muted/30">
+                            <tr className="text-left">
+                                <th className="px-3 py-2 font-semibold text-muted-foreground">Rep</th>
+                                <th className="px-3 py-2 font-semibold text-muted-foreground text-right">Open opps</th>
+                                <th className="px-3 py-2 font-semibold text-muted-foreground text-right">Qualified $</th>
+                                <th className="px-3 py-2 font-semibold text-muted-foreground text-right">Quota</th>
+                                <th className="px-3 py-2 font-semibold text-muted-foreground text-right">On-time</th>
+                                <th className="px-3 py-2 font-semibold text-muted-foreground">Flag</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {SALES_REPS.map(r => (
+                                <tr key={r.id} className="border-t border-border">
+                                    <td className="px-3 py-2 text-foreground">
+                                        <div className="font-medium">{r.label}</div>
+                                        <div className="text-[10px] text-muted-foreground">{r.territory}</div>
+                                    </td>
+                                    <td className="px-3 py-2 text-right tabular-nums text-foreground">{r.openOpps}</td>
+                                    <td className="px-3 py-2 text-right tabular-nums text-foreground">${(r.qualifiedPipelineValueUSD / 1_000_000).toFixed(1)}M</td>
+                                    <td className="px-3 py-2 text-right tabular-nums text-foreground">{r.quotaProgressPct}%</td>
+                                    <td className="px-3 py-2 text-right tabular-nums text-foreground">{r.onTimeResponseRatePct}%</td>
+                                    <td className="px-3 py-2">
+                                        <span className={`text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 ${
+                                            r.capacityFlag === 'overloaded' ? 'bg-destructive/10 text-destructive border border-destructive/20' :
+                                            r.capacityFlag === 'optimal'    ? 'bg-warning/10 text-warning border border-warning/20' :
+                                            'bg-success/10 text-success border border-success/20'
+                                        }`}>{r.capacityFlag}</span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* ─── Engagement feed + Painpoints addressed ────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <div className="lg:col-span-2 bg-card border border-border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Activity className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-medium text-foreground">Multi-channel engagement · today</span>
+                    </div>
+                    <ul className="space-y-2">
+                        {SALES_ENGAGEMENT_FEED.map(e => {
+                            const Icon = e.icon === 'mail' ? Mail
+                                       : e.icon === 'message' ? Inbox
+                                       : e.icon === 'upload' ? Send
+                                       : e.icon === 'flag' ? Clock
+                                       : e.icon === 'check' ? CheckCircle2
+                                       : e.icon === 'alert' ? AlertCircle
+                                       : e.icon === 'handoff' ? TrendingUp
+                                       : Activity
+                            return (
+                                <li key={e.id} className="flex items-start gap-2 text-[11px]">
+                                    <Icon className="h-3.5 w-3.5 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-foreground">{e.text}</div>
+                                        <div className="text-[10px] text-muted-foreground tabular-nums">{e.at} · {e.channel}</div>
+                                    </div>
+                                </li>
+                            )
+                        })}
+                    </ul>
+                </div>
+                <div className="bg-ai/5 border border-ai/30 rounded-xl p-4 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-ai" aria-hidden="true" />
+                        <span className="text-xs font-bold text-foreground">Sales painpoints addressed</span>
+                    </div>
+                    <ul className="text-[11px] text-foreground space-y-1.5">
+                        <li>· <strong>S3</strong> · email overload · triage + drafted replies</li>
+                        <li>· <strong>S9</strong> · multi-channel chaos · unified feed</li>
+                        <li>· <strong>S7</strong> · process not enforced · SLA gate + auto-handoff</li>
+                        <li>· <strong>SC5</strong> · capacity self-reported · live ledger</li>
+                        <li>· <strong>S2</strong> · Works form ~{SALES_VOLUME_FACTS.worksFormIncompletePctMin}-{SALES_VOLUME_FACTS.worksFormIncompletePctMax}% incomplete · pre-flight</li>
+                        <li>· <strong>S6</strong> · proposal ~6h assembly · review pass</li>
+                    </ul>
+                    <div className="text-[10px] text-muted-foreground italic pt-2 border-t border-ai/20">
+                        Strata never auto-sends · never replaces Copper/NetSuite · only enriches and orchestrates.
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }

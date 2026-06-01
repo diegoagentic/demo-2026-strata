@@ -18,7 +18,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send, Calendar, Layers, Pencil, Inbox, Building2, Truck, ChevronDown, ChevronRight as ChevronRightIcon, Save, Edit3, Target, TrendingUp } from 'lucide-react'
+import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send, Calendar, Layers, Pencil, Inbox, Building2, Truck, ChevronDown, ChevronRight as ChevronRightIcon, Save, Edit3, Target, TrendingUp, MessageSquare, Smartphone, ExternalLink, Activity, Clock, Briefcase, Award } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import {
@@ -31,6 +31,15 @@ import {
     NOTIFICATION_DRAFTS, PORTAL_STATUS,
     getActiveVerticalData,
 } from './shared/manattLaborData'
+import {
+    SALES_ACTOR, SALES_VOLUME_FACTS,
+    SALES_INBOX_THREADS, SALES_OPPORTUNITIES, SALES_REPS,
+    SALES_DISCOVERY_TEMPLATE, SALES_OUTREACH_DRAFTS,
+    SALES_PROPOSAL_LINE_ITEMS, SALES_PROPOSAL_META,
+    SALES_HANDOFF_PACKET, SALES_HANDOFF_ROUTES,
+    SALES_STAGE_AI_BANNER, SALES_STAGE_PAINPOINT_CHIPS,
+    type SalesInboxThread, type SalesRep,
+} from './shared/manattSalesData'
 import { useOfficeworksVertical } from './shared/verticalSignal'
 import { OFFICEWORKS_FUNNEL } from './shared/funnelStages'
 import CapacityHeatmap from './shared/CapacityHeatmap'
@@ -40,7 +49,7 @@ import { findDesigner, regionLabel, computeCapacity } from './shared/designerPro
 import RequestInfoDialog from '../shared/RequestInfoDialog'
 import SelfAuditScene from './SelfAuditScene'
 
-// 16 stages matching demo steps (intake split into intake/intake-complete)
+// Stages matching demo steps (intake split into intake/intake-complete)
 export type OfficeworksReviewStage =
     | 'intake' | 'intake-complete'
     | 'design' | 'bom-gen' | 'validation' | 'field-verify'
@@ -49,6 +58,9 @@ export type OfficeworksReviewStage =
     // ─── L&D flow · 8 stages (sc-LD.0 to sc-LD.7) ─────────────────────────
     | 'ld-rfp-intake' | 'ld-takeoff' | 'ld-conditions' | 'ld-vendor-pool'
     | 'ld-bid-send' | 'ld-bid-compare' | 'ld-winner-select' | 'ld-final-upload'
+    // ─── Sales flow · 8 stages (sc-S.0 to sc-S.7) ────────────────────────
+    | 'sales-inbox' | 'sales-intake' | 'sales-capacity' | 'sales-assign'
+    | 'sales-discovery' | 'sales-outreach' | 'sales-proposal' | 'sales-handoff'
 
 // Stage → funnel column index (5 cols: intake / design / spec-check / submission / ack)
 const STAGE_TO_COL: Record<OfficeworksReviewStage, number> = {
@@ -65,11 +77,22 @@ const STAGE_TO_COL: Record<OfficeworksReviewStage, number> = {
     'ld-vendor-pool': 2, 'ld-bid-send': 2,
     'ld-bid-compare': 3, 'ld-winner-select': 3,
     'ld-final-upload': 4,
+    // Sales flow · 5-column rhythm (triage → assign → discover → propose → close)
+    'sales-inbox': 0, 'sales-intake': 0,
+    'sales-capacity': 1, 'sales-assign': 1,
+    'sales-discovery': 2, 'sales-outreach': 2,
+    'sales-proposal': 3,
+    'sales-handoff': 4,
 }
 
 const LD_STAGES: ReadonlySet<OfficeworksReviewStage> = new Set([
     'ld-rfp-intake', 'ld-takeoff', 'ld-conditions', 'ld-vendor-pool',
     'ld-bid-send', 'ld-bid-compare', 'ld-winner-select', 'ld-final-upload',
+])
+
+const SALES_STAGES: ReadonlySet<OfficeworksReviewStage> = new Set([
+    'sales-inbox', 'sales-intake', 'sales-capacity', 'sales-assign',
+    'sales-discovery', 'sales-outreach', 'sales-proposal', 'sales-handoff',
 ])
 
 // L&D-flow funnel (5 cols mirroring the design funnel but L&D-themed).
@@ -79,6 +102,15 @@ const LD_FUNNEL = [
     { id: 'ld-bid', label: 'Vendor Bid' },
     { id: 'ld-eval', label: 'Bid Eval' },
     { id: 'ld-quote', label: 'Final Quote' },
+] as const
+
+// Sales-flow funnel (5 cols mirroring the rhythm: triage → assign → discover → propose → close).
+const SALES_FUNNEL = [
+    { id: 's-triage', label: 'Triage' },
+    { id: 's-assign', label: 'Assign' },
+    { id: 's-discover', label: 'Discover' },
+    { id: 's-propose', label: 'Propose' },
+    { id: 's-close', label: 'Close' },
 ] as const
 
 const STAGE_AI_BANNER: Record<OfficeworksReviewStage, string> = {
@@ -106,12 +138,23 @@ const STAGE_AI_BANNER: Record<OfficeworksReviewStage, string> = {
     'ld-bid-compare':   'Strata computes the internal benchmark · 320h × $60/hr + 2 stops × $1,350 = $21,900 · flags variance ≥15%. All 3 bids land within tolerance · TriState wins on price + headroom.',
     'ld-winner-select': 'TriState selected · Strata drafts 3 emails (winner notify + 2 loser notifies). Alan reviews and sends · winner + loser comms tracked.',
     'ld-final-upload':  '3 sub-steps: apply OW margin → preview Excel cells → upload to Building Connected portal. Today manual copy/validate/re-enter with formula errors found in both files.',
+    // Sales flow banners
+    'sales-inbox':      'Strata classified 12 inbound threads in 1.8s · dedup, intent and urgency scored across email + Teams + portal · today reps work 3 inboxes in parallel under 150-200 emails/day.',
+    'sales-intake':     'Strata extracts company · size · budget hint from the thread and pre-flights the Works form · catches the 75-80% incomplete cycle BEFORE submit, not after.',
+    'sales-capacity':   'Live capacity ledger pulled from Copper events (read-only mock) · revisions and rework included · the Thursday spreadsheet captures intent, this captures reality.',
+    'sales-assign':     'Strata suggests a rep on territory + prior wins + load · 24h qualify / 48h proposal SLA timer auto-starts · auto-escalates to Sales Manager if breached.',
+    'sales-discovery':  'Strata auto-summarized the 7-message thread into BANT + MEDDIC · 2 missing fields flagged before the rep talks to the client · stops the salesperson-guessing root cause of revisions.',
+    'sales-outreach':   'Strata drafted across email + Teams + SMS in one composer · channel-of-record suggestion · drafts only, never auto-sends · rep reviews and confirms each one.',
+    'sales-proposal':   'Strata pulled the Spec Check BOM + L&D labor quote + NetSuite catalog (read-only) into one proposal · the 6h stops-and-starts assembly collapses to a review pass.',
+    'sales-handoff':    'Strata builds the post-award handoff packet · Works post-award form + NetSuite SO bridge + downstream flow triggers · no missed coordinator step.',
 }
 
 // ─── Sub-component: Stage progress stepper (5 stages) ──────────────────────────
 
 function StageProgress({ activeCol, stage }: { activeCol: number; stage: OfficeworksReviewStage }) {
-    const funnel = LD_STAGES.has(stage) ? LD_FUNNEL : OFFICEWORKS_FUNNEL
+    const funnel = LD_STAGES.has(stage) ? LD_FUNNEL
+                 : SALES_STAGES.has(stage) ? SALES_FUNNEL
+                 : OFFICEWORKS_FUNNEL
     return (
         <div className="flex items-center gap-1">
             {funnel.map((s, i) => {
@@ -159,6 +202,18 @@ const DOC_TABS = [
     { id: 'ld-notifications' as const,       icon: Mail,           label: 'Notifications' },
     { id: 'ld-excel-quote' as const,         icon: FileText,       label: 'Excel Quote' },
     { id: 'ld-portal-status' as const,       icon: CheckCircle2,   label: 'Portal Status' },
+    // ─── Sales flow tabs ────────────────────────────────────────────────────
+    { id: 'sales-inbox-feed' as const,        icon: Inbox,          label: 'Inbox Feed' },
+    { id: 'sales-thread-detail' as const,     icon: Mail,           label: 'Thread Detail' },
+    { id: 'sales-opp-record' as const,        icon: FileText,       label: 'Opp Record' },
+    { id: 'sales-capacity-ledger' as const,   icon: Users,          label: 'Capacity Ledger' },
+    { id: 'sales-assignment' as const,        icon: UserCheck,      label: 'Assignment' },
+    { id: 'sales-discovery-notes' as const,   icon: ClipboardCheck, label: 'Discovery Notes' },
+    { id: 'sales-outreach-draft' as const,    icon: Send,           label: 'Outreach Draft' },
+    { id: 'sales-proposal-pdf' as const,      icon: FileText,       label: 'Proposal PDF' },
+    { id: 'sales-quote-detail' as const,      icon: DollarSign,     label: 'Quote Detail' },
+    { id: 'sales-win-loss' as const,          icon: Target,         label: 'Win / Loss' },
+    { id: 'sales-handoff-packet' as const,    icon: TrendingUp,     label: 'Handoff Packet' },
 ] as const
 
 type DocTab = typeof DOC_TABS[number]['id']
@@ -182,6 +237,15 @@ const STAGE_TABS: Partial<Record<OfficeworksReviewStage, DocTab[]>> = {
     'ld-bid-compare':    ['ld-internal-benchmark', 'ld-bids-received'],
     'ld-winner-select':  ['ld-scorecard', 'ld-notifications'],
     'ld-final-upload':   ['ld-excel-quote', 'ld-portal-status'],
+    // ─── Sales flow tabs per stage ──────────────────────────────────────────
+    'sales-inbox':       ['sales-inbox-feed', 'sales-thread-detail'],
+    'sales-intake':      ['sales-opp-record', 'sales-thread-detail'],
+    'sales-capacity':    ['sales-capacity-ledger', 'sales-opp-record'],
+    'sales-assign':      ['sales-assignment', 'sales-capacity-ledger'],
+    'sales-discovery':   ['sales-discovery-notes', 'sales-opp-record'],
+    'sales-outreach':    ['sales-outreach-draft', 'sales-thread-detail'],
+    'sales-proposal':    ['sales-proposal-pdf', 'sales-quote-detail', 'sales-outreach-draft'],
+    'sales-handoff':     ['sales-handoff-packet', 'sales-win-loss'],
 }
 const DEFAULT_TAB_SET: DocTab[] = ['works-form', 'bom', 'validation', 'floor-plan', 'ack']
 
@@ -215,6 +279,15 @@ const DEFAULT_DOC: Record<OfficeworksReviewStage, DocTab> = {
     'ld-bid-compare':    'ld-internal-benchmark',
     'ld-winner-select':  'ld-scorecard',
     'ld-final-upload':   'ld-excel-quote',
+    // Sales stages · each opens at its primary document tab.
+    'sales-inbox':       'sales-inbox-feed',
+    'sales-intake':      'sales-opp-record',
+    'sales-capacity':    'sales-capacity-ledger',
+    'sales-assign':      'sales-assignment',
+    'sales-discovery':   'sales-discovery-notes',
+    'sales-outreach':    'sales-outreach-draft',
+    'sales-proposal':    'sales-proposal-pdf',
+    'sales-handoff':     'sales-handoff-packet',
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -398,6 +471,15 @@ export default function OfficeworksDocumentReviewModal({
                                                 if (stage === 'ld-bid-compare')   return <BidComparisonPanel onValidate={onValidate} />
                                                 if (stage === 'ld-winner-select') return <WinnerSelectPanel onValidate={onValidate} winnerVendorId={winnerVendorId ?? null} onSelectWinner={onSelectWinner ?? (() => {})} />
                                                 if (stage === 'ld-final-upload')  return <FinalQuotePanel onValidate={onValidate} />
+                                                // ─── Sales Flow (sc-S.0–sc-S.7) ──────────────────────
+                                                if (stage === 'sales-inbox')     return <SalesInboxTriagePanel onValidate={onValidate} />
+                                                if (stage === 'sales-intake')    return <SalesOppIntakePanel onValidate={onValidate} />
+                                                if (stage === 'sales-capacity')  return <SalesCapacityPanel onValidate={onValidate} />
+                                                if (stage === 'sales-assign')    return <SalesAssignmentPanel onValidate={onValidate} />
+                                                if (stage === 'sales-discovery') return <SalesDiscoveryPanel onValidate={onValidate} />
+                                                if (stage === 'sales-outreach')  return <SalesOutreachPanel onValidate={onValidate} />
+                                                if (stage === 'sales-proposal')  return <SalesProposalPanel onValidate={onValidate} />
+                                                if (stage === 'sales-handoff')   return <SalesHandoffPanel onValidate={onValidate} />
                                                 // Default · static description + Approve & Continue
                                                 return (
                                                     <>
@@ -523,6 +605,18 @@ function DocTabContent({ tab, stage, flowProgress }: { tab: DocTab; stage: Offic
     if (tab === 'ld-notifications')      return <LDNotificationsPreview />
     if (tab === 'ld-excel-quote')        return <LDExcelQuotePreview />
     if (tab === 'ld-portal-status')      return <LDPortalStatusPreview />
+    // ─── Sales doc previews ────────────────────────────────────────────────
+    if (tab === 'sales-inbox-feed')       return <SalesInboxFeedPreview />
+    if (tab === 'sales-thread-detail')    return <SalesThreadDetailPreview />
+    if (tab === 'sales-opp-record')       return <SalesOppRecordPreview />
+    if (tab === 'sales-capacity-ledger')  return <SalesCapacityLedgerPreview />
+    if (tab === 'sales-assignment')       return <SalesAssignmentPreview />
+    if (tab === 'sales-discovery-notes')  return <SalesDiscoveryNotesPreview />
+    if (tab === 'sales-outreach-draft')   return <SalesOutreachDraftPreview />
+    if (tab === 'sales-proposal-pdf')     return <SalesProposalPDFPreview />
+    if (tab === 'sales-quote-detail')     return <SalesQuoteDetailPreview />
+    if (tab === 'sales-win-loss')         return <SalesWinLossPreview />
+    if (tab === 'sales-handoff-packet')   return <SalesHandoffPacketPreview />
     return null
 }
 
@@ -1078,6 +1172,15 @@ function DefaultStagePanel({ stage }: PanelProps) {
         'ld-bid-compare':  { headline: 'Bid evaluation · variance check', body: <p>Dispatched · see right panel.</p> },
         'ld-winner-select':{ headline: 'Select winning installer', body: <p>Dispatched · see right panel.</p> },
         'ld-final-upload': { headline: 'Final quote · upload to portal', body: <p>Dispatched · see right panel.</p> },
+        // Sales stages (right panel handled by Sales*Panel components)
+        'sales-inbox':     { headline: 'Unified inbox triage', body: <p>Dispatched · see right panel.</p> },
+        'sales-intake':    { headline: 'Opportunity intake · pre-flight', body: <p>Dispatched · see right panel.</p> },
+        'sales-capacity':  { headline: 'Rep capacity ledger', body: <p>Dispatched · see right panel.</p> },
+        'sales-assign':    { headline: 'Rep assignment · SLA gate', body: <p>Dispatched · see right panel.</p> },
+        'sales-discovery': { headline: 'Discovery & qualification', body: <p>Dispatched · see right panel.</p> },
+        'sales-outreach':  { headline: 'Multi-channel outreach', body: <p>Dispatched · see right panel.</p> },
+        'sales-proposal':  { headline: 'Proposal assembly', body: <p>Dispatched · see right panel.</p> },
+        'sales-handoff':   { headline: 'Close & handoff to Ops', body: <p>Dispatched · see right panel.</p> },
     }
 
     const data = intro[stage]
@@ -5654,6 +5757,1076 @@ function LDPortalStatusPreview() {
                 </ul>
             </div>
         </LDPreviewShell>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SALES FLOW · helpers + 8 panels + 11 doc previews
+// All Sales-specific UI for sc-S.0 → sc-S.7. Same in-file pattern as L&D.
+// Source: manattSalesData.ts · all grounded in AS-IS Notion v6 + BPMN.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Helper · PainpointChip (consistent banner for all 8 panels) ─────────────
+function SalesPainpointChip({ stage }: { stage: OfficeworksReviewStage }) {
+    const chip = SALES_STAGE_PAINPOINT_CHIPS[stage]
+    if (!chip) return null
+    return (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 text-warning border border-warning/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+            <AlertCircle className="h-3 w-3" aria-hidden="true" />
+            <span>{chip.id} · {chip.label}</span>
+        </div>
+    )
+}
+
+// ─── Helper · AI banner (consistent across panels) ───────────────────────────
+function SalesAIBanner({ stage }: { stage: OfficeworksReviewStage }) {
+    const text = SALES_STAGE_AI_BANNER[stage]
+    if (!text) return null
+    return (
+        <div className="rounded-lg border border-ai/30 bg-ai/5 px-3 py-2.5 flex items-start gap-2">
+            <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="text-[12px] text-foreground leading-relaxed">
+                <span className="font-bold text-ai">Strata AI · </span>{text}
+            </div>
+        </div>
+    )
+}
+
+// ─── Helper · SLATimerChip · static deadline with semantic tone ──────────────
+function SLATimerChip({ hoursLeft, label }: { hoursLeft: number; label?: string }) {
+    const tone = hoursLeft < 0 ? 'destructive'
+               : hoursLeft < 12 ? 'warning'
+               : 'success'
+    const toneClass = tone === 'destructive' ? 'bg-destructive/10 text-destructive border-destructive/30'
+                    : tone === 'warning'     ? 'bg-warning/10 text-warning border-warning/30'
+                    : 'bg-success/10 text-success border-success/30'
+    const display = hoursLeft < 0 ? `${Math.abs(hoursLeft)}h overdue` : `${hoursLeft}h left`
+    return (
+        <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider rounded-full border px-2 py-0.5 ${toneClass}`}>
+            <Clock className="h-3 w-3" aria-hidden="true" />
+            {label ? `${label} · ${display}` : display}
+        </span>
+    )
+}
+
+// ─── Helper · Channel icon ───────────────────────────────────────────────────
+function ChannelIcon({ channel, className }: { channel: string; className?: string }) {
+    const cls = className ?? 'h-3.5 w-3.5'
+    if (channel === 'email')  return <Mail className={`${cls} text-info`} aria-hidden="true" />
+    if (channel === 'teams')  return <MessageSquare className={`${cls} text-ai`} aria-hidden="true" />
+    if (channel === 'portal') return <ExternalLink className={`${cls} text-foreground`} aria-hidden="true" />
+    if (channel === 'sms')    return <Smartphone className={`${cls} text-warning`} aria-hidden="true" />
+    return <Activity className={`${cls} text-muted-foreground`} aria-hidden="true" />
+}
+
+// ─── Helper · Source cite footer ─────────────────────────────────────────────
+function SalesSourceCite({ source }: { source: string }) {
+    return (
+        <div className="text-[10px] text-muted-foreground italic px-1 flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+            Source: {source}
+        </div>
+    )
+}
+
+// ─── Helper · Reusable preview shell (mirror of LDPreviewShell) ──────────────
+function SalesPreviewShell({ icon: Icon, filename, size, statusBadge, children }: {
+    icon: React.ComponentType<{ className?: string }>
+    filename: string
+    size?: string
+    statusBadge?: { label: string; tone: 'success' | 'warning' | 'neutral' | 'info' | 'danger' }
+    children: React.ReactNode
+}) {
+    const toneClass = statusBadge?.tone === 'success' ? 'bg-success/10 text-success border border-success/20'
+                    : statusBadge?.tone === 'warning' ? 'bg-warning/10 text-warning border border-warning/20'
+                    : statusBadge?.tone === 'info'    ? 'bg-info/10 text-info border border-info/20'
+                    : statusBadge?.tone === 'danger'  ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                    : 'bg-muted text-muted-foreground border border-border'
+    return (
+        <div className="h-full flex flex-col bg-muted/20">
+            <div className="px-4 py-2.5 border-b border-border bg-muted/40 flex items-center gap-2 shrink-0">
+                <Icon className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                <div className="text-[11px] font-bold uppercase tracking-wide text-foreground">{filename}</div>
+                {size && <span className="text-[10px] text-muted-foreground">· {size}</span>}
+                {statusBadge && (
+                    <span className={`ml-auto inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 ${toneClass}`}>
+                        {statusBadge.label}
+                    </span>
+                )}
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+                {children}
+            </div>
+        </div>
+    )
+}
+
+// ─── Helper · Panel hero header (consistent across panels) ───────────────────
+function SalesPanelHero({ stage, title, subtitle, kpiRow }: {
+    stage: OfficeworksReviewStage
+    title: string
+    subtitle: string
+    kpiRow?: React.ReactNode
+}) {
+    return (
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-lg bg-ai/10 flex items-center justify-center shrink-0">
+                    <Sparkles className="h-4 w-4 text-ai" aria-hidden="true" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-foreground">{title}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</div>
+                </div>
+            </div>
+            <SalesPainpointChip stage={stage} />
+            <SalesAIBanner stage={stage} />
+            {kpiRow}
+        </div>
+    )
+}
+
+// ─── Sticky CTA footer reused across panels ──────────────────────────────────
+function SalesStickyCTA({ label, onClick, disabled, secondaryNote }: {
+    label: string; onClick: () => void; disabled?: boolean; secondaryNote?: string
+}) {
+    return (
+        <div className="border-t border-border px-5 py-3 bg-card shrink-0 space-y-1.5">
+            {secondaryNote && (
+                <div className="text-[10px] text-muted-foreground italic px-1">{secondaryNote}</div>
+            )}
+            <button
+                type="button"
+                onClick={onClick}
+                disabled={disabled}
+                className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+            >
+                {label}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SALES PANELS · 8 right-panel components
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── sc-S.0 · Unified Inbox Triage ──────────────────────────────────────────
+function SalesInboxTriagePanel({ onValidate }: LDPanelProps) {
+    const [filter, setFilter] = useState<'all' | 'urgent' | 'action' | 'fyi'>('all')
+    const counts = useMemo(() => {
+        const c = { all: SALES_INBOX_THREADS.length, urgent: 0, action: 0, fyi: 0 }
+        for (const t of SALES_INBOX_THREADS) {
+            if (t.intent === 'urgent') c.urgent++
+            else if (t.intent === 'action') c.action++
+            else if (t.intent === 'fyi') c.fyi++
+        }
+        return c
+    }, [])
+    const filtered = useMemo(() =>
+        filter === 'all' ? SALES_INBOX_THREADS : SALES_INBOX_THREADS.filter(t => t.intent === filter),
+    [filter])
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-inbox"
+                    title="Unified inbox triage · multi-channel feed"
+                    subtitle={`${SALES_VOLUME_FACTS.inboundEmailsPerDayPerRep} emails/day per rep · cross-channel today is 3 inboxes in parallel`}
+                />
+
+                <div className="flex items-center gap-1 p-0.5 rounded-md bg-muted/30 text-[11px]">
+                    {([
+                        { id: 'all'    as const, label: 'All',     n: counts.all },
+                        { id: 'urgent' as const, label: 'Urgent',  n: counts.urgent },
+                        { id: 'action' as const, label: 'Action',  n: counts.action },
+                        { id: 'fyi'    as const, label: 'FYI',     n: counts.fyi },
+                    ]).map(f => (
+                        <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => setFilter(f.id)}
+                            className={`flex-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                                filter === f.id
+                                    ? 'bg-card text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {f.label} <span className="tabular-nums opacity-70">{f.n}</span>
+                        </button>
+                    ))}
+                </div>
+
+                <UnifiedInboxFeed threads={filtered} />
+
+                <SalesSourceCite source="Notion AS-IS §8 · 150–200 emails/day · S9 multi-channel ~52:00 (Karen)" />
+            </div>
+            <SalesStickyCTA
+                label="Triage complete · proceed to intake"
+                onClick={onValidate}
+                secondaryNote="Strata classified · deduped · scored. Sales Lead resolves the queue · no auto-action."
+            />
+        </>
+    )
+}
+
+// ─── New component · UnifiedInboxFeed ───────────────────────────────────────
+function UnifiedInboxFeed({ threads }: { threads: SalesInboxThread[] }) {
+    const dedupeGroups = useMemo(() => {
+        const seen = new Map<string, number>()
+        threads.forEach(t => {
+            if (!t.dedupGroupId) return
+            seen.set(t.dedupGroupId, (seen.get(t.dedupGroupId) ?? 0) + 1)
+        })
+        return seen
+    }, [threads])
+
+    return (
+        <div className="space-y-2">
+            {threads.map(t => {
+                const dupCount = t.dedupGroupId ? dedupeGroups.get(t.dedupGroupId) ?? 1 : 1
+                const isDup = dupCount > 1
+                return (
+                    <div key={t.id} className="rounded-lg border border-border bg-card overflow-hidden hover:border-foreground/20 transition-colors">
+                        <div className="px-3 py-2 flex items-center gap-2">
+                            <ChannelIcon channel={t.channel} />
+                            <span className="text-[11px] font-bold text-foreground truncate flex-1 min-w-0">{t.from}</span>
+                            {isDup && (
+                                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-ai/10 text-ai border border-ai/20">
+                                    Dedup · {dupCount} channels
+                                </span>
+                            )}
+                            {t.intent === 'urgent' && (
+                                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-destructive/10 text-destructive border border-destructive/20">
+                                    Urgent
+                                </span>
+                            )}
+                            {t.intent === 'action' && (
+                                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-warning/10 text-warning border border-warning/20">
+                                    Action
+                                </span>
+                            )}
+                            {t.intent === 'fyi' && (
+                                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-muted text-muted-foreground border border-border">
+                                    FYI
+                                </span>
+                            )}
+                        </div>
+                        <div className="px-3 pb-2 space-y-1">
+                            <div className="text-[12px] font-medium text-foreground truncate">{t.subject}</div>
+                            <div className="text-[11px] text-muted-foreground line-clamp-2">{t.snippet}</div>
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground tabular-nums">
+                                <span>{t.receivedAt}</span>
+                                {typeof t.hoursSinceLastTouch === 'number' && t.hoursSinceLastTouch > 12 && (
+                                    <span className="text-destructive font-bold">· {t.hoursSinceLastTouch}h since last touch</span>
+                                )}
+                                <span className="ml-auto">Strata intent score · {t.intentScore}</span>
+                            </div>
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+// ─── sc-S.1 · Opportunity Intake ────────────────────────────────────────────
+function SalesOppIntakePanel({ onValidate }: LDPanelProps) {
+    const opp = SALES_OPPORTUNITIES[0] // MANATT-4F
+    const missing = useMemo(() => {
+        const fields: { label: string; status: 'missing' | 'present'; value?: string }[] = [
+            { label: 'CAD file',            status: opp.specAttached ? 'present' : 'missing' },
+            { label: 'SQ number',           status: 'missing' },
+            { label: 'Scope detail',        status: 'missing' },
+            { label: 'Timeline / move-in',  status: 'present', value: '2026-08-30' },
+            { label: 'Company',             status: 'present', value: opp.company },
+            { label: 'Est value range',     status: 'present', value: `$${(opp.estValueUSD / 1000).toFixed(0)}k` },
+            { label: 'Vertical',            status: 'present', value: opp.vertical },
+            { label: 'Market',              status: 'present', value: opp.market },
+            { label: 'Account type',        status: 'present', value: opp.accountType },
+        ]
+        return fields
+    }, [opp])
+    const missingCount = missing.filter(m => m.status === 'missing').length
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-intake"
+                    title="Opportunity intake · pre-flight Works form"
+                    subtitle={`${opp.company} · ${opp.projectCode} · $${(opp.estValueUSD / 1000).toFixed(0)}k est · ${opp.vertical}`}
+                />
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <ClipboardCheck className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Pre-flight check · 9 Works form fields</span>
+                        <span className={`ml-auto text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${
+                            missingCount === 0 ? 'bg-success/10 text-success border border-success/20' :
+                            'bg-warning/10 text-warning border border-warning/20'
+                        }`}>
+                            {missingCount === 0 ? 'Complete' : `${missingCount} missing`}
+                        </span>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {missing.map(f => (
+                            <li key={f.label} className="px-4 py-2 flex items-center gap-3 text-[11px]">
+                                <span className="text-muted-foreground w-32 shrink-0">{f.label}</span>
+                                {f.status === 'present' ? (
+                                    <span className="text-foreground flex-1">{f.value ?? '—'}</span>
+                                ) : (
+                                    <span className="flex-1 inline-flex items-center gap-1 text-warning">
+                                        <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                                        <em className="italic">missing · clarify before submit</em>
+                                    </span>
+                                )}
+                                {f.status === 'present' ? (
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" aria-hidden="true" />
+                                ) : (
+                                    <AlertCircle className="h-3.5 w-3.5 text-warning shrink-0" aria-hidden="true" />
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                <SalesSourceCite source={`Felicia Miano-Poles · Spec Check 30-Apr · ~${SALES_VOLUME_FACTS.worksFormIncompletePctMin}-${SALES_VOLUME_FACTS.worksFormIncompletePctMax}% of Works forms arrive incomplete`} />
+            </div>
+            <SalesStickyCTA
+                label={missingCount > 0 ? 'Save opp record · request missing fields' : 'Save opp record · proceed'}
+                onClick={onValidate}
+                secondaryNote="Strata never auto-submits Works form · the rep clarifies and submits."
+            />
+        </>
+    )
+}
+
+// ─── sc-S.2 · Rep Capacity Ledger ───────────────────────────────────────────
+function SalesCapacityPanel({ onValidate }: LDPanelProps) {
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-capacity"
+                    title="Rep capacity ledger · live load view"
+                    subtitle={`${SALES_REPS.length} reps · Mid-Atlantic · pulled from Copper events (read-only mock)`}
+                />
+
+                <RepCapacityLedger reps={SALES_REPS} />
+
+                <SalesSourceCite source="PP SC5 (BPMN) · capacity self-reported Thursdays · rework not captured · this view includes both" />
+            </div>
+            <SalesStickyCTA
+                label="Capacity reviewed · proceed to assignment"
+                onClick={onValidate}
+            />
+        </>
+    )
+}
+
+// ─── New component · RepCapacityLedger ──────────────────────────────────────
+function RepCapacityLedger({ reps }: { reps: readonly SalesRep[] }) {
+    return (
+        <div className="space-y-2">
+            {reps.map(r => {
+                const tone = r.capacityFlag === 'overloaded' ? 'destructive'
+                           : r.capacityFlag === 'optimal'    ? 'warning'
+                           : 'success'
+                const toneClass = tone === 'destructive' ? 'bg-destructive/10 text-destructive border-destructive/20'
+                                : tone === 'warning'     ? 'bg-warning/10 text-warning border-warning/20'
+                                : 'bg-success/10 text-success border-success/20'
+                return (
+                    <div key={r.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                        <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                            <Briefcase className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                            <span className="text-xs font-bold text-foreground truncate flex-1">{r.label}</span>
+                            <span className={`inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 border ${toneClass}`}>
+                                {r.capacityFlag}
+                            </span>
+                        </div>
+                        <div className="px-4 py-2 text-[11px] text-muted-foreground">{r.territory}</div>
+                        <div className="px-4 py-2 grid grid-cols-3 gap-2 text-[11px] border-t border-border">
+                            <div><span className="text-muted-foreground">Open opps</span><div className="text-foreground font-bold tabular-nums">{r.openOpps}</div></div>
+                            <div><span className="text-muted-foreground">Qualified $</span><div className="text-foreground font-bold tabular-nums">${(r.qualifiedPipelineValueUSD / 1_000_000).toFixed(1)}M</div></div>
+                            <div><span className="text-muted-foreground">Quota</span><div className="text-foreground font-bold tabular-nums">{r.quotaProgressPct}%</div></div>
+                        </div>
+                        <div className="px-4 py-2 grid grid-cols-2 gap-2 text-[11px] border-t border-border">
+                            <div><span className="text-muted-foreground">On-time response</span><div className="text-foreground tabular-nums">{r.onTimeResponseRatePct}%</div></div>
+                            <div>
+                                <span className="text-muted-foreground">Prior wins</span>
+                                <div className="text-foreground tabular-nums">
+                                    {Object.keys(r.priorWinsWithAccount).length === 0
+                                        ? '—'
+                                        : Object.entries(r.priorWinsWithAccount).map(([k, v]) => `${k}:${v}`).join(' · ')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+// ─── sc-S.3 · Rep Assignment + SLA Gate ─────────────────────────────────────
+function SalesAssignmentPanel({ onValidate }: LDPanelProps) {
+    const [selected, setSelected] = useState<string>('rep-a')
+    const recommended = 'rep-a'
+    const selectedRep = SALES_REPS.find(r => r.id === selected)
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-assign"
+                    title="Assign rep · SLA gate starts"
+                    subtitle="MANATT-4F · Strata recommends Rep A (DC + NoVA · 2 prior MANATT wins · 78% quota)"
+                    kpiRow={
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <SLATimerChip hoursLeft={24} label="Qualify SLA" />
+                            <SLATimerChip hoursLeft={48} label="Proposal SLA" />
+                        </div>
+                    }
+                />
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <UserCheck className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Choose rep · suggested first</span>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {SALES_REPS.map(r => {
+                            const isSel = selected === r.id
+                            const isRec = recommended === r.id
+                            return (
+                                <li key={r.id}>
+                                    <label className={`px-4 py-2.5 flex items-start gap-3 cursor-pointer transition-colors ${isSel ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
+                                        <input
+                                            type="radio"
+                                            name="rep"
+                                            checked={isSel}
+                                            onChange={() => setSelected(r.id)}
+                                            className="mt-1"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[12px] font-bold text-foreground truncate">{r.label}</span>
+                                                {isRec && (
+                                                    <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-ai/10 text-ai border border-ai/20">
+                                                        Strata recommends
+                                                    </span>
+                                                )}
+                                                <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 ${
+                                                    r.capacityFlag === 'overloaded' ? 'bg-destructive/10 text-destructive border border-destructive/20' :
+                                                    r.capacityFlag === 'optimal'    ? 'bg-warning/10 text-warning border border-warning/20' :
+                                                    'bg-success/10 text-success border border-success/20'
+                                                }`}>
+                                                    {r.capacityFlag}
+                                                </span>
+                                            </div>
+                                            <div className="text-[10px] text-muted-foreground mt-0.5">{r.territory} · {r.openOpps} opps · {r.quotaProgressPct}% quota · on-time {r.onTimeResponseRatePct}%</div>
+                                        </div>
+                                    </label>
+                                </li>
+                            )
+                        })}
+                    </ul>
+                </div>
+
+                {selectedRep && (
+                    <div className="rounded-lg border border-info/30 bg-info/5 px-3 py-2 text-[11px] text-foreground flex items-start gap-2">
+                        <ShieldCheck className="h-3.5 w-3.5 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                        <div>
+                            <strong>{selectedRep.label}</strong> will own this opp. SLA timer starts on confirm · 24h qualify · 48h proposal. Auto-escalates to Sales Manager if breached.
+                        </div>
+                    </div>
+                )}
+
+                <SalesSourceCite source="PP S7 (BPMN) · process exists but is not enforced · 11-page workflow doc · 'You can have this amazing process, but if no one's following it…' (Karen ~end of session)" />
+            </div>
+            <SalesStickyCTA
+                label="Confirm assignment · start SLA timer"
+                onClick={onValidate}
+                secondaryNote="Strata never auto-assigns · the Sales Lead picks · Strata only suggests."
+            />
+        </>
+    )
+}
+
+// ─── sc-S.4 · Discovery & Qualification ─────────────────────────────────────
+function SalesDiscoveryPanel({ onValidate }: LDPanelProps) {
+    const bant = SALES_DISCOVERY_TEMPLATE.filter(f => f.framework === 'BANT')
+    const meddic = SALES_DISCOVERY_TEMPLATE.filter(f => f.framework === 'MEDDIC')
+    const missing = SALES_DISCOVERY_TEMPLATE.filter(f => !f.value)
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-discovery"
+                    title="Discovery & qualification checklist"
+                    subtitle="Strata auto-summarized the 7-message thread into BANT + MEDDIC · 2 fields missing"
+                />
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <ClipboardCheck className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">BANT · qualification</span>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {bant.map(f => (
+                            <DiscoveryRow key={f.key} field={f} />
+                        ))}
+                    </ul>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Target className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">MEDDIC · enterprise qualification</span>
+                        {missing.length > 0 && (
+                            <span className="ml-auto inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-warning/10 text-warning border border-warning/20">
+                                {missing.length} missing
+                            </span>
+                        )}
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {meddic.map(f => (
+                            <DiscoveryRow key={f.key} field={f} />
+                        ))}
+                    </ul>
+                </div>
+
+                <SalesSourceCite source={`PP S2 (BPMN) · salesperson guessing → 2-4 design revisions · ${SALES_VOLUME_FACTS.worksFormIncompletePctMin}-${SALES_VOLUME_FACTS.worksFormIncompletePctMax}% Works forms incomplete`} />
+            </div>
+            <SalesStickyCTA
+                label="Save discovery · proceed to outreach"
+                onClick={onValidate}
+                secondaryNote={missing.length > 0 ? `${missing.length} fields will be flagged on next sync · queue follow-up` : 'All fields captured'}
+            />
+        </>
+    )
+}
+
+function DiscoveryRow({ field }: { field: typeof SALES_DISCOVERY_TEMPLATE[number] }) {
+    const present = Boolean(field.value)
+    return (
+        <li className="px-4 py-2 flex items-start gap-3 text-[11px]">
+            <span className="text-muted-foreground w-28 shrink-0">{field.label}</span>
+            {present ? (
+                <>
+                    <span className="text-foreground flex-1">{field.value}</span>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 shrink-0 ${
+                        field.confidence === 'high'   ? 'bg-success/10 text-success border border-success/20' :
+                        field.confidence === 'medium' ? 'bg-warning/10 text-warning border border-warning/20' :
+                        'bg-muted text-muted-foreground border border-border'
+                    }`}>{field.confidence}</span>
+                </>
+            ) : (
+                <span className="flex-1 inline-flex items-center gap-1 text-warning italic">
+                    <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                    missing
+                </span>
+            )}
+        </li>
+    )
+}
+
+// ─── sc-S.5 · Multi-Channel Outreach Draft ──────────────────────────────────
+function SalesOutreachPanel({ onValidate }: LDPanelProps) {
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-outreach"
+                    title="Multi-channel outreach draft"
+                    subtitle="Email · Teams · SMS · drafts only · Sales Lead reviews and confirms each send"
+                />
+
+                <ChannelTabsComposer drafts={SALES_OUTREACH_DRAFTS} />
+
+                <SalesSourceCite source="PP S9 (BPMN) · multi-channel chaos · same request via 3 channels · Karen ~52:00" />
+            </div>
+            <SalesStickyCTA
+                label="Queue drafts · proceed to proposal"
+                onClick={onValidate}
+                secondaryNote="CLAUDE.md rule · Strata never auto-sends · every send confirmed by the rep."
+            />
+        </>
+    )
+}
+
+// ─── New component · ChannelTabsComposer ────────────────────────────────────
+function ChannelTabsComposer({ drafts }: { drafts: readonly typeof SALES_OUTREACH_DRAFTS[number][] }) {
+    const [active, setActive] = useState(0)
+    const draft = drafts[active]
+
+    return (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="flex items-center gap-1 px-2 py-2 bg-muted/30 border-b border-border">
+                {drafts.map((d, i) => (
+                    <button
+                        key={i}
+                        type="button"
+                        onClick={() => setActive(i)}
+                        className={`flex-1 px-3 py-1.5 rounded text-[11px] font-medium inline-flex items-center justify-center gap-1.5 transition-colors ${
+                            active === i ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <ChannelIcon channel={d.channel} />
+                        <span>{d.label}</span>
+                        {d.suggestedAsChannelOfRecord && (
+                            <span className="ml-1 inline-flex items-center text-[9px] font-bold uppercase tracking-wider rounded px-1 py-0.5 bg-ai/10 text-ai border border-ai/20">
+                                Suggested
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </div>
+            <div className="p-4 space-y-2">
+                <div className="text-[11px] text-foreground font-medium">{draft.subjectOrPreview}</div>
+                <div className="space-y-1.5 text-[11px] text-foreground leading-relaxed">
+                    {draft.body.map((line, i) => (
+                        line === '' ? <div key={i} className="h-2" /> : <p key={i}>{line}</p>
+                    ))}
+                </div>
+                {draft.attachments && draft.attachments.length > 0 && (
+                    <div className="pt-2 border-t border-border flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <Paperclip className="h-3 w-3" aria-hidden="true" />
+                        {draft.attachments.join(' · ')}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+// ─── sc-S.6 · Proposal Assembly ─────────────────────────────────────────────
+function SalesProposalPanel({ onValidate }: LDPanelProps) {
+    const subtotal = SALES_PROPOSAL_LINE_ITEMS.reduce((acc, l) => acc + l.qty * l.unitPriceUSD, 0)
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-proposal"
+                    title="Proposal assembly · BOM + labor + pricing"
+                    subtitle={`${SALES_PROPOSAL_META.quotePDFFile} · ${SALES_PROPOSAL_LINE_ITEMS.length} lines · GSA SQ price-protected`}
+                />
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <FileText className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Pulled inputs</span>
+                    </div>
+                    <ul className="divide-y divide-border text-[11px]">
+                        <li className="px-4 py-2 flex items-center gap-3">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                            <span className="flex-1">Spec Check BOM · 71 lines · $1,541,392 list</span>
+                            <span className="text-[10px] text-muted-foreground italic">sc1.7 output</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center gap-3">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                            <span className="flex-1">L&D labor quote · TriState · $20,900 + 18% margin</span>
+                            <span className="text-[10px] text-muted-foreground italic">sc-LD.7 output</span>
+                        </li>
+                        <li className="px-4 py-2 flex items-center gap-3">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                            <span className="flex-1">NetSuite catalog · GSA SQ #436533 · 2025</span>
+                            <span className="text-[10px] text-muted-foreground italic">read-only mock</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <DollarSign className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Quote totals</span>
+                    </div>
+                    <ul className="divide-y divide-border text-[11px]">
+                        <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">List subtotal</span><span className="text-foreground tabular-nums">${subtotal.toLocaleString()}</span></li>
+                        <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">GSA discount</span><span className="text-foreground tabular-nums">{SALES_PROPOSAL_META.gsaDiscountPct}% off</span></li>
+                        <li className="px-4 py-2 flex items-center justify-between bg-muted/20"><span className="text-muted-foreground">Net to client</span><span className="text-success font-bold tabular-nums">${SALES_PROPOSAL_META.netToClientUSD.toLocaleString()}</span></li>
+                        <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">GC portal due</span><span className="text-foreground tabular-nums">{SALES_PROPOSAL_META.gcQuoteDueAt}</span></li>
+                    </ul>
+                </div>
+
+                <SalesSourceCite source={SALES_PROPOSAL_META.quoteSource} />
+            </div>
+            <SalesStickyCTA
+                label="Approve proposal · queue email + portal upload"
+                onClick={onValidate}
+                secondaryNote="Today this assembly is ~6h in stops-and-starts · with Strata it's a review pass."
+            />
+        </>
+    )
+}
+
+// ─── sc-S.7 · Close + Handoff ───────────────────────────────────────────────
+function SalesHandoffPanel({ onValidate }: LDPanelProps) {
+    const [outcome, setOutcome] = useState<'won' | 'lost' | 'pending'>('won')
+    const [route, setRoute] = useState<string>('route-furn')
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                <SalesPanelHero
+                    stage="sales-handoff"
+                    title="Close + auto-handoff to Ops"
+                    subtitle="Mark win/loss · Strata builds the packet · routes to Spec Check or L&D"
+                />
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Award className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Outcome</span>
+                    </div>
+                    <div className="p-2 grid grid-cols-3 gap-2">
+                        {(['won', 'pending', 'lost'] as const).map(o => (
+                            <button
+                                key={o}
+                                type="button"
+                                onClick={() => setOutcome(o)}
+                                className={`px-3 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors border ${
+                                    outcome === o
+                                        ? (o === 'won' ? 'bg-success/10 text-success border-success/30' :
+                                           o === 'lost' ? 'bg-destructive/10 text-destructive border-destructive/30' :
+                                                           'bg-warning/10 text-warning border-warning/30')
+                                        : 'bg-muted/20 text-muted-foreground border-border hover:bg-muted/40'
+                                }`}
+                            >
+                                {o}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {outcome === 'won' && (
+                    <>
+                        <div className="rounded-xl border border-border bg-card overflow-hidden">
+                            <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                                <TrendingUp className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Route handoff</span>
+                            </div>
+                            <ul className="divide-y divide-border">
+                                {SALES_HANDOFF_ROUTES.map(r => (
+                                    <li key={r.id}>
+                                        <label className={`px-4 py-2.5 flex items-start gap-3 cursor-pointer transition-colors ${route === r.id ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
+                                            <input
+                                                type="radio"
+                                                name="route"
+                                                checked={route === r.id}
+                                                onChange={() => setRoute(r.id)}
+                                                className="mt-1"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[12px] font-bold text-foreground">{r.label}</div>
+                                                <div className="text-[10px] text-muted-foreground mt-0.5">Triggers · {r.flowsTriggered.length === 0 ? 'no downstream flow (direct to coordinator)' : r.flowsTriggered.join(' · ')}</div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="rounded-xl border border-border bg-card overflow-hidden">
+                            <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                                <ClipboardCheck className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Handoff packet · auto-built</span>
+                            </div>
+                            <ul className="divide-y divide-border">
+                                {SALES_HANDOFF_PACKET.map(f => (
+                                    <li key={f.label} className="px-4 py-2 flex items-start gap-3 text-[11px]">
+                                        <span className="text-muted-foreground w-32 shrink-0">{f.label}</span>
+                                        <span className="text-foreground flex-1">{f.value}</span>
+                                        <span className="text-[9px] text-muted-foreground italic shrink-0">{f.source}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </>
+                )}
+
+                <SalesSourceCite source="PP S7 (BPMN) · post-award = 2 manual steps · coordinator NetSuite step routinely missed" />
+            </div>
+            <SalesStickyCTA
+                label="Finish · trigger downstream flows · return to dashboard"
+                onClick={onValidate}
+                secondaryNote="Strata never auto-creates the NetSuite SO · the Sales Coordinator gets the prefilled task."
+            />
+        </>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SALES DOC PREVIEWS · 11 components for the modal left-panel
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── sales-inbox-feed ───────────────────────────────────────────────────────
+function SalesInboxFeedPreview() {
+    return (
+        <SalesPreviewShell icon={Inbox} filename="unified-inbox-feed.json" size="—" statusBadge={{ label: `${SALES_INBOX_THREADS.length} threads`, tone: 'info' }}>
+            <div className="text-[11px] text-muted-foreground">
+                Multi-channel feed · email + Teams + portal · classified, deduped and scored by Strata.
+            </div>
+            <UnifiedInboxFeed threads={SALES_INBOX_THREADS} />
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-thread-detail ────────────────────────────────────────────────────
+function SalesThreadDetailPreview() {
+    const t = SALES_INBOX_THREADS[0] // MANATT urgent email
+    return (
+        <SalesPreviewShell icon={Mail} filename={`thread-${t.id}.eml`} size="14 KB" statusBadge={{ label: t.intent, tone: t.intent === 'urgent' ? 'danger' : t.intent === 'action' ? 'warning' : 'neutral' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border space-y-1">
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">Channel</span>
+                        <span className="text-foreground inline-flex items-center gap-1"><ChannelIcon channel={t.channel} /> {t.channel}</span>
+                    </div>
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">From</span>
+                        <span className="text-foreground"><strong>{t.from}</strong> · {t.fromOrg}</span>
+                    </div>
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[11px]">
+                        <span className="text-muted-foreground">Subject</span>
+                        <span className="text-foreground font-medium">{t.subject}</span>
+                    </div>
+                    <div className="grid grid-cols-[60px_1fr] gap-2 text-[10px] text-muted-foreground tabular-nums">
+                        <span>Received</span>
+                        <span>{t.receivedAt}</span>
+                    </div>
+                </div>
+                <div className="px-4 py-3 space-y-2 text-[12px] text-foreground leading-relaxed">
+                    {t.snippet}
+                </div>
+            </div>
+            <div className="rounded-lg border border-ai/30 bg-ai/5 px-3 py-2 text-[11px] text-foreground flex items-start gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" aria-hidden="true" />
+                <div>
+                    <strong>Strata extracted</strong> · opportunity match · intent · urgency score · saved to Sales Lead queue.
+                </div>
+            </div>
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-opp-record ───────────────────────────────────────────────────────
+function SalesOppRecordPreview() {
+    const opp = SALES_OPPORTUNITIES[0]
+    return (
+        <SalesPreviewShell icon={FileText} filename={`opp-${opp.projectCode}.json`} size="6 KB" statusBadge={{ label: `Stage ${opp.copperStage}%`, tone: 'info' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Opportunity record (Copper read-only mock)</div>
+                    <div className="text-sm font-bold text-foreground mt-0.5">{opp.company}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{opp.projectCode} · {opp.vertical} · {opp.market}</div>
+                </div>
+                <ul className="divide-y divide-border">
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Est value</span><span className="text-foreground font-bold tabular-nums">${opp.estValueUSD.toLocaleString()}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Copper stage</span><span className="text-foreground">{opp.copperStage}%</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Account type</span><span className="text-foreground">{opp.accountType}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Days in stage</span><span className="text-foreground tabular-nums">{opp.daysInStage}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Spec attached</span><span className="text-foreground">{opp.specAttached ? 'yes' : 'no'}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">Works form</span><span className="text-foreground">{opp.worksFormComplete ? 'complete' : 'incomplete · 3 fields'}</span></li>
+                    {opp.slaDeadline && (
+                        <li className="px-4 py-2 flex items-center justify-between text-[11px]"><span className="text-muted-foreground">SLA deadline</span><span className="text-foreground tabular-nums">{opp.slaDeadline}</span></li>
+                    )}
+                </ul>
+            </div>
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-capacity-ledger ──────────────────────────────────────────────────
+function SalesCapacityLedgerPreview() {
+    return (
+        <SalesPreviewShell icon={Users} filename="capacity-ledger.pdf" size="22 KB" statusBadge={{ label: 'Live · Copper mock', tone: 'info' }}>
+            <div className="text-[11px] text-muted-foreground">{SALES_REPS.length} reps · Mid-Atlantic · pulled from Copper events (read-only mock) · includes revisions and rework.</div>
+            <RepCapacityLedger reps={SALES_REPS} />
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-assignment ───────────────────────────────────────────────────────
+function SalesAssignmentPreview() {
+    const recommended = SALES_REPS[0]
+    return (
+        <SalesPreviewShell icon={UserCheck} filename="assignment-record.pdf" size="6 KB" statusBadge={{ label: 'SLA · 24h / 48h', tone: 'success' }}>
+            <div className="rounded-xl border border-ai/30 bg-ai/5 p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" aria-hidden="true" />
+                    <div>
+                        <div className="text-sm font-bold text-foreground">Strata recommends · {recommended.label}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">Territory match · {recommended.territory} · {Object.entries(recommended.priorWinsWithAccount).map(([k, v]) => `${k}:${v}`).join(' · ')} · {recommended.quotaProgressPct}% quota</div>
+                    </div>
+                </div>
+            </div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">SLA targets</span>
+                </div>
+                <ul className="divide-y divide-border text-[11px]">
+                    <li className="px-4 py-2 flex items-center gap-3">
+                        <span className="text-muted-foreground w-32">Qualify by</span>
+                        <span className="text-foreground flex-1">24 hours after assignment</span>
+                        <SLATimerChip hoursLeft={24} />
+                    </li>
+                    <li className="px-4 py-2 flex items-center gap-3">
+                        <span className="text-muted-foreground w-32">Proposal by</span>
+                        <span className="text-foreground flex-1">48 hours after qualify</span>
+                        <SLATimerChip hoursLeft={48} />
+                    </li>
+                    <li className="px-4 py-2 flex items-center gap-3">
+                        <span className="text-muted-foreground w-32">Escalation</span>
+                        <span className="text-foreground flex-1">Sales Manager auto-notified on breach</span>
+                    </li>
+                </ul>
+            </div>
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-discovery-notes ──────────────────────────────────────────────────
+function SalesDiscoveryNotesPreview() {
+    return (
+        <SalesPreviewShell icon={ClipboardCheck} filename="discovery-notes.pdf" size="18 KB" statusBadge={{ label: 'BANT + MEDDIC', tone: 'info' }}>
+            <div className="text-[11px] text-muted-foreground">Strata auto-summarized 7-message thread into BANT + MEDDIC.</div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/30 border-b border-border text-[10px] font-bold uppercase tracking-wider text-foreground">BANT</div>
+                <ul className="divide-y divide-border">
+                    {SALES_DISCOVERY_TEMPLATE.filter(f => f.framework === 'BANT').map(f => (
+                        <DiscoveryRow key={f.key} field={f} />
+                    ))}
+                </ul>
+            </div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/30 border-b border-border text-[10px] font-bold uppercase tracking-wider text-foreground">MEDDIC</div>
+                <ul className="divide-y divide-border">
+                    {SALES_DISCOVERY_TEMPLATE.filter(f => f.framework === 'MEDDIC').map(f => (
+                        <DiscoveryRow key={f.key} field={f} />
+                    ))}
+                </ul>
+            </div>
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-outreach-draft ───────────────────────────────────────────────────
+function SalesOutreachDraftPreview() {
+    return (
+        <SalesPreviewShell icon={Send} filename="outreach-drafts.pdf" size="12 KB" statusBadge={{ label: 'Drafts · review before send', tone: 'warning' }}>
+            <div className="rounded-lg border border-info/30 bg-info/5 px-3 py-2 text-[11px] text-foreground flex items-start gap-2">
+                <ShieldCheck className="h-3.5 w-3.5 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                <div>Strata never auto-sends · Sales Lead confirms each (CLAUDE.md rule).</div>
+            </div>
+            <ChannelTabsComposer drafts={SALES_OUTREACH_DRAFTS} />
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-proposal-pdf ─────────────────────────────────────────────────────
+function SalesProposalPDFPreview() {
+    return (
+        <SalesPreviewShell icon={FileText} filename={SALES_PROPOSAL_META.quotePDFFile} size="248 KB" statusBadge={{ label: 'Cell audit complete', tone: 'success' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Officeworks proposal · MANATT 4F</div>
+                    <div className="text-sm font-bold text-foreground mt-0.5">{SALES_PROPOSAL_META.quotePDFFile}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">CBRE portal · {SALES_PROPOSAL_META.cbrePortalRef} · due {SALES_PROPOSAL_META.gcQuoteDueAt}</div>
+                </div>
+                <ul className="divide-y divide-border text-[11px]">
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Sections</span><span className="text-foreground">Cover · Scope · BOM · Labor · Pricing · Terms</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">BOM lines</span><span className="text-foreground tabular-nums">{SALES_PROPOSAL_LINE_ITEMS.length}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Net to client</span><span className="text-success font-bold tabular-nums">${SALES_PROPOSAL_META.netToClientUSD.toLocaleString()}</span></li>
+                </ul>
+            </div>
+            <SalesSourceCite source={SALES_PROPOSAL_META.quoteSource} />
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-quote-detail ─────────────────────────────────────────────────────
+function SalesQuoteDetailPreview() {
+    return (
+        <SalesPreviewShell icon={DollarSign} filename="quote-line-items.xlsx" size="42 KB" statusBadge={{ label: 'NetSuite read-only mock', tone: 'info' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <table className="w-full text-[11px]">
+                    <thead className="bg-muted/30">
+                        <tr className="text-left">
+                            <th className="px-3 py-2 font-semibold text-muted-foreground">SKU</th>
+                            <th className="px-3 py-2 font-semibold text-muted-foreground">Description</th>
+                            <th className="px-3 py-2 font-semibold text-muted-foreground text-right">Qty</th>
+                            <th className="px-3 py-2 font-semibold text-muted-foreground text-right">Unit $</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {SALES_PROPOSAL_LINE_ITEMS.map(li => (
+                            <tr key={li.sku} className="border-t border-border">
+                                <td className="px-3 py-2 text-foreground font-mono text-[10px]">{li.sku}</td>
+                                <td className="px-3 py-2 text-foreground">{li.desc}</td>
+                                <td className="px-3 py-2 text-right tabular-nums text-foreground">{li.qty}</td>
+                                <td className="px-3 py-2 text-right tabular-nums text-foreground">${li.unitPriceUSD.toLocaleString()}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <SalesSourceCite source="NetSuite catalog (read-only mock) · GSA SQ #436533 · catalog 2025" />
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-win-loss ─────────────────────────────────────────────────────────
+function SalesWinLossPreview() {
+    return (
+        <SalesPreviewShell icon={Target} filename="outcome-record.pdf" size="4 KB" statusBadge={{ label: 'WON', tone: 'success' }}>
+            <div className="rounded-xl border border-success/30 bg-success/5 p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                    <Award className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                    <div>
+                        <div className="text-sm font-bold text-foreground">MANATT-4F · WON</div>
+                        <div className="text-[11px] text-muted-foreground">${SALES_OPPORTUNITIES[0].estValueUSD.toLocaleString()} · 2026-06-12 close · 90 → 100% transition</div>
+                    </div>
+                </div>
+            </div>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <ul className="divide-y divide-border text-[11px]">
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Won amount</span><span className="text-success font-bold tabular-nums">${SALES_OPPORTUNITIES[0].estValueUSD.toLocaleString()}</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Close date</span><span className="text-foreground tabular-nums">2026-06-12</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">Cycle time</span><span className="text-foreground tabular-nums">4.5 months</span></li>
+                    <li className="px-4 py-2 flex items-center justify-between"><span className="text-muted-foreground">NetSuite SO</span><span className="text-foreground font-mono">SO-WIP-088421 (to create)</span></li>
+                </ul>
+            </div>
+        </SalesPreviewShell>
+    )
+}
+
+// ─── sales-handoff-packet ───────────────────────────────────────────────────
+function SalesHandoffPacketPreview() {
+    return (
+        <SalesPreviewShell icon={TrendingUp} filename="handoff-packet.pdf" size="32 KB" statusBadge={{ label: 'Auto-routed', tone: 'success' }}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                    <ClipboardCheck className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Packet fields · auto-populated</span>
+                </div>
+                <ul className="divide-y divide-border">
+                    {SALES_HANDOFF_PACKET.map(f => (
+                        <li key={f.label} className="px-4 py-2 flex items-start gap-3 text-[11px]">
+                            <span className="text-muted-foreground w-32 shrink-0">{f.label}</span>
+                            <span className="text-foreground flex-1">{f.value}</span>
+                            <span className="text-[9px] text-muted-foreground italic shrink-0">{f.source}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <SalesSourceCite source={`${SALES_ACTOR.role} · ${SALES_ACTOR.territoryLabel}`} />
+        </SalesPreviewShell>
     )
 }
 

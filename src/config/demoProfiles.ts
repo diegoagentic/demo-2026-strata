@@ -28,7 +28,8 @@ export type SimulationApp =
     | 'bfi-agency-fee' | 'bfi-receiving'
     | 'workspaces-submit' | 'workspaces-approval' | 'workspaces-ap' | 'workspaces-reporting'
     | 'officeworks-intake' | 'officeworks-design' | 'officeworks-spec-check' | 'officeworks-submission' | 'officeworks-dashboard'
-    | 'officeworks-labor';
+    | 'officeworks-labor'
+    | 'officeworks-sales';
 
 export interface DemoStep {
     id: string;
@@ -37,14 +38,15 @@ export interface DemoStep {
     title: string;
     description: string;
     app: SimulationApp;
-    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Manager' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant' | 'BFI Manager' | 'Design Manager' | 'Peer Reviewer' | 'Sr Operations';
+    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Manager' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant' | 'BFI Manager' | 'Design Manager' | 'Peer Reviewer' | 'Sr Operations' | 'Sales Lead';
     highlightId?: string;
     /**
-     * Optional flow grouping for multi-flow profiles (Officeworks runs Spec Check
-     * and Labor & Delivery in parallel per the AS-IS BPMN). When unset, behaves as
-     * 'spec-check' for backwards-compat. Only the Officeworks profile reads this.
+     * Optional flow grouping for multi-flow profiles (Officeworks runs Spec Check,
+     * Labor & Delivery and Sales in parallel per the AS-IS BPMN). When unset,
+     * behaves as 'spec-check' for backwards-compat. Only the Officeworks profile
+     * reads this.
      */
-    flowId?: 'spec-check' | 'labor-delivery';
+    flowId?: 'spec-check' | 'labor-delivery' | 'sales';
 }
 
 export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks';

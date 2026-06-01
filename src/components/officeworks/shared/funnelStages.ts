@@ -29,5 +29,11 @@ export function stepIdToColIdx(stepId: string | undefined): number {
     if (['sc-LD.3', 'sc-LD.4'].includes(stepId)) return 2          // Vendor Bid
     if (['sc-LD.5', 'sc-LD.6'].includes(stepId)) return 3          // Bid Eval
     if (stepId === 'sc-LD.7') return 4                              // Final Quote
+    // Sales flow (sc-S.0 to sc-S.7)
+    if (['sc-S.0', 'sc-S.1'].includes(stepId)) return 0            // Triage
+    if (['sc-S.2', 'sc-S.3'].includes(stepId)) return 1            // Assign
+    if (['sc-S.4', 'sc-S.5'].includes(stepId)) return 2            // Discover
+    if (stepId === 'sc-S.6') return 3                               // Propose
+    if (stepId === 'sc-S.7') return 4                               // Close
     return 0
 }

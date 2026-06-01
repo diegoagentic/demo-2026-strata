@@ -23,6 +23,7 @@ import {
     LD_CONTEXT_PROJECTS, MANATT_LD_BADGE, MANATT_LD_BADGE_BY_STEP,
     MANATT_LD_SUBTITLE, MANATT_LD_SUBTITLE_BY_STEP,
 } from './shared/manattLaborData'
+import { SALES_ACTOR, SALES_OPPORTUNITIES, SALES_VOLUME_FACTS } from './shared/manattSalesData'
 import { useOfficeworksVertical } from './shared/verticalSignal'
 import CapacityModal from './CapacityModal'
 
@@ -43,6 +44,43 @@ const LD_COLUMNS = [
     { id: 'ld-eval',       label: 'Bid Eval',    color: 'text-primary', border: 'border-primary/30', pill: 'bg-primary/10 text-primary border border-primary/20' },
     { id: 'ld-quote',      label: 'Final Quote', color: 'text-success', border: 'border-success/30', pill: 'bg-success/10 text-success border border-success/20' },
 ] as const
+
+const SALES_COLUMNS = [
+    { id: 's-triage',   label: 'Triage',   color: 'text-ai',      border: 'border-ai/30',      pill: 'bg-ai/10 text-ai border border-ai/20' },
+    { id: 's-assign',   label: 'Assign',   color: 'text-info',    border: 'border-info/30',    pill: 'bg-info/10 text-info border border-info/20' },
+    { id: 's-discover', label: 'Discover', color: 'text-warning', border: 'border-warning/30', pill: 'bg-warning/10 text-warning border border-warning/20' },
+    { id: 's-propose',  label: 'Propose',  color: 'text-primary', border: 'border-primary/30', pill: 'bg-primary/10 text-primary border border-primary/20' },
+    { id: 's-close',    label: 'Close',    color: 'text-success', border: 'border-success/30', pill: 'bg-success/10 text-success border border-success/20' },
+] as const
+
+// ─── Sales flow · MANATT card content per column ────────────────────────────
+
+const SALES_BADGE: Record<number, { label: string; className: string }> = {
+    0: { label: 'Triaged',       className: 'bg-ai/10 text-ai border border-ai/20' },
+    1: { label: 'Assigned',      className: 'bg-info/10 text-info border border-info/20' },
+    2: { label: 'Qualifying',    className: 'bg-warning/10 text-warning border border-warning/20' },
+    3: { label: 'Proposal',      className: 'bg-primary/10 text-primary border border-primary/20' },
+    4: { label: 'Won',           className: 'bg-success/10 text-success border border-success/20' },
+}
+
+const SALES_BADGE_BY_STEP: Record<string, { label: string; className: string }> = {
+    'sc-S.0': { label: 'Triage',    className: 'bg-ai/10 text-ai border border-ai/20' },
+    'sc-S.1': { label: 'Intake',    className: 'bg-ai/10 text-ai border border-ai/20' },
+    'sc-S.7': { label: 'Handoff',   className: 'bg-success/10 text-success border border-success/20' },
+}
+
+const SALES_SUBTITLE: Record<number, string> = {
+    0: 'Inbound thread · MANATT 4F · 26h since last touch · urgent',
+    1: 'Sales Rep · DC + NoVA recommended · SLA 24h qualify / 48h proposal',
+    2: 'BANT + MEDDIC capture · 2 missing fields flagged before client call',
+    3: 'Proposal assembled · BOM + labor + pricing · CBRE portal due 14-May 17:00',
+    4: 'WON · $1,541,392 · auto-handoff to Spec Check + L&D',
+}
+
+const SALES_SUBTITLE_BY_STEP: Record<string, string> = {
+    'sc-S.0': 'Multi-channel feed · 12 threads · 5 urgent · classified',
+    'sc-S.5': 'Multi-channel outreach drafted · email + Teams + SMS · drafts only',
+}
 
 // ─── MANATT contextual content per column · Spec Check flow ──────────────────
 
@@ -111,6 +149,31 @@ const SPEC_CONTEXT_CARDS: ContextCard[] = [
     },
 ]
 
+// Sales · 3 context opps live in non-MANATT columns
+const SALES_CONTEXT_CARDS: ContextCard[] = [
+    {
+        code: 'JPM-ATL-4471', initials: 'JPM', client: 'JPMorgan · Atlanta HQ · pricing burst',
+        value: '$3.28M', colIdx: 1,
+        avatarBg: 'bg-info/20', avatarColor: 'text-info',
+        desc: 'Strategic account · 8 floors · qualify SLA running',
+        designer: 'Sales Rep · ATL + Carolinas',
+    },
+    {
+        code: 'DLA-NYC-22F', initials: 'DLA', client: 'DLA Piper · NYC expansion',
+        value: '$780K', colIdx: 2,
+        avatarBg: 'bg-warning/20', avatarColor: 'text-warning',
+        desc: 'Walls vertical · NeoCon intro · 6mo out',
+        designer: 'Sales Rep · NYC + Tri-State',
+    },
+    {
+        code: 'ELI-PA-1180', initials: 'ELI', client: 'Eli Lilly · PA facility',
+        value: '$425K', colIdx: 3,
+        avatarBg: 'bg-primary/20', avatarColor: 'text-primary',
+        desc: 'Proposal in assembly · spec attached · BANT + MEDDIC complete',
+        designer: 'Sales Rep · PA + WV',
+    },
+]
+
 // ─── Header text + actor info per flow ───────────────────────────────────────
 
 const HEADER_BY_FLOW = {
@@ -126,6 +189,12 @@ const HEADER_BY_FLOW = {
         capacityLabel: 'View installers',
         capacityCount: '6 approved DC',
     },
+    'sales': {
+        title: 'Sales · Pipeline',
+        sub: `${SALES_ACTOR.role} · ${SALES_ACTOR.territoryLabel} · ${SALES_ACTOR.personaSubLine}`,
+        capacityLabel: 'View capacity',
+        capacityCount: '5 reps · Mid-Atlantic',
+    },
 } as const
 
 // Walls vertical override · same title but Paul Egan + Walls metrics
@@ -138,7 +207,12 @@ const HEADER_WALLS = {
 
 // ─── MANATT card · owner per step + flow ─────────────────────────────────────
 
-function getMANATTOwner(stepId: string | undefined, flowId: 'spec-check' | 'labor-delivery', vertical: 'furniture' | 'walls' = 'furniture'): string {
+function getMANATTOwner(stepId: string | undefined, flowId: 'spec-check' | 'labor-delivery' | 'sales', vertical: 'furniture' | 'walls' = 'furniture'): string {
+    if (flowId === 'sales') {
+        if (!stepId || stepId === 'sc-S.0') return `${SALES_ACTOR.role} · routing`
+        if (stepId === 'sc-S.1' || stepId === 'sc-S.2') return `${SALES_ACTOR.role} · ${SALES_ACTOR.territoryLabel}`
+        return 'Sales Rep · DC + NoVA (assigned)'
+    }
     if (flowId === 'labor-delivery') {
         if (vertical === 'walls') {
             if (!stepId || stepId === 'sc-LD.0') return 'Paul Egan · routing'
@@ -165,23 +239,24 @@ interface Props {
      * in parallel per the AS-IS BPMN. The funnel renders 5 columns + 3 context
      * cards + the MANATT card consistently across both, but the data swaps.
      */
-    flowId?: 'spec-check' | 'labor-delivery'
+    flowId?: 'spec-check' | 'labor-delivery' | 'sales'
 }
 
 export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false, assignedDesigner, flowId = 'spec-check' }: Props) {
     const { currentStep } = useDemo()
     const [capacityOpen, setCapacityOpen] = useState(false)
     const isLD = flowId === 'labor-delivery'
+    const isSales = flowId === 'sales'
     const vertical = useOfficeworksVertical()
     const isWalls = isLD && vertical === 'walls'
 
     // Active arrays per flow · same shape, different content.
-    const PROCESS_COLUMNS = isLD ? LD_COLUMNS : SPEC_COLUMNS
-    const BADGE          = isLD ? MANATT_LD_BADGE : SPEC_BADGE
-    const BADGE_BY_STEP  = isLD ? MANATT_LD_BADGE_BY_STEP : SPEC_BADGE_BY_STEP
-    const SUBTITLE       = isLD ? MANATT_LD_SUBTITLE : SPEC_SUBTITLE
-    const SUBTITLE_BY_STEP = isLD ? MANATT_LD_SUBTITLE_BY_STEP : SPEC_SUBTITLE_BY_STEP
-    const CONTEXT_CARDS  = isLD ? LD_CONTEXT_PROJECTS : SPEC_CONTEXT_CARDS
+    const PROCESS_COLUMNS = isSales ? SALES_COLUMNS : isLD ? LD_COLUMNS : SPEC_COLUMNS
+    const BADGE          = isSales ? SALES_BADGE          : isLD ? MANATT_LD_BADGE          : SPEC_BADGE
+    const BADGE_BY_STEP  = isSales ? SALES_BADGE_BY_STEP  : isLD ? MANATT_LD_BADGE_BY_STEP  : SPEC_BADGE_BY_STEP
+    const SUBTITLE       = isSales ? SALES_SUBTITLE       : isLD ? MANATT_LD_SUBTITLE       : SPEC_SUBTITLE
+    const SUBTITLE_BY_STEP = isSales ? SALES_SUBTITLE_BY_STEP : isLD ? MANATT_LD_SUBTITLE_BY_STEP : SPEC_SUBTITLE_BY_STEP
+    const CONTEXT_CARDS  = isSales ? SALES_CONTEXT_CARDS  : isLD ? LD_CONTEXT_PROJECTS      : SPEC_CONTEXT_CARDS
     const header         = isWalls ? HEADER_WALLS : HEADER_BY_FLOW[flowId]
 
     const activeCol = stepIdToColIdx(currentStep?.id)
@@ -193,8 +268,8 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
     // Quote amount for MANATT card · uses Walls FQ when Walls vertical is active.
     const ldQuotedTotal = isWalls ? WALLS_FINAL_QUOTE.quotedTotal : FINAL_QUOTE.quotedTotal
 
-    const firstStepId = isLD ? 'sc-LD.0' : 'sc1.0'
-    const ingestEvent = isLD ? 'officeworks:ld-rfp-ingest' : 'officeworks:intake-ingest'
+    const firstStepId = isSales ? 'sc-S.0' : isLD ? 'sc-LD.0' : 'sc1.0'
+    const ingestEvent = isSales ? 'officeworks:sales-inbox-ingest' : isLD ? 'officeworks:ld-rfp-ingest' : 'officeworks:intake-ingest'
     const isJustArrived = currentStep?.id === firstStepId
 
     // First-step gate · MANATT card is hidden until ActionCenter finishes the
@@ -229,9 +304,9 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                         type="button"
                         onClick={() => setCapacityOpen(true)}
                         className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-border text-xs text-foreground hover:bg-muted/50 transition-colors"
-                        title={isLD ? 'Approved installer pool · per market · MSA-locked' : 'Designer capacity · weekly committed/available hours · refreshed nightly'}
+                        title={isSales ? 'Sales rep capacity · pipeline load + quota progress · live from Copper events' : isLD ? 'Approved installer pool · per market · MSA-locked' : 'Designer capacity · weekly committed/available hours · refreshed nightly'}
                     >
-                        {isLD ? <Truck className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
+                        {isLD && !isSales ? <Truck className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
                         {header.capacityLabel}
                         <span className="text-[10px] text-muted-foreground font-normal">· {header.capacityCount}</span>
                     </button>
@@ -296,24 +371,26 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                                                     </span>
                                                 </div>
                                                 <span className="text-[11px] text-muted-foreground block truncate">
-                                                    {isLD ? `Manatt Phelps & Phillips · 4F · ${MANATT_LD_RFP.market}` : 'Manatt Phelps & Phillips LLP · DC'}
+                                                    {isSales ? `Manatt Phelps & Phillips · 4F · MANATT-4F · ${SALES_OPPORTUNITIES[0].copperStage}%`
+                                                     : isLD ? `Manatt Phelps & Phillips · 4F · ${MANATT_LD_RFP.market}`
+                                                     : 'Manatt Phelps & Phillips LLP · DC'}
                                                 </span>
                                             </div>
                                         </div>
 
                                         <div className="space-y-1.5">
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-muted-foreground">PO</span>
-                                                <span className="font-medium text-foreground font-mono">{MANATT_ORDER_META.poNumber}</span>
+                                                <span className="text-muted-foreground">{isSales ? 'Opp' : 'PO'}</span>
+                                                <span className="font-medium text-foreground font-mono">{isSales ? SALES_OPPORTUNITIES[0].oppId : MANATT_ORDER_META.poNumber}</span>
                                             </div>
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-muted-foreground">{isLD ? 'Quote' : 'Net'}</span>
+                                                <span className="text-muted-foreground">{isSales ? 'Pipeline' : isLD ? 'Quote' : 'Net'}</span>
                                                 <span className="font-semibold text-foreground">
-                                                    ${isLD ? ldQuotedTotal.toLocaleString() : MANATT_ORDER_META.netTotal.toLocaleString()}
+                                                    ${isSales ? SALES_OPPORTUNITIES[0].estValueUSD.toLocaleString() : isLD ? ldQuotedTotal.toLocaleString() : MANATT_ORDER_META.netTotal.toLocaleString()}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-muted-foreground">{isLD ? 'Owner' : 'Designer'}</span>
+                                                <span className="text-muted-foreground">{isSales ? 'Sales Lead' : isLD ? 'Owner' : 'Designer'}</span>
                                                 <span className="font-medium text-foreground truncate ml-1">{owner}</span>
                                             </div>
                                         </div>
@@ -323,7 +400,9 @@ export default function OfficeworksFunnel({ onOpenReview, hideReviewCta = false,
                                         {!hideReviewCta && (
                                             <div className="pt-2 border-t border-border flex items-center justify-between">
                                                 <span className="text-[10px] text-muted-foreground">
-                                                    {isLD ? `Portal ${MANATT_LD_RFP.gcPortalRef}` : `SQ #${MANATT_ORDER_META.specialQuote}`}
+                                                    {isSales ? `Copper · stage ${SALES_OPPORTUNITIES[0].copperStage}% · ${SALES_VOLUME_FACTS.totalOpenOpportunities.toLocaleString()} open` :
+                                                     isLD ? `Portal ${MANATT_LD_RFP.gcPortalRef}` :
+                                                     `SQ #${MANATT_ORDER_META.specialQuote}`}
                                                 </span>
                                                 <div className="relative">
                                                     <span className="absolute -inset-1 rounded-xl bg-ai/20 animate-pulse pointer-events-none" />

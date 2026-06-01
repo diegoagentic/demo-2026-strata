@@ -1,11 +1,14 @@
 ﻿import React from 'react';
 import { useDemo } from '../../context/DemoContext';
 import { useTheme } from 'strata-design-system';
+import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react';
 import {
     CheckCircle2,
     Circle,
     ChevronRight,
     ChevronLeft,
+    ChevronDown,
+    Check,
     Play,
     Pause,
     Loader2,
@@ -140,16 +143,17 @@ export default function DemoSidebar() {
     const isLeland = activeProfile.id === 'leland';
     const isOfficeworks = activeProfile.id === 'officeworks';
 
-    // Officeworks runs two flows in parallel (Spec Check & Design ↔ Labor &
-    // Delivery). Tab toggle filters the sidebar to one flow at a time.
-    const [activeFlow, setActiveFlow] = React.useState<'spec-check' | 'labor-delivery'>('spec-check');
+    // Officeworks runs three flows in parallel (Spec Check & Design ·
+    // Labor & Delivery · Sales). Tab toggle filters the sidebar to one flow.
+    type OfficeworksFlow = 'spec-check' | 'labor-delivery' | 'sales';
+    const [activeFlow, setActiveFlow] = React.useState<OfficeworksFlow>('spec-check');
 
-    // If the user lands directly on a step from the other flow (e.g. resumed
+    // If the user lands directly on a step from a different flow (e.g. resumed
     // session), sync the tab so the active step is visible.
     React.useEffect(() => {
         if (!isOfficeworks) return;
         const curr = steps[currentStepIndex];
-        const f = (curr?.flowId ?? 'spec-check') as 'spec-check' | 'labor-delivery';
+        const f = (curr?.flowId ?? 'spec-check') as OfficeworksFlow;
         if (f !== activeFlow) setActiveFlow(f);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOfficeworks, activeProfile.id]);
@@ -162,13 +166,15 @@ export default function DemoSidebar() {
     }, [steps, isOfficeworks, activeFlow]);
 
     const flowCounts = React.useMemo(() => {
-        if (!isOfficeworks) return { specCheck: 0, laborDelivery: 0 };
-        let s = 0, l = 0;
+        if (!isOfficeworks) return { specCheck: 0, laborDelivery: 0, sales: 0 };
+        let s = 0, l = 0, x = 0;
         for (const step of steps) {
             const f = step.flowId ?? 'spec-check';
-            if (f === 'spec-check') s++; else l++;
+            if (f === 'spec-check') s++;
+            else if (f === 'labor-delivery') l++;
+            else if (f === 'sales') x++;
         }
-        return { specCheck: s, laborDelivery: l };
+        return { specCheck: s, laborDelivery: l, sales: x };
     }, [steps, isOfficeworks]);
 
     // L&D vertical sub-toggle (Furniture vs Walls) · only meaningful inside L&D tab.
@@ -178,7 +184,7 @@ export default function DemoSidebar() {
         writeVertical(vertical)
     }
 
-    const handleFlowSwitch = (flow: 'spec-check' | 'labor-delivery') => {
+    const handleFlowSwitch = (flow: OfficeworksFlow) => {
         if (flow === activeFlow) return;
         setActiveFlow(flow);
         // Jump to first step of the target flow so currentStepIndex points to a
@@ -346,37 +352,75 @@ export default function DemoSidebar() {
                 </div>
                 <p className={`text-xs ${c.textDim}`}>Guided Experience Simulation</p>
 
-                {/* Officeworks · Flow tab toggle (Spec Check ↔ Labor & Delivery) */}
-                {isOfficeworks && (
-                    <div className="mt-4 flex gap-1 p-1 rounded-lg bg-zinc-900/5 dark:bg-white/5">
-                        <button
-                            type="button"
-                            onClick={() => handleFlowSwitch('spec-check')}
-                            aria-pressed={activeFlow === 'spec-check'}
-                            className={`flex-1 px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                                activeFlow === 'spec-check'
-                                    ? `${c.bgBadgeActive} ${c.textBadgeActive} shadow-sm`
-                                    : `${c.textMuted} hover:opacity-80`
-                            }`}
-                        >
-                            <span className="block leading-tight">Spec Check</span>
-                            <span className="block leading-tight text-[9px] opacity-70">& Design · {flowCounts.specCheck}</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => handleFlowSwitch('labor-delivery')}
-                            aria-pressed={activeFlow === 'labor-delivery'}
-                            className={`flex-1 px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                                activeFlow === 'labor-delivery'
-                                    ? `${c.bgBadgeActive} ${c.textBadgeActive} shadow-sm`
-                                    : `${c.textMuted} hover:opacity-80`
-                            }`}
-                        >
-                            <span className="block leading-tight">Labor &</span>
-                            <span className="block leading-tight text-[9px] opacity-70">Delivery · {flowCounts.laborDelivery}</span>
-                        </button>
-                    </div>
-                )}
+                {/* Officeworks · Flow dropdown selector (Spec Check · Labor & Delivery · Sales) */}
+                {isOfficeworks && (() => {
+                    const FLOW_OPTIONS = [
+                        { id: 'spec-check'    as const, label: 'Spec Check & Design', count: flowCounts.specCheck },
+                        { id: 'labor-delivery' as const, label: 'Labor & Delivery',    count: flowCounts.laborDelivery },
+                        { id: 'sales'         as const, label: 'Sales',                count: flowCounts.sales },
+                    ]
+                    const activeOpt = FLOW_OPTIONS.find(f => f.id === activeFlow) ?? FLOW_OPTIONS[0]
+                    return (
+                        <div className="mt-4">
+                            <Popover className="relative">
+                                {({ open }) => (
+                                    <>
+                                        <PopoverButton
+                                            className={`w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${c.bgBadgeActive} ${c.textBadgeActive}`}
+                                            aria-label="Switch active flow"
+                                        >
+                                            <span className="truncate">{activeOpt.label}</span>
+                                            <span className="inline-flex items-center gap-1.5 shrink-0">
+                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 ${c.bgBadge} ${c.textBadge}`}>
+                                                    {activeOpt.count}
+                                                </span>
+                                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+                                            </span>
+                                        </PopoverButton>
+                                        <Transition
+                                            as={React.Fragment}
+                                            enter="transition ease-out duration-150"
+                                            enterFrom="opacity-0 -translate-y-1"
+                                            enterTo="opacity-100 translate-y-0"
+                                            leave="transition ease-in duration-100"
+                                            leaveFrom="opacity-100 translate-y-0"
+                                            leaveTo="opacity-0 -translate-y-1"
+                                        >
+                                            <PopoverPanel className="absolute z-50 left-0 right-0 mt-1 rounded-md bg-card border border-border shadow-lg overflow-hidden">
+                                                {({ close }) => (
+                                                    <ul role="listbox" aria-label="Officeworks flows">
+                                                        {FLOW_OPTIONS.map(opt => {
+                                                            const isActive = activeFlow === opt.id
+                                                            return (
+                                                                <li key={opt.id} role="option" aria-selected={isActive}>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => { handleFlowSwitch(opt.id); close() }}
+                                                                        className={`w-full inline-flex items-center gap-2 px-3 py-2 text-[12px] transition-colors text-left ${
+                                                                            isActive
+                                                                                ? 'bg-primary/10 text-foreground font-semibold'
+                                                                                : 'text-foreground hover:bg-muted/50'
+                                                                        }`}
+                                                                    >
+                                                                        <span className="flex-1 truncate">{opt.label}</span>
+                                                                        <span className="text-[10px] tabular-nums rounded-full bg-zinc-900/10 dark:bg-white/10 px-1.5 text-muted-foreground">
+                                                                            {opt.count}
+                                                                        </span>
+                                                                        {isActive && <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                                                                    </button>
+                                                                </li>
+                                                            )
+                                                        })}
+                                                    </ul>
+                                                )}
+                                            </PopoverPanel>
+                                        </Transition>
+                                    </>
+                                )}
+                            </Popover>
+                        </div>
+                    )
+                })()}
 
                 {/* Officeworks · L&D vertical sub-toggle (Furniture ↔ Walls) */}
                 {isOfficeworks && activeFlow === 'labor-delivery' && (
