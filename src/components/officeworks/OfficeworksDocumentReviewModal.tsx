@@ -18,7 +18,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send, Calendar, Layers } from 'lucide-react'
+import { X, Sparkles, FileText, MapPin, ClipboardCheck, ArrowRight, AlertCircle, CheckCircle2, FileWarning, Image as ImageIcon, Eye, UserCheck, Users, Paperclip, Mail, Loader2, HelpCircle, ShieldCheck, Search, AlertTriangle, DollarSign, Send, Calendar, Layers, Pencil } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import { MANATT_ORDER_META } from './shared/manattOrderData'
 import { OFFICEWORKS_FUNNEL } from './shared/funnelStages'
@@ -27,6 +27,7 @@ import BlueprintFloorPlan from './shared/BlueprintFloorPlan'
 import { OFFICEWORKS_PDFS } from './shared/PDFPreviewModal'
 import { findDesigner, regionLabel, computeCapacity } from './shared/designerProfiles'
 import RequestInfoDialog from '../shared/RequestInfoDialog'
+import SelfAuditScene from './SelfAuditScene'
 
 // 16 stages matching demo steps (intake split into intake/intake-complete)
 export type OfficeworksReviewStage =
@@ -282,6 +283,8 @@ export default function OfficeworksDocumentReviewModal({
                                                 // Flow 3 · 2 interactive panels
                                                 if (stage === 'teknion-preview') return <TeknionPreviewPanel onValidate={onValidate} />
                                                 if (stage === 'spec-gap')        return <SpecGapResolvePanel onValidate={onValidate} />
+                                                // Flow 4 · sc1.6 Self-audit · designer-led 5-step audit + peer assignment
+                                                if (stage === 'self-audit')      return <SelfAuditScene onValidate={onValidate} />
                                                 // Default · static description + Approve & Continue
                                                 return (
                                                     <>
@@ -2681,17 +2684,40 @@ interface SpecGapResolvePanelProps { onValidate: () => void }
 
 function SpecGapResolvePanel({ onValidate }: SpecGapResolvePanelProps) {
     const [phase, setPhase] = useState<'gap-shown' | 'resubmitted'>('gap-shown')
-    const [expanded, setExpanded] = useState(false)
     const [emailDialogOpen, setEmailDialogOpen] = useState(false)
+    const [mode, setMode] = useState<'strata' | 'upload'>('upload')
+    const [selectedOption, setSelectedOption] = useState<'vertical' | 'horizontal' | 'custom' | null>(null)
+    const [customText, setCustomText] = useState('')
+    const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'uploaded'>('idle')
+    const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>(null)
+    const uploadTimeoutRef = useRef<number | null>(null)
 
-    const resubmitConfig = {
-        title: 'Resubmit · CR 2046138 grain direction',
-        subtitle: 'Strata drafted the answer · review and send',
-        from: 'kimberly.tucker@officeworksinc.com',
-        to: 'tifani.cooper@teknion.com',
-        cc: 'felicia.miano-poles@officeworksinc.com',
-        subject: `Re: Order Preview · MANATT 4th Floor · CR 2046138 grain direction`,
-        body: `Hi Tifani,
+    useEffect(() => {
+        return () => {
+            if (uploadTimeoutRef.current !== null) window.clearTimeout(uploadTimeoutRef.current)
+        }
+    }, [])
+
+    // The actual grain direction value the designer is sending to Tifani.
+    // Trimmed custom text falls back to a placeholder string only for display;
+    // the CTA stays disabled until customText is non-empty.
+    const chosenValue =
+        selectedOption === 'vertical'   ? 'vertical' :
+        selectedOption === 'horizontal' ? 'horizontal' :
+        selectedOption === 'custom'     ? customText.trim() :
+        ''
+
+    const canSubmitStrata = selectedOption !== null && (selectedOption !== 'custom' || customText.trim().length > 0)
+    const canSubmitUpload = uploadPhase === 'uploaded' && uploadedFile !== null
+    const canSubmit = mode === 'strata' ? canSubmitStrata : canSubmitUpload
+
+    // Email body branches first by mode · in strata mode the body varies with
+    // the chosen value (vertical = Strata's grounded recommendation, horizontal
+    // is flagged as a divergence, custom echoes the designer's text). In upload
+    // mode the body references the attached corrected file.
+    const strataBody =
+        selectedOption === 'vertical'
+            ? `Hi Tifani,
 
 Quick follow-up on your spec gap for CR 2046138 (Solid Add-On Screen · Flintwood White Oak 5N).
 
@@ -2701,12 +2727,67 @@ No other changes to the BOM. Resubmitting for your review · same Sched Ship tar
 
 — Kimberly Tucker
    Design Manager · PA · cross-market to DC
-   Officeworks Inc.`,
-        attachments: [
-            { name: `CR-2046138-grain-update.pdf`, size: '120 KB', badge: 'Spec update' },
-            { name: `flintwood-grain-reference.png`, size: '88 KB', badge: 'Validation doc · page 7' },
-        ],
+   Officeworks Inc.`
+            : selectedOption === 'horizontal'
+            ? `Hi Tifani,
+
+Quick follow-up on your spec gap for CR 2046138 (Solid Add-On Screen · Flintwood White Oak 5N).
+
+Grain direction: horizontal. Note: this differs from the other 4 Flintwood pieces (CRs 2046131, 2046136, 2046139, 2046140) and from the validation doc page 7 (vertical). Confirming this is intentional.
+
+No other changes to the BOM. Resubmitting for your review · same Sched Ship target ${MANATT_ORDER_META.schedShipDate}.
+
+— Kimberly Tucker
+   Design Manager · PA · cross-market to DC
+   Officeworks Inc.`
+            : `Hi Tifani,
+
+Quick follow-up on your spec gap for CR 2046138 (Solid Add-On Screen · Flintwood White Oak 5N).
+
+Grain direction: ${chosenValue || '—'}.
+
+No other changes to the BOM. Resubmitting for your review · same Sched Ship target ${MANATT_ORDER_META.schedShipDate}.
+
+— Kimberly Tucker
+   Design Manager · PA · cross-market to DC
+   Officeworks Inc.`
+
+    const uploadBody = `Hi Tifani,
+
+Quick follow-up on your spec gap for CR 2046138 · attaching the corrected BOM with the grain direction updated. Strata flagged the change for your review.
+
+No other changes to the BOM. Resubmitting for your review · same Sched Ship target ${MANATT_ORDER_META.schedShipDate}.
+
+— Kimberly Tucker
+   Design Manager · PA · cross-market to DC
+   Officeworks Inc.`
+
+    const resubmitConfig = {
+        title: 'Resubmit · CR 2046138 grain direction',
+        subtitle: 'Strata drafted the answer · review and send',
+        from: 'kimberly.tucker@officeworksinc.com',
+        to: 'tifani.cooper@teknion.com',
+        cc: 'felicia.miano-poles@officeworksinc.com',
+        subject: `Re: Order Preview · MANATT 4th Floor · CR 2046138 grain direction`,
+        body: mode === 'strata' ? strataBody : uploadBody,
+        attachments: mode === 'strata'
+            ? [
+                { name: `CR-2046138-grain-update.pdf`, size: '120 KB', badge: 'Spec update' },
+                { name: `flintwood-grain-reference.png`, size: '88 KB', badge: 'Validation doc · page 7' },
+            ]
+            : uploadedFile
+                ? [{ name: uploadedFile.name, size: uploadedFile.size, badge: 'Updated BOM' }]
+                : [],
         sentMessage: 'Resubmitted · recipients notified',
+    }
+
+    const handleUploadClick = () => {
+        setUploadPhase('uploading')
+        if (uploadTimeoutRef.current !== null) window.clearTimeout(uploadTimeoutRef.current)
+        uploadTimeoutRef.current = window.setTimeout(() => {
+            setUploadedFile({ name: 'MANATT-4F_BOM_v1.1.pdf', size: '215 KB' })
+            setUploadPhase('uploaded')
+        }, 1200)
     }
 
     return (
@@ -2728,48 +2809,269 @@ No other changes to the BOM. Resubmitting for your review · same Sched Ship tar
                     </div>
                 </div>
 
-                {/* Section 2 · Gap card (BOM_FINDINGS pattern) */}
+                {/* Section 2 · Gap card · context only · Strata's recommendation lives in the edit card */}
                 <div className="rounded-xl border border-warning/30 bg-card overflow-hidden">
-                    <button
-                        type="button"
-                        onClick={() => setExpanded(!expanded)}
-                        className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-muted/30 transition-colors"
-                    >
-                        <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                    <div className="px-4 py-3 flex items-start gap-3">
+                        <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" aria-hidden="true" />
                         <div className="flex-1 min-w-0">
                             <div className="text-xs font-semibold text-foreground">CR 2046138 · finish detail missing in spec</div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">
-                                Tifani: "Flintwood White Oak 5N specified but no grain direction provided. Default vertical assumed?"
+                                Tifani: &quot;Flintwood White Oak 5N specified but no grain direction provided. Default vertical assumed?&quot;
                             </div>
                             <div className="text-[10px] italic text-muted-foreground mt-0.5">Source: Tifani · Teknion · 2025/12/31 09:14</div>
                         </div>
-                        <span className="text-[10px] font-bold text-foreground bg-primary/20 rounded px-1.5 py-0.5 shrink-0">
-                            {expanded ? 'Hide' : 'Strata answers'} {expanded ? '▴' : '▾'}
-                        </span>
-                    </button>
-                    {expanded && (
-                        <div className="bg-muted/40 px-4 py-3 border-t border-border space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
-                            <div className="flex items-center gap-1.5">
-                                <Sparkles className="h-3.5 w-3.5 text-ai" />
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-ai">Strata's answer · grounded in this project</span>
-                            </div>
-                            <p className="text-xs text-foreground leading-relaxed">
-                                The other 4 Flintwood pieces in this BOM all specify <strong>vertical grain</strong> (CRs 2046131, 2046136, 2046139, 2046140). The validation doc approved by Manatt on page 7 shows vertical grain on all wood surfaces. Strongly suggest replying: <em>"Vertical grain · matches validation doc and the other 4 Flintwood pieces."</em>
+                    </div>
+                </div>
+
+                {/* Mode selector · Strata vs Upload (only while gap-shown) */}
+                {phase === 'gap-shown' && (
+                    <div className="rounded-xl border border-border bg-card overflow-hidden">
+                        <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                            <span className="text-xs font-bold uppercase tracking-wider text-foreground">How do you want to fix this gap?</span>
+                        </div>
+                        <fieldset className="px-4 py-3 grid grid-cols-2 gap-2">
+                            <legend className="sr-only">Fix mode</legend>
+                            <label className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                                mode === 'strata' ? 'border-ai/40 bg-ai/5' : 'border-border bg-card hover:bg-muted/30'
+                            }`}>
+                                <input
+                                    type="radio"
+                                    name="fix-mode"
+                                    value="strata"
+                                    checked={mode === 'strata'}
+                                    onChange={() => setMode('strata')}
+                                    className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-xs font-semibold text-foreground">Resolve with Strata</span>
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-ai/10 text-ai border border-ai/20 rounded px-1.5 py-0.5">
+                                            <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                            Recommends
+                                        </span>
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                                        Pick from suggested options · inline
+                                    </div>
+                                </div>
+                            </label>
+                            <label className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                                mode === 'upload' ? 'border-primary/40 bg-primary/5' : 'border-border bg-card hover:bg-muted/30'
+                            }`}>
+                                <input
+                                    type="radio"
+                                    name="fix-mode"
+                                    value="upload"
+                                    checked={mode === 'upload'}
+                                    onChange={() => setMode('upload')}
+                                    className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-xs font-semibold text-foreground">Upload corrected file</span>
+                                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                                        Attach a revised BOM or validation doc
+                                    </div>
+                                </div>
+                            </label>
+                        </fieldset>
+                    </div>
+                )}
+
+                {/* Mode = upload · dropzone or uploaded file card */}
+                {phase === 'gap-shown' && mode === 'upload' && (
+                    <div className="rounded-xl border border-border bg-card overflow-hidden">
+                        <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                            <Paperclip className="h-4 w-4 text-foreground" aria-hidden="true" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Attach corrected file</span>
+                        </div>
+                        <div className="px-4 py-3 space-y-2.5">
+                            <p className="text-[11px] text-muted-foreground">
+                                BOM (.pdf / .sp4) or validation document (.pdf / .pptx) · Strata will detect what changed and notify Tifani.
+                            </p>
+                            {uploadPhase === 'idle' && (
+                                <button
+                                    type="button"
+                                    onClick={handleUploadClick}
+                                    aria-label="Attach corrected file (simulated)"
+                                    className="w-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 rounded-lg p-5 flex flex-col items-center justify-center gap-2 transition-colors"
+                                >
+                                    <div className="h-10 w-10 rounded-xl bg-muted/60 flex items-center justify-center" aria-hidden="true">
+                                        <Paperclip className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="text-xs font-semibold text-foreground">Drop corrected file here · or click to attach</div>
+                                    <div className="text-[10px] text-muted-foreground italic">Demo · click to simulate the upload of MANATT-4F_BOM_v1.1.pdf (215 KB)</div>
+                                </button>
+                            )}
+                            {uploadPhase === 'uploading' && (
+                                <div
+                                    role="status"
+                                    aria-busy="true"
+                                    className="rounded-lg border border-border bg-muted/30 px-3 py-3 flex items-center gap-2 animate-in fade-in duration-200"
+                                >
+                                    <Loader2 className="h-4 w-4 text-foreground animate-spin" aria-hidden="true" />
+                                    <span className="text-xs text-foreground">Strata reading the file…</span>
+                                </div>
+                            )}
+                            {uploadPhase === 'uploaded' && uploadedFile && (
+                                <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2.5 flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                                    <div className="h-9 w-9 rounded-lg bg-success/10 text-success flex items-center justify-center shrink-0" aria-hidden="true">
+                                        <FileText className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-xs font-semibold text-foreground truncate">{uploadedFile.name}</span>
+                                            <span className="text-[9px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5">Uploaded</span>
+                                        </div>
+                                        <div className="text-[11px] text-muted-foreground mt-0.5">{uploadedFile.size} · attached to the resubmit</div>
+                                        <div className="text-[10px] italic text-muted-foreground mt-1">
+                                            Strata detected: CR 2046138 grain direction updated to vertical.
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Mode = strata · inline edit · designer picks the grain direction */}
+                {phase === 'gap-shown' && mode === 'strata' && (
+                    <div className="rounded-xl border border-border bg-card overflow-hidden">
+                        <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                            <Pencil className="h-4 w-4 text-foreground" aria-hidden="true" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Update CR 2046138 · grain direction</span>
+                        </div>
+                        <div className="px-4 py-3 space-y-2.5">
+                            <p className="text-[11px] text-muted-foreground">
+                                Required by Tifani · choose the value to apply to the BOM. Strata pre-computed the grounded recommendation.
+                            </p>
+                            <fieldset className="space-y-1.5">
+                                <legend className="sr-only">Grain direction</legend>
+
+                                {/* Vertical · Strata recommendation */}
+                                <label className={`flex items-start gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
+                                    selectedOption === 'vertical' ? 'border-ai/40 bg-ai/5' : 'border-border bg-card hover:bg-muted/30'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name="grain-direction"
+                                        value="vertical"
+                                        checked={selectedOption === 'vertical'}
+                                        onChange={() => setSelectedOption('vertical')}
+                                        className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="text-xs font-semibold text-foreground">Vertical</span>
+                                            <RuleTooltip
+                                                rule="Vertical grain matches the validation doc Manatt approved on page 7 and the other 4 Flintwood CRs in this BOM (2046131, 2046136, 2046139, 2046140)."
+                                                source="Source: Validation doc page 7 · MANATT CR ledger 4 of 4 Flintwood"
+                                            >
+                                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-ai/10 text-ai border border-ai/20 rounded px-1.5 py-0.5">
+                                                    <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                                    Strata recommends
+                                                </span>
+                                            </RuleTooltip>
+                                        </div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                                            Matches validation doc + 4 other Flintwood CRs
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {/* Horizontal */}
+                                <label className={`flex items-start gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
+                                    selectedOption === 'horizontal' ? 'border-primary/40 bg-primary/5' : 'border-border bg-card hover:bg-muted/30'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name="grain-direction"
+                                        value="horizontal"
+                                        checked={selectedOption === 'horizontal'}
+                                        onChange={() => setSelectedOption('horizontal')}
+                                        className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-xs font-semibold text-foreground">Horizontal</span>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                                            Diverges from validation doc · Strata will flag the difference in the email
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {/* Custom · textarea appears when selected */}
+                                <label className={`flex items-start gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
+                                    selectedOption === 'custom' ? 'border-primary/40 bg-primary/5' : 'border-border bg-card hover:bg-muted/30'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name="grain-direction"
+                                        value="custom"
+                                        checked={selectedOption === 'custom'}
+                                        onChange={() => setSelectedOption('custom')}
+                                        className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-xs font-semibold text-foreground">Custom</span>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                                            Type the value to send to Tifani
+                                        </div>
+                                    </div>
+                                </label>
+                                {selectedOption === 'custom' && (
+                                    <textarea
+                                        value={customText}
+                                        onChange={e => setCustomText(e.target.value.slice(0, 80))}
+                                        placeholder="e.g. diagonal weft · book-matched · request clarification"
+                                        rows={2}
+                                        maxLength={80}
+                                        aria-label="Custom grain direction value"
+                                        className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-card text-xs text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 animate-in fade-in duration-200"
+                                    />
+                                )}
+                            </fieldset>
+
+                            {/* Applied banner · live preview of the change */}
+                            {canSubmit && (
+                                <div
+                                    role="status"
+                                    className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-200"
+                                >
+                                    <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                    <div className="text-[11px]">
+                                        <div className="font-semibold text-success">
+                                            Change applied · CR 2046138 · grain direction = {chosenValue}
+                                        </div>
+                                        <div className="text-muted-foreground">This will be sent to Tifani when you resubmit the preview.</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="px-4 py-2.5 bg-muted/20 border-t border-border space-y-0.5">
+                            <p className="text-[10px] italic text-muted-foreground leading-relaxed">
+                                Strata&apos;s recommendation: <strong className="text-foreground not-italic">vertical grain</strong> · matches validation doc page 7 + the other 4 Flintwood CRs (2046131, 2046136, 2046139, 2046140).
                             </p>
                             <p className="text-[10px] italic text-muted-foreground">
-                                Citation: Spec Check AS-IS · §Step 8A (CR lookup) + Validation doc page 7 + MANATT CR ledger (4 of 4 Flintwood = vertical)
+                                Source: Spec Check AS-IS · §Step 8A + MANATT CR ledger (4/4 Flintwood = vertical)
                             </p>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
 
                 {/* Section 3 · Resubmission summary (only when resubmitted) */}
                 {phase === 'resubmitted' && (
                     <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2.5 flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                         <div className="text-xs">
-                            <div className="font-semibold text-success">CR 2046138 updated · grain direction: vertical</div>
-                            <div className="text-muted-foreground">Resubmission queued · Tifani notified · Felicia CC'd · expected clean on next turnaround</div>
+                            <div className="font-semibold text-success">
+                                {mode === 'strata'
+                                    ? `CR 2046138 updated · grain direction: ${chosenValue}`
+                                    : `CR 2046138 updated · corrected file sent to Tifani`}
+                            </div>
+                            <div className="text-muted-foreground">
+                                {mode === 'upload' && uploadedFile
+                                    ? `${uploadedFile.name} · ${uploadedFile.size} · Tifani notified · Felicia CC'd`
+                                    : `Resubmission queued · Tifani notified · Felicia CC'd · expected clean on next turnaround`}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -2805,25 +3107,43 @@ No other changes to the BOM. Resubmitting for your review · same Sched Ship tar
                 )}
             </div>
 
-            {/* Footer CTA */}
+            {/* Footer CTA · 5 states (2 modes × 2 sub-states + resubmitted) */}
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
-                {phase === 'gap-shown' ? (
+                {phase === 'gap-shown' && !canSubmit && (
+                    <button
+                        type="button"
+                        disabled
+                        aria-busy={mode === 'upload' && uploadPhase === 'uploading'}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-muted text-muted-foreground text-sm font-medium cursor-not-allowed"
+                    >
+                        {mode === 'upload' && uploadPhase === 'uploading' && (
+                            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        )}
+                        {mode === 'strata'
+                            ? 'Select grain direction to continue'
+                            : uploadPhase === 'uploading'
+                                ? 'Reading file…'
+                                : 'Upload corrected file to continue'}
+                    </button>
+                )}
+                {phase === 'gap-shown' && canSubmit && (
                     <button
                         type="button"
                         onClick={() => setEmailDialogOpen(true)}
                         className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
                     >
-                        <Mail className="h-4 w-4" />
-                        Apply suggestion &amp; resubmit →
+                        <Mail className="h-4 w-4" aria-hidden="true" />
+                        Resubmit preview to Tifani →
                     </button>
-                ) : (
+                )}
+                {phase === 'resubmitted' && (
                     <button
                         type="button"
                         onClick={onValidate}
                         className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
                     >
                         Proceed to Self-Audit
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </button>
                 )}
             </div>

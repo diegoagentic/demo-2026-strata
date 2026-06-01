@@ -22,7 +22,6 @@ import OfficeworksDocumentReviewModal, { type OfficeworksReviewStage } from './O
 import OfficeworksDashboardScene from './OfficeworksDashboardScene'
 
 // Hero scenes used as fullContent inside the modal at their stages
-import SelfAuditScene from './SelfAuditScene'
 import PeerReviewScene from './PeerReviewScene'
 import AckReviewScene from './AckReviewScene'
 
@@ -123,11 +122,12 @@ export default function OfficeworksPage() {
         setTimeout(() => nextStep(), 200)
     }
 
-    // Pick hero scene as fullContent when at hero stages
+    // Pick hero scene as fullContent when at hero stages.
+    // sc1.6 'self-audit' uses the standard split-pane pattern · the modal
+    // dispatches SelfAuditScene as the right panel so the BOM/Validation Doc
+    // tabs stay visible on the left.
     let fullContent: React.ReactNode | undefined
-    if (stage === 'self-audit') {
-        fullContent = <SelfAuditScene onContinue={handleValidate} />
-    } else if (stage === 'peer-review') {
+    if (stage === 'peer-review') {
         fullContent = <PeerReviewScene onContinue={handleValidate} />
     } else if (stage === 'ack-review') {
         fullContent = <AckReviewScene onContinue={handleValidate} />
