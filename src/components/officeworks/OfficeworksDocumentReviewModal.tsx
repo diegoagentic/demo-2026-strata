@@ -57,7 +57,7 @@ const STAGE_AI_BANNER: Record<OfficeworksReviewStage, string> = {
     'spec-gap':         'Spec gap on CR 2046138 (40-day leadtime) · Strata suggests fix · resubmit preview',
     'phasing':          'Teknion can\'t meet date · 3-way huddle Designer + PM + Salesperson · phased plan',
     'self-audit':       'Kimberly checks her own BOM · 5-step audit · 71 lines × 6 attrs · 13 CRs · Today: 6h paper. With Strata: 25min.',
-    'peer-review':      'Rebecca reviews Kimberly\'s audit · Felicia\'s tacit knowledge surfaces as rules (SC7)',
+    'peer-review':      'Peer audits Kimberly\'s self-audit · Strata surfaces tacit rules from Felicia\'s history as proposed KB entries (SC7)',
     'submission':       'BOM PDF + SP4 file to Caitlin + Coordinator · OW Best Practice template',
     'handoff':          'Coordinator uploads SP4 to NetSuite · 79% discount · Caitlin releases PO to Teknion',
     'ack-review':       'Gemini already in use · Strata supercharges · 71-line diff · 2 EE terminal states',
@@ -158,11 +158,16 @@ interface Props {
     assignedDesigner?: string | null
     /** Called when user assigns/changes a designer from inside the modal */
     onAssignDesigner?: (name: string) => void
+    /** Peer reviewer picked at sc1.6 · propagated to sc1.7 PeerReviewScene */
+    peerReviewerName?: string | null
+    /** Called when SelfAuditScene's PeerAssignPopover picks a peer */
+    onAssignPeerReviewer?: (name: string | null) => void
 }
 
 export default function OfficeworksDocumentReviewModal({
     isOpen, onClose, stage, onValidate, rightPanelOverride, leftPanelOverride, fullContent,
     assignedDesigner, onAssignDesigner,
+    peerReviewerName, onAssignPeerReviewer,
 }: Props) {
     const { isSidebarCollapsed, isDemoActive } = useDemo()
     const leftOffset = isDemoActive && !isSidebarCollapsed ? 'left-80' : 'left-0'
@@ -176,12 +181,21 @@ export default function OfficeworksDocumentReviewModal({
         validationCompiled: false,
         clientApproved: false,
     })
-    // Defensive reset when the modal returns to a pre-Flow-2 stage (back-navigation).
-    // The DesignBOMPanel owns its own state machine for the 3 sub-steps in sc1.2.
+    // Hydration logic for flowProgress flags · they are monotonic in the normal
+    // flow (once true, never false). Three branches:
+    //   · intake / intake-complete · reset to false (back-navigation guard)
+    //   · design                   · no-op, DesignBOMPanel owns its sub-state
+    //   · any other (post-design)  · force flags to true so the BOM + Validation
+    //                                tabs stay populated even when the demo
+    //                                opens mid-flow (refresh, jump-to-step,
+    //                                notification CTA at a later stage).
     useEffect(() => {
         if (stage === 'intake' || stage === 'intake-complete') {
             setFlowProgress({ bomUploaded: false, validationStarted: false, validationCompiled: false, clientApproved: false })
+            return
         }
+        if (stage === 'design') return
+        setFlowProgress({ bomUploaded: true, validationStarted: true, validationCompiled: true, clientApproved: true })
     }, [stage])
     const markBomUploaded       = () => setFlowProgress(p => ({ ...p, bomUploaded: true }))
     const markValidationStarted = () => setFlowProgress(p => ({ ...p, validationStarted: true }))
@@ -284,7 +298,10 @@ export default function OfficeworksDocumentReviewModal({
                                                 if (stage === 'teknion-preview') return <TeknionPreviewPanel onValidate={onValidate} />
                                                 if (stage === 'spec-gap')        return <SpecGapResolvePanel onValidate={onValidate} />
                                                 // Flow 4 · sc1.6 Self-audit · designer-led 5-step audit + peer assignment
-                                                if (stage === 'self-audit')      return <SelfAuditScene onValidate={onValidate} />
+                                                if (stage === 'self-audit')      return <SelfAuditScene onValidate={onValidate} peerName={peerReviewerName ?? null} onAssignPeerReviewer={onAssignPeerReviewer ?? (() => {})} />
+                                                // Flow 5 · sc1.8 submission email + sc1.8b NetSuite/PO handoff
+                                                if (stage === 'submission')      return <SubmissionEmailPanel onValidate={onValidate} />
+                                                if (stage === 'handoff')         return <HandoffPanel onValidate={onValidate} />
                                                 // Default · static description + Approve & Continue
                                                 return (
                                                     <>
@@ -937,17 +954,11 @@ function DefaultStagePanel({ stage }: PanelProps) {
         },
         'self-audit':  { headline: 'Self-audit panel', body: <p>Hero panel · see right side.</p> },
         'peer-review': { headline: 'Peer review panel', body: <p>Hero panel · see right side.</p> },
-        'submission': {
-            headline: 'BOM Submission email',
-            body: <p>Standard template auto-filled. Two attachments: BOM PDF + SP4 file (NetSuite-ready). Strata pre-validates SP4 against schema before send. Sent to Caitlin Barolet + Sales Coordinator.</p>,
-            cta: 'Send for handoff',
-        },
-        'handoff': {
-            headline: 'Coordinator → Salesperson handoff',
-            body: <p>Cross-lane: Coordinator uploads SP4 to NetSuite + applies discount (79% off list = ${MANATT_ORDER_META.netTotal.toLocaleString()} net). Then Salesperson Caitlin releases the PO to Teknion (PO-DC-0009642 generated).</p>,
-            cta: 'Wait for Teknion acknowledgment',
-        },
-        'ack-review': { headline: 'Acknowledgment review', body: <p>Hero panel · see right side.</p> },
+        // 'submission' and 'handoff' are dispatched by SubmissionEmailPanel /
+        // HandoffPanel above · these entries are intentionally omitted.
+        'submission':  { headline: 'BOM Submission', body: <p>Dispatched · see right panel.</p> },
+        'handoff':     { headline: 'NetSuite handoff', body: <p>Dispatched · see right panel.</p> },
+        'ack-review':  { headline: 'Acknowledgment review', body: <p>Hero panel · see right side.</p> },
     }
 
     const data = intro[stage]
@@ -3150,3 +3161,603 @@ No other changes to the BOM. Resubmitting for your review · same Sched Ship tar
         </>
     )
 }
+
+// ─── Flow 5 · sc1.8 · BOM Submission email · PDF + SP4 ─────────────────────────
+// Designer (Kimberly) sends the BOM submission email to Caitlin (Sales DC) +
+// Sales Coordinator. Strata pre-validates SP4 vs NetSuite schema before send.
+// Pattern: 3 summary cards + SQConfirmationDialog (same dialog reused by sc1.4
+// and sc1.5) with an emailConfig override.
+
+const PRE_FLIGHT_SUBMISSION = [
+    {
+        label: 'SP4 schema validated · NetSuite-ready',
+        detail: 'No field gaps · 149 lines mapped to NetSuite item codes · discount field unlocked',
+    },
+    {
+        label: 'BOM PDF · 149 lines · all CRs cited',
+        detail: '13 CRs cross-referenced with Teknion Create · finishes + grain direction confirmed',
+    },
+    {
+        label: 'Recipient list verified · Coordinator role auto-resolved',
+        detail: 'Caitlin Barolet (DC Salesperson) + Sales Coordinator · Felicia CC for oversight',
+    },
+] as const
+
+const SUBMISSION_EMAIL_BODY = `Hi Caitlin,
+
+Submitting the BOM for MANATT 4th Floor · ready for NetSuite handoff.
+
+Project summary:
+· PO target: ${MANATT_ORDER_META.poNumber}
+· 71 line items · 13 CRs · ${MANATT_ORDER_META.manufacturer}
+· List ${MANATT_ORDER_META.listTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Net ${MANATT_ORDER_META.netTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (79% off · SQ #${MANATT_ORDER_META.specialQuote} GSA price-protected)
+· Sched Ship: ${MANATT_ORDER_META.schedShipDate}
+
+Strata pre-validated the SP4 against the NetSuite schema before send · please forward to the Coordinator so they can upload to NetSuite and apply the discount. I'll standby for the Teknion acknowledgment.
+
+Thanks,
+Kimberly`
+
+interface SubmissionEmailPanelProps { onValidate: () => void }
+
+function SubmissionEmailPanel({ onValidate }: SubmissionEmailPanelProps) {
+    const [phase, setPhase] = useState<'compose' | 'sending' | 'sent'>('compose')
+    const [emailDialogOpen, setEmailDialogOpen] = useState(false)
+
+    const submissionEmailConfig = {
+        title: 'BOM Submission · MANATT 4th Floor',
+        subtitle: 'Strata pre-validated · ready for NetSuite handoff',
+        from: 'kimberly.tucker@officeworksinc.com',
+        to: 'caitlin.barolet@officeworksinc.com',
+        cc: 'coordinator-dc@officeworksinc.com, felicia.miano-poles@officeworksinc.com',
+        subject: `BOM Submission · MANATT 4th Floor · ${MANATT_ORDER_META.poNumber}`,
+        body: SUBMISSION_EMAIL_BODY,
+        attachments: [
+            { name: `MANATT-4F_BOM_v1.pdf`,        size: '212 KB', badge: 'BOM · 149 lines' },
+            { name: `MANATT-4F-SP4.json`,           size: '54 KB',  badge: 'Schema validated' },
+        ],
+        sentMessage: 'BOM submission sent · Coordinator + Salesperson notified',
+    }
+
+    return (
+        <>
+            <SQConfirmationDialog
+                isOpen={emailDialogOpen}
+                onSent={() => {
+                    setEmailDialogOpen(false)
+                    setPhase('sending')
+                    window.setTimeout(() => setPhase('sent'), 900)
+                }}
+                onCancel={() => setEmailDialogOpen(false)}
+                emailConfig={submissionEmailConfig}
+            />
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+                {/* Section 1 · Recipient summary */}
+                <section
+                    aria-label="BOM submission recipients"
+                    className="rounded-xl border border-border bg-card overflow-hidden"
+                >
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">BOM submission · to Sales + Coordinator</span>
+                    </div>
+                    <div className="px-4 py-3 space-y-1.5 text-xs">
+                        <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">From</span>
+                            <span className="text-foreground font-mono">kimberly.tucker@officeworksinc.com</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">To</span>
+                            <span className="text-foreground">Caitlin Barolet · Salesperson (DC)</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">Cc</span>
+                            <span className="text-foreground">Sales Coordinator · Felicia Miano-Poles</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">Subject</span>
+                            <span className="text-foreground">BOM Submission · MANATT 4th Floor · {MANATT_ORDER_META.poNumber}</span>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Section 2 · Pre-flight validation */}
+                <section
+                    aria-label="Pre-flight validation"
+                    className="rounded-xl border border-border bg-card overflow-hidden"
+                >
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Pre-flight · 3 checks before send</span>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        {PRE_FLIGHT_SUBMISSION.map(check => (
+                            <li key={check.label} className="px-4 py-2.5 flex items-start gap-2.5">
+                                <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs text-foreground">{check.label}</div>
+                                    <div className="text-[11px] text-muted-foreground mt-0.5">{check.detail}</div>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* Section 3 · Attachments */}
+                <section
+                    aria-label="Submission attachments"
+                    className="rounded-xl border border-border bg-card overflow-hidden"
+                >
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                        <Paperclip className="h-4 w-4 text-foreground" aria-hidden="true" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Attachments · 2 files</span>
+                    </div>
+                    <ul className="divide-y divide-border">
+                        <li className="px-4 py-2.5 flex items-center gap-3">
+                            <FileText className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold text-foreground">MANATT-4F_BOM_v1.pdf</div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5">212 KB · 149 lines · 13 CRs cited</div>
+                            </div>
+                            <span className="text-[9px] font-bold uppercase tracking-wider bg-muted text-foreground border border-border rounded px-1.5 py-0.5 shrink-0">BOM</span>
+                        </li>
+                        <li className="px-4 py-2.5 flex items-center gap-3">
+                            <FileText className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold text-foreground">MANATT-4F-SP4.json</div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5">54 KB · NetSuite-ready · all field gaps resolved</div>
+                            </div>
+                            <span className="text-[9px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5 shrink-0">Schema validated</span>
+                        </li>
+                    </ul>
+                </section>
+
+                {/* Sent banner */}
+                {phase === 'sent' && (
+                    <div
+                        role="status"
+                        className="rounded-xl border border-success/30 bg-success/5 px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-300"
+                    >
+                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                        <div className="flex-1 min-w-0 text-xs">
+                            <div className="font-semibold text-success">Submission sent · Coordinator + Salesperson notified</div>
+                            <div className="text-muted-foreground mt-0.5">
+                                BOM PDF + SP4 file attached · awaiting Coordinator handoff to NetSuite · ETA ~4 minutes.
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Footer CTA */}
+            <div className="border-t border-border px-5 py-3 bg-card shrink-0">
+                {phase === 'compose' && (
+                    <button
+                        type="button"
+                        onClick={() => setEmailDialogOpen(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-sm font-bold transition-colors"
+                    >
+                        <Mail className="h-4 w-4" aria-hidden="true" />
+                        Send BOM submission →
+                    </button>
+                )}
+                {phase === 'sending' && (
+                    <button
+                        type="button"
+                        disabled
+                        aria-busy="true"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-muted text-muted-foreground text-sm font-medium cursor-not-allowed"
+                    >
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        Sending to recipients…
+                    </button>
+                )}
+                {phase === 'sent' && (
+                    <button
+                        type="button"
+                        onClick={onValidate}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
+                    >
+                        Continue to NetSuite handoff
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                )}
+            </div>
+        </>
+    )
+}
+
+// ─── Flow 5 · sc1.8b · Coordinator → Salesperson handoff ───────────────────────
+// 3 sequential sub-steps · each unlocks the next · same role/data as before but
+// stacked vertically full-width for legibility on the narrow modal right pane.
+//   Step 1 · Coordinator · Upload SP4 to NetSuite
+//   Step 2 · Coordinator · Apply 79% discount
+//   Step 3 · Salesperson Caitlin · Review + release PO to Teknion
+
+const SP4_UPLOAD_BULLETS = [
+    'Uploading SP4 to NetSuite · validating fields',
+    'Mapping 149 lines to NetSuite item codes',
+    'Resolving Teknion T25 catalog references',
+    'SP4 uploaded · ready for discount',
+] as const
+
+interface HandoffPanelProps { onValidate: () => void }
+
+type HandoffStep =
+    | 'step-1-upload'
+    | 'step-1-uploading'
+    | 'step-2-discount'
+    | 'step-3-review'
+    | 'step-3-releasing'
+    | 'step-3-released'
+
+/** Map each sub-step phase to its parent step number (1, 2, or 3) for compare helpers. */
+function stepNumberOf(s: HandoffStep): 1 | 2 | 3 {
+    if (s === 'step-1-upload' || s === 'step-1-uploading') return 1
+    if (s === 'step-2-discount') return 2
+    return 3
+}
+
+/** Status badge variants reused by all three cards. */
+function StatusChip({ variant }: { variant: 'pending' | 'active' | 'done' }) {
+    if (variant === 'done') {
+        return (
+            <span
+                role="status"
+                className="ml-auto inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5 shrink-0"
+            >
+                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                Done
+            </span>
+        )
+    }
+    if (variant === 'active') {
+        return (
+            <span className="ml-auto inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-foreground text-background rounded px-1.5 py-0.5 shrink-0">
+                In progress
+            </span>
+        )
+    }
+    return (
+        <span className="ml-auto inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border rounded px-1.5 py-0.5 shrink-0">
+            Awaiting
+        </span>
+    )
+}
+
+function HandoffPanel({ onValidate }: HandoffPanelProps) {
+    const [step, setStep] = useState<HandoffStep>('step-1-upload')
+    const [uploadCount, setUploadCount] = useState(0)
+    const timeoutsRef = useRef<number[]>([])
+
+    useEffect(() => () => {
+        timeoutsRef.current.forEach(id => window.clearTimeout(id))
+        timeoutsRef.current = []
+    }, [])
+
+    // Step 1 upload simulation · bullets at 350ms · auto-advance to step 2.
+    useEffect(() => {
+        if (step !== 'step-1-uploading') return
+        SP4_UPLOAD_BULLETS.forEach((_, i) => {
+            const id = window.setTimeout(() => setUploadCount(i + 1), 350 * (i + 1))
+            timeoutsRef.current.push(id)
+        })
+        const doneId = window.setTimeout(() => setStep('step-2-discount'), 350 * SP4_UPLOAD_BULLETS.length + 250)
+        timeoutsRef.current.push(doneId)
+    }, [step])
+
+    // Step 3 PO release simulation.
+    useEffect(() => {
+        if (step !== 'step-3-releasing') return
+        const id = window.setTimeout(() => setStep('step-3-released'), 1500)
+        timeoutsRef.current.push(id)
+    }, [step])
+
+    const currentStepNum = stepNumberOf(step)
+    const canContinue = step === 'step-3-released'
+
+    // CTA copy varies by current sub-step when disabled.
+    const disabledCopy =
+        step === 'step-1-upload'    ? 'Coordinator about to upload SP4…' :
+        step === 'step-1-uploading' ? 'Coordinator uploading SP4…' :
+        step === 'step-2-discount'  ? 'Coordinator applying discount…' :
+        step === 'step-3-review'    ? 'Salesperson reviewing PO…' :
+        /* step-3-releasing */        'Salesperson releasing PO…'
+
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto p-5 space-y-3 text-sm">
+                {/* Banner · sequential context */}
+                <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3 flex items-start gap-2.5">
+                    <Sparkles className="h-4 w-4 text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                    <div className="flex-1 min-w-0 text-xs">
+                        <div className="font-semibold text-foreground">
+                            Three sequential sub-steps · Coordinator → Salesperson
+                        </div>
+                        <div className="text-muted-foreground mt-0.5">
+                            Coordinator uploads SP4 + applies the 79% discount · then Caitlin releases the PO to Teknion. Each step unlocks the next.
+                        </div>
+                    </div>
+                </div>
+
+                {/* STEP 1 · Coordinator · Upload SP4 to NetSuite */}
+                {(() => {
+                    const variant: 'pending' | 'active' | 'done' =
+                        currentStepNum > 1 ? 'done' :
+                        currentStepNum === 1 ? 'active' :
+                        'pending'
+                    return (
+                        <section
+                            aria-label="Step 1 · Coordinator · Upload SP4 to NetSuite"
+                            aria-current={variant === 'active' ? 'step' : undefined}
+                            className={`rounded-xl border overflow-hidden ${
+                                variant === 'done' ? 'border-success/30 bg-success/5' :
+                                variant === 'active' ? 'border-border bg-card' :
+                                'border-border bg-card opacity-60'
+                            }`}
+                        >
+                            <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                                <span className="h-5 w-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center shrink-0" aria-hidden="true">
+                                    1
+                                </span>
+                                <UserCheck className="h-4 w-4 text-foreground shrink-0" aria-hidden="true" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-foreground truncate">
+                                        Upload SP4 to NetSuite
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground truncate">Sales Coordinator</div>
+                                </div>
+                                <StatusChip variant={variant} />
+                            </div>
+
+                            {variant === 'active' && step === 'step-1-upload' && (
+                                <div className="px-4 py-3 space-y-2.5">
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Drop the validated SP4 here · NetSuite will accept the {MANATT_ORDER_META.specialQuote} schema mapping.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep('step-1-uploading')}
+                                        aria-label="Upload SP4 to NetSuite (simulated)"
+                                        className="w-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 rounded-lg p-4 flex flex-col items-center justify-center gap-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1"
+                                    >
+                                        <div className="h-9 w-9 rounded-xl bg-muted/60 flex items-center justify-center" aria-hidden="true">
+                                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <div className="text-xs font-semibold text-foreground">Drop SP4 here · or click to upload</div>
+                                        <div className="text-[10px] text-muted-foreground italic">Demo · click to simulate the upload of MANATT-4F-SP4.json (54 KB)</div>
+                                    </button>
+                                </div>
+                            )}
+                            {variant === 'active' && step === 'step-1-uploading' && (
+                                <div className="px-4 py-3 space-y-2" role="status" aria-busy="true">
+                                    <div className="flex items-center gap-2">
+                                        <Loader2 className="h-4 w-4 text-foreground animate-spin" aria-hidden="true" />
+                                        <span className="text-xs font-semibold text-foreground">Uploading to NetSuite · ETA 4 min</span>
+                                    </div>
+                                    <ul className="space-y-1.5">
+                                        {SP4_UPLOAD_BULLETS.slice(0, uploadCount).map((b, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-xs text-foreground animate-in fade-in slide-in-from-left-1 duration-200">
+                                                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                                <span>{b}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            {variant === 'done' && (
+                                <div className="px-4 py-2.5 text-xs text-foreground flex items-center gap-2">
+                                    <FileText className="h-3.5 w-3.5 text-success shrink-0" aria-hidden="true" />
+                                    <span><strong>MANATT-4F-SP4.json</strong> · 54 KB · 149 lines mapped · NetSuite-ready</span>
+                                </div>
+                            )}
+                            {variant === 'pending' && (
+                                <div className="px-4 py-2.5 text-[11px] italic text-muted-foreground">
+                                    Will activate at the start of the handoff.
+                                </div>
+                            )}
+                        </section>
+                    )
+                })()}
+
+                {/* STEP 2 · Coordinator · Apply 79% discount */}
+                {(() => {
+                    const variant: 'pending' | 'active' | 'done' =
+                        currentStepNum > 2 ? 'done' :
+                        currentStepNum === 2 ? 'active' :
+                        'pending'
+                    return (
+                        <section
+                            aria-label="Step 2 · Coordinator · Apply 79% discount"
+                            aria-current={variant === 'active' ? 'step' : undefined}
+                            className={`rounded-xl border overflow-hidden ${
+                                variant === 'done' ? 'border-success/30 bg-success/5' :
+                                variant === 'active' ? 'border-border bg-card' :
+                                'border-border bg-card opacity-60'
+                            }`}
+                        >
+                            <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                                <span className="h-5 w-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center shrink-0" aria-hidden="true">
+                                    2
+                                </span>
+                                <DollarSign className="h-4 w-4 text-foreground shrink-0" aria-hidden="true" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-foreground truncate">
+                                        Apply 79% discount
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground truncate">Sales Coordinator · SQ #{MANATT_ORDER_META.specialQuote}</div>
+                                </div>
+                                <StatusChip variant={variant} />
+                            </div>
+
+                            {variant === 'active' && (
+                                <div className="px-4 py-3 space-y-2.5">
+                                    <p className="text-[11px] text-muted-foreground">
+                                        SP4 is loaded · apply the GSA price-protected discount to lock the net total.
+                                    </p>
+                                    <ul className="divide-y divide-border text-[11px] rounded-lg border border-border overflow-hidden">
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">List total</span>
+                                            <span className="text-foreground tabular-nums">${MANATT_ORDER_META.listTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </li>
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">Discount (79% off)</span>
+                                            <span className="text-foreground tabular-nums">−${MANATT_ORDER_META.discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </li>
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3 bg-muted/30">
+                                            <span className="text-foreground font-medium">Net total</span>
+                                            <span className="text-success font-bold tabular-nums">${MANATT_ORDER_META.netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </li>
+                                    </ul>
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep('step-3-review')}
+                                        aria-label="Apply 79% discount in NetSuite"
+                                        className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1"
+                                    >
+                                        <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
+                                        Apply 79% discount
+                                    </button>
+                                </div>
+                            )}
+                            {variant === 'done' && (
+                                <div className="px-4 py-2.5 text-xs text-foreground flex items-center gap-2">
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" aria-hidden="true" />
+                                    <span><strong>Net ${MANATT_ORDER_META.netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> applied · SQ #{MANATT_ORDER_META.specialQuote} · ready for sales handoff</span>
+                                </div>
+                            )}
+                            {variant === 'pending' && (
+                                <div className="px-4 py-2.5 text-[11px] italic text-muted-foreground">
+                                    Discount calculator unlocks once SP4 is uploaded.
+                                </div>
+                            )}
+                        </section>
+                    )
+                })()}
+
+                {/* STEP 3 · Salesperson · Review + release PO to Teknion */}
+                {(() => {
+                    const variant: 'pending' | 'active' | 'done' =
+                        step === 'step-3-released' ? 'done' :
+                        currentStepNum === 3 ? 'active' :
+                        'pending'
+                    return (
+                        <section
+                            aria-label="Step 3 · Salesperson Caitlin · Review and release PO to Teknion"
+                            aria-current={variant === 'active' ? 'step' : undefined}
+                            className={`rounded-xl border overflow-hidden ${
+                                variant === 'done' ? 'border-success/30 bg-success/5' :
+                                variant === 'active' ? 'border-border bg-card' :
+                                'border-border bg-card opacity-60'
+                            }`}
+                        >
+                            <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
+                                <span className="h-5 w-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center shrink-0" aria-hidden="true">
+                                    3
+                                </span>
+                                <Send className="h-4 w-4 text-foreground shrink-0" aria-hidden="true" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-foreground truncate">
+                                        Release PO to Teknion
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground truncate">Salesperson · Caitlin Barolet</div>
+                                </div>
+                                <StatusChip variant={variant} />
+                            </div>
+
+                            {variant === 'active' && (
+                                <div className="px-4 py-3 space-y-2.5">
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Review the PO before sending to Teknion · the PO number is generated on release.
+                                    </p>
+                                    <ul className="divide-y divide-border text-[11px] rounded-lg border border-border overflow-hidden">
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">PO number</span>
+                                            <span className="text-muted-foreground italic">TBD on release</span>
+                                        </li>
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">SQ #</span>
+                                            <span className="text-foreground tabular-nums">{MANATT_ORDER_META.specialQuote} · GSA price-protected</span>
+                                        </li>
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">Net total</span>
+                                            <span className="text-success font-bold tabular-nums">${MANATT_ORDER_META.netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </li>
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">Sched ship</span>
+                                            <span className="text-foreground tabular-nums">{MANATT_ORDER_META.schedShipDate}</span>
+                                        </li>
+                                        <li className="px-3 py-1.5 flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">Recipient</span>
+                                            <span className="text-foreground font-mono">tekco1@teknion.com</span>
+                                        </li>
+                                    </ul>
+                                    {step === 'step-3-review' ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep('step-3-releasing')}
+                                            aria-label="Review and release PO to Teknion"
+                                            className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-brand-400 hover:bg-brand-300 text-zinc-900 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1"
+                                        >
+                                            <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Release PO to Teknion →
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            disabled
+                                            aria-busy="true"
+                                            className="w-full inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-muted text-muted-foreground text-xs font-medium cursor-not-allowed"
+                                        >
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                                            Releasing PO…
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                            {variant === 'done' && (
+                                <div className="px-4 py-2.5 text-xs text-foreground space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" aria-hidden="true" />
+                                        <span><strong>{MANATT_ORDER_META.poNumber}</strong> generated · sent to tekco1@teknion.com</span>
+                                    </div>
+                                    <div className="pl-5 text-[11px] text-muted-foreground">
+                                        Universal #{MANATT_ORDER_META.universal} · order receipt {MANATT_ORDER_META.orderReceipt}
+                                    </div>
+                                </div>
+                            )}
+                            {variant === 'pending' && (
+                                <div className="px-4 py-2.5 text-[11px] italic text-muted-foreground">
+                                    Awaiting Coordinator handoff · Caitlin reviews and releases when ready.
+                                </div>
+                            )}
+                        </section>
+                    )
+                })()}
+            </div>
+
+            {/* Footer CTA · enabled only when step-3-released */}
+            <div className="border-t border-border px-5 py-3 bg-card shrink-0">
+                {!canContinue ? (
+                    <button
+                        type="button"
+                        disabled
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-muted text-muted-foreground text-sm font-medium cursor-not-allowed"
+                    >
+                        {disabledCopy}
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={onValidate}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
+                    >
+                        Continue to Acknowledgment review
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                )}
+            </div>
+        </>
+    )
+}
+

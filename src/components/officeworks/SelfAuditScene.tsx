@@ -35,6 +35,10 @@ import { AUDIT_CHECKLIST_STEPS } from './shared/auditChecklistSteps'
 
 interface Props {
     onValidate: () => void
+    /** Peer reviewer picked by Kimberly · lifted to OfficeworksPage so sc1.7 sees the same person */
+    peerName: string | null
+    /** Setter forwarded from OfficeworksPage state */
+    onAssignPeerReviewer: (name: string | null) => void
 }
 
 type ItemState = 'pending' | 'verified' | 'flagged'
@@ -108,11 +112,17 @@ const STEP_SHORT_TITLE: Record<StepNum, string> = {
     5: 'Last Check',
 }
 
-export default function SelfAuditScene({ onValidate }: Props) {
+/** Parse a flag key like 'step-1-1' → step number. */
+function flagKeyToStep(key: string): StepNum {
+    const m = key.match(/^step-(\d)-/)
+    return (m ? Number(m[1]) : 1) as StepNum
+}
+
+export default function SelfAuditScene({ onValidate, peerName, onAssignPeerReviewer }: Props) {
+    const [mode, setMode] = useState<'manual' | 'strata'>('manual')
     const [itemStates, setItemStates] = useState<Record<string, ItemState>>({})
     const [activeStep, setActiveStep] = useState<StepNum>(1)
     const [showPDF, setShowPDF] = useState(false)
-    const [peerName, setPeerName] = useState<string | null>(null)
     const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'uploaded'>('idle')
     const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>(null)
     const uploadTimeoutRef = useRef<number | null>(null)
@@ -170,37 +180,98 @@ export default function SelfAuditScene({ onValidate }: Props) {
         }, 1200)
     }
 
-    const canSend = peerName !== null
+    // In manual mode the upload is the audit deliverable · required before send.
+    // In strata mode the upload is optional · the interactive verify/flag is the deliverable.
+    const uploadRequirementMet = mode === 'manual' ? uploadPhase === 'uploaded' : true
+    const canSend = uploadRequirementMet && peerName !== null
 
     return (
         <>
             <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
-                {/* Strata pre-check banner · context, no decisions */}
-                <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3 flex items-start gap-2.5">
-                    <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" aria-hidden="true" />
-                    <div className="flex-1 min-w-0 text-xs">
-                        <div className="font-semibold text-foreground">
-                            Strata pre-checked 71 lines × 6 attributes · {TOTAL_FLAGS_CRITICAL} critical · {TOTAL_FLAGS_ADVISORY} advisory
-                        </div>
-                        <div className="text-muted-foreground mt-0.5">
-                            Kimberly Tucker · 5-step audit · cross-referenced with floor plan + validation doc + Create CR DB.
-                        </div>
+                {/* Mode selector · Manual (offline + attach) vs Strata (interactive) */}
+                <section
+                    aria-label="Audit mode"
+                    className="rounded-xl border border-border bg-card overflow-hidden"
+                >
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">How do you want to run the audit?</span>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5 tabular-nums">
-                            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                            {verifiedCount}/{totalItems}
-                        </span>
-                        {flaggedCount > 0 && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-warning/10 text-warning border border-warning/20 rounded px-1.5 py-0.5 tabular-nums">
-                                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                                {flaggedCount} flagged
-                            </span>
-                        )}
-                    </div>
-                </div>
+                    <fieldset className="px-4 py-3 grid grid-cols-2 gap-2">
+                        <legend className="sr-only">Audit mode</legend>
+                        <label className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                            mode === 'manual' ? 'border-primary/40 bg-primary/5' : 'border-border bg-card hover:bg-muted/30'
+                        }`}>
+                            <input
+                                type="radio"
+                                name="audit-mode"
+                                value="manual"
+                                checked={mode === 'manual'}
+                                onChange={() => setMode('manual')}
+                                className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <span className="text-xs font-semibold text-foreground">Manual audit</span>
+                                <div className="text-[10px] text-muted-foreground mt-0.5">
+                                    Review BOM offline · attach your audit notes or a corrected file when ready
+                                </div>
+                            </div>
+                        </label>
+                        <label className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                            mode === 'strata' ? 'border-ai/40 bg-ai/5' : 'border-border bg-card hover:bg-muted/30'
+                        }`}>
+                            <input
+                                type="radio"
+                                name="audit-mode"
+                                value="strata"
+                                checked={mode === 'strata'}
+                                onChange={() => setMode('strata')}
+                                className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-xs font-semibold text-foreground">Audit with Strata</span>
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-ai/10 text-ai border border-ai/20 rounded px-1.5 py-0.5">
+                                        <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                        Recommends
+                                    </span>
+                                </div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5">
+                                    5-step interactive audit · verify/flag each item inline · Strata pre-flags issues
+                                </div>
+                            </div>
+                        </label>
+                    </fieldset>
+                </section>
 
-                {/* Step navigator + body of active step · single card · drastically reduces scroll */}
+                {/* Strata mode · pre-check banner · context, no decisions */}
+                {mode === 'strata' && (
+                    <div className="rounded-xl border border-ai/30 bg-ai/5 px-4 py-3 flex items-start gap-2.5">
+                        <Sparkles className="h-4 w-4 text-ai shrink-0 mt-0.5" aria-hidden="true" />
+                        <div className="flex-1 min-w-0 text-xs">
+                            <div className="font-semibold text-foreground">
+                                Strata pre-checked 71 lines × 6 attributes · {TOTAL_FLAGS_CRITICAL} critical · {TOTAL_FLAGS_ADVISORY} advisory
+                            </div>
+                            <div className="text-muted-foreground mt-0.5">
+                                Kimberly Tucker · 5-step audit · cross-referenced with floor plan + validation doc + Create CR DB.
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-success/10 text-success border border-success/20 rounded px-1.5 py-0.5 tabular-nums">
+                                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                {verifiedCount}/{totalItems}
+                            </span>
+                            {flaggedCount > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-warning/10 text-warning border border-warning/20 rounded px-1.5 py-0.5 tabular-nums">
+                                    <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                                    {flaggedCount} flagged
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Step navigator + body of active step · only rendered in Strata mode */}
+                {mode === 'strata' && (
                 <section
                     aria-label="Audit step navigator"
                     className="rounded-xl border border-border bg-card overflow-hidden"
@@ -214,23 +285,31 @@ export default function SelfAuditScene({ onValidate }: Props) {
                                     key={stepNumber}
                                     type="button"
                                     onClick={() => setActiveStep(stepNumber as StepNum)}
-                                    aria-label={`Step ${stepNumber}: ${STEP_SHORT_TITLE[stepNumber as StepNum]}`}
-                                    aria-pressed={isActive}
-                                    className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[11px] font-medium border transition-colors shrink-0 ${
+                                    aria-label={`Step ${stepNumber}: ${STEP_SHORT_TITLE[stepNumber as StepNum]} · ${verified} of ${total} verified${flagged > 0 ? ` · ${flagged} flagged` : ''}`}
+                                    aria-current={isActive ? 'step' : undefined}
+                                    className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[11px] font-medium border transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1 focus-visible:ring-offset-card ${
                                         isActive
-                                            ? 'bg-primary/10 text-primary border-primary/30 font-bold'
-                                            : 'bg-card text-muted-foreground border-border hover:bg-muted/40 hover:text-foreground'
+                                            ? 'bg-primary text-primary-foreground border-primary font-bold shadow-sm'
+                                            : 'bg-card text-foreground/70 border-border hover:bg-muted/60 hover:text-foreground'
                                     }`}
                                 >
                                     <span className="font-mono tabular-nums">{stepNumber}</span>
                                     <span>{STEP_SHORT_TITLE[stepNumber as StepNum]}</span>
                                     {allVerified && (
-                                        <CheckCircle2 className="h-3 w-3 text-success" aria-hidden="true" />
+                                        <CheckCircle2
+                                            className={`h-3 w-3 ${isActive ? 'text-primary-foreground' : 'text-success'}`}
+                                            aria-hidden="true"
+                                        />
                                     )}
                                     {flagged > 0 && (
-                                        <span className="h-1.5 w-1.5 rounded-full bg-warning" aria-label={`${flagged} flagged`} />
+                                        <span
+                                            className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-primary-foreground' : 'bg-warning'}`}
+                                            aria-hidden="true"
+                                        />
                                     )}
-                                    <span className="text-[9px] tabular-nums opacity-70">{verified}/{total}</span>
+                                    <span className={`text-[9px] tabular-nums ${isActive ? 'text-primary-foreground/85' : 'text-muted-foreground'}`}>
+                                        {verified}/{total}
+                                    </span>
                                 </button>
                             )
                         })}
@@ -316,19 +395,24 @@ export default function SelfAuditScene({ onValidate }: Props) {
                         </div>
                     )}
                 </section>
+                )}
 
-                {/* Supporting file upload · optional · paridad con sc1.5b */}
+                {/* Supporting file upload · required in manual mode · optional in strata mode */}
                 <section
                     aria-label="Supporting file upload"
                     className="rounded-xl border border-border bg-card overflow-hidden"
                 >
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Paperclip className="h-4 w-4 text-foreground" aria-hidden="true" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Supporting file (optional)</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                            {mode === 'manual' ? 'Upload audit results · required' : 'Supporting file (optional)'}
+                        </span>
                     </div>
                     <div className="px-4 py-3 space-y-2.5">
                         <p className="text-[11px] text-muted-foreground">
-                            Upload a corrected BOM, validation deck, or floor plan if you found discrepancies. The peer reviewer will see it alongside your verified items.
+                            {mode === 'manual'
+                                ? 'Attach a corrected BOM, validation deck, or audit notes PDF — this is your audit deliverable for the peer reviewer.'
+                                : 'Upload a corrected file if you found discrepancies that need a new version. The peer reviewer will see it alongside your verified items.'}
                         </p>
                         {uploadPhase === 'idle' && (
                             <button
@@ -372,6 +456,43 @@ export default function SelfAuditScene({ onValidate }: Props) {
                             </div>
                         )}
                     </div>
+                    {/* Manual mode · issues list as a sub-section of the same card */}
+                    {mode === 'manual' && (
+                        <>
+                            <div className="px-4 py-2.5 bg-muted/30 border-t border-border flex items-center gap-2">
+                                <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">
+                                    Things to fix · per Strata&apos;s pre-check · {TOTAL_FLAGS_CRITICAL + TOTAL_FLAGS_ADVISORY} items
+                                </span>
+                            </div>
+                            <ul className="divide-y divide-border">
+                                {Object.entries(STRATA_FLAGS).map(([key, flag]) => {
+                                    const stepNum = flagKeyToStep(key)
+                                    return (
+                                        <li key={key} className="px-4 py-2.5 flex items-start gap-2.5">
+                                            <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 border shrink-0 mt-0.5 ${
+                                                flag.severity === 'critical'
+                                                    ? 'bg-warning/10 text-warning border-warning/20'
+                                                    : 'bg-ai/10 text-ai border-ai/20'
+                                            }`}>
+                                                <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                                {flag.severity}
+                                            </span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                    Step {stepNum} · {STEP_SHORT_TITLE[stepNum]}
+                                                </div>
+                                                <div className="text-xs text-foreground mt-0.5">{flag.reason}</div>
+                                            </div>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                            <div className="px-4 py-2.5 bg-muted/20 border-t border-border text-[11px] text-foreground/70">
+                                Resolve these before sending.
+                            </div>
+                        </>
+                    )}
                 </section>
 
                 {/* Peer reviewer assignment · designer picks before send */}
@@ -395,15 +516,36 @@ export default function SelfAuditScene({ onValidate }: Props) {
                         <PeerAssignPopover
                             assigneeName={peerName}
                             currentDesignerName="Kimberly Tucker"
-                            onAssign={setPeerName}
+                            excludeManagerName="Felicia Miano-Poles"
+                            onAssign={onAssignPeerReviewer}
                         />
                     </div>
                 </section>
             </div>
 
-            {/* Footer CTA */}
+            {/* Footer CTA · gated by upload (manual only) + peer reviewer (always) */}
             <div className="border-t border-border px-5 py-3 bg-card shrink-0">
-                {!canSend ? (
+                {mode === 'manual' && uploadPhase === 'uploading' && (
+                    <button
+                        type="button"
+                        disabled
+                        aria-busy="true"
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-muted text-muted-foreground text-sm font-medium cursor-not-allowed"
+                    >
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        Reading file…
+                    </button>
+                )}
+                {mode === 'manual' && uploadPhase !== 'uploading' && !uploadRequirementMet && (
+                    <button
+                        type="button"
+                        disabled
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-md bg-muted text-muted-foreground text-sm font-medium cursor-not-allowed"
+                    >
+                        Upload audit results to continue
+                    </button>
+                )}
+                {uploadRequirementMet && peerName === null && (
                     <button
                         type="button"
                         disabled
@@ -411,7 +553,8 @@ export default function SelfAuditScene({ onValidate }: Props) {
                     >
                         Assign peer reviewer to continue
                     </button>
-                ) : (
+                )}
+                {canSend && (
                     <button
                         type="button"
                         onClick={onValidate}

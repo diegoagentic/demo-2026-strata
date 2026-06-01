@@ -93,6 +93,8 @@ export default function OfficeworksPage() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     // Active designer assignment for MANATT · selected via IntakeAssignPanel or Dashboard
     const [assignedDesigner, setAssignedDesigner] = useState<string | null>(null)
+    // Peer reviewer picked at sc1.6 (SelfAuditScene → PeerAssignPopover) · propagated to sc1.7
+    const [peerReviewerName, setPeerReviewerName] = useState<string | null>(null)
 
     const stepId = currentStep?.id
     const stage = stepIdToStage(stepId)
@@ -128,7 +130,7 @@ export default function OfficeworksPage() {
     // tabs stay visible on the left.
     let fullContent: React.ReactNode | undefined
     if (stage === 'peer-review') {
-        fullContent = <PeerReviewScene onContinue={handleValidate} />
+        fullContent = <PeerReviewScene onContinue={handleValidate} peerName={peerReviewerName} />
     } else if (stage === 'ack-review') {
         fullContent = <AckReviewScene onContinue={handleValidate} />
     }
@@ -159,6 +161,8 @@ export default function OfficeworksPage() {
                 fullContent={fullContent}
                 assignedDesigner={assignedDesigner}
                 onAssignDesigner={setAssignedDesigner}
+                peerReviewerName={peerReviewerName}
+                onAssignPeerReviewer={setPeerReviewerName}
             />
         </MBIPageShell>
     )

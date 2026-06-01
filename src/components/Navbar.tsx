@@ -130,6 +130,11 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Sales Coordinator',
         photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
     },
+    'Officeworks Peer Reviewer': {
+        name: 'Rebecca Warren',
+        role: 'Lead Designer · MA / NY / NJ',
+        photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
@@ -148,6 +153,7 @@ function resolveProfileKey(role: string | undefined, app: string | undefined): s
         if (role === 'Design Manager')    return 'Officeworks Design Manager';
         if (role === 'Designer')          return 'Officeworks Designer';
         if (role === 'Sales Coordinator') return 'Officeworks Sales Coordinator';
+        if (role === 'Peer Reviewer')     return 'Officeworks Peer Reviewer';
         return 'Officeworks Design Manager';
     }
     if (role === 'Expert') return 'Expert';

@@ -27,6 +27,8 @@ interface PeerAssignPopoverProps {
     assigneeName: string | null
     /** Designer currently running the audit · excluded from the list */
     currentDesignerName: string
+    /** Optional · manager name to exclude from the pool (manager shouldn't peer-review) */
+    excludeManagerName?: string
     onAssign: (name: string | null) => void
     triggerLabel?: string
 }
@@ -92,6 +94,7 @@ interface AnchorPos {
 export default function PeerAssignPopover({
     assigneeName,
     currentDesignerName,
+    excludeManagerName,
     onAssign,
     triggerLabel = 'Assign peer reviewer',
 }: PeerAssignPopoverProps) {
@@ -101,7 +104,9 @@ export default function PeerAssignPopover({
     const popoverRef = useRef<HTMLDivElement>(null)
 
     const eligible = DESIGNER_PROFILES.filter(
-        d => d.name !== currentDesignerName && (d.seniority === 'Lead' || d.seniority === 'Senior'),
+        d => d.name !== currentDesignerName
+            && d.name !== excludeManagerName
+            && (d.seniority === 'Lead' || d.seniority === 'Senior'),
     )
     const assignee = assigneeName ? DESIGNER_PROFILES.find(d => d.name === assigneeName) ?? null : null
     const recommended = strataRecommendation(eligible)

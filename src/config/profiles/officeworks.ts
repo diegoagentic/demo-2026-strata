@@ -111,9 +111,9 @@ export const OFFICEWORKS_STEPS: DemoStep[] = [
         groupId: 4,
         groupTitle: 'Spec Check',
         title: 'Peer review · second designer',
-        description: 'Felicia opens the peer audit · Rebecca Warren reviews Kimberly\'s self-audit. Strata summarizes deltas to focus the review. Felicia drops her own tacit knowledge as rules ("I always check District inset glass — should be 6mm not CET default 10mm") — converting tacit to explicit knowledge base · CEO #3 priority (SC7).',
+        description: 'A second designer (Rebecca Warren by default · cross-market peer auditor) audits Kimberly\'s self-audit. Strata summarizes deltas to focus the review and surfaces tacit-knowledge rules captured from Felicia\'s prior projects (e.g. "District inset glass should be 6mm, not CET default 10mm") — the peer can save them to the OW knowledge base before approving (CEO #3 priority · SC7 knowledge concentration risk).',
         app: 'officeworks-spec-check',
-        role: 'Design Manager',
+        role: 'Peer Reviewer',
     },
 
     // ═══════════════════════════════════════════
@@ -225,8 +225,8 @@ export const OFFICEWORKS_STEP_MESSAGES: Record<string, string[]> = {
     'sc1.7': [
         'Peer assigned: Rebecca Warren (MA/NY/NJ)',
         'Delta summary: focus on CRs + electrical layout',
-        'Felicia tacit knowledge: District inset glass should be 6mm',
-        'Felicia tacit: Leverage NO field cut metal fascia',
+        'Strata surfaced: District inset glass should be 6mm (from Felicia\'s history)',
+        'Strata surfaced: Leverage NO field cut metal fascia (from Felicia\'s history)',
         '2 new rules saved to Officeworks knowledge base',
         'Peer audit complete · BOM approved · send submission',
     ],
