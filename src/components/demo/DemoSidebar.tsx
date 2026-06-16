@@ -142,11 +142,16 @@ export default function DemoSidebar() {
     const isWRG = activeProfile.id === 'wrg';
     const isLeland = activeProfile.id === 'leland';
     const isOfficeworks = activeProfile.id === 'officeworks';
+    const isClc = activeProfile.id === 'clc';
 
     // Officeworks runs three flows in parallel (Spec Check & Design ·
     // Labor & Delivery · Sales). Tab toggle filters the sidebar to one flow.
     type OfficeworksFlow = 'spec-check' | 'labor-delivery' | 'sales';
     const [activeFlow, setActiveFlow] = React.useState<OfficeworksFlow>('spec-check');
+
+    // CLC runs four flows in parallel (Calendar · SharePoint · Intake · Data Lake).
+    type ClcFlow = 'calendar' | 'sharepoint' | 'intake' | 'data-lake';
+    const [activeClcFlow, setActiveClcFlow] = React.useState<ClcFlow>('calendar');
 
     // If the user lands directly on a step from a different flow (e.g. resumed
     // session), sync the tab so the active step is visible.
@@ -158,12 +163,21 @@ export default function DemoSidebar() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOfficeworks, activeProfile.id]);
 
+    React.useEffect(() => {
+        if (!isClc) return;
+        const curr = steps[currentStepIndex];
+        const f = (curr?.flowId ?? 'calendar') as ClcFlow;
+        if (f !== activeClcFlow) setActiveClcFlow(f);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isClc, activeProfile.id, currentStepIndex]);
+
     // Filtered + original-index-preserving step list for the render loop.
     const displayedSteps = React.useMemo(() => {
         const indexed = steps.map((step, originalIndex) => ({ step, originalIndex }));
-        if (!isOfficeworks) return indexed;
-        return indexed.filter(({ step }) => (step.flowId ?? 'spec-check') === activeFlow);
-    }, [steps, isOfficeworks, activeFlow]);
+        if (isOfficeworks) return indexed.filter(({ step }) => (step.flowId ?? 'spec-check') === activeFlow);
+        if (isClc) return indexed.filter(({ step }) => (step.flowId ?? 'calendar') === activeClcFlow);
+        return indexed;
+    }, [steps, isOfficeworks, activeFlow, isClc, activeClcFlow]);
 
     const flowCounts = React.useMemo(() => {
         if (!isOfficeworks) return { specCheck: 0, laborDelivery: 0, sales: 0 };
@@ -176,6 +190,19 @@ export default function DemoSidebar() {
         }
         return { specCheck: s, laborDelivery: l, sales: x };
     }, [steps, isOfficeworks]);
+
+    const clcFlowCounts = React.useMemo(() => {
+        if (!isClc) return { calendar: 0, sharepoint: 0, intake: 0, dataLake: 0 };
+        let c = 0, sp = 0, i = 0, dl = 0;
+        for (const step of steps) {
+            const f = step.flowId ?? 'calendar';
+            if (f === 'calendar') c++;
+            else if (f === 'sharepoint') sp++;
+            else if (f === 'intake') i++;
+            else if (f === 'data-lake') dl++;
+        }
+        return { calendar: c, sharepoint: sp, intake: i, dataLake: dl };
+    }, [steps, isClc]);
 
     // L&D vertical sub-toggle (Furniture vs Walls) · only meaningful inside L&D tab.
     const activeVertical = useOfficeworksVertical()
@@ -190,6 +217,13 @@ export default function DemoSidebar() {
         // Jump to first step of the target flow so currentStepIndex points to a
         // visible row · avoids stale-active-state when the flow changes.
         const firstIdx = steps.findIndex(s => (s.flowId ?? 'spec-check') === flow);
+        if (firstIdx >= 0) goToStep(firstIdx);
+    };
+
+    const handleClcFlowSwitch = (flow: ClcFlow) => {
+        if (flow === activeClcFlow) return;
+        setActiveClcFlow(flow);
+        const firstIdx = steps.findIndex(s => (s.flowId ?? 'calendar') === flow);
         if (firstIdx >= 0) goToStep(firstIdx);
     };
     const isWorkspaces = activeProfile.id === 'workspaces';
@@ -396,6 +430,77 @@ export default function DemoSidebar() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => { handleFlowSwitch(opt.id); close() }}
+                                                                        className={`w-full inline-flex items-center gap-2 px-3 py-2 text-[12px] transition-colors text-left ${
+                                                                            isActive
+                                                                                ? 'bg-primary/10 text-foreground font-semibold'
+                                                                                : 'text-foreground hover:bg-muted/50'
+                                                                        }`}
+                                                                    >
+                                                                        <span className="flex-1 truncate">{opt.label}</span>
+                                                                        <span className="text-[10px] tabular-nums rounded-full bg-zinc-900/10 dark:bg-white/10 px-1.5 text-muted-foreground">
+                                                                            {opt.count}
+                                                                        </span>
+                                                                        {isActive && <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                                                                    </button>
+                                                                </li>
+                                                            )
+                                                        })}
+                                                    </ul>
+                                                )}
+                                            </PopoverPanel>
+                                        </Transition>
+                                    </>
+                                )}
+                            </Popover>
+                        </div>
+                    )
+                })()}
+
+                {/* CLC · Flow dropdown selector (Calendar · SharePoint · Intake · Data Lake) */}
+                {isClc && (() => {
+                    const FLOW_OPTIONS = [
+                        { id: 'calendar'   as const, label: 'Calendar Sync',        count: clcFlowCounts.calendar },
+                        { id: 'sharepoint' as const, label: 'SharePoint Seeding',   count: clcFlowCounts.sharepoint },
+                        { id: 'intake'     as const, label: 'Intake Validation',    count: clcFlowCounts.intake },
+                        { id: 'data-lake'  as const, label: 'Data Lake Dashboard',  count: clcFlowCounts.dataLake },
+                    ]
+                    const activeOpt = FLOW_OPTIONS.find(f => f.id === activeClcFlow) ?? FLOW_OPTIONS[0]
+                    return (
+                        <div className="mt-4">
+                            <Popover className="relative">
+                                {({ open }) => (
+                                    <>
+                                        <PopoverButton
+                                            className={`w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${c.bgBadgeActive} ${c.textBadgeActive}`}
+                                            aria-label="Switch active CLC flow"
+                                        >
+                                            <span className="truncate">{activeOpt.label}</span>
+                                            <span className="inline-flex items-center gap-1.5 shrink-0">
+                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 ${c.bgBadge} ${c.textBadge}`}>
+                                                    {activeOpt.count}
+                                                </span>
+                                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+                                            </span>
+                                        </PopoverButton>
+                                        <Transition
+                                            as={React.Fragment}
+                                            enter="transition ease-out duration-150"
+                                            enterFrom="opacity-0 -translate-y-1"
+                                            enterTo="opacity-100 translate-y-0"
+                                            leave="transition ease-in duration-100"
+                                            leaveFrom="opacity-100 translate-y-0"
+                                            leaveTo="opacity-0 -translate-y-1"
+                                        >
+                                            <PopoverPanel className="absolute z-50 left-0 right-0 mt-1 rounded-md bg-card border border-border shadow-lg overflow-hidden">
+                                                {({ close }) => (
+                                                    <ul role="listbox" aria-label="CLC flows">
+                                                        {FLOW_OPTIONS.map(opt => {
+                                                            const isActive = activeClcFlow === opt.id
+                                                            return (
+                                                                <li key={opt.id} role="option" aria-selected={isActive}>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => { handleClcFlowSwitch(opt.id); close() }}
                                                                         className={`w-full inline-flex items-center gap-2 px-3 py-2 text-[12px] transition-colors text-left ${
                                                                             isActive
                                                                                 ? 'bg-primary/10 text-foreground font-semibold'

@@ -14,6 +14,7 @@ import { LELAND_STEPS, LELAND_STEP_BEHAVIOR, LELAND_STEP_MESSAGES, LELAND_SELF_I
 import { BFI_STEPS, BFI_STEP_BEHAVIOR, BFI_STEP_MESSAGES, BFI_SELF_INDICATED } from './profiles/bfi';
 import { WORKSPACES_STEPS, WORKSPACES_STEP_BEHAVIOR, WORKSPACES_STEP_MESSAGES, WORKSPACES_SELF_INDICATED } from './profiles/workspaces';
 import { OFFICEWORKS_STEPS, OFFICEWORKS_STEP_BEHAVIOR, OFFICEWORKS_STEP_MESSAGES, OFFICEWORKS_SELF_INDICATED } from './profiles/officeworks';
+import { CLC_STEPS, CLC_STEP_BEHAVIOR, CLC_STEP_MESSAGES, CLC_SELF_INDICATED } from './profiles/clc';
 
 export type SimulationApp =
     | 'dashboard' | 'expert-hub' | 'email-marketplace'
@@ -29,7 +30,8 @@ export type SimulationApp =
     | 'workspaces-submit' | 'workspaces-approval' | 'workspaces-ap' | 'workspaces-reporting'
     | 'officeworks-intake' | 'officeworks-design' | 'officeworks-spec-check' | 'officeworks-submission' | 'officeworks-dashboard'
     | 'officeworks-labor'
-    | 'officeworks-sales';
+    | 'officeworks-sales'
+    | 'clc-calendar' | 'clc-sharepoint' | 'clc-intake' | 'clc-dashboard';
 
 export interface DemoStep {
     id: string;
@@ -38,7 +40,7 @@ export interface DemoStep {
     title: string;
     description: string;
     app: SimulationApp;
-    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Manager' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant' | 'BFI Manager' | 'Design Manager' | 'Peer Reviewer' | 'Sr Operations' | 'Sales Lead';
+    role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Manager' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant' | 'BFI Manager' | 'Design Manager' | 'Peer Reviewer' | 'Sr Operations' | 'Sales Lead' | 'Director of Operations' | 'Office Director';
     highlightId?: string;
     /**
      * Optional flow grouping for multi-flow profiles (Officeworks runs Spec Check,
@@ -46,10 +48,10 @@ export interface DemoStep {
      * behaves as 'spec-check' for backwards-compat. Only the Officeworks profile
      * reads this.
      */
-    flowId?: 'spec-check' | 'labor-delivery' | 'sales';
+    flowId?: 'spec-check' | 'labor-delivery' | 'sales' | 'calendar' | 'sharepoint' | 'intake' | 'data-lake';
 }
 
-export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks';
+export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks' | 'clc';
 
 export interface DemoProfile {
     id: DemoProfileId;
@@ -66,6 +68,17 @@ export interface DemoProfile {
 // Order: most recently created demo first (newest at top of Switch Demo dropdown).
 // To add a new demo, prepend its entry — do not append.
 export const DEMO_PROFILES: DemoProfile[] = [
+    {
+        id: 'clc',
+        name: 'CLC',
+        companyName: 'Creative Library Concepts',
+        description: 'IQ × Outlook × SharePoint × M365 · install scheduling · asset seeding · intake validation · data lake',
+        icon: '📚',
+        steps: CLC_STEPS,
+        stepBehavior: CLC_STEP_BEHAVIOR,
+        stepMessages: CLC_STEP_MESSAGES,
+        selfIndicatedSteps: CLC_SELF_INDICATED,
+    },
     {
         id: 'officeworks',
         name: 'Officeworks',
