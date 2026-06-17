@@ -7,8 +7,13 @@ interface CLCFloatingPanelProps {
     anchorRef: RefObject<HTMLElement | null>
     children: ReactNode
     width?: number
-    /** Anchor edge for horizontal alignment. Default: right edge of trigger
-        aligns with right edge of panel. */
+    /** Anchor edge for horizontal alignment.
+        - 'bottom-start' (default) → panel's LEFT edge aligns with trigger's
+          left edge · panel extends to the right (safe for triggers near the
+          left side of the viewport, which is typical for top summary chips)
+        - 'bottom-end' → panel's RIGHT edge aligns with trigger's right edge ·
+          panel extends to the left (use for triggers in the top-right corner)
+        Both modes auto-clamp to keep the panel inside the viewport. */
     anchor?: 'bottom-end' | 'bottom-start'
     title?: string
 }
@@ -22,6 +27,7 @@ interface AnchorPos {
 }
 
 const GAP = 8
+const EDGE_MARGIN = 8
 
 /**
  * Portal-based floating popover with smart positioning.
@@ -36,7 +42,7 @@ const GAP = 8
  *  - click-outside (anchor + panel both excluded) closes
  *  - Escape closes
  */
-export default function CLCFloatingPanel({ open, onClose, anchorRef, children, width = 360, anchor = 'bottom-end', title }: CLCFloatingPanelProps) {
+export default function CLCFloatingPanel({ open, onClose, anchorRef, children, width = 360, anchor = 'bottom-start', title }: CLCFloatingPanelProps) {
     const [pos, setPos] = useState<AnchorPos | null>(null)
     const panelRef = useRef<HTMLDivElement>(null)
 
@@ -44,12 +50,23 @@ export default function CLCFloatingPanel({ open, onClose, anchorRef, children, w
         const el = anchorRef.current
         if (!el) return
         const r = el.getBoundingClientRect()
+        const vpW = window.innerWidth
+        const top = r.bottom + GAP
+
         if (anchor === 'bottom-start') {
-            setPos({ top: r.bottom + GAP, left: Math.max(8, r.left) })
+            // Panel's left edge aligns with trigger's left edge.
+            // Clamp so the panel never overflows the right edge of the viewport.
+            const maxLeft = Math.max(EDGE_MARGIN, vpW - width - EDGE_MARGIN)
+            const left = Math.min(maxLeft, Math.max(EDGE_MARGIN, r.left))
+            setPos({ top, left })
         } else {
-            setPos({ top: r.bottom + GAP, right: Math.max(8, window.innerWidth - r.right) })
+            // Panel's right edge aligns with trigger's right edge.
+            // Clamp so the panel never overflows the left edge.
+            const maxRight = Math.max(EDGE_MARGIN, vpW - width - EDGE_MARGIN)
+            const right = Math.min(maxRight, Math.max(EDGE_MARGIN, vpW - r.right))
+            setPos({ top, right })
         }
-    }, [anchorRef, anchor])
+    }, [anchorRef, anchor, width])
 
     useEffect(() => {
         if (!open) return
@@ -98,7 +115,7 @@ export default function CLCFloatingPanel({ open, onClose, anchorRef, children, w
                 width,
                 maxHeight: '80vh',
                 overflowY: 'auto',
-                zIndex: 250,
+                zIndex: 9999,
             }}
         >
             {children}

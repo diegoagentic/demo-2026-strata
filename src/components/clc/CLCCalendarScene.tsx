@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import { Database, RefreshCw, Clock, Sparkles, ArrowRight } from 'lucide-react'
 import WeekCalendarGrid from './shared/WeekCalendarGrid'
@@ -41,7 +41,10 @@ export default function CLCCalendarScene() {
     // View mode (step-aware default + user override)
     const [viewMode, setViewMode] = useState<ViewMode>('list')
     const [pulseMode, setPulseMode] = useState<ViewMode | null>(null)
-    const [hasUserToggled, setHasUserToggled] = useState(false)
+    // Use a ref (not state) so toggling inside a step does NOT re-trigger
+    // the per-step useEffect — which would race with the autoswap timer
+    // and cause Step 1.1 to never switch to Calendar.
+    const userToggledRef = useRef(false)
 
     // Filter state
     const [statuses, setStatuses] = useState<string[]>([])
@@ -50,40 +53,44 @@ export default function CLCCalendarScene() {
     const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(null)
 
     // ─── Per-step wiring ──────────────────────────────────────────────────
+    // Single effect keyed on stepId · forces the default mode + schedules
+    // the autoswap. User overrides flip userToggledRef (a ref, not state)
+    // so this effect does NOT re-run mid-step.
     useEffect(() => {
         if (!stepId) return
+        userToggledRef.current = false  // reset on step entry
+
         if (stepId === 'clc1.0') {
             setViewMode('list')
             setPulseMode(null)
-        } else if (stepId === 'clc1.1') {
-            // List → Calendar autoswap @1500ms (the bridge mechanic)
-            if (!hasUserToggled) {
-                setViewMode('list')
-                setPulseMode('calendar')
-                const t = setTimeout(() => {
-                    setViewMode('calendar')
-                    setPulseMode(null)
-                }, 1500)
-                return () => clearTimeout(t)
-            }
-        } else if (stepId === 'clc1.2') {
-            if (!hasUserToggled) setViewMode('calendar')
-            setPulseMode(null)
-        } else if (stepId === 'clc1.3') {
-            if (!hasUserToggled) setViewMode('calendar')
-            setPulseMode(null)
+            return
         }
-    }, [stepId, hasUserToggled])
-
-    // Reset the user-toggled flag when stepId changes so each step gets one
-    // chance to set its default. Manual toggle within the step disables it.
-    useEffect(() => {
-        setHasUserToggled(false)
+        if (stepId === 'clc1.1') {
+            // Land on list · pulse the Calendar mode chip · auto-swap @1500ms
+            setViewMode('list')
+            setPulseMode('calendar')
+            const t = setTimeout(() => {
+                if (userToggledRef.current) return  // user took over; skip
+                setViewMode('calendar')
+                setPulseMode(null)
+            }, 1500)
+            return () => clearTimeout(t)
+        }
+        if (stepId === 'clc1.2') {
+            setViewMode('calendar')
+            setPulseMode(null)
+            return
+        }
+        if (stepId === 'clc1.3') {
+            setViewMode('calendar')
+            setPulseMode(null)
+            return
+        }
     }, [stepId])
 
     const handleViewChange = (m: ViewMode) => {
         setViewMode(m)
-        setHasUserToggled(true)
+        userToggledRef.current = true
         setPulseMode(null)
     }
 
