@@ -1,4 +1,4 @@
-// Mock data for Flow 1 — Calendar Sync
+﻿// Mock data for Flow 1 — Calendar Sync
 //
 // 14 install jobs across NY/NJ/PA, 6 weeks starting Mon Jun 1 2026.
 // Fairport Public Library is the anchor (5 IQ jobs · all CLC vendors).
@@ -322,7 +322,7 @@ export const REGION_LABEL: Record<Region, string> = {
     pa: 'PA',
 }
 
-// ─── Third-party installer suggestion (Flow 1 · clc1.3) ──────────────────────
+// ─── Third-party installer suggestion (Flow 1 · clc1.4) ──────────────────────
 
 export const THIRD_PARTY_INSTALLER = {
     name: 'Albany Install Co.',

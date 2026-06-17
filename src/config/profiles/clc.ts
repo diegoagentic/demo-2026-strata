@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // CLC — Creative Library Concepts · Strata AI Multi-Flow Demo Profile
 //
 // CLIENT: Creative Library Concepts (Manalapan NJ · 12 employees · founded 1993
@@ -19,10 +19,10 @@
 //
 // STRUCTURE: 12 steps across 4 flows
 //
-//   Group 1 — Calendar Sync (Flow 1)        clc1.0 → clc1.3   (IQ → Outlook)
-//   Group 2 — SharePoint Seeding (Flow 2)   clc2.0 → clc2.3   (IQ → SharePoint)
-//   Group 3 — Intake Validation (Flow 3)    clc3.0 → clc3.2   (Survey ↔ IQ)
-//   Group 4 — Data Lake Dashboard (Flow 4)  clc4.0            (persistent tab)
+//   Group 1 — Calendar Sync (Flow 1)        clc1.1 → clc1.4   (IQ → Outlook)
+//   Group 2 — SharePoint Seeding (Flow 2)   clc2.1 → clc2.4   (IQ → SharePoint)
+//   Group 3 — Intake Validation (Flow 3)    clc3.1 → clc3.3   (Survey ↔ IQ)
+//   Group 4 — Data Lake Dashboard (Flow 4)  clc4.1            (persistent tab)
 //
 // STAKEHOLDER PAIN MAP (from Avanto discovery call · 2026-05-27):
 //   #1 Calendar visibility → clc1.* "if it happened tomorrow, would be huge"
@@ -50,7 +50,7 @@ export const CLC_STEPS: DemoStep[] = [
     // GROUP 1: Calendar Sync (Flow 1) · IQ → Outlook
     // ═══════════════════════════════════════════
     {
-        id: 'clc1.0',
+        id: 'clc1.1',
         groupId: 1,
         groupTitle: 'Calendar Sync',
         title: 'Pull install schedule from IQ',
@@ -60,7 +60,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'calendar',
     },
     {
-        id: 'clc1.1',
+        id: 'clc1.2',
         groupId: 1,
         groupTitle: 'Calendar Sync',
         title: 'Publish to Outlook calendar · visual load view',
@@ -70,7 +70,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'calendar',
     },
     {
-        id: 'clc1.2',
+        id: 'clc1.3',
         groupId: 1,
         groupTitle: 'Calendar Sync',
         title: 'Drag-drop reschedule · queued for IQ batch sync',
@@ -80,7 +80,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'calendar',
     },
     {
-        id: 'clc1.3',
+        id: 'clc1.4',
         groupId: 1,
         groupTitle: 'Calendar Sync',
         title: 'Capacity warning · third-party installer trigger',
@@ -94,7 +94,7 @@ export const CLC_STEPS: DemoStep[] = [
     // GROUP 2: SharePoint Seeding (Flow 2) · IQ → SharePoint
     // ═══════════════════════════════════════════
     {
-        id: 'clc2.0',
+        id: 'clc2.1',
         groupId: 2,
         groupTitle: 'SharePoint Seeding',
         title: 'Job hits Scheduled · seed installer folder',
@@ -104,7 +104,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'sharepoint',
     },
     {
-        id: 'clc2.1',
+        id: 'clc2.2',
         groupId: 2,
         groupTitle: 'SharePoint Seeding',
         title: 'Consolidate 5 IQ jobs · exclude 2 unrelated',
@@ -114,7 +114,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'sharepoint',
     },
     {
-        id: 'clc2.2',
+        id: 'clc2.3',
         groupId: 2,
         groupTitle: 'SharePoint Seeding',
         title: 'Review consolidated assets · 15 files staged',
@@ -124,7 +124,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'sharepoint',
     },
     {
-        id: 'clc2.3',
+        id: 'clc2.4',
         groupId: 2,
         groupTitle: 'SharePoint Seeding',
         title: 'Publish folder · share link with installer',
@@ -138,7 +138,7 @@ export const CLC_STEPS: DemoStep[] = [
     // GROUP 3: Intake Validation (Flow 3) · Survey ↔ IQ
     // ═══════════════════════════════════════════
     {
-        id: 'clc3.0',
+        id: 'clc3.1',
         groupId: 3,
         groupTitle: 'Intake Validation',
         title: 'Award received · pick delivery channel',
@@ -148,7 +148,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'intake',
     },
     {
-        id: 'clc3.1',
+        id: 'clc3.2',
         groupId: 3,
         groupTitle: 'Intake Validation',
         title: 'Customer survey · 10 site-conditions questions',
@@ -158,7 +158,7 @@ export const CLC_STEPS: DemoStep[] = [
         flowId: 'intake',
     },
     {
-        id: 'clc3.2',
+        id: 'clc3.3',
         groupId: 3,
         groupTitle: 'Intake Validation',
         title: 'Reconcile survey vs IQ · queue corrections',
@@ -172,7 +172,7 @@ export const CLC_STEPS: DemoStep[] = [
     // GROUP 4: Data Lake Dashboard (Flow 4) · persistent
     // ═══════════════════════════════════════════
     {
-        id: 'clc4.0',
+        id: 'clc4.1',
         groupId: 4,
         groupTitle: 'Data Lake Dashboard',
         title: 'Operational dashboard · KPIs pulling from IQ + QuickBooks + M365',
@@ -187,104 +187,104 @@ export const CLC_STEPS: DemoStep[] = [
 // ─── STEP BEHAVIOR (presenter guide · action-forward) ────────────────────────
 
 export const CLC_STEP_BEHAVIOR: Record<string, StepBehavior> = {
-    'clc1.0': { mode: 'interactive', userAction: 'Open the IQ source list · confirm 14 jobs pulled · proceed to publish' },
-    'clc1.1': { mode: 'interactive', userAction: 'Review the Outlook week view · Sparkles on Strata-scheduled jobs · scan by region' },
-    'clc1.2': { mode: 'interactive', userAction: 'Drag the Fairport card from Jun 2 to Jun 5 · confirm "Queued for IQ batch sync" chip appears' },
-    'clc1.3': { mode: 'interactive', userAction: 'Expand the NY region warning · review the third-party installer suggestion · open the draft email' },
+    'clc1.1': { mode: 'interactive', userAction: 'Open the IQ source list · confirm 14 jobs pulled · proceed to publish' },
+    'clc1.2': { mode: 'interactive', userAction: 'Review the Outlook week view · Sparkles on Strata-scheduled jobs · scan by region' },
+    'clc1.3': { mode: 'interactive', userAction: 'Drag the Fairport card from Jun 2 to Jun 5 · confirm "Queued for IQ batch sync" chip appears' },
+    'clc1.4': { mode: 'interactive', userAction: 'Expand the NY region warning · review the third-party installer suggestion · open the draft email' },
 
-    'clc2.0': { mode: 'interactive', userAction: 'Open the Scheduled trigger · review the Fairport job hitting the seed condition' },
-    'clc2.1': { mode: 'interactive', userAction: 'Review the 5 IQ jobs included · check the 2 excluded with tag-mismatch rationale · proceed' },
-    'clc2.2': { mode: 'interactive', userAction: 'Preview 2-3 PDFs inline · note the Sparkles-flagged ACK · approve the consolidation' },
-    'clc2.3': { mode: 'interactive', userAction: 'Publish the folder · confirm the SharePoint URL · review the installer notification draft' },
+    'clc2.1': { mode: 'interactive', userAction: 'Open the Scheduled trigger · review the Fairport job hitting the seed condition' },
+    'clc2.2': { mode: 'interactive', userAction: 'Review the 5 IQ jobs included · check the 2 excluded with tag-mismatch rationale · proceed' },
+    'clc2.3': { mode: 'interactive', userAction: 'Preview 2-3 PDFs inline · note the Sparkles-flagged ACK · approve the consolidation' },
+    'clc2.4': { mode: 'interactive', userAction: 'Publish the folder · confirm the SharePoint URL · review the installer notification draft' },
 
-    'clc3.0': { mode: 'interactive', userAction: 'Read the phishing-risk warning · pick the recommended platform delivery channel' },
-    'clc3.1': { mode: 'interactive', userAction: 'Watch the conversational survey play through · 10 questions · customer answers stream in' },
-    'clc3.2': { mode: 'interactive', userAction: 'Review the 10-field diff · resolve the 2 mismatches · approve the IQ batch-sync queue' },
+    'clc3.1': { mode: 'interactive', userAction: 'Read the phishing-risk warning · pick the recommended platform delivery channel' },
+    'clc3.2': { mode: 'interactive', userAction: 'Watch the conversational survey play through · 10 questions · customer answers stream in' },
+    'clc3.3': { mode: 'interactive', userAction: 'Review the 10-field diff · resolve the 2 mismatches · approve the IQ batch-sync queue' },
 
-    'clc4.0': { mode: 'interactive', userAction: 'Open the Dashboard tab · scan 4 KPIs · drill into the at-risk Fairport row' },
+    'clc4.1': { mode: 'interactive', userAction: 'Open the Dashboard tab · scan 4 KPIs · drill into the at-risk Fairport row' },
 };
 
 // ─── STEP MESSAGES (AI agent progress · short, status-style) ─────────────────
 
 export const CLC_STEP_MESSAGES: Record<string, string[]> = {
-    'clc1.0': [
+    'clc1.1': [
         'Pulling install schedule from IQ · 14 jobs active',
         'Last sync · 2 minutes ago',
         'NY region · 6 jobs · NJ · 5 · PA · 3',
         'Cross-checking ship dates vs install dates · all aligned',
         'Ready to publish to Outlook',
     ],
-    'clc1.1': [
+    'clc1.2': [
         'Building Outlook week view · Jun 1-Jul 12 (6 weeks)',
         'Color-coding by region · NY blue · NJ amber · PA green',
         'Fairport Public Library · Jun 2 · NY · 5 IQ jobs linked',
         'Sparkles on 11 of 14 jobs · Strata pre-scheduled from IQ data',
-        'Capacity overlay computed · 1 conflict surfaced for clc1.3',
+        'Capacity overlay computed · 1 conflict surfaced for clc1.4',
     ],
-    'clc1.2': [
+    'clc1.3': [
         'Drag detected · Fairport Public Library · Jun 2 → Jun 5',
         'Checking conflicts · Jun 5 NY slot available · 1 crew open',
         'IQ API is read-only · staging change as queued batch sync',
         'Queued for IQ batch sync · nightly window 2am ET',
         'Operator can revert from the source list before sync runs',
     ],
-    'clc1.3': [
+    'clc1.4': [
         'Capacity alert · NY region · week of Jun 1',
         '3 jobs back-to-back · in-house crew at 100%',
         'Searching vetted third-party installers · radius 4h',
         'Match · Albany Install Co. · 7 prior CLC jobs · COI on file',
         'Drafting outreach email · drafts only · operator reviews and sends',
     ],
-    'clc2.0': [
+    'clc2.1': [
         'IQ status change detected · Fairport · "Scheduled"',
         'Trigger fired · folder seeding kicked off',
         'Customer tag · "Fairport Library Phase 1"',
         'Looking for linked IQ jobs via customer tag',
         'Found 5 related jobs · 2 unrelated to exclude',
     ],
-    'clc2.1': [
+    'clc2.2': [
         'IQ jobs included · J-44021 (TMC) · J-44022 (KI) · J-44023 (Smith System)',
         'IQ jobs included · J-44024 (Media Tech) · J-44025 (Aurora)',
         'IQ jobs excluded · J-43901 (Tappé · punch order · different tag)',
         'IQ jobs excluded · J-44510 (SWBR · Q4 project · future ready-date)',
         'Rationale shown inline · operator can override',
     ],
-    'clc2.2': [
+    'clc2.3': [
         'Staging 15 assets from the 5 IQ jobs',
         '8 shop drawings · 5 ACKs · 1 site plan · 1 runbook',
         'Sparkles on J-44022 ACK · vendor short-ship flagged',
         'Generating thumbnails · PDF preview ready',
         'Folder structure mirrors install-day workflow',
     ],
-    'clc2.3': [
+    'clc2.4': [
         'Publishing to SharePoint · /sites/Installs/Fairport-Library-Phase1/',
         'Setting permissions · install crew + Director of Operations',
         'Drafting installer notification email · iPad-friendly link',
         'Folder live · 15 assets · 23.4 MB',
         'Notification queued · operator reviews and sends',
     ],
-    'clc3.0': [
+    'clc3.1': [
         'Fairport awarded · 10-question survey ready',
         'Phishing risk · direct email links flagged by major spam filters',
         'Customer uses Procore · already authenticated · trusted source',
         'Recommendation · deliver via Procore project channel',
         'Operator picks channel · platform delivery default',
     ],
-    'clc3.1': [
+    'clc3.2': [
         'Survey delivered via Procore · 10 questions',
         'Question 1 · site contact name + mobile · answered',
         'Question 4 · freight elevator (Y/N + dimensions) · answered',
         'Question 8 · floor ready-date · "Jun 1, 2026"',
         'All 10 answers received · ready for reconciliation',
     ],
-    'clc3.2': [
+    'clc3.3': [
         'Reconciling survey vs IQ · 10 fields compared',
         'Match · 5 fields (vendor name · address · floor · payment terms · subtotal)',
         'Mismatch · 2 fields (ready-date · day-of-install contact)',
         'IQ blank · 3 fields (elevator dimensions · loading dock · after-hours surcharge)',
         'Operator resolves each row · approved changes queue for IQ batch sync',
     ],
-    'clc4.0': [
+    'clc4.1': [
         'Data lake online · IQ + QuickBooks + Outlook + SharePoint + CET',
         'KPIs computed · avg install cycle 18d · target 14d',
         'Punch backlog · $42K open · 4 projects in 31-60d bucket',
@@ -296,8 +296,8 @@ export const CLC_STEP_MESSAGES: Record<string, string[]> = {
 // ─── SELF-INDICATED STEPS ────────────────────────────────────────────────────
 
 export const CLC_SELF_INDICATED: string[] = [
-    'clc1.0', 'clc1.1', 'clc1.2', 'clc1.3',
-    'clc2.0', 'clc2.1', 'clc2.2', 'clc2.3',
-    'clc3.0', 'clc3.1', 'clc3.2',
-    'clc4.0',
+    'clc1.1', 'clc1.2', 'clc1.3', 'clc1.4',
+    'clc2.1', 'clc2.2', 'clc2.3', 'clc2.4',
+    'clc3.1', 'clc3.2', 'clc3.3',
+    'clc4.1',
 ];

@@ -1,4 +1,4 @@
-import { Filter, List, Calendar } from 'lucide-react'
+﻿import { Filter, List, Calendar } from 'lucide-react'
 
 export type ViewMode = 'funnel' | 'list' | 'calendar'
 
@@ -10,7 +10,7 @@ interface CLCViewToggleProps {
         toggle). */
     available?: ViewMode[]
     /** Mode to pulse — used as the visual bridge during step transitions
-        (e.g. clc1.1 pulses Calendar before auto-switching). */
+        (e.g. clc1.2 pulses Calendar before auto-switching). */
     pulse?: ViewMode | null
 }
 

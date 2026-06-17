@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronRight, Sparkles, Mail, Phone } from 'lucide-react'
 import type { RegionCapacity } from './installScheduleData'
 import { CAPACITY_BY_REGION, THIRD_PARTY_INSTALLER, WEEKS } from './installScheduleData'
@@ -11,11 +11,11 @@ interface Props {
 /**
  * Adapter of the CapacityHeatmap accordion pattern (Officeworks) for CLC.
  * 3 region accordions (NY/NJ/PA) instead of 3 manager regions.
- * Default-expands NY when clc1.3 fires (the capacity warning step).
+ * Default-expands NY when clc1.4 fires (the capacity warning step).
  */
 export default function CLCCapacityWarningPanel({ stepId }: Props) {
     const [expandedRegion, setExpandedRegion] = useState<string | null>(
-        stepId === 'clc1.3' ? 'ny' : null
+        stepId === 'clc1.4' ? 'ny' : null
     )
 
     const statusBadge = (status: RegionCapacity['status']) => {

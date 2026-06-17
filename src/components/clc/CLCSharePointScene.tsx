@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import { FolderTree, Folder, FolderOpen, Sparkles, AlertCircle, CheckCircle2, ExternalLink, FileText, Database, MoreHorizontal } from 'lucide-react'
 import CLCAssetConsolidationModal from './CLCAssetConsolidationModal'
@@ -76,10 +76,10 @@ function folderInitials(name: string): string {
  *
  * View modes: Funnel · List (no Calendar — installs don't fit a calendar grid).
  * Per-step:
- *   clc2.0 → list view · Fairport row appears with "Triggered" status
- *   clc2.1 → list view + modal at Filter stage
- *   clc2.2 → list view + modal at Review stage
- *   clc2.3 → list view + modal at Publish stage · autoswap to Funnel after publish
+ *   clc2.1 → list view · Fairport row appears with "Triggered" status
+ *   clc2.2 → list view + modal at Filter stage
+ *   clc2.3 → list view + modal at Review stage
+ *   clc2.4 → list view + modal at Publish stage · autoswap to Funnel after publish
  */
 export default function CLCSharePointScene() {
     const { currentStep } = useDemo()
@@ -96,13 +96,13 @@ export default function CLCSharePointScene() {
 
     // Auto-open modal at the right stage
     useEffect(() => {
-        if (stepId === 'clc2.1') {
+        if (stepId === 'clc2.2') {
             setInitialStage('filter')
             setModalOpen(true)
-        } else if (stepId === 'clc2.2') {
+        } else if (stepId === 'clc2.3') {
             setInitialStage('review')
             setModalOpen(true)
-        } else if (stepId === 'clc2.3') {
+        } else if (stepId === 'clc2.4') {
             setInitialStage('publish')
             setModalOpen(true)
         } else {
@@ -115,7 +115,7 @@ export default function CLCSharePointScene() {
         setHasUserToggled(false)
     }, [stepId])
 
-    // Autoswap to funnel after publish (clc2.3 outcome)
+    // Autoswap to funnel after publish (clc2.4 outcome)
     useEffect(() => {
         if (!published || hasUserToggled) return
         const t = setTimeout(() => setViewMode('funnel'), 1500)
@@ -132,9 +132,9 @@ export default function CLCSharePointScene() {
         if (stepId?.startsWith('clc2.')) {
             const fairportStatus: SeedingStatus =
                 published ? 'live' :
-                stepId === 'clc2.3' ? 'publishing' :
-                stepId === 'clc2.2' ? 'reviewing' :
-                stepId === 'clc2.1' ? 'filtering' :
+                stepId === 'clc2.4' ? 'publishing' :
+                stepId === 'clc2.3' ? 'reviewing' :
+                stepId === 'clc2.2' ? 'filtering' :
                 'ready'
             arr.push({
                 id: 'fairport',
@@ -186,7 +186,7 @@ export default function CLCSharePointScene() {
             label: `${flaggedCount} flagged`,
             count: flaggedCount,
             tone: 'warning',
-            pulse: flaggedCount > 0 && (stepId === 'clc2.2'),
+            pulse: flaggedCount > 0 && (stepId === 'clc2.3'),
             panelTitle: 'Assets flagged by Strata',
             panel: <FlaggedAssetsPanel />,
         },
@@ -195,7 +195,7 @@ export default function CLCSharePointScene() {
             label: `${publishedCount} published`,
             count: publishedCount,
             tone: 'success',
-            pulse: published && stepId === 'clc2.3',
+            pulse: published && stepId === 'clc2.4',
             panelTitle: 'Published folders',
             panel: <SimpleList items={projects.filter(p => p.status === 'live').map(p => `${p.name} · ${p.url ?? ''}`)} emptyMessage="No folders published yet." />,
         },
@@ -264,7 +264,7 @@ export default function CLCSharePointScene() {
             </section>
 
             {/* Per-step hint */}
-            {stepId === 'clc2.0' && (
+            {stepId === 'clc2.1' && (
                 <div className="px-5 py-2.5 border-t border-border bg-muted/20">
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Sparkles className="h-3 w-3" />
@@ -308,9 +308,9 @@ function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProjec
                         key={p.id}
                         project={p}
                         onOpen={() => onOpenProject(
-                            stepId === 'clc2.3' ? 'publish' :
-                            stepId === 'clc2.2' ? 'review' :
-                            stepId === 'clc2.1' ? 'filter' :
+                            stepId === 'clc2.4' ? 'publish' :
+                            stepId === 'clc2.3' ? 'review' :
+                            stepId === 'clc2.2' ? 'filter' :
                             'discover'
                         )}
                     />
@@ -345,7 +345,7 @@ function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProj
                         ) : col.map(p => {
                             const action = () => p.url
                                 ? window.open(p.url, '_blank')
-                                : onOpenProject(stepId === 'clc2.3' ? 'publish' : stepId === 'clc2.2' ? 'review' : stepId === 'clc2.1' ? 'filter' : 'discover')
+                                : onOpenProject(stepId === 'clc2.4' ? 'publish' : stepId === 'clc2.3' ? 'review' : stepId === 'clc2.2' ? 'filter' : 'discover')
                             return (
                                 <button
                                     key={p.id}

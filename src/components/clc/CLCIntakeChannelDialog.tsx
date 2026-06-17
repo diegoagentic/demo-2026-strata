@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+﻿import { Fragment } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { X, Sparkles, AlertTriangle, ShieldCheck, Mail, Layers } from 'lucide-react'
 
@@ -9,7 +9,7 @@ interface Props {
 }
 
 /**
- * Channel selector dialog (clc3.0).
+ * Channel selector dialog (clc3.1).
  * Strata flags the phishing risk of direct email links and recommends
  * delivery via the customer's existing platform (Procore / Teams / OneDrive).
  */

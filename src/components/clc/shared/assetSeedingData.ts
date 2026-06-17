@@ -1,4 +1,4 @@
-// Mock data for Flow 2 — SharePoint Asset Seeding
+﻿// Mock data for Flow 2 — SharePoint Asset Seeding
 //
 // Fairport Public Library project · 5 IQ jobs (1 per vendor) on state contracts,
 // 2 excluded IQ jobs that share the customer but belong to different projects.
@@ -114,7 +114,7 @@ export const FAIRPORT_VENDOR_JOBS: VendorJob[] = [
     },
 ]
 
-/** Shared site-plan and runbook (not per-vendor) added by Strata in step clc2.2. */
+/** Shared site-plan and runbook (not per-vendor) added by Strata in step clc2.3. */
 export const COMMON_ASSETS: AssetEntry[] = [
     { id: 'common-1', name: 'Fairport-site-plan-v2.pdf',         type: 'site-plan', sizeKb: 2200 },
     { id: 'common-2', name: 'Fairport-installer-runbook-v1.pdf', type: 'runbook',   sizeKb: 540 },

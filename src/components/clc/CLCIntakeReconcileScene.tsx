@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+﻿import { useState, useMemo } from 'react'
 import { Check, X, ArrowRight, Sparkles, CheckCircle2, ChevronDown, ChevronRight, Clock, FileCheck2 } from 'lucide-react'
 import { INTAKE_QUESTIONS, type IntakeQuestion } from './shared/intakeData'
 import CLCFilterBar, { type StatusOption } from './shared/CLCFilterBar'
@@ -15,7 +15,7 @@ const STATUS_OPTIONS: StatusOption[] = [
 ]
 
 /**
- * Flow 3 — Reconcile scene (clc3.2).
+ * Flow 3 — Reconcile scene (clc3.3).
  * Two-column diff · IQ value (left) vs survey answer (right) · status chips per field.
  * Operator resolves each row · approved changes queue for IQ batch sync.
  *

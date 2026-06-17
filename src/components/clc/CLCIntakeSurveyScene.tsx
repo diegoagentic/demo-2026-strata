@@ -1,29 +1,29 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import { Sparkles, ShieldCheck, AlertTriangle, MessageSquare, User, Bot, ArrowRight } from 'lucide-react'
 import { INTAKE_QUESTIONS, SURVEY_DELIVERY_PLATFORMS } from './shared/intakeData'
 
 interface Props {
-    /** Channel picked in clc3.0 · null = waiting for pick */
+    /** Channel picked in clc3.1 · null = waiting for pick */
     channel: 'email' | 'platform' | null
     onOpenChannelDialog: () => void
 }
 
 /**
- * Flow 3 — Survey scene (clc3.0 and clc3.1).
+ * Flow 3 — Survey scene (clc3.1 and clc3.2).
  *
- * clc3.0 · channel picker is open (rendered by parent CLCPage)
- * clc3.1 · conversational survey plays through · all 10 answers stream in
+ * clc3.1 · channel picker is open (rendered by parent CLCPage)
+ * clc3.2 · conversational survey plays through · all 10 answers stream in
  */
 export default function CLCIntakeSurveyScene({ channel, onOpenChannelDialog }: Props) {
     const { currentStep } = useDemo()
     const stepId = currentStep?.id
 
-    // Reveal questions one-by-one as a conversational stream when clc3.1 fires.
+    // Reveal questions one-by-one as a conversational stream when clc3.2 fires.
     const [revealedCount, setRevealedCount] = useState(0)
     useEffect(() => {
-        if (stepId !== 'clc3.1') {
-            // On other steps, fully revealed (so clc3.2 shows the complete record)
+        if (stepId !== 'clc3.2') {
+            // On other steps, fully revealed (so clc3.3 shows the complete record)
             setRevealedCount(INTAKE_QUESTIONS.length)
             return
         }
@@ -41,7 +41,7 @@ export default function CLCIntakeSurveyScene({ channel, onOpenChannelDialog }: P
     }, [stepId])
 
     const platformMeta = channel === 'platform' ? SURVEY_DELIVERY_PLATFORMS.procore : channel === 'email' ? SURVEY_DELIVERY_PLATFORMS.email : null
-    const isAwaitingChannel = !channel && stepId === 'clc3.0'
+    const isAwaitingChannel = !channel && stepId === 'clc3.1'
 
     return (
         <div className="p-5 max-w-5xl mx-auto space-y-4">
@@ -112,7 +112,7 @@ export default function CLCIntakeSurveyScene({ channel, onOpenChannelDialog }: P
                                     </div>
                                 </div>
                             ))}
-                            {revealedCount < INTAKE_QUESTIONS.length && stepId === 'clc3.1' && (
+                            {revealedCount < INTAKE_QUESTIONS.length && stepId === 'clc3.2' && (
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
                                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                                     Customer typing…

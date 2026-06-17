@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import { Database, RefreshCw, Clock, Sparkles, ArrowRight } from 'lucide-react'
 import WeekCalendarGrid from './shared/WeekCalendarGrid'
@@ -25,10 +25,10 @@ import {
  *   step hint footer — varies per step
  *
  * Per-step behavior:
- *   clc1.0 → list view · all chips visible · no drag · no auto-open
- *   clc1.1 → list → calendar autoswap @1500ms · calendar chip pulses · no drag
- *   clc1.2 → calendar · drag enabled · queued chip pulses on each drop
- *   clc1.3 → calendar · alert chip pulses red + auto-opens capacity popover
+ *   clc1.1 → list view · all chips visible · no drag · no auto-open
+ *   clc1.2 → list → calendar autoswap @1500ms · calendar chip pulses · no drag
+ *   clc1.3 → calendar · drag enabled · queued chip pulses on each drop
+ *   clc1.4 → calendar · alert chip pulses red + auto-opens capacity popover
  */
 export default function CLCCalendarScene() {
     const { currentStep } = useDemo()
@@ -45,6 +45,10 @@ export default function CLCCalendarScene() {
     // the per-step useEffect — which would race with the autoswap timer
     // and cause Step 1.1 to never switch to Calendar.
     const userToggledRef = useRef(false)
+    // Track the last stepId we ran setup for, so re-renders that don't
+    // actually change the step don't re-run the per-step logic (and don't
+    // cancel the in-flight autoswap timer).
+    const lastStepRef = useRef<string | null>(null)
 
     // Filter state
     const [statuses, setStatuses] = useState<string[]>([])
@@ -53,35 +57,49 @@ export default function CLCCalendarScene() {
     const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(null)
 
     // ─── Per-step wiring ──────────────────────────────────────────────────
-    // Single effect keyed on stepId · forces the default mode + schedules
-    // the autoswap. User overrides flip userToggledRef (a ref, not state)
-    // so this effect does NOT re-run mid-step.
+    // Idempotent setup per step entry. The lastStepRef gate ensures unrelated
+    // re-renders (e.g. from filter state) do NOT re-run the per-step block ·
+    // crucial because the autoswap setTimeout would otherwise be re-scheduled
+    // or cancelled by every re-render.
     useEffect(() => {
         if (!stepId) return
-        userToggledRef.current = false  // reset on step entry
+        if (lastStepRef.current === stepId) return   // already handled this step
+        lastStepRef.current = stepId
+        userToggledRef.current = false
 
-        if (stepId === 'clc1.0') {
+        // eslint-disable-next-line no-console
+        console.log('[CLC] enter step', stepId)
+
+        if (stepId === 'clc1.1') {
             setViewMode('list')
             setPulseMode(null)
             return
         }
-        if (stepId === 'clc1.1') {
+        if (stepId === 'clc1.2') {
             // Land on list · pulse the Calendar mode chip · auto-swap @1500ms
             setViewMode('list')
             setPulseMode('calendar')
-            const t = setTimeout(() => {
-                if (userToggledRef.current) return  // user took over; skip
+            // No cleanup · let the timer run to completion. The callback checks
+            // userToggledRef so a manual toggle in the meantime still wins.
+            setTimeout(() => {
+                if (userToggledRef.current) {
+                    // eslint-disable-next-line no-console
+                    console.log('[CLC] clc1.2 autoswap skipped · user took over')
+                    return
+                }
+                // eslint-disable-next-line no-console
+                console.log('[CLC] clc1.2 autoswap firing → calendar')
                 setViewMode('calendar')
                 setPulseMode(null)
             }, 1500)
-            return () => clearTimeout(t)
+            return
         }
-        if (stepId === 'clc1.2') {
+        if (stepId === 'clc1.3') {
             setViewMode('calendar')
             setPulseMode(null)
             return
         }
-        if (stepId === 'clc1.3') {
+        if (stepId === 'clc1.4') {
             setViewMode('calendar')
             setPulseMode(null)
             return
@@ -130,7 +148,7 @@ export default function CLCCalendarScene() {
         return c
     }, [filteredJobs])
 
-    const autoOpenChipId = stepId === 'clc1.3' ? 'alert' : null
+    const autoOpenChipId = stepId === 'clc1.4' ? 'alert' : null
 
     const chips: SummaryChip[] = [
         {
@@ -146,7 +164,7 @@ export default function CLCCalendarScene() {
             label: `${alertCount} alert${alertCount === 1 ? '' : 's'}`,
             count: alertCount,
             tone: 'warning',
-            pulse: stepId === 'clc1.3',
+            pulse: stepId === 'clc1.4',
             panelTitle: 'Capacity alerts',
             panel: (
                 <div className="p-2">
@@ -159,14 +177,14 @@ export default function CLCCalendarScene() {
             label: `${queuedJobIds.size} queued`,
             count: queuedJobIds.size,
             tone: 'success',
-            pulse: queuedJobIds.size > 0 && stepId === 'clc1.2',
+            pulse: queuedJobIds.size > 0 && stepId === 'clc1.3',
             panelTitle: 'Queued for IQ batch sync',
             panel: <QueuedJobsList queuedJobIds={queuedJobIds} jobs={jobs} />,
         },
     ]
 
-    const allowDragDrop = stepId === 'clc1.2' && viewMode === 'calendar'
-    const highlightFairport = stepId === 'clc1.3' ? 'job-fairport' : null
+    const allowDragDrop = stepId === 'clc1.3' && viewMode === 'calendar'
+    const highlightFairport = stepId === 'clc1.4' ? 'job-fairport' : null
 
     return (
         <div className="flex flex-col h-full bg-muted/5">
@@ -333,17 +351,17 @@ function QueuedJobsList({ queuedJobIds, jobs }: { queuedJobIds: Set<string>; job
 function StepHint({ stepId }: { stepId: string | undefined }) {
     if (!stepId) return null
     let hint: string | null = null
-    if (stepId === 'clc1.0') hint = 'Review the 14 pulled jobs · advance to publish them on the Outlook calendar.'
-    else if (stepId === 'clc1.1') hint = 'Publishing to calendar… Sparkles mark jobs Strata pre-scheduled from IQ.'
-    else if (stepId === 'clc1.2') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
-    else if (stepId === 'clc1.3') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
+    if (stepId === 'clc1.1') hint = 'Review the 14 pulled jobs · advance to publish them on the Outlook calendar.'
+    else if (stepId === 'clc1.2') hint = 'Publishing to calendar… Sparkles mark jobs Strata pre-scheduled from IQ.'
+    else if (stepId === 'clc1.3') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
+    else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
     if (!hint) return null
     return (
         <div className="px-5 py-2.5 border-t border-border bg-muted/20">
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3" />
                 {hint}
-                {stepId !== 'clc1.3' && <ArrowRight className="h-3 w-3 ml-1" />}
+                {stepId !== 'clc1.4' && <ArrowRight className="h-3 w-3 ml-1" />}
             </p>
         </div>
     )

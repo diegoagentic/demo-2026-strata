@@ -1,4 +1,4 @@
-# CLC — Demo Plan (Iter 1)
+﻿# CLC — Demo Plan (Iter 1)
 
 ## Iter 1 deliverable
 
@@ -8,10 +8,10 @@
 
 | Flow | Scenes | Hero interaction |
 |---|---|---|
-| **Calendar Sync** (clc1.0-3) | `CLCCalendarScene` + `CLCCapacityWarningPanel` + `WeekCalendarGrid` | Drag-drop install card → "Queued for IQ batch sync" · NY capacity warning |
-| **SharePoint Seeding** (clc2.0-3) | `CLCSharePointScene` + `CLCAssetConsolidationModal` | Consolidate 5 IQ jobs · exclude 2 unrelated · publish folder URL |
-| **Intake Validation** (clc3.0-2) | `CLCIntakeChannelDialog` + `CLCIntakeSurveyScene` + `CLCIntakeReconcileScene` | Channel picker (phishing warning) · 10-Q survey · diff vs IQ |
-| **Data Lake Dashboard** (clc4.0) | `CLCDashboardScene` | 4 KPIs + 4 charts + at-risk Fairport |
+| **Calendar Sync** (clc1.1-3) | `CLCCalendarScene` + `CLCCapacityWarningPanel` + `WeekCalendarGrid` | Drag-drop install card → "Queued for IQ batch sync" · NY capacity warning |
+| **SharePoint Seeding** (clc2.1-3) | `CLCSharePointScene` + `CLCAssetConsolidationModal` | Consolidate 5 IQ jobs · exclude 2 unrelated · publish folder URL |
+| **Intake Validation** (clc3.1-2) | `CLCIntakeChannelDialog` + `CLCIntakeSurveyScene` + `CLCIntakeReconcileScene` | Channel picker (phishing warning) · 10-Q survey · diff vs IQ |
+| **Data Lake Dashboard** (clc4.1) | `CLCDashboardScene` | 4 KPIs + 4 charts + at-risk Fairport |
 
 ## Shared/reused components
 

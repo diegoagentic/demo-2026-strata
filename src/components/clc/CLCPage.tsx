@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import CLCCalendarScene from './CLCCalendarScene'
 import CLCSharePointScene from './CLCSharePointScene'
@@ -21,8 +21,8 @@ export default function CLCPage() {
         if (!stepId) return 'calendar'
         if (stepId.startsWith('clc1.')) return 'calendar'
         if (stepId.startsWith('clc2.')) return 'sharepoint'
-        if (stepId === 'clc3.0' || stepId === 'clc3.1') return 'intake-survey'
-        if (stepId === 'clc3.2') return 'intake-reconcile'
+        if (stepId === 'clc3.1' || stepId === 'clc3.2') return 'intake-survey'
+        if (stepId === 'clc3.3') return 'intake-reconcile'
         // Fallback by app
         if (currentStep?.app === 'clc-calendar') return 'calendar'
         if (currentStep?.app === 'clc-sharepoint') return 'sharepoint'
@@ -32,15 +32,15 @@ export default function CLCPage() {
 
     const scene = stepToScene(currentStep?.id)
 
-    // Channel-picker dialog: open on clc3.0, close once a channel is picked.
+    // Channel-picker dialog: open on clc3.1, close once a channel is picked.
     const [showChannelDialog, setShowChannelDialog] = useState(false)
     useEffect(() => {
-        if (currentStep?.id === 'clc3.0' && intakeChannel === null) {
+        if (currentStep?.id === 'clc3.1' && intakeChannel === null) {
             setShowChannelDialog(true)
         }
     }, [currentStep?.id, intakeChannel])
 
-    // Reset channel on step rewind back to before clc3.0
+    // Reset channel on step rewind back to before clc3.1
     useEffect(() => {
         const id = currentStep?.id
         if (id && !id.startsWith('clc3.')) {
