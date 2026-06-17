@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useDemo } from '../../context/DemoContext'
-import { FolderTree, Folder, FolderOpen, Sparkles, AlertCircle, CheckCircle2, ExternalLink, FileText, Database } from 'lucide-react'
+import { FolderTree, Folder, FolderOpen, Sparkles, AlertCircle, CheckCircle2, ExternalLink, FileText, Database, MoreHorizontal } from 'lucide-react'
 import CLCAssetConsolidationModal from './CLCAssetConsolidationModal'
 import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
 import CLCFilterBar, { type StatusOption } from './shared/CLCFilterBar'
@@ -39,12 +39,36 @@ const STATUS_TONE: Record<SeedingStatus, string> = {
 
 const FUNNEL_STATUSES: SeedingStatus[] = ['ready', 'filtering', 'reviewing', 'publishing', 'live']
 const FUNNEL_COLORS: Record<SeedingStatus, string> = {
-    ready:      'text-blue-700 dark:text-blue-300',
-    filtering:  'text-blue-700 dark:text-blue-300',
-    reviewing:  'text-purple-700 dark:text-purple-300',
-    publishing: 'text-yellow-700 dark:text-yellow-300',
-    live:       'text-green-700 dark:text-green-300',
-    archived:   'text-zinc-600 dark:text-zinc-400',
+    ready:      'text-ai',
+    filtering:  'text-info',
+    reviewing:  'text-warning',
+    publishing: 'text-primary',
+    live:       'text-success',
+    archived:   'text-muted-foreground',
+}
+const FUNNEL_AVATAR_BG: Record<SeedingStatus, string> = {
+    ready:      'bg-ai/20',
+    filtering:  'bg-info/20',
+    reviewing:  'bg-warning/20',
+    publishing: 'bg-primary/20',
+    live:       'bg-success/20',
+    archived:   'bg-muted',
+}
+const FUNNEL_AVATAR_TEXT: Record<SeedingStatus, string> = {
+    ready:      'text-ai',
+    filtering:  'text-info',
+    reviewing:  'text-warning',
+    publishing: 'text-primary',
+    live:       'text-success',
+    archived:   'text-muted-foreground',
+}
+
+/** 2-letter initials from a folder name like "Fairport-Library-Phase1" → "FA" */
+function folderInitials(name: string): string {
+    const cleaned = name.replace(/[^a-z0-9 -]/gi, '').toUpperCase()
+    const parts = cleaned.split(/[-\s]/).filter(Boolean)
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).slice(0, 3)
+    return cleaned.slice(0, 2)
 }
 
 /**
@@ -302,43 +326,57 @@ function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProj
             {FUNNEL_STATUSES.map(status => {
                 const col = projects.filter(p => p.status === status)
                 return (
-                    <div key={status} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
-                        <div className="px-3 py-2.5 border-b border-border bg-muted/30 flex items-center justify-between">
-                            <span className={`text-[11px] font-bold uppercase tracking-wider ${FUNNEL_COLORS[status]}`}>{STATUS_LABEL[status]}</span>
-                            <span className="text-[11px] font-bold text-foreground tabular-nums px-1.5 py-0.5 rounded bg-muted">{col.length}</span>
+                    <div key={status} className="space-y-3 min-h-[200px]">
+                        {/* Column header */}
+                        <div className="flex items-center justify-between mb-1 px-1">
+                            <h4 className={`font-medium text-sm flex items-center gap-2 ${FUNNEL_COLORS[status]}`}>
+                                {STATUS_LABEL[status]}
+                                <span className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0.5 rounded-full font-mono tabular-nums">{col.length}</span>
+                            </h4>
+                            <button className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options" aria-label="Column options">
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                            </button>
                         </div>
-                        <div className="p-2 space-y-1.5 min-h-[120px] flex-1">
-                            {col.length === 0 ? (
-                                <div className="h-full min-h-[100px] flex items-center justify-center rounded-md border-2 border-dashed border-border/60 text-[10px] text-muted-foreground">
-                                    No folders
-                                </div>
-                            ) : col.map(p => (
+
+                        {col.length === 0 ? (
+                            <div className="border-2 border-dashed border-border rounded-xl p-5 text-center">
+                                <p className="text-xs text-muted-foreground">No projects</p>
+                            </div>
+                        ) : col.map(p => {
+                            const action = () => p.url
+                                ? window.open(p.url, '_blank')
+                                : onOpenProject(stepId === 'clc2.3' ? 'publish' : stepId === 'clc2.2' ? 'review' : stepId === 'clc2.1' ? 'filter' : 'discover')
+                            return (
                                 <button
                                     key={p.id}
-                                    onClick={() => p.url ? window.open(p.url, '_blank') : onOpenProject(
-                                        stepId === 'clc2.3' ? 'publish' :
-                                        stepId === 'clc2.2' ? 'review' :
-                                        stepId === 'clc2.1' ? 'filter' :
-                                        'discover'
-                                    )}
-                                    className="w-full text-left rounded-md border border-border bg-card p-2 hover:border-foreground/30 transition-colors"
+                                    type="button"
+                                    onClick={action}
+                                    className="w-full text-left rounded-2xl border border-border bg-card p-3.5 space-y-2.5 shadow-sm hover:shadow-md transition-shadow"
                                 >
-                                    <div className="flex items-center gap-1 mb-0.5">
-                                        <FolderOpen className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
-                                        <div className="text-[11px] font-semibold text-foreground truncate">{p.name}</div>
-                                    </div>
-                                    <div className="text-[10px] text-muted-foreground font-mono">
-                                        {p.installDate} · {p.assetCount} files
-                                    </div>
-                                    {p.flaggedCount > 0 && (
-                                        <div className="inline-flex items-center gap-0.5 mt-1 text-[10px] text-amber-700 dark:text-amber-300">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {p.flaggedCount} flagged
+                                    <div className="flex items-center gap-2.5">
+                                        <div className={`h-8 w-8 rounded-full ${FUNNEL_AVATAR_BG[p.status]} flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
+                                            <span className={`text-[10px] font-black ${FUNNEL_AVATAR_TEXT[p.status]}`}>{folderInitials(p.name)}</span>
                                         </div>
-                                    )}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-sm font-semibold text-foreground truncate">{p.name}</div>
+                                            <div className="text-[10px] text-muted-foreground truncate">{p.installDate}</div>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                                        {p.assetCount} files · {p.flaggedCount > 0 ? `${p.flaggedCount} flagged · ` : ''}{STATUS_LABEL[p.status]}
+                                    </p>
+                                    <div className="h-px bg-border" />
+                                    <div className="flex items-center justify-between text-[11px]">
+                                        <span className="text-muted-foreground truncate">
+                                            {p.url ? (
+                                                <span className="inline-flex items-center gap-1 text-info"><ExternalLink className="h-3 w-3" /> Open folder</span>
+                                            ) : 'View →'}
+                                        </span>
+                                        <span className="font-semibold text-foreground tabular-nums">{p.assetCount} <span className="text-muted-foreground font-normal">files</span></span>
+                                    </div>
                                 </button>
-                            ))}
-                        </div>
+                            )
+                        })}
                     </div>
                 )
             })}
