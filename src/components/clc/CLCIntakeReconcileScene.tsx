@@ -1,14 +1,25 @@
 import { useState, useMemo } from 'react'
 import { Check, X, ArrowRight, Sparkles, CheckCircle2, ChevronDown, ChevronRight, Clock, FileCheck2 } from 'lucide-react'
 import { INTAKE_QUESTIONS, type IntakeQuestion } from './shared/intakeData'
+import CLCFilterBar, { type StatusOption } from './shared/CLCFilterBar'
+import CLCSummaryChipsBar, { type SummaryChip } from './shared/CLCSummaryChipsBar'
 
 type Decision = 'pending' | 'approved' | 'rejected'
 type DecisionMap = Record<string, Decision>
+
+const STATUS_OPTIONS: StatusOption[] = [
+    { key: 'match',        label: 'Match' },
+    { key: 'mismatch',     label: 'Mismatch' },
+    { key: 'iq-blank',     label: 'IQ blank' },
+    { key: 'survey-blank', label: 'Survey blank' },
+]
 
 /**
  * Flow 3 — Reconcile scene (clc3.2).
  * Two-column diff · IQ value (left) vs survey answer (right) · status chips per field.
  * Operator resolves each row · approved changes queue for IQ batch sync.
+ *
+ * Additive in Phase D: summary chips + filter bar on top.
  */
 export default function CLCIntakeReconcileScene() {
     const [decisions, setDecisions] = useState<DecisionMap>(() => {
@@ -18,6 +29,19 @@ export default function CLCIntakeReconcileScene() {
     })
     const [committed, setCommitted] = useState(false)
     const [expandedRow, setExpandedRow] = useState<string | null>(INTAKE_QUESTIONS.find(q => q.status !== 'match')?.id ?? null)
+
+    // Phase D — filter state
+    const [statuses, setStatuses] = useState<string[]>([])
+    const [customerQuery, setCustomerQuery] = useState('')
+
+    // Filtered questions for table rendering
+    const filteredQuestions = useMemo(() => {
+        return INTAKE_QUESTIONS.filter(q => {
+            if (statuses.length > 0 && !statuses.includes(q.status)) return false
+            if (customerQuery && !q.label.toLowerCase().includes(customerQuery.toLowerCase())) return false
+            return true
+        })
+    }, [statuses, customerQuery])
 
     const counts = useMemo(() => {
         const c = { match: 0, mismatch: 0, iqBlank: 0, surveyBlank: 0 }
@@ -43,26 +67,83 @@ export default function CLCIntakeReconcileScene() {
         window.dispatchEvent(new CustomEvent('clc:intake-iq-writeback-queued', { detail: { decisions } }))
     }
 
+    // Summary chips (additive)
+    const chips: SummaryChip[] = [
+        {
+            id: 'fields',
+            label: `${INTAKE_QUESTIONS.length} fields`,
+            count: INTAKE_QUESTIONS.length,
+            tone: 'neutral',
+            panelTitle: 'All intake fields',
+            panel: <ChipPanelList items={INTAKE_QUESTIONS.map(q => `${q.label} · ${q.status}`)} empty="No fields." />,
+        },
+        {
+            id: 'attention',
+            label: `${needsAction.length} need attention`,
+            count: needsAction.length,
+            tone: 'warning',
+            pulse: !committed && resolvedCount < needsAction.length,
+            panelTitle: 'Fields needing attention',
+            panel: <ChipPanelList items={needsAction.map(q => `${q.label} · ${q.status}`)} empty="All clean." />,
+        },
+        {
+            id: 'resolved',
+            label: `${resolvedCount} resolved`,
+            count: resolvedCount,
+            tone: 'info',
+            panelTitle: 'Resolved fields',
+            panel: <ChipPanelList items={needsAction.filter(q => decisions[q.id] !== 'pending').map(q => `${q.label} · ${decisions[q.id]}`)} empty="No fields resolved yet." />,
+        },
+        {
+            id: 'queued',
+            label: `${committed ? needsAction.length : 0} queued`,
+            count: committed ? needsAction.length : 0,
+            tone: 'success',
+            pulse: committed,
+            panelTitle: 'Queued for IQ batch sync',
+            panel: <ChipPanelList items={committed ? needsAction.filter(q => decisions[q.id] === 'approved').map(q => q.label) : []} empty="Nothing queued yet · resolve fields and click 'Queue corrections for IQ' below." />,
+        },
+    ]
+
     return (
-        <div className="p-5 max-w-6xl mx-auto space-y-4">
-            {/* Header with counts */}
-            <div className="rounded-2xl border border-border bg-card p-4">
-                <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-brand-300/40 dark:bg-brand-500/20 flex items-center justify-center shrink-0">
-                        <FileCheck2 className="h-4 w-4 text-zinc-800 dark:text-zinc-200" />
-                    </div>
-                    <div className="min-w-0">
-                        <div className="text-sm font-bold text-foreground">Reconcile · Project Intake · Fairport Public Library</div>
-                        <p className="text-xs text-muted-foreground">Compare survey answers vs IQ record · resolve each gap · queue corrections for IQ batch sync.</p>
+        <div className="flex flex-col h-full bg-muted/5">
+            {/* Header */}
+            <header className="flex items-start gap-3 px-5 pt-5 pb-3">
+                <div className="h-9 w-9 rounded-xl bg-brand-300/40 dark:bg-brand-500/20 flex items-center justify-center shrink-0">
+                    <FileCheck2 className="h-4 w-4 text-zinc-800 dark:text-zinc-200" />
+                </div>
+                <div className="min-w-0">
+                    <div className="text-base font-bold text-foreground">Reconcile · Project Intake</div>
+                    <p className="text-xs text-muted-foreground">Fairport Public Library · compare survey answers vs IQ record · queue corrections for IQ batch sync.</p>
+                </div>
+            </header>
+
+            {/* Summary chips */}
+            <CLCSummaryChipsBar chips={chips} />
+
+            {/* Filter bar — status pills + field search only */}
+            <CLCFilterBar
+                statuses={statuses}
+                onStatuses={setStatuses}
+                statusOptions={STATUS_OPTIONS}
+                customerQuery={customerQuery}
+                onCustomerQuery={setCustomerQuery}
+                customerPlaceholder="Search field name…"
+                showDateRange={false}
+                showRegion={false}
+            />
+
+            {/* Body */}
+            <section className="flex-1 overflow-y-auto px-5 pb-5 pt-3 space-y-4">
+                {/* Original count tiles (kept inside body for at-a-glance) */}
+                <div className="rounded-2xl border border-border bg-card p-4">
+                    <div className="grid grid-cols-4 gap-2">
+                        <CountTile label="Match" count={counts.match} color="green" />
+                        <CountTile label="Mismatch" count={counts.mismatch} color="red" />
+                        <CountTile label="IQ blank" count={counts.iqBlank} color="amber" />
+                        <CountTile label="Survey blank" count={counts.surveyBlank} color="muted" />
                     </div>
                 </div>
-                <div className="grid grid-cols-4 gap-2 mt-4">
-                    <CountTile label="Match" count={counts.match} color="green" />
-                    <CountTile label="Mismatch" count={counts.mismatch} color="red" />
-                    <CountTile label="IQ blank" count={counts.iqBlank} color="amber" />
-                    <CountTile label="Survey blank" count={counts.surveyBlank} color="muted" />
-                </div>
-            </div>
 
             {/* Diff table */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -75,7 +156,12 @@ export default function CLCIntakeReconcileScene() {
                     <span className="text-right">Your call</span>
                 </div>
                 <div className="divide-y divide-border">
-                    {INTAKE_QUESTIONS.map((q, idx) => {
+                    {filteredQuestions.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-xs text-muted-foreground">
+                            No fields match the current filters. Adjust above to widen the diff.
+                        </div>
+                    ) : filteredQuestions.map((q) => {
+                        const idx = INTAKE_QUESTIONS.indexOf(q)
                         const isOpen = expandedRow === q.id
                         const decision = decisions[q.id]
                         return (
@@ -159,6 +245,25 @@ export default function CLCIntakeReconcileScene() {
                     {committed ? 'Queued for IQ batch sync' : 'Queue corrections for IQ'}
                 </button>
             </div>
+            </section>
+        </div>
+    )
+}
+
+// ─── Chip panel helper ──────────────────────────────────────────────────────
+
+function ChipPanelList({ items, empty }: { items: string[]; empty: string }) {
+    return (
+        <div className="p-3">
+            {items.length === 0 ? (
+                <p className="text-xs text-muted-foreground">{empty}</p>
+            ) : (
+                <ul className="space-y-1">
+                    {items.map((s, i) => (
+                        <li key={i} className="text-xs text-foreground truncate">· {s}</li>
+                    ))}
+                </ul>
+            )}
         </div>
     )
 }
