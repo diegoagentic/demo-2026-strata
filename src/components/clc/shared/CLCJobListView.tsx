@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Sparkles, ChevronUp, ChevronDown } from 'lucide-react'
 import type { InstallJob, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
+import JobQuickActions from './JobQuickActions'
 
 type SortKey = 'customer' | 'region' | 'startDate' | 'iqJobs' | 'status'
 type SortDir = 'asc' | 'desc'
@@ -11,6 +12,9 @@ interface CLCJobListViewProps {
     queuedJobIds: Set<string>
     highlightedJobId?: string | null
     onJobClick?: (jobId: string) => void
+    onPublish?: (jobId: string) => void
+    onView?: (jobId: string) => void
+    onSkip?: (jobId: string) => void
 }
 
 const STATUS_LABEL: Record<InstallJob['status'], string> = {
@@ -32,7 +36,9 @@ const STATUS_TONE: Record<InstallJob['status'], string> = {
  * Pattern adapted from ThreeWayMatchView grid + the prior SourceListGridFallback
  * in CLCCalendarScene. Sort state is local to the view.
  */
-export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, onJobClick }: CLCJobListViewProps) {
+export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, onJobClick, onPublish, onView, onSkip }: CLCJobListViewProps) {
+    const hasActions = !!(onPublish && onView && onSkip)
+    const gridCols = hasActions ? 'grid-cols-[1fr_70px_120px_70px_110px_160px]' : 'grid-cols-[1fr_70px_120px_70px_110px_110px]'
     const [sortKey, setSortKey] = useState<SortKey>('startDate')
     const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -59,13 +65,13 @@ export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, o
 
     return (
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
-            <div className="grid grid-cols-[1fr_70px_120px_70px_110px_110px] gap-2 px-3 py-2 bg-muted/40 border-b border-border">
+            <div className={`grid ${gridCols} gap-2 px-3 py-2 bg-muted/40 border-b border-border`}>
                 <SortHeader label="Project"  active={sortKey==='customer'}  dir={sortDir} onClick={() => toggleSort('customer')} />
                 <SortHeader label="Region"   active={sortKey==='region'}    dir={sortDir} onClick={() => toggleSort('region')} />
                 <SortHeader label="Start"    active={sortKey==='startDate'} dir={sortDir} onClick={() => toggleSort('startDate')} />
                 <SortHeader label="IQ jobs"  active={sortKey==='iqJobs'}    dir={sortDir} onClick={() => toggleSort('iqJobs')} align="right" />
                 <SortHeader label="Status"   active={sortKey==='status'}    dir={sortDir} onClick={() => toggleSort('status')} />
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sync</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{hasActions ? 'Actions' : 'Sync'}</span>
             </div>
             <div className="divide-y divide-border">
                 {sortedJobs.length === 0 ? (
@@ -74,20 +80,29 @@ export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, o
                     const isQueued = queuedJobIds.has(job.id)
                     const isHighlighted = highlightedJobId === job.id
                     return (
-                        <button
+                        <div
                             key={job.id}
                             onClick={() => onJobClick?.(job.id)}
-                            type="button"
-                            className={`w-full text-left grid grid-cols-[1fr_70px_120px_70px_110px_110px] gap-2 px-3 py-2.5 items-center text-sm hover:bg-muted/30 transition-colors ${
-                                isHighlighted ? 'bg-red-50/40 dark:bg-red-500/5' : isQueued ? 'bg-yellow-50/40 dark:bg-yellow-500/5' : ''
-                            }`}
+                            className={`grid ${gridCols} gap-2 px-3 py-2.5 items-center text-sm hover:bg-muted/30 transition-colors ${
+                                job.justArrived ? 'bg-ai/10 animate-pulse' :
+                                isHighlighted   ? 'bg-red-50/40 dark:bg-red-500/5' :
+                                isQueued        ? 'bg-yellow-50/40 dark:bg-yellow-500/5' : ''
+                            } ${job.skipped ? 'opacity-50 grayscale' : ''} ${onJobClick ? 'cursor-pointer' : ''}`}
+                            role={onJobClick ? 'button' : undefined}
                         >
                             <div className="min-w-0 flex items-center gap-1.5">
                                 <span className="font-semibold text-foreground truncate">{job.customer}</span>
-                                {job.aiScheduled && <Sparkles className="h-3 w-3 text-zinc-800 dark:text-zinc-200 shrink-0" />}
+                                {(job.aiScheduled || job.publishedToOutlook) && (
+                                    <Sparkles className="h-3 w-3 text-zinc-800 dark:text-zinc-200 shrink-0" />
+                                )}
                                 {job.isAnchor && (
                                     <span className="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 uppercase tracking-wider whitespace-nowrap">
                                         Anchor
+                                    </span>
+                                )}
+                                {job.justArrived && (
+                                    <span className="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-ai/15 text-ai uppercase tracking-wider whitespace-nowrap">
+                                        Just arrived
                                     </span>
                                 )}
                             </div>
@@ -99,14 +114,22 @@ export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, o
                             <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider w-fit ${STATUS_TONE[job.status]}`}>
                                 {STATUS_LABEL[job.status]}
                             </span>
-                            <span>
-                                {isQueued && (
+                            <div className="flex items-center gap-1">
+                                {hasActions ? (
+                                    <JobQuickActions
+                                        job={job}
+                                        variant="row"
+                                        onPublish={onPublish!}
+                                        onView={onView!}
+                                        onSkip={onSkip!}
+                                    />
+                                ) : isQueued ? (
                                     <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-yellow-50 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300 uppercase tracking-wider">
                                         Queued
                                     </span>
-                                )}
-                            </span>
-                        </button>
+                                ) : null}
+                            </div>
+                        </div>
                     )
                 })}
             </div>

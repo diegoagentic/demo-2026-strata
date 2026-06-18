@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
-import { Database, RefreshCw, Clock, Sparkles, ArrowRight } from 'lucide-react'
+import { Database, RefreshCw, Clock, Sparkles, ArrowRight, Send, Users, X } from 'lucide-react'
 import WeekCalendarGrid from './shared/WeekCalendarGrid'
 import CLCCapacityWarningPanel from './shared/CLCCapacityWarningPanel'
 import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
@@ -9,7 +9,7 @@ import CLCSummaryChipsBar, { type SummaryChip } from './shared/CLCSummaryChipsBa
 import CLCFunnelView from './shared/CLCFunnelView'
 import CLCJobListView from './shared/CLCJobListView'
 import {
-    INITIAL_JOBS, WEEKS, REGION_BADGE, REGION_LABEL, CAPACITY_BY_REGION,
+    INITIAL_JOBS, INBOUND_JOB, WEEKS, REGION_BADGE, REGION_LABEL, CAPACITY_BY_REGION,
     type InstallJob, type Region,
 } from './shared/installScheduleData'
 
@@ -31,12 +31,19 @@ import {
  *   clc1.4 → calendar · alert chip pulses red + auto-opens capacity popover
  */
 export default function CLCCalendarScene() {
-    const { currentStep } = useDemo()
+    const { currentStep, nextStep } = useDemo()
     const stepId = currentStep?.id
 
     // Job state (drag-drop reschedules these via WeekCalendarGrid)
     const [jobs, setJobs] = useState<InstallJob[]>(INITIAL_JOBS)
     const [queuedJobIds, setQueuedJobIds] = useState<Set<string>>(new Set())
+
+    // Narrative interaction state (Phase C)
+    const [inboundDelivered, setInboundDelivered] = useState(false)
+    const [publishedJobIds, setPublishedJobIds] = useState<Set<string>>(new Set())
+    const [skippedJobIds, setSkippedJobIds] = useState<Set<string>>(new Set())
+    const [viewPanelJobId, setViewPanelJobId] = useState<string | null>(null)
+    const userClickedPublishAllRef = useRef(false)
 
     // View mode (step-aware default + user override)
     const [viewMode, setViewMode] = useState<ViewMode>('list')
@@ -73,25 +80,37 @@ export default function CLCCalendarScene() {
         if (stepId === 'clc1.1') {
             setViewMode('list')
             setPulseMode(null)
-            return
+            // Narrative: a new job arrives from IQ 1500ms after entering.
+            setInboundDelivered(false)
+            const inboundT = setTimeout(() => setInboundDelivered(true), 1500)
+            return () => clearTimeout(inboundT)
         }
         if (stepId === 'clc1.2') {
-            // Land on list · pulse the Calendar mode chip · auto-swap @1500ms
+            // Two paths:
+            //   A) User clicked "Publish all to Outlook" in clc1.1 →
+            //      fast-path · 500ms swap + bulk-mark all visible jobs as published
+            //   B) User advanced via the sidebar Next button →
+            //      existing 1500ms autoswap unchanged · bulk-mark at swap time
+            const fastPath = userClickedPublishAllRef.current
             setViewMode('list')
             setPulseMode('calendar')
-            // No cleanup · let the timer run to completion. The callback checks
-            // userToggledRef so a manual toggle in the meantime still wins.
+            const delay = fastPath ? 500 : 1500
             setTimeout(() => {
-                if (userToggledRef.current) {
-                    // eslint-disable-next-line no-console
-                    console.log('[CLC] clc1.2 autoswap skipped · user took over')
-                    return
-                }
-                // eslint-disable-next-line no-console
-                console.log('[CLC] clc1.2 autoswap firing → calendar')
+                if (userToggledRef.current) return
                 setViewMode('calendar')
                 setPulseMode(null)
-            }, 1500)
+                // Bulk-mark · everything that's not skipped becomes published.
+                setPublishedJobIds(prev => {
+                    const next = new Set(prev)
+                    for (const j of jobs) {
+                        if (!skippedJobIds.has(j.id)) next.add(j.id)
+                    }
+                    if (inboundDelivered && !skippedJobIds.has(INBOUND_JOB.id)) {
+                        next.add(INBOUND_JOB.id)
+                    }
+                    return next
+                })
+            }, delay)
             return
         }
         if (stepId === 'clc1.3') {
@@ -104,7 +123,9 @@ export default function CLCCalendarScene() {
             setPulseMode(null)
             return
         }
-    }, [stepId])
+        // Any other step · cleanup the inbound flag so it doesn't leak.
+        setInboundDelivered(false)
+    }, [stepId])  // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleViewChange = (m: ViewMode) => {
         setViewMode(m)
@@ -126,9 +147,43 @@ export default function CLCCalendarScene() {
         window.dispatchEvent(new CustomEvent('clc:calendar-writeback-queued', { detail: { jobId, newStart } }))
     }
 
+    // ─── Per-card quick actions ───────────────────────────────────────────
+    const handlePublish = (jobId: string) =>
+        setPublishedJobIds(prev => new Set(prev).add(jobId))
+    const handleSkip = (jobId: string) =>
+        setSkippedJobIds(prev => new Set(prev).add(jobId))
+    const handleView = (jobId: string) =>
+        setViewPanelJobId(jobId)
+    const handlePublishAll = () => {
+        userClickedPublishAllRef.current = true
+        nextStep()
+    }
+
+    // Listen for the Action Center notification CTA · opens the View panel.
+    useEffect(() => {
+        const handler = () => setViewPanelJobId('job-troy')
+        window.addEventListener('clc:inbound-job-open', handler)
+        return () => window.removeEventListener('clc:inbound-job-open', handler)
+    }, [])
+
+    // ─── Display pipeline ─────────────────────────────────────────────────
+    // Inject INBOUND_JOB only during clc1.1 (after delivery). Apply
+    // per-job state flags so views render published/skipped/just-arrived.
+    const displayedJobs = useMemo(() => {
+        const arr: InstallJob[] = [...jobs]
+        if (stepId === 'clc1.1' && inboundDelivered) {
+            arr.push({ ...INBOUND_JOB, justArrived: true })
+        }
+        return arr.map(j => ({
+            ...j,
+            publishedToOutlook: publishedJobIds.has(j.id),
+            skipped: skippedJobIds.has(j.id),
+        }))
+    }, [jobs, stepId, inboundDelivered, publishedJobIds, skippedJobIds])
+
     // ─── Filter pipeline ──────────────────────────────────────────────────
     const filteredJobs = useMemo(() => {
-        return jobs.filter(j => {
+        return displayedJobs.filter(j => {
             if (statuses.length > 0 && !statuses.includes(j.status)) return false
             if (regionFilter !== 'all' && j.region !== regionFilter) return false
             if (customerQuery && !j.customer.toLowerCase().includes(customerQuery.toLowerCase())) return false
@@ -138,7 +193,7 @@ export default function CLCCalendarScene() {
             }
             return true
         })
-    }, [jobs, statuses, regionFilter, customerQuery, dateRange])
+    }, [displayedJobs, statuses, regionFilter, customerQuery, dateRange])
 
     // ─── Summary chips ────────────────────────────────────────────────────
     const alertCount = CAPACITY_BY_REGION.filter(r => r.status === 'red').length
@@ -179,12 +234,15 @@ export default function CLCCalendarScene() {
             tone: 'success',
             pulse: queuedJobIds.size > 0 && stepId === 'clc1.3',
             panelTitle: 'Queued for IQ batch sync',
-            panel: <QueuedJobsList queuedJobIds={queuedJobIds} jobs={jobs} />,
+            panel: <QueuedJobsList queuedJobIds={queuedJobIds} jobs={displayedJobs} />,
         },
     ]
 
     const allowDragDrop = stepId === 'clc1.3' && viewMode === 'calendar'
     const highlightFairport = stepId === 'clc1.4' ? 'job-fairport' : null
+    const showPublishAll = stepId === 'clc1.1' || stepId === 'clc1.2'
+    const publishAllDisabled = displayedJobs.length === 0 || stepId === 'clc1.2'
+    const viewedJob = viewPanelJobId ? displayedJobs.find(j => j.id === viewPanelJobId) ?? null : null
 
     return (
         <div className="flex flex-col h-full bg-muted/5">
@@ -192,7 +250,7 @@ export default function CLCCalendarScene() {
             <header className="flex items-start justify-between gap-4 px-5 pt-5 pb-3 flex-wrap">
                 <div>
                     <h1 className="text-xl font-bold text-foreground">Install Schedule</h1>
-                    <p className="text-sm text-muted-foreground">6-week view · Mon Jun 1 → Fri Jul 10 · 14 jobs across NY/NJ/PA</p>
+                    <p className="text-sm text-muted-foreground">6-week view · Mon Jun 1 → Fri Jul 10 · {displayedJobs.length} jobs across NY/NJ/PA</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground px-2 py-1 rounded-md bg-muted">
@@ -207,6 +265,17 @@ export default function CLCCalendarScene() {
                         <RefreshCw className="h-3.5 w-3.5" />
                         Resync
                     </button>
+                    {showPublishAll && (
+                        <button
+                            onClick={handlePublishAll}
+                            disabled={publishAllDisabled}
+                            title="Publish every queued install to the Outlook calendar and advance the flow"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-background bg-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            <Send className="h-3.5 w-3.5" />
+                            Publish all to Outlook
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -236,10 +305,24 @@ export default function CLCCalendarScene() {
             {/* Body — one view at a time */}
             <section className="flex-1 overflow-y-auto px-5 pb-5">
                 {viewMode === 'funnel' && (
-                    <CLCFunnelView jobs={filteredJobs} queuedJobIds={queuedJobIds} highlightedJobId={highlightFairport} />
+                    <CLCFunnelView
+                        jobs={filteredJobs}
+                        queuedJobIds={queuedJobIds}
+                        highlightedJobId={highlightFairport}
+                        onPublish={handlePublish}
+                        onView={handleView}
+                        onSkip={handleSkip}
+                    />
                 )}
                 {viewMode === 'list' && (
-                    <CLCJobListView jobs={filteredJobs} queuedJobIds={queuedJobIds} highlightedJobId={highlightFairport} />
+                    <CLCJobListView
+                        jobs={filteredJobs}
+                        queuedJobIds={queuedJobIds}
+                        highlightedJobId={highlightFairport}
+                        onPublish={handlePublish}
+                        onView={handleView}
+                        onSkip={handleSkip}
+                    />
                 )}
                 {viewMode === 'calendar' && (
                     <>
@@ -264,6 +347,10 @@ export default function CLCCalendarScene() {
                             highlightedJobId={highlightFairport}
                             onJobDrop={allowDragDrop ? handleJobDrop : undefined}
                             queuedJobIds={queuedJobIds}
+                            onPublish={handlePublish}
+                            onView={handleView}
+                            onSkip={handleSkip}
+                            showQuickActions={!allowDragDrop}
                         />
                     </>
                 )}
@@ -271,6 +358,15 @@ export default function CLCCalendarScene() {
 
             {/* Per-step hint */}
             <StepHint stepId={stepId} />
+
+            {/* View panel · opened via per-card View action or Action Center CTA */}
+            {viewedJob && (
+                <ViewJobPanel
+                    job={viewedJob}
+                    onClose={() => setViewPanelJobId(null)}
+                    onPublish={() => { handlePublish(viewedJob.id); setViewPanelJobId(null) }}
+                />
+            )}
         </div>
     )
 }
@@ -351,8 +447,8 @@ function QueuedJobsList({ queuedJobIds, jobs }: { queuedJobIds: Set<string>; job
 function StepHint({ stepId }: { stepId: string | undefined }) {
     if (!stepId) return null
     let hint: string | null = null
-    if (stepId === 'clc1.1') hint = 'Review the 14 pulled jobs · advance to publish them on the Outlook calendar.'
-    else if (stepId === 'clc1.2') hint = 'Publishing to calendar… Sparkles mark jobs Strata pre-scheduled from IQ.'
+    if (stepId === 'clc1.1') hint = 'Review the queued jobs. Click Publish all to Outlook to bridge to step 1.2 · or use a card\'s Send to publish individually first.'
+    else if (stepId === 'clc1.2') hint = 'Publishing… Sparkles mark jobs sent to Outlook. Drag-drop unlocks in step 1.3.'
     else if (stepId === 'clc1.3') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
     if (!hint) return null
@@ -363,6 +459,75 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
                 {hint}
                 {stepId !== 'clc1.4' && <ArrowRight className="h-3 w-3 ml-1" />}
             </p>
+        </div>
+    )
+}
+
+// ─── View Job panel ─────────────────────────────────────────────────────────
+
+function ViewJobPanel({ job, onClose, onPublish }: { job: InstallJob; onClose: () => void; onPublish: () => void }) {
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+            <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
+                <header className="p-4 border-b border-border flex items-start justify-between gap-3">
+                    <div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Install detail</div>
+                        <h2 className="text-base font-bold text-foreground leading-tight">{job.customer}</h2>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{job.project}</p>
+                    </div>
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                        <X className="h-4 w-4" />
+                    </button>
+                </header>
+                <div className="p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Region</div>
+                            <div className="text-sm font-semibold text-foreground">{REGION_LABEL[job.region]} · {job.region.toUpperCase()}</div>
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Crew</div>
+                            <div className="inline-flex items-center gap-1 text-sm font-semibold text-foreground"><Users className="h-3.5 w-3.5" />{job.crewSize}</div>
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Start</div>
+                            <div className="text-sm font-mono text-foreground">{job.startDate}</div>
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Duration</div>
+                            <div className="text-sm font-semibold text-foreground">{job.durationDays} day{job.durationDays !== 1 ? 's' : ''}</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Vendors</div>
+                        <div className="flex flex-wrap gap-1">
+                            {job.vendors.map(v => (
+                                <span key={v} className="text-[11px] font-semibold px-2 py-0.5 rounded-full border border-border text-foreground">{v}</span>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">IQ jobs</div>
+                        <div className="flex flex-wrap gap-1">
+                            {job.iqJobIds.map(id => (
+                                <span key={id} className="text-[11px] font-mono px-2 py-0.5 rounded bg-muted text-foreground">{id}</span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <footer className="p-3 border-t border-border bg-muted/20 flex items-center justify-end gap-2">
+                    <button onClick={onClose} className="px-3 py-1.5 text-xs font-semibold rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                        Close
+                    </button>
+                    {!job.publishedToOutlook && !job.skipped && (
+                        <button onClick={onPublish} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-foreground text-background hover:opacity-90 transition-opacity">
+                            <Send className="h-3 w-3" />
+                            Send to Outlook
+                        </button>
+                    )}
+                </footer>
+            </div>
         </div>
     )
 }

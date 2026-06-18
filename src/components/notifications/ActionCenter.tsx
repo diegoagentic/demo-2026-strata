@@ -406,6 +406,26 @@ const OFFICEWORKS_STEP_NOTIFICATIONS: Record<string, OwStepNotif> = {
     },
 }
 
+// ─── CLC · step notifications (parallel to BFI/Officeworks pattern) ──────────
+// CLC Flow 1 (Schedule AI) narrative notifications. Each entry pairs a step
+// id with a notification panel + the CustomEvent name fired on CTA click ·
+// scenes listen for that event to open the matching modal/panel.
+
+type ClcStepNotif = BfiStepNotif
+
+const CLC_STEP_NOTIFICATIONS: Record<string, ClcStepNotif> = {
+    'clc1.1': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'IQ install request · Troy Public Library',
+        desc: 'Troy Public Library · NY · 1 IQ job (J-44099) · adult reading room install · KI vendor · 2-crew · 1 day. Inbound from IQ reporting API.',
+        sender: 'IQ Reporting API · 9:14 AM',
+        re: 'New install request · Troy · ready to publish',
+        cta: 'Open in Schedule AI →',
+        event: 'clc:inbound-job-open',
+        footerText: '1 inbound request',
+    },
+}
+
 // Officeworks Step sc1.0 — MANATT intake (parallel to BFI a1.1 ingest pattern)
 const OFFICEWORKS_SC10_NOTIFICATIONS: Notification[] = [
     {
@@ -487,6 +507,8 @@ export default function ActionCenter() {
     const [sc10bIngestCount,  setSc10bIngestCount]  = useState(0);
     // Officeworks generic step panel (sc1.1 .. sc1.9)
     const [owPanelClosed, setOwPanelClosed] = useState(false);
+    // CLC generic step panel (clc1.1 .. clc1.4)
+    const [clcPanelClosed, setClcPanelClosed] = useState(false);
     // Delay before any notification panel appears (2s after step loads)
     const [notifDelayReady, setNotifDelayReady] = useState(false);
     // Reset all panels when step changes, then reveal after 2s (pause-aware)
@@ -502,6 +524,7 @@ export default function ActionCenter() {
         setSc10bIngestState('idle');
         setSc10bIngestCount(0);
         setOwPanelClosed(false);
+        setClcPanelClosed(false);
         setNotifDelayReady(false);
         const cancel = pauseAwareTimeout(() => setNotifDelayReady(true), 2000);
         return () => cancel?.();
@@ -646,13 +669,17 @@ export default function ActionCenter() {
     const isOwStepActive = !!owStepConfig && !owPanelClosed && notifDelayReady
         && !SUPPRESS_OW_AC.has(currentStep?.id ?? '');
 
+    const clcStepConfig = isDemoActive ? CLC_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
+    const isClcStepActive = !!clcStepConfig && !clcPanelClosed && notifDelayReady;
+
     const isStepAutoOpen =
         isStep19 || isStep27 ||
         (isStepA11 && !a11PanelClosed && notifDelayReady) ||
         isBfiStepActive ||
         (isStepSc10 && !sc10PanelClosed && notifDelayReady) ||
         (isStepSc10b && !sc10bPanelClosed && notifDelayReady) ||
-        isOwStepActive;
+        isOwStepActive ||
+        isClcStepActive;
 
     return (
         <>
@@ -1361,6 +1388,84 @@ export default function ActionCenter() {
                         <p className="text-xs font-bold text-ai flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
                             {owStepConfig.footerText}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* CLC Steps clc1.1 .. clc1.4: Generic incoming-event notification panel */}
+        {isClcStepActive && clcStepConfig && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] lg:w-[520px] z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden">
+                    <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                clcStepConfig.badgeColor === 'warning' ? 'bg-warning/15 text-warning' :
+                                clcStepConfig.badgeColor === 'success' ? 'bg-success/15 text-success' :
+                                'bg-foreground/10 text-foreground'
+                            }`}>{clcStepConfig.badge}</span>
+                        </div>
+                        <button onClick={() => setClcPanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="px-5 pb-5">
+                        <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden">
+                            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                                <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
+                                <span className="text-sm font-semibold text-foreground flex-1">{clcStepConfig.title}</span>
+                                <span className="text-[10px] text-muted-foreground shrink-0">Today · 9:14 AM</span>
+                            </div>
+                            <div className="px-4 py-3 border-b border-border space-y-1">
+                                <div className="flex gap-2 text-[11px]">
+                                    <span className="text-muted-foreground w-10 shrink-0">From</span>
+                                    <span className="text-foreground font-medium">{clcStepConfig.sender}</span>
+                                </div>
+                                {clcStepConfig.re ? (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Re</span>
+                                        <span className="text-foreground">{clcStepConfig.re}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Info</span>
+                                        <span className="text-foreground">{clcStepConfig.desc}</span>
+                                    </div>
+                                )}
+                            </div>
+                            {clcStepConfig.attachment && (
+                                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide shrink-0">Attachment:</span>
+                                    <span className="flex items-center gap-1 text-[10px] text-success font-medium px-2 py-0.5 rounded bg-success/10 border border-success/20">
+                                        <DocumentTextIcon className="w-3 h-3" /> {clcStepConfig.attachment}
+                                    </span>
+                                </div>
+                            )}
+                            {clcStepConfig.re && (
+                                <div className="px-4 py-3 border-b border-border">
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{clcStepConfig.desc}</p>
+                                </div>
+                            )}
+                            <div className="px-4 py-4">
+                                <button
+                                    onClick={() => {
+                                        setClcPanelClosed(true);
+                                        window.dispatchEvent(new CustomEvent(clcStepConfig.event));
+                                    }}
+                                    className="w-full py-2.5 text-[12px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                >
+                                    {clcStepConfig.cta}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                        <p className="text-xs font-bold text-ai flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
+                            {clcStepConfig.footerText}
                         </p>
                     </div>
                 </div>

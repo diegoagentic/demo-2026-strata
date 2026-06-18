@@ -22,6 +22,15 @@ export interface InstallJob {
     /** True if Strata auto-scheduled this from IQ data (renders Sparkles) */
     aiScheduled: boolean
     isAnchor?: boolean
+    /** Per-card publish · gains Sparkles + "Published" pill across views.
+        Set by handlePublish in CLCCalendarScene · persists for the session. */
+    publishedToOutlook?: boolean
+    /** Per-card skip · grayscale + removed from calendar candidates.
+        Set by handleSkip in CLCCalendarScene · persists for the session. */
+    skipped?: boolean
+    /** Just-arrived pulse · only true during clc1.1 for the INBOUND_JOB.
+        Auto-clears when stepId changes to anything other than clc1.1. */
+    justArrived?: boolean
 }
 
 export interface WeekColumn {
@@ -257,6 +266,28 @@ export const INITIAL_JOBS: InstallJob[] = [
         aiScheduled: false,
     },
 ]
+
+// ─── Inbound job (arrives during clc1.1 narrative) ──────────────────────────
+//
+// Strata "discovers" this job from the IQ reporting API after 1500ms on step
+// clc1.1 entry. It gets appended to the displayed list with justArrived=true
+// so the views can highlight it. Week of Jun 22 is empty in CAPACITY_BY_REGION,
+// so injecting this job doesn't introduce a fake capacity warning.
+
+export const INBOUND_JOB: InstallJob = {
+    id: 'job-troy',
+    iqJobIds: ['J-44099'],
+    customer: 'Troy Public Library',
+    project: 'Troy Adult Reading Room',
+    region: 'ny',
+    vendors: ['KI'],
+    startDate: '2026-06-22',
+    endDate: '2026-06-22',
+    crewSize: 2,
+    durationDays: 1,
+    status: 'pending',
+    aiScheduled: false,  // no Sparkles initially · earns them once published
+}
 
 // ─── Capacity by region ─────────────────────────────────────────────────────
 

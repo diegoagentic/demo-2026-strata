@@ -1,11 +1,15 @@
 import { MoreHorizontal, Sparkles } from 'lucide-react'
 import type { InstallJob, Region } from './installScheduleData'
 import { REGION_LABEL } from './installScheduleData'
+import JobQuickActions from './JobQuickActions'
 
 interface CLCFunnelViewProps {
     jobs: InstallJob[]
     queuedJobIds: Set<string>
     highlightedJobId?: string | null
+    onPublish?: (jobId: string) => void
+    onView?: (jobId: string) => void
+    onSkip?: (jobId: string) => void
 }
 
 type FunnelStage = 'pulled' | 'reviewed' | 'scheduled' | 'in-flight' | 'complete'
@@ -45,7 +49,7 @@ const REGION_AVATAR_TEXT: Record<Region, string> = {
     pa: 'text-success',
 }
 
-export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId }: CLCFunnelViewProps) {
+export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, onPublish, onView, onSkip }: CLCFunnelViewProps) {
     const byStage: Record<FunnelStage, InstallJob[]> = {
         pulled:     [],
         reviewed:   [],
@@ -83,6 +87,9 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId }: 
                                     job={job}
                                     queued={queuedJobIds.has(job.id)}
                                     highlighted={highlightedJobId === job.id}
+                                    onPublish={onPublish}
+                                    onView={onView}
+                                    onSkip={onSkip}
                                 />
                             ))
                         )}
@@ -95,21 +102,35 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId }: 
 
 // ─── Card · aligned with Officeworks context card layout ────────────────────
 
-function JobCard({ job, queued, highlighted }: { job: InstallJob; queued: boolean; highlighted: boolean }) {
+function JobCard({ job, queued, highlighted, onPublish, onView, onSkip }: {
+    job: InstallJob
+    queued: boolean
+    highlighted: boolean
+    onPublish?: (jobId: string) => void
+    onView?: (jobId: string) => void
+    onSkip?: (jobId: string) => void
+}) {
     const avatarBg = REGION_AVATAR_BG[job.region as Region]
     const avatarText = REGION_AVATAR_TEXT[job.region as Region]
     const regionLabel = REGION_LABEL[job.region as Region]
     const vendorSummary = job.vendors.length === 1 ? job.vendors[0] : `${job.vendors[0]} +${job.vendors.length - 1}`
+    const hasActions = !!(onPublish && onView && onSkip)
 
     return (
         <div
-            className={`rounded-2xl border bg-card p-3.5 space-y-2.5 shadow-sm transition-shadow ${
-                highlighted ? 'border-destructive/40 ring-2 ring-destructive/20' :
-                queued      ? 'border-warning/40' :
-                              'border-border hover:shadow-md'
-            }`}
+            className={`relative rounded-2xl border bg-card p-3.5 space-y-2.5 shadow-sm transition-shadow ${
+                job.justArrived ? 'border-ai/40 ring-2 ring-ai/30 ring-offset-2 ring-offset-background' :
+                highlighted    ? 'border-destructive/40 ring-2 ring-destructive/20' :
+                queued         ? 'border-warning/40' :
+                                 'border-border hover:shadow-md'
+            } ${job.skipped ? 'opacity-50 grayscale' : ''}`}
             title={`${job.customer} · ${job.crewSize} crew · ${job.iqJobIds.length} IQ job${job.iqJobIds.length > 1 ? 's' : ''}`}
         >
+            {job.justArrived && (
+                <div className="absolute -top-2 -right-2 text-[9px] font-bold uppercase tracking-wider bg-ai text-background px-2 py-0.5 rounded-full shadow-md animate-pulse">
+                    Just arrived
+                </div>
+            )}
             <div className="flex items-center gap-2.5">
                 <div className={`h-8 w-8 rounded-full ${avatarBg} flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
                     <span className={`text-[10px] font-black ${avatarText}`}>{regionLabel}</span>
@@ -117,7 +138,9 @@ function JobCard({ job, queued, highlighted }: { job: InstallJob; queued: boolea
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-sm font-semibold text-foreground truncate">{job.customer}</span>
-                        {job.aiScheduled && <Sparkles className="h-3 w-3 text-foreground shrink-0" aria-label="AI-scheduled" />}
+                        {(job.aiScheduled || job.publishedToOutlook) && (
+                            <Sparkles className="h-3 w-3 text-foreground shrink-0" aria-label="Strata signal" />
+                        )}
                         {job.isAnchor && (
                             <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
                                 Anchor
@@ -138,6 +161,16 @@ function JobCard({ job, queued, highlighted }: { job: InstallJob; queued: boolea
                 <span className="text-muted-foreground truncate">{job.startDate}</span>
                 <span className="font-semibold text-foreground tabular-nums">{queued ? 'Queued · IQ batch' : `${job.durationDays}d`}</span>
             </div>
+
+            {hasActions && (
+                <JobQuickActions
+                    job={job}
+                    variant="card"
+                    onPublish={onPublish!}
+                    onView={onView!}
+                    onSkip={onSkip!}
+                />
+            )}
         </div>
     )
 }

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Sparkles, Users } from 'lucide-react'
 import type { InstallJob, WeekColumn, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
+import JobQuickActions from './JobQuickActions'
 
 interface WeekCalendarGridProps {
     weeks: WeekColumn[]
@@ -12,6 +13,13 @@ interface WeekCalendarGridProps {
     onJobDrop?: (jobId: string, newStartDate: string) => void
     /** When set, the user is informed that the row is "queued for IQ batch sync" */
     queuedJobIds?: Set<string>
+    /** Phase D · per-card quick actions (compact variant) on hover */
+    onPublish?: (jobId: string) => void
+    onView?: (jobId: string) => void
+    onSkip?: (jobId: string) => void
+    /** When false (e.g. during clc1.3 drag-drop), the hover overlay is hidden
+        so the actions don't fight with the drag affordance. */
+    showQuickActions?: boolean
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
@@ -41,7 +49,7 @@ function daysBetween(a: string, b: string): number {
  * positioned in the Mon-cell of its start day. Weekends collapsed (most installs
  * are weekday-only). HTML5 drag-and-drop with no dependency.
  */
-export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds }: WeekCalendarGridProps) {
+export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true }: WeekCalendarGridProps) {
     const [dragJobId, setDragJobId] = useState<string | null>(null)
     const [dragOverCell, setDragOverCell] = useState<string | null>(null)
 
@@ -123,7 +131,7 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                 onDragLeave={() => dragOverCell === cellKey && setDragOverCell(null)}
                                 className={`min-h-[88px] p-1.5 space-y-1 transition-colors ${
                                     dayIdx < 4 ? 'border-r border-border' : ''
-                                } ${isDropTarget ? 'bg-brand-300/20 dark:bg-brand-500/15' : 'hover:bg-muted/20'}`}
+                                } ${isDropTarget ? 'bg-ai/10' : 'hover:bg-muted/20'}`}
                             >
                                 {cellJobs.map(job => (
                                     <JobCard
@@ -131,10 +139,14 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                         job={job}
                                         highlighted={highlightedJobId === job.id}
                                         queued={queuedJobIds?.has(job.id) ?? false}
-                                        draggable={!!onJobDrop}
+                                        draggable={!!onJobDrop && !job.publishedToOutlook && !job.skipped}
                                         onDragStart={(e) => handleDragStart(e, job.id)}
                                         onDragEnd={handleDragEnd}
                                         isDragging={dragJobId === job.id}
+                                        onPublish={onPublish}
+                                        onView={onView}
+                                        onSkip={onSkip}
+                                        showQuickActions={showQuickActions}
                                     />
                                 ))}
                             </div>
@@ -156,30 +168,38 @@ interface JobCardProps {
     onDragStart: (e: React.DragEvent) => void
     onDragEnd: () => void
     isDragging: boolean
+    onPublish?: (jobId: string) => void
+    onView?: (jobId: string) => void
+    onSkip?: (jobId: string) => void
+    showQuickActions: boolean
 }
 
-function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging }: JobCardProps) {
+function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions }: JobCardProps) {
     const regionBadge = REGION_BADGE[job.region as Region]
+    const hasActions = showQuickActions && !!(onPublish && onView && onSkip)
     return (
         <div
             draggable={draggable}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            className={`rounded-md border bg-card p-2 cursor-grab active:cursor-grabbing transition-all ${
+            className={`relative group rounded-md border bg-card p-2 transition-all ${
+                draggable ? 'cursor-grab active:cursor-grabbing' : ''
+            } ${
                 isDragging ? 'opacity-40 scale-95' : ''
             } ${
-                highlighted ? 'border-red-300 ring-2 ring-red-200 dark:border-red-500/50 dark:ring-red-500/20' :
-                queued ? 'border-yellow-300 dark:border-yellow-500/50' :
-                'border-border hover:border-foreground/30'
-            }`}
+                job.justArrived ? 'border-ai/40 ring-2 ring-ai/30' :
+                highlighted    ? 'border-red-300 ring-2 ring-red-200 dark:border-red-500/50 dark:ring-red-500/20' :
+                queued         ? 'border-yellow-300 dark:border-yellow-500/50' :
+                                 'border-border hover:border-foreground/30'
+            } ${job.skipped ? 'opacity-50 grayscale' : ''}`}
             title={`${job.customer} · ${job.crewSize} crew · ${job.iqJobIds.length} IQ job${job.iqJobIds.length > 1 ? 's' : ''}`}
         >
             <div className="flex items-start gap-1.5 mb-1">
                 <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap ${regionBadge}`}>
                     {REGION_LABEL[job.region as Region]}
                 </span>
-                {job.aiScheduled && (
-                    <Sparkles className="h-3 w-3 text-zinc-800 dark:text-zinc-200 shrink-0 mt-0.5" aria-label="AI-scheduled" />
+                {(job.aiScheduled || job.publishedToOutlook) && (
+                    <Sparkles className="h-3 w-3 text-zinc-800 dark:text-zinc-200 shrink-0 mt-0.5" aria-label="Strata signal" />
                 )}
                 {job.isAnchor && (
                     <span className="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 uppercase tracking-wider whitespace-nowrap">
@@ -201,6 +221,20 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
                 <div className="mt-1 text-[9px] font-bold text-yellow-700 dark:text-yellow-300 uppercase tracking-wider">
                     Queued · IQ batch
                 </div>
+            )}
+            {job.justArrived && (
+                <div className="absolute -top-1.5 -right-1.5 text-[8px] font-bold uppercase tracking-wider bg-ai text-background px-1.5 py-0.5 rounded-full shadow-md animate-pulse">
+                    New
+                </div>
+            )}
+            {hasActions && (
+                <JobQuickActions
+                    job={job}
+                    variant="compact"
+                    onPublish={onPublish!}
+                    onView={onView!}
+                    onSkip={onSkip!}
+                />
             )}
         </div>
     )
