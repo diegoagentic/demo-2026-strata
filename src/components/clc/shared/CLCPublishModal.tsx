@@ -25,8 +25,20 @@ const STATUS_OPTIONS: { key: InstallJob['status']; label: string }[] = [
  * advanced the step without any user confirmation.
  */
 export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublishModalProps) {
+    // The modal mirrors the calendar · shows ALL displayed jobs with
+    // status-aware rendering. Published rows are checked + disabled with
+    // a Published pill, skipped rows are disabled + grayed. Only the
+    // publishable subset is interactive.
     const publishable = useMemo(
         () => jobs.filter(j => !j.publishedToOutlook && !j.skipped),
+        [jobs],
+    )
+    const alreadyPublishedCount = useMemo(
+        () => jobs.filter(j => j.publishedToOutlook).length,
+        [jobs],
+    )
+    const skippedOnlyCount = useMemo(
+        () => jobs.filter(j => j.skipped && !j.publishedToOutlook).length,
         [jobs],
     )
 
@@ -39,13 +51,16 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
     const [regionFilter, setRegionFilter] = useState<Region | 'all'>('all')
     const [statusFilter, setStatusFilter] = useState<string[]>([])
 
+    // Visible set · ALL jobs that pass the region+status filter, regardless
+    // of publish/skip state. Diego's call · the modal should feel "complete"
+    // by showing the calendar context, not a sparse list of leftovers.
     const visible = useMemo(() => {
-        return publishable.filter(j => {
+        return jobs.filter(j => {
             if (regionFilter !== 'all' && j.region !== regionFilter) return false
             if (statusFilter.length > 0 && !statusFilter.includes(j.status)) return false
             return true
         })
-    }, [publishable, regionFilter, statusFilter])
+    }, [jobs, regionFilter, statusFilter])
 
     const selectedCount = selectedIds.size
 
@@ -61,14 +76,18 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
     const selectAllVisible = () => {
         setSelectedIds(prev => {
             const next = new Set(prev)
-            for (const j of visible) next.add(j.id)
+            for (const j of visible) {
+                if (!j.publishedToOutlook && !j.skipped) next.add(j.id)
+            }
             return next
         })
     }
     const deselectAllVisible = () => {
         setSelectedIds(prev => {
             const next = new Set(prev)
-            for (const j of visible) next.delete(j.id)
+            for (const j of visible) {
+                if (!j.publishedToOutlook && !j.skipped) next.delete(j.id)
+            }
             return next
         })
     }
@@ -105,7 +124,13 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
                             Publish to Outlook
                         </h2>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                            <strong className="text-foreground tabular-nums">{selectedCount}</strong> of {publishable.length} install jobs selected · Director of Operations' calendar.
+                            <strong className="text-foreground tabular-nums">{selectedCount}</strong> of {publishable.length} pending selected
+                            {alreadyPublishedCount > 0 && (
+                                <> · <span className="text-success font-semibold">{alreadyPublishedCount} already in Outlook</span></>
+                            )}
+                            {skippedOnlyCount > 0 && (
+                                <> · {skippedOnlyCount} skipped</>
+                            )}
                         </p>
                     </div>
                     <button
@@ -170,7 +195,9 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
                     </div>
                 </div>
 
-                {/* Job list with checkboxes */}
+                {/* Job list with checkboxes · all calendar jobs, with status-aware
+                    rendering (Published rows checked+disabled, Skipped rows
+                    grayed+disabled, publishable rows interactive). */}
                 <div className="flex-1 overflow-y-auto">
                     {visible.length === 0 ? (
                         <div className="p-8 text-center text-xs text-muted-foreground">
@@ -179,27 +206,50 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
                     ) : (
                         <ul className="divide-y divide-border">
                             {visible.map(job => {
-                                const isSelected = selectedIds.has(job.id)
+                                const isPublished = !!job.publishedToOutlook
+                                const isSkipped = !!job.skipped && !isPublished
+                                const isInteractive = !isPublished && !isSkipped
+                                const isSelected = isInteractive && selectedIds.has(job.id)
+                                const checked = isPublished || isSelected
+
+                                const rowTone = isPublished
+                                    ? 'bg-success/5 cursor-not-allowed'
+                                    : isSkipped
+                                        ? 'bg-muted/30 cursor-not-allowed opacity-60'
+                                        : isSelected
+                                            ? 'bg-background hover:bg-muted/30 cursor-pointer'
+                                            : 'bg-muted/10 hover:bg-muted/30 opacity-70 cursor-pointer'
+
                                 return (
                                     <li key={job.id}>
-                                        <label className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
-                                            isSelected ? 'bg-background hover:bg-muted/30' : 'bg-muted/10 hover:bg-muted/30 opacity-70'
-                                        }`}>
+                                        <label className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${rowTone}`}>
                                             <input
                                                 type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => toggle(job.id)}
+                                                checked={checked}
+                                                disabled={!isInteractive}
+                                                onChange={() => isInteractive && toggle(job.id)}
                                                 aria-label={`Select ${job.customer}`}
-                                                className="h-4 w-4 rounded border-border accent-foreground"
+                                                className="h-4 w-4 rounded border-border accent-foreground disabled:opacity-50"
                                             />
                                             <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 ${REGION_BADGE[job.region as Region]}`}>
                                                 {REGION_LABEL[job.region as Region]}
                                             </span>
                                             <div className="min-w-0 flex-1">
-                                                <div className="text-sm font-semibold text-foreground truncate">
-                                                    {job.customer}
+                                                <div className="text-sm font-semibold text-foreground truncate flex items-center gap-1.5 flex-wrap">
+                                                    <span className="truncate">{job.customer}</span>
+                                                    {isPublished && (
+                                                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/15 text-success uppercase tracking-wider">
+                                                            <Sparkles className="h-2.5 w-2.5" />
+                                                            Published
+                                                        </span>
+                                                    )}
+                                                    {isSkipped && (
+                                                        <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">
+                                                            Skipped
+                                                        </span>
+                                                    )}
                                                     {job.isAnchor && (
-                                                        <span className="ml-1.5 inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 uppercase tracking-wider align-middle">
+                                                        <span className="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 uppercase tracking-wider">
                                                             Anchor
                                                         </span>
                                                     )}

@@ -304,7 +304,13 @@ export default function CLCCalendarScene() {
     // capacity-alert highlight in 1.4.
     const highlightedJobId = inboundReviewJobId ?? highlightFairport
     const showPublishAll = stepId === 'clc1.1' || stepId === 'clc1.2'
-    const publishAllDisabled = displayedJobs.length === 0 || stepId === 'clc1.2'
+    // Disable when in 1.2 (already published) OR when there's literally
+    // nothing left to send (everything's already published or skipped).
+    const publishableCount = useMemo(
+        () => displayedJobs.filter(j => !j.publishedToOutlook && !j.skipped).length,
+        [displayedJobs],
+    )
+    const publishAllDisabled = publishableCount === 0 || stepId === 'clc1.2'
     const viewedJob = viewPanelJobId ? displayedJobs.find(j => j.id === viewPanelJobId) ?? null : null
 
     return (
