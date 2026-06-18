@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Search, X, Filter as FilterIcon } from 'lucide-react'
 import type { InstallJob, Region } from './installScheduleData'
 import { REGION_LABEL } from './installScheduleData'
@@ -39,6 +40,11 @@ interface CLCFilterBarProps {
     regionFilter?: Region | 'all'
     onRegionFilter?: (r: Region | 'all') => void
     showRegion?: boolean
+
+    /** Optional right-aligned slot rendered after the Reset button. Used for
+        data-action buttons (Sync pill, Resync, Publish-all, etc.) that
+        conceptually belong alongside the filters. */
+    rightSlot?: ReactNode
 }
 
 const INPUT_CLASS = 'px-2.5 py-1.5 text-xs font-medium bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30'
@@ -63,6 +69,7 @@ export default function CLCFilterBar({
     regionFilter = 'all',
     onRegionFilter,
     showRegion = true,
+    rightSlot,
 }: CLCFilterBarProps) {
     const options: StatusOption[] = statusOptions ?? (Object.keys(STATUS_LABELS) as StatusKey[]).map(k => ({ key: k, label: STATUS_LABELS[k] }))
 
@@ -173,6 +180,16 @@ export default function CLCFilterBar({
                     <X className="h-3 w-3" />
                     Reset
                 </button>
+            )}
+
+            {rightSlot && (
+                <>
+                    {/* Push the slot to the right when no customer search is shown */}
+                    {!(showCustomer && onCustomerQuery) && <span className="ml-auto" />}
+                    {/* Subtle divider so the actions read as a distinct cluster */}
+                    <span className="h-5 w-px bg-border hidden sm:inline-block" aria-hidden />
+                    <div className="inline-flex items-center gap-2 flex-wrap">{rightSlot}</div>
+                </>
             )}
         </div>
     )

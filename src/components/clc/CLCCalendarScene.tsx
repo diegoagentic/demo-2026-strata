@@ -257,7 +257,9 @@ export default function CLCCalendarScene() {
             {/* Summary chips */}
             <CLCSummaryChipsBar chips={chips} autoOpenChipId={autoOpenChipId} />
 
-            {/* Filter bar */}
+            {/* Filter bar · data actions (Sync · Resync · Publish-all) live in the
+                rightSlot so they sit AFTER the filters · semantically the actions
+                belong to the data control row, not to the view-mode toolbar below. */}
             <CLCFilterBar
                 dateRange={dateRange}
                 onDateRange={setDateRange}
@@ -267,41 +269,41 @@ export default function CLCCalendarScene() {
                 onCustomerQuery={setCustomerQuery}
                 regionFilter={regionFilter}
                 onRegionFilter={setRegionFilter}
+                rightSlot={
+                    <>
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground px-2 py-1 rounded-md bg-muted">
+                            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                            Synced from IQ · 2 min ago
+                        </span>
+                        <button
+                            disabled
+                            title="Read-only · IQ API has no write-back · changes queue for nightly batch"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-muted-foreground border border-border rounded-lg opacity-60 cursor-not-allowed"
+                        >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Resync
+                        </button>
+                        {showPublishAll && (
+                            <button
+                                onClick={handlePublishAll}
+                                disabled={publishAllDisabled}
+                                title="Publish every queued install to the Outlook calendar and advance the flow"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-background bg-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <Send className="h-3.5 w-3.5" />
+                                Publish all to Outlook
+                            </button>
+                        )}
+                    </>
+                }
             />
 
-            {/* Toolbar row · jobs count on the left · Sync + Publish + Toggle on the right */}
+            {/* Toolbar row · jobs count on the left · view toggle on the right */}
             <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-2 flex-wrap">
                 <div className="text-[11px] text-muted-foreground">
                     {filteredJobs.length === jobs.length ? `${jobs.length} jobs` : `${filteredJobs.length} of ${jobs.length} jobs`}
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground px-2 py-1 rounded-md bg-muted">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                        Synced from IQ · 2 min ago
-                    </span>
-                    <button
-                        disabled
-                        title="Read-only · IQ API has no write-back · changes queue for nightly batch"
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-muted-foreground border border-border rounded-lg opacity-60 cursor-not-allowed"
-                    >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        Resync
-                    </button>
-                    {showPublishAll && (
-                        <button
-                            onClick={handlePublishAll}
-                            disabled={publishAllDisabled}
-                            title="Publish every queued install to the Outlook calendar and advance the flow"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-background bg-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            <Send className="h-3.5 w-3.5" />
-                            Publish all to Outlook
-                        </button>
-                    )}
-                    {/* Subtle divider before the view toggle so it reads as a separate cluster */}
-                    <span className="h-5 w-px bg-border mx-1 hidden sm:inline-block" aria-hidden />
-                    <CLCViewToggle value={viewMode} onChange={handleViewChange} pulse={pulseMode} />
-                </div>
+                <CLCViewToggle value={viewMode} onChange={handleViewChange} pulse={pulseMode} />
             </div>
 
             {/* Body — one view at a time */}
