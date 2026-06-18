@@ -518,6 +518,26 @@ export default function CLCCalendarScene() {
         return () => window.removeEventListener('clc:capacity-warning-open', handler)
     }, [])
 
+    // Flow 1 → Flow 2 auto-bridge · when the operator sends either the
+    // outreach (Albany) or dispatcher email from the capacity panel in
+    // clc1.4, the narrative beat is "operator has handled the capacity
+    // conflict · ready to proceed". We give the success toast time to
+    // play (~2.5s) and then advance to clc2.1 (SharePoint seeding) so
+    // the cross-flow handoff matches the documented intent.
+    useEffect(() => {
+        const handler = () => {
+            if (stepIdRef.current !== 'clc1.4') return
+            setTimeout(() => {
+                if (stepIdRef.current === 'clc1.4') {
+                    nextStep()
+                }
+            }, 2500)
+        }
+        window.addEventListener('clc:flow1-handled', handler)
+        return () => window.removeEventListener('clc:flow1-handled', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
     const chips: SummaryChip[] = [
         {
             id: 'jobs',
@@ -924,7 +944,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
     if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
     else if (stepId === 'clc1.2') hint = 'Calendar visualization rendered · Sparkles mark Strata-scheduled jobs. Auto-continuing to drag-drop in a moment · toggle a view to stay on this step.'
     else if (stepId === 'clc1.3') hint = 'Strata suggests moving Fairport to Mon Jun 8 (the dashed ghost slot). Drop the card there to confirm with the AI-framed modal · or pick any other cell / use 📅 Reschedule from any view for a manual override. Confirm queues for IQ batch and bridges to 1.4.'
-    else if (stepId === 'clc1.4') hint = 'Strata detected an NY-region capacity conflict. Three paths · bell (Action Center notification + CTA) · pulsing alert chip on the toolbar · "Review · AI" pill on Fairport. Any of them opens the capacity report with the third-party installer suggestion.'
+    else if (stepId === 'clc1.4') hint = 'Strata detected an NY-region capacity conflict. Three paths to the capacity report · bell · pulsing alert chip · "Review · AI" pill on Fairport. Send the outreach draft (or contact dispatcher) and the demo auto-bridges to Flow 2 · SharePoint seeding.'
     if (!hint) return null
     return (
         <div className="px-5 py-2.5 border-t border-border bg-muted/20">

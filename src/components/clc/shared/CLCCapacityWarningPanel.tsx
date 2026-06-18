@@ -69,6 +69,10 @@ export default function CLCCapacityWarningPanel({ stepId }: Props) {
             detail: { jobId: `email-${kind}`, customer: `${customer} · ${subject}` },
         }))
         setComposerMode(null)
+        // Signal "Flow 1 capacity issue handled" · CLCCalendarScene listens
+        // for this and bridges to clc2.1 (SharePoint seeding) after a beat.
+        // Either send (outreach or dispatcher) counts as resolved.
+        window.dispatchEvent(new CustomEvent('clc:flow1-handled', { detail: { kind } }))
     }
 
     const activeDraft = composerMode === 'outreach'

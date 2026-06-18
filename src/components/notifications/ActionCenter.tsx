@@ -434,6 +434,16 @@ const CLC_STEP_NOTIFICATIONS: Record<string, ClcStepNotif> = {
         event: 'clc:capacity-warning-open',
         footerText: '1 Strata-detected alert',
     },
+    'clc2.1': {
+        badge: '1 new', badgeColor: 'ai',
+        title: 'IQ status change · Fairport now Scheduled',
+        desc: 'Fairport Public Library hit "Scheduled" in IQ. 5 IQ jobs (J-44021 · J-44022 · J-44023 · J-44024 · J-44025 · TMC · KI · Smith System · Media Tech · Aurora) ready to consolidate into a SharePoint folder for installer iPad delivery · saves the 30+ minutes of manual copy/paste across the 5 jobs.',
+        sender: 'IQ Reporting API · just now',
+        re: 'Seed install folder · Fairport Library Phase 1',
+        cta: 'Open seed workflow →',
+        event: 'clc:sharepoint-trigger',
+        footerText: '1 IQ status change',
+    },
 }
 
 // Officeworks Step sc1.0 — MANATT intake (parallel to BFI a1.1 ingest pattern)

@@ -110,6 +110,18 @@ export default function CLCSharePointScene() {
         }
     }, [stepId])
 
+    // Action Center CTA listener · clc2.1 notification dispatches this event.
+    // Opens the consolidation modal at the discover stage so the operator
+    // sees Strata's "5 IQ jobs found · 2 to exclude" before they decide.
+    useEffect(() => {
+        const handler = () => {
+            setInitialStage('discover')
+            setModalOpen(true)
+        }
+        window.addEventListener('clc:sharepoint-trigger', handler)
+        return () => window.removeEventListener('clc:sharepoint-trigger', handler)
+    }, [])
+
     // Reset user-toggled flag when step changes
     useEffect(() => {
         setHasUserToggled(false)
@@ -268,7 +280,7 @@ export default function CLCSharePointScene() {
                 <div className="px-5 py-2.5 border-t border-border bg-muted/20">
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Sparkles className="h-3 w-3" />
-                        Strata detected the IQ status change · Fairport row is ready to seed. Click <strong>Open</strong> to consolidate the 5 IQ jobs.
+                        Strata detected the IQ status change · two paths · click the pulsing bell + <strong>Open seed workflow →</strong> · or click <strong>Open</strong> on the Fairport row directly. Either consolidates the 5 IQ jobs.
                     </p>
                 </div>
             )}
