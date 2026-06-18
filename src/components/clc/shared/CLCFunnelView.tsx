@@ -16,6 +16,9 @@ interface CLCFunnelViewProps {
     /** Jobs currently in the ~1200ms publish simulation · their action
         column renders a "Sending…" indicator instead of the buttons. */
     publishingJobIds?: Set<string>
+    /** Reschedule request handler · opens the ViewJobPanel with the date
+        editor pre-expanded. Passed to JobQuickActions when defined. */
+    onReschedule?: (jobId: string) => void
 }
 
 type FunnelStage = 'pulled' | 'reviewed' | 'scheduled' | 'in-flight' | 'complete'
@@ -62,7 +65,7 @@ const REGION_AVATAR_TEXT: Record<Region, string> = {
     pa: 'text-emerald-800 dark:text-emerald-200',
 }
 
-export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, onPublish, onView, onSkip, pulseViewActionForJobId, publishingJobIds }: CLCFunnelViewProps) {
+export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, onPublish, onView, onSkip, pulseViewActionForJobId, publishingJobIds, onReschedule }: CLCFunnelViewProps) {
     const byStage: Record<FunnelStage, InstallJob[]> = {
         pulled:     [],
         reviewed:   [],
@@ -120,6 +123,7 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, on
                                             onPublish={onPublish}
                                             onView={onView}
                                             onSkip={onSkip}
+                                            onReschedule={onReschedule}
                                         />
                                     ))
                                 )}
@@ -134,7 +138,7 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, on
 
 // ─── Card · aligned with Officeworks context card layout ────────────────────
 
-function JobCard({ job, queued, highlighted, pulseView, isPublishing, onPublish, onView, onSkip }: {
+function JobCard({ job, queued, highlighted, pulseView, isPublishing, onPublish, onView, onSkip, onReschedule }: {
     job: InstallJob
     queued: boolean
     highlighted: boolean
@@ -143,6 +147,7 @@ function JobCard({ job, queued, highlighted, pulseView, isPublishing, onPublish,
     onPublish?: (jobId: string) => void
     onView?: (jobId: string) => void
     onSkip?: (jobId: string) => void
+    onReschedule?: (jobId: string) => void
 }) {
     const avatarBg = REGION_AVATAR_BG[job.region as Region]
     const avatarText = REGION_AVATAR_TEXT[job.region as Region]
@@ -205,6 +210,7 @@ function JobCard({ job, queued, highlighted, pulseView, isPublishing, onPublish,
                     onPublish={onPublish!}
                     onView={onView!}
                     onSkip={onSkip!}
+                    onReschedule={onReschedule}
                 />
             )}
         </div>

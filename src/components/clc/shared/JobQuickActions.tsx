@@ -1,4 +1,4 @@
-import { Send, Eye, SkipForward, Sparkles, Check, Loader2 } from 'lucide-react'
+import { Send, Eye, SkipForward, Sparkles, Check, Loader2, Calendar as CalendarIcon } from 'lucide-react'
 import type { InstallJob } from './installScheduleData'
 
 interface JobQuickActionsProps {
@@ -22,6 +22,11 @@ interface JobQuickActionsProps {
         (variant-aware) instead of the buttons · used during the ~1200ms
         publish simulation between click and the Published terminal state. */
     isPublishing?: boolean
+    /** When defined, a Reschedule action (Calendar icon) renders alongside
+        the other quick actions. Click bubbles a request up to the parent ·
+        the parent decides whether to open the inline popover (calendar
+        view) or the ViewJobPanel (list/funnel views). */
+    onReschedule?: (jobId: string) => void
 }
 
 /**
@@ -37,7 +42,7 @@ interface JobQuickActionsProps {
  * a terminal pill instead of the buttons so the user doesn't re-trigger.
  */
 export default function JobQuickActions({
-    job, variant, onPublish, onView, onSkip, disabled, pulseView, isPublishing,
+    job, variant, onPublish, onView, onSkip, disabled, pulseView, isPublishing, onReschedule,
 }: JobQuickActionsProps) {
     if (disabled) return null
 
@@ -57,9 +62,10 @@ export default function JobQuickActions({
         return <SkippedPill variant={variant} />
     }
 
-    const handlePublish = (e: React.MouseEvent) => { stop(e); onPublish(job.id) }
-    const handleView    = (e: React.MouseEvent) => { stop(e); onView(job.id) }
-    const handleSkip    = (e: React.MouseEvent) => { stop(e); onSkip(job.id) }
+    const handlePublish    = (e: React.MouseEvent) => { stop(e); onPublish(job.id) }
+    const handleView       = (e: React.MouseEvent) => { stop(e); onView(job.id) }
+    const handleSkip       = (e: React.MouseEvent) => { stop(e); onSkip(job.id) }
+    const handleReschedule = (e: React.MouseEvent) => { stop(e); onReschedule?.(job.id) }
 
     // ── Variant: card (Funnel) ─────────────────────────────────────────
     if (variant === 'card') {
@@ -85,6 +91,16 @@ export default function JobQuickActions({
                     <Eye className="h-3 w-3" />
                     View
                 </button>
+                {onReschedule && (
+                    <button
+                        onClick={handleReschedule}
+                        title="Reschedule to a different date"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+                    >
+                        <CalendarIcon className="h-3 w-3" />
+                        Reschedule
+                    </button>
+                )}
                 <button
                     onClick={handleSkip}
                     title="Skip · defer this job out of the calendar"
@@ -121,6 +137,16 @@ export default function JobQuickActions({
                 >
                     <Eye className="h-3.5 w-3.5" />
                 </button>
+                {onReschedule && (
+                    <button
+                        onClick={handleReschedule}
+                        title="Reschedule"
+                        aria-label="Reschedule"
+                        className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                        <CalendarIcon className="h-3.5 w-3.5" />
+                    </button>
+                )}
                 <button
                     onClick={handleSkip}
                     title="Skip · defer"

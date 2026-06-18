@@ -11,6 +11,7 @@ import CLCJobListView from './shared/CLCJobListView'
 import CLCPublishModal from './shared/CLCPublishModal'
 import CLCToastStack from './shared/CLCToastStack'
 import CLCIngestionOverlay from './shared/CLCIngestionOverlay'
+import CLCRescheduleConfirmModal from './shared/CLCRescheduleConfirmModal'
 import {
     INITIAL_JOBS, INBOUND_JOB, REGION_BADGE, REGION_LABEL, CAPACITY_BY_REGION,
     INITIAL_ANCHOR_MONDAY, generateWeeks, shiftMondayByWeeks, mondayOfWeek,
@@ -89,6 +90,20 @@ export default function CLCCalendarScene() {
     const [calendarPeriod, setCalendarPeriod] = useState<CalendarPeriod>('6w')
     const [calendarAnchor, setCalendarAnchor] = useState<string>(INITIAL_ANCHOR_MONDAY)
 
+    // Pending reschedule confirmation · populated in clc1.3 when the user
+    // drags/picks a new date. Drives the CLCRescheduleConfirmModal · Accept
+    // commits the move + advances to clc1.4 · Cancel just closes.
+    const [pendingReschedule, setPendingReschedule] = useState<{
+        jobId: string
+        newStart: string
+        isAiSuggested: boolean
+    } | null>(null)
+
+    // When the operator triggers Reschedule from a List/Funnel row, we want
+    // the ViewJobPanel to open with the date editor already expanded · skips
+    // the extra click. Cleared when the panel closes.
+    const [viewPanelStartInReschedule, setViewPanelStartInReschedule] = useState(false)
+
     // View mode (step-aware default + user override)
     const [viewMode, setViewMode] = useState<ViewMode>('list')
     const [pulseMode, setPulseMode] = useState<ViewMode | null>(null)
@@ -144,6 +159,9 @@ export default function CLCCalendarScene() {
             setViewPanelJobId(null)
             setPublishModalOpen(false)
             setBulkPublishIds(null)
+            setPendingReschedule(null)
+            setViewPanelStartInReschedule(false)
+            setJobs(INITIAL_JOBS)   // restore original Fairport start date etc.
             userClickedPublishAllRef.current = false
         }
 
@@ -232,8 +250,11 @@ export default function CLCCalendarScene() {
         setPulseMode(null)
     }
 
-    // ─── Drag-drop ────────────────────────────────────────────────────────
-    const handleJobDrop = (jobId: string, newStart: string) => {
+    // ─── Drag-drop · commit primitive ─────────────────────────────────────
+    /** Pure state mutation · moves the job + queues for IQ batch sync.
+        Does NOT advance the step or open any modal · the wrappers below
+        decide whether the move goes through the confirmation gate first. */
+    const commitReschedule = (jobId: string, newStart: string) => {
         setJobs(prev => prev.map(j => {
             if (j.id !== jobId) return j
             const [oy, om, od] = newStart.split('-').map(Number)
@@ -244,6 +265,20 @@ export default function CLCCalendarScene() {
         }))
         setQueuedJobIds(prev => new Set(prev).add(jobId))
         window.dispatchEvent(new CustomEvent('clc:calendar-writeback-queued', { detail: { jobId, newStart } }))
+    }
+
+    /** Drag-drop and date-picker entry point · in clc1.3 every reschedule
+        runs through the confirm modal (Strata-AI framing when the date
+        matches the suggestion · neutral framing otherwise). Outside 1.3
+        the move commits immediately (current behavior preserved). */
+    const handleJobDrop = (jobId: string, newStart: string) => {
+        if (stepId === 'clc1.3') {
+            const job = displayedJobs.find(j => j.id === jobId)
+            const isAiSuggested = !!job?.aiSuggestedDate && job.aiSuggestedDate === newStart
+            setPendingReschedule({ jobId, newStart, isAiSuggested })
+            return
+        }
+        commitReschedule(jobId, newStart)
     }
 
     // ─── Calendar period · nav · reschedule auto-shift ────────────────────
@@ -257,21 +292,49 @@ export default function CLCCalendarScene() {
     }
     const goToToday = () => setCalendarAnchor(INITIAL_ANCHOR_MONDAY)
     /** Reschedule a job to an arbitrary date · used by ViewJobPanel's
-        inline date picker. Reuses handleJobDrop for the state mutation,
-        then auto-shifts the visible window if the new date falls outside. */
+        inline date picker AND the per-card calendar popover. Same confirm
+        gate as handleJobDrop · clc1.3 routes through the modal, other
+        steps commit immediately. Also auto-shifts the calendar anchor
+        when the new date is outside the currently visible window. */
     const handleReschedule = (jobId: string, newStart: string) => {
         handleJobDrop(jobId, newStart)
         const newMonday = mondayOfWeek(newStart)
         const inWindow = visibleWeeks.some(w => w.monday === newMonday)
         if (!inWindow) {
-            // Anchor the visible window on the new date's Monday so the
-            // updated card is immediately on screen.
             setCalendarAnchor(newMonday)
-            // Also force calendar view so the user sees the result.
             setViewMode('calendar')
             userToggledRef.current = true
         }
     }
+
+    /** Reschedule request from a List or Funnel row · opens ViewJobPanel
+        with the date editor pre-expanded. The calendar view uses the
+        inline popover from WeekCalendarGrid instead · this handler is
+        passed only to the non-calendar views. */
+    const handleRescheduleRequest = (jobId: string) => {
+        setViewPanelJobId(jobId)
+        setViewPanelStartInReschedule(true)
+    }
+
+    /** Confirm-modal callbacks · accept commits + advances, cancel just closes. */
+    const handleConfirmReschedule = () => {
+        if (!pendingReschedule) return
+        commitReschedule(pendingReschedule.jobId, pendingReschedule.newStart)
+        // Auto-shift the calendar window if the new date is off-screen.
+        const newMonday = mondayOfWeek(pendingReschedule.newStart)
+        if (!visibleWeeks.some(w => w.monday === newMonday)) {
+            setCalendarAnchor(newMonday)
+            setViewMode('calendar')
+            userToggledRef.current = true
+        }
+        setPendingReschedule(null)
+        // Any reschedule in 1.3 bridges to 1.4 · matches the publish-bridge
+        // pattern from 1.1 (every commit is a narrative step).
+        if (stepIdRef.current === 'clc1.3') {
+            nextStep()
+        }
+    }
+    const handleCancelReschedule = () => setPendingReschedule(null)
 
     // ─── Per-card quick actions ───────────────────────────────────────────
     const handlePublish = (jobId: string) => {
@@ -474,6 +537,17 @@ export default function CLCCalendarScene() {
 
     const allowDragDrop = stepId === 'clc1.3' && viewMode === 'calendar'
     const highlightFairport = stepId === 'clc1.4' ? 'job-fairport' : null
+    // AI suggestion currently only fires in 1.3 for Fairport · pulled from
+    // the job data so the seed file is the single source of truth.
+    const aiSuggestion = useMemo(() => {
+        if (stepId !== 'clc1.3') return null
+        const j = displayedJobs.find(j => j.aiSuggestedDate)
+        if (!j || !j.aiSuggestedDate) return null
+        return { jobId: j.id, targetDate: j.aiSuggestedDate, customer: j.customer }
+    }, [stepId, displayedJobs])
+    const pendingRescheduleJob = pendingReschedule
+        ? displayedJobs.find(j => j.id === pendingReschedule.jobId) ?? null
+        : null
     // In 1.3 · point the user at the Fairport card (matches the step's
     // userAction: "Drag the Fairport card from Jun 2 to Jun 5"). The visual
     // is an ai-tinted ring + "Drag me" badge — different language from the
@@ -570,6 +644,7 @@ export default function CLCCalendarScene() {
                         onPublish={handlePublish}
                         onView={handleView}
                         onSkip={handleSkip}
+                        onReschedule={stepId === 'clc1.3' ? handleRescheduleRequest : undefined}
                     />
                 )}
                 {viewMode === 'list' && (
@@ -582,6 +657,7 @@ export default function CLCCalendarScene() {
                         onPublish={handlePublish}
                         onView={handleView}
                         onSkip={handleSkip}
+                        onReschedule={stepId === 'clc1.3' ? handleRescheduleRequest : undefined}
                     />
                 )}
                 {viewMode === 'calendar' && (
@@ -667,6 +743,7 @@ export default function CLCCalendarScene() {
                             pulseViewActionForJobId={inboundReviewJobId}
                             publishingJobIds={publishingJobIds}
                             suggestDragJobId={suggestDragJobId}
+                            aiSuggestion={aiSuggestion}
                             onJobDrop={allowDragDrop ? handleJobDrop : undefined}
                             onReschedule={stepId === 'clc1.3' ? handleReschedule : undefined}
                             queuedJobIds={queuedJobIds}
@@ -707,9 +784,23 @@ export default function CLCCalendarScene() {
                 <ViewJobPanel
                     job={viewedJob}
                     isPublishing={publishingJobIds.has(viewedJob.id)}
-                    onClose={() => setViewPanelJobId(null)}
+                    startInReschedule={viewPanelStartInReschedule}
+                    onClose={() => { setViewPanelJobId(null); setViewPanelStartInReschedule(false) }}
                     onPublish={() => handlePublish(viewedJob.id)}
                     onReschedule={(newStart) => handleReschedule(viewedJob.id, newStart)}
+                />
+            )}
+
+            {/* AI-or-manual reschedule confirmation · clc1.3 routes every
+                handleJobDrop/handleReschedule through this gate. Accept
+                commits + bridges to 1.4 · Cancel just closes. */}
+            {pendingReschedule && pendingRescheduleJob && (
+                <CLCRescheduleConfirmModal
+                    job={pendingRescheduleJob}
+                    newStart={pendingReschedule.newStart}
+                    isAiSuggested={pendingReschedule.isAiSuggested}
+                    onConfirm={handleConfirmReschedule}
+                    onCancel={handleCancelReschedule}
                 />
             )}
 
@@ -804,7 +895,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
     let hint: string | null = null
     if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
     else if (stepId === 'clc1.2') hint = 'Calendar visualization rendered · Sparkles mark Strata-scheduled jobs. Auto-continuing to drag-drop in a moment · toggle a view to stay on this step.'
-    else if (stepId === 'clc1.3') hint = 'Three ways to reschedule · drag a card to a visible cell · tap the 📅 icon on any card for a quick date picker · open the card and use Reschedule for the full detail view. Switch 1w / 4w / 6w or use the chevrons to browse weeks.'
+    else if (stepId === 'clc1.3') hint = 'Strata suggests moving Fairport to Mon Jun 8 (the dashed ghost slot). Drop the card there to confirm with the AI-framed modal · or pick any other cell / use 📅 Reschedule from any view for a manual override. Confirm queues for IQ batch and bridges to 1.4.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
     if (!hint) return null
     return (
@@ -820,14 +911,14 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
 
 // ─── View Job panel ─────────────────────────────────────────────────────────
 
-function ViewJobPanel({ job, onClose, onPublish, isPublishing, onReschedule }: { job: InstallJob; onClose: () => void; onPublish: () => void; isPublishing: boolean; onReschedule?: (newStart: string) => void }) {
-    const [rescheduling, setRescheduling] = useState(false)
+function ViewJobPanel({ job, onClose, onPublish, isPublishing, onReschedule, startInReschedule = false }: { job: InstallJob; onClose: () => void; onPublish: () => void; isPublishing: boolean; onReschedule?: (newStart: string) => void; startInReschedule?: boolean }) {
+    const [rescheduling, setRescheduling] = useState(startInReschedule)
     const [newDate, setNewDate] = useState(job.startDate)
     // When the panel re-opens for a different job, reset the editor state.
     useEffect(() => {
-        setRescheduling(false)
+        setRescheduling(startInReschedule)
         setNewDate(job.startDate)
-    }, [job.id, job.startDate])
+    }, [job.id, job.startDate, startInReschedule])
     const canReschedule = !!onReschedule && !isPublishing && !job.skipped
     const commitReschedule = () => {
         if (!onReschedule) return

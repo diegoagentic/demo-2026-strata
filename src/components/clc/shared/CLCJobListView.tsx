@@ -19,6 +19,9 @@ interface CLCJobListViewProps {
     pulseViewActionForJobId?: string | null
     /** Jobs currently in the publish simulation · render "Sending…" indicator. */
     publishingJobIds?: Set<string>
+    /** Reschedule request handler · opens the ViewJobPanel with the date
+        editor pre-expanded. Passed to JobQuickActions when defined. */
+    onReschedule?: (jobId: string) => void
 }
 
 const STATUS_LABEL: Record<InstallJob['status'], string> = {
@@ -40,7 +43,7 @@ const STATUS_TONE: Record<InstallJob['status'], string> = {
  * Pattern adapted from ThreeWayMatchView grid + the prior SourceListGridFallback
  * in CLCCalendarScene. Sort state is local to the view.
  */
-export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, onJobClick, onPublish, onView, onSkip, pulseViewActionForJobId, publishingJobIds }: CLCJobListViewProps) {
+export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, onJobClick, onPublish, onView, onSkip, pulseViewActionForJobId, publishingJobIds, onReschedule }: CLCJobListViewProps) {
     const hasActions = !!(onPublish && onView && onSkip)
     const gridCols = hasActions ? 'grid-cols-[1fr_70px_120px_70px_110px_160px]' : 'grid-cols-[1fr_70px_120px_70px_110px_110px]'
     const [sortKey, setSortKey] = useState<SortKey>('startDate')
@@ -128,6 +131,7 @@ export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, o
                                         onPublish={onPublish!}
                                         onView={onView!}
                                         onSkip={onSkip!}
+                                        onReschedule={onReschedule}
                                     />
                                 ) : isQueued ? (
                                     <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-yellow-50 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300 uppercase tracking-wider">

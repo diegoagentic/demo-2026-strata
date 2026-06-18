@@ -16,6 +16,12 @@ export interface InstallJob {
     startDate: string
     /** ISO date for install end (same day OK) */
     endDate: string
+    /** Strata-AI suggested new start date · used in clc1.3 to render the
+        ghost target cell and to gate the confirmation modal flow. */
+    aiSuggestedDate?: string
+    /** Human-readable rationale for the suggestion · shown in the confirm
+        modal so the operator understands why Strata recommends the move. */
+    aiSuggestionReason?: string
     crewSize: number
     durationDays: number
     status: 'pending' | 'scheduled' | 'in-flight' | 'complete'
@@ -115,6 +121,8 @@ export const INITIAL_JOBS: InstallJob[] = [
         vendors: ['TMC', 'KI', 'Smith System', 'Media Tech', 'Aurora'],
         startDate: '2026-06-02',
         endDate: '2026-06-03',
+        aiSuggestedDate: '2026-06-08',
+        aiSuggestionReason: 'NY region overloaded week of Jun 1 · Jun 8 is NJ-only · 5-vendor anchor benefits from the breathing room',
         crewSize: 4,
         durationDays: 2,
         status: 'scheduled',

@@ -34,6 +34,10 @@ interface WeekCalendarGridProps {
         any date without leaving the calendar view (skips the View modal
         and the prev/next navigation chain for far-future dates). */
     onReschedule?: (jobId: string, newStart: string) => void
+    /** Strata-AI suggestion · renders a ghost "drop here" preview at the
+        targetDate cell. The actual job (jobId) stays at its current start
+        until the user drags it there (or accepts via the date picker). */
+    aiSuggestion?: { jobId: string; targetDate: string; customer: string } | null
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
@@ -63,7 +67,7 @@ function daysBetween(a: string, b: string): number {
  * positioned in the Mon-cell of its start day. Weekends collapsed (most installs
  * are weekday-only). HTML5 drag-and-drop with no dependency.
  */
-export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds, suggestDragJobId, onReschedule }: WeekCalendarGridProps) {
+export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds, suggestDragJobId, onReschedule, aiSuggestion }: WeekCalendarGridProps) {
     const [dragJobId, setDragJobId] = useState<string | null>(null)
     const [dragOverCell, setDragOverCell] = useState<string | null>(null)
 
@@ -137,6 +141,13 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                         const cellKey = `${week.monday}::${dayIdx}`
                         const cellJobs = jobsByCell[cellKey] ?? []
                         const isDropTarget = dragOverCell === cellKey
+                        // Suggested ghost · only renders when the AI's target
+                        // date maps to THIS cell AND the actual job hasn't yet
+                        // been moved there (still at its original startDate).
+                        const cellIso = addDays(week.monday, dayIdx)
+                        const ghostJob = aiSuggestion && aiSuggestion.targetDate === cellIso
+                            ? jobs.find(j => j.id === aiSuggestion.jobId && j.startDate !== aiSuggestion.targetDate)
+                            : null
                         return (
                             <div
                                 key={cellKey}
@@ -145,8 +156,29 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                 onDragLeave={() => dragOverCell === cellKey && setDragOverCell(null)}
                                 className={`min-h-[88px] p-1.5 space-y-1 transition-colors ${
                                     dayIdx < 4 ? 'border-r border-border' : ''
-                                } ${isDropTarget ? 'bg-ai/10' : 'hover:bg-muted/20'}`}
+                                } ${
+                                    isDropTarget ? 'bg-ai/15' :
+                                    ghostJob ? 'bg-ai/5 ring-1 ring-ai/30 ring-inset' :
+                                    'hover:bg-muted/20'
+                                }`}
                             >
+                                {ghostJob && aiSuggestion && (
+                                    <div
+                                        className="rounded-md border-2 border-dashed border-ai/60 bg-card/40 p-2 space-y-1 pointer-events-none animate-pulse"
+                                        aria-hidden
+                                    >
+                                        <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-ai">
+                                            <Sparkles className="h-2.5 w-2.5" />
+                                            Strata suggests
+                                        </div>
+                                        <div className="text-[10px] font-semibold text-foreground/70 leading-tight line-clamp-2">
+                                            {aiSuggestion.customer}
+                                        </div>
+                                        <div className="text-[9px] text-muted-foreground italic">
+                                            Drop here to accept
+                                        </div>
+                                    </div>
+                                )}
                                 {cellJobs.map(job => (
                                     <JobCard
                                         key={job.id}
