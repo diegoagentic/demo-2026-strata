@@ -54,8 +54,12 @@ export default function JobQuickActions({
     if (isPublishing) {
         return <PublishingIndicator variant={variant} />
     }
-    // ── Terminal states · once acted on, swap to a static pill ──────────
-    if (job.publishedToOutlook) {
+    // ── Terminal states ──────────────────────────────────────────────────
+    // Compact variant (Calendar): the Sparkles indicator is already inline
+    // in the JobCard content, so for published cards we keep the View +
+    // Reschedule actions instead of taking over with a Published pill ·
+    // matches Diego's "los quick actions que correspondan según el estado".
+    if (job.publishedToOutlook && variant !== 'compact') {
         return <PublishedPill variant={variant} />
     }
     if (job.skipped) {
@@ -160,6 +164,9 @@ export default function JobQuickActions({
     }
 
     // ── Variant: compact (Calendar hover overlay) ──────────────────────
+    // Send/Skip only render when meaningful · published jobs hide both
+    // (can't re-send, can't skip into the void), so the overlay shrinks to
+    // View + Reschedule for already-Published cards.
     return (
         <div
             className={`absolute top-1 right-1 inline-flex items-center gap-0.5 transition-opacity bg-card border border-border rounded-md shadow-sm p-0.5 ${
@@ -167,14 +174,16 @@ export default function JobQuickActions({
             }`}
             onPointerDown={stop}
         >
-            <button
-                onClick={handlePublish}
-                title="Send to Outlook"
-                aria-label="Send to Outlook"
-                className="p-1 rounded text-foreground hover:bg-muted transition-colors"
-            >
-                <Send className="h-3 w-3" />
-            </button>
+            {!job.publishedToOutlook && (
+                <button
+                    onClick={handlePublish}
+                    title="Send to Outlook"
+                    aria-label="Send to Outlook"
+                    className="p-1 rounded text-foreground hover:bg-muted transition-colors"
+                >
+                    <Send className="h-3 w-3" />
+                </button>
+            )}
             <button
                 onClick={handleView}
                 title="View details"
@@ -187,14 +196,26 @@ export default function JobQuickActions({
             >
                 <Eye className="h-3 w-3" />
             </button>
-            <button
-                onClick={handleSkip}
-                title="Skip"
-                aria-label="Skip"
-                className="p-1 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-            >
-                <SkipForward className="h-3 w-3" />
-            </button>
+            {onReschedule && (
+                <button
+                    onClick={handleReschedule}
+                    title="Reschedule"
+                    aria-label="Reschedule"
+                    className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                    <CalendarIcon className="h-3 w-3" />
+                </button>
+            )}
+            {!job.publishedToOutlook && (
+                <button
+                    onClick={handleSkip}
+                    title="Skip"
+                    aria-label="Skip"
+                    className="p-1 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                >
+                    <SkipForward className="h-3 w-3" />
+                </button>
+            )}
         </div>
     )
 }

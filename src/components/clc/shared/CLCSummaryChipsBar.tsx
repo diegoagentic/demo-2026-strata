@@ -62,10 +62,22 @@ function ChipWithPanel({ chip, autoOpen }: { chip: SummaryChip; autoOpen: boolea
     const triggerRef = useRef<HTMLButtonElement>(null)
     const tone = TONE_CLASSES[chip.tone]
 
-    // Auto-open when the parent flips the autoOpen flag.
+    // Auto-open when the parent flips the autoOpen flag (mount-time hook).
     useEffect(() => {
         if (autoOpen) setOpen(true)
     }, [autoOpen])
+
+    // Imperative open · listens for `clc:open-chip` events with the matching
+    // chip id. Used by the Action Center CTA in clc1.4 and the AI-flag
+    // quick action on Fairport · either path opens this panel programmatically.
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent).detail as { chipId?: string } | undefined
+            if (detail?.chipId === chip.id) setOpen(true)
+        }
+        window.addEventListener('clc:open-chip', handler)
+        return () => window.removeEventListener('clc:open-chip', handler)
+    }, [chip.id])
 
     return (
         <>

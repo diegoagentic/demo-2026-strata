@@ -500,7 +500,23 @@ export default function CLCCalendarScene() {
         return c
     }, [filteredJobs])
 
-    const autoOpenChipId = stepId === 'clc1.4' ? 'alert' : null
+    // 1.4 no longer auto-opens the capacity chip on entry · "se abría de la
+    // nada". Instead the Action Center fires a notification with a CTA, the
+    // alert chip pulses on the toolbar, and the AI-flag pill on Fairport
+    // dispatches the same open event · all three converge on the chip via
+    // window.dispatchEvent('clc:open-chip', { chipId: 'alert' }).
+    const autoOpenChipId = null
+
+    // Capacity-warning event listener · the Action Center CTA (clc1.4
+    // notification) and the AI-flag quick action both dispatch this event.
+    // We forward it to the chip bar via clc:open-chip so the panel opens.
+    useEffect(() => {
+        const handler = () => {
+            window.dispatchEvent(new CustomEvent('clc:open-chip', { detail: { chipId: 'alert' } }))
+        }
+        window.addEventListener('clc:capacity-warning-open', handler)
+        return () => window.removeEventListener('clc:capacity-warning-open', handler)
+    }, [])
 
     const chips: SummaryChip[] = [
         {
@@ -537,6 +553,9 @@ export default function CLCCalendarScene() {
 
     const allowDragDrop = stepId === 'clc1.3' && viewMode === 'calendar'
     const highlightFairport = stepId === 'clc1.4' ? 'job-fairport' : null
+    // AI-flag · Fairport in 1.4 gets a pulsing "Review · AI flagged" badge ·
+    // click dispatches clc:capacity-warning-open to open the capacity panel.
+    const aiFlaggedJobId = stepId === 'clc1.4' ? 'job-fairport' : null
     // AI suggestion currently only fires in 1.3 for Fairport · pulled from
     // the job data so the seed file is the single source of truth.
     const aiSuggestion = useMemo(() => {
@@ -744,8 +763,9 @@ export default function CLCCalendarScene() {
                             publishingJobIds={publishingJobIds}
                             suggestDragJobId={suggestDragJobId}
                             aiSuggestion={aiSuggestion}
+                            aiFlaggedJobId={aiFlaggedJobId}
                             onJobDrop={allowDragDrop ? handleJobDrop : undefined}
-                            onReschedule={stepId === 'clc1.3' ? handleReschedule : undefined}
+                            onReschedule={(stepId === 'clc1.3' || stepId === 'clc1.4') ? handleReschedule : undefined}
                             queuedJobIds={queuedJobIds}
                             onPublish={handlePublish}
                             onView={handleView}
@@ -896,7 +916,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
     if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
     else if (stepId === 'clc1.2') hint = 'Calendar visualization rendered · Sparkles mark Strata-scheduled jobs. Auto-continuing to drag-drop in a moment · toggle a view to stay on this step.'
     else if (stepId === 'clc1.3') hint = 'Strata suggests moving Fairport to Mon Jun 8 (the dashed ghost slot). Drop the card there to confirm with the AI-framed modal · or pick any other cell / use 📅 Reschedule from any view for a manual override. Confirm queues for IQ batch and bridges to 1.4.'
-    else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
+    else if (stepId === 'clc1.4') hint = 'Strata detected an NY-region capacity conflict. Three paths · bell (Action Center notification + CTA) · pulsing alert chip on the toolbar · "Review · AI" pill on Fairport. Any of them opens the capacity report with the third-party installer suggestion.'
     if (!hint) return null
     return (
         <div className="px-5 py-2.5 border-t border-border bg-muted/20">

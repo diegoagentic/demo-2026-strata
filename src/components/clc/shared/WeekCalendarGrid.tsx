@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Sparkles, Users, GripVertical, Calendar as CalendarIcon } from 'lucide-react'
+import { Sparkles, Users, GripVertical, Calendar as CalendarIcon, AlertTriangle } from 'lucide-react'
 import type { InstallJob, WeekColumn, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
 import JobQuickActions from './JobQuickActions'
@@ -38,6 +38,11 @@ interface WeekCalendarGridProps {
         targetDate cell. The actual job (jobId) stays at its current start
         until the user drags it there (or accepts via the date picker). */
     aiSuggestion?: { jobId: string; targetDate: string; customer: string } | null
+    /** When set, the specified job gets a pulsing "Review · AI flagged"
+        badge top-left + a warning ring. Click on the badge dispatches the
+        clc:capacity-warning-open event to open the capacity panel. Used in
+        step 1.4 to make the alert a card-level affordance. */
+    aiFlaggedJobId?: string | null
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
@@ -67,7 +72,7 @@ function daysBetween(a: string, b: string): number {
  * positioned in the Mon-cell of its start day. Weekends collapsed (most installs
  * are weekday-only). HTML5 drag-and-drop with no dependency.
  */
-export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds, suggestDragJobId, onReschedule, aiSuggestion }: WeekCalendarGridProps) {
+export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds, suggestDragJobId, onReschedule, aiSuggestion, aiFlaggedJobId }: WeekCalendarGridProps) {
     const [dragJobId, setDragJobId] = useState<string | null>(null)
     const [dragOverCell, setDragOverCell] = useState<string | null>(null)
 
@@ -201,6 +206,7 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                         isPublishing={publishingJobIds?.has(job.id) ?? false}
                                         suggestDrag={suggestDragJobId === job.id}
                                         onReschedule={onReschedule}
+                                        aiFlagged={aiFlaggedJobId === job.id}
                                     />
                                 ))}
                             </div>
@@ -230,9 +236,10 @@ interface JobCardProps {
     isPublishing: boolean
     suggestDrag: boolean
     onReschedule?: (jobId: string, newStart: string) => void
+    aiFlagged: boolean
 }
 
-function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing, suggestDrag, onReschedule }: JobCardProps) {
+function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing, suggestDrag, onReschedule, aiFlagged }: JobCardProps) {
     const cardRef = useRef<HTMLDivElement>(null)
     const [rescheduleOpen, setRescheduleOpen] = useState(false)
     const [rescheduleDraft, setRescheduleDraft] = useState(job.startDate)
@@ -320,19 +327,38 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
             } ${
                 job.justArrived ? 'border-ai/40 ring-2 ring-ai/30' :
                 suggestDrag    ? 'border-ai ring-2 ring-ai/50 ring-offset-1 ring-offset-card animate-pulse' :
+                aiFlagged      ? 'border-warning/60 ring-2 ring-warning/40' :
                 highlighted    ? 'border-red-300 ring-2 ring-red-200 dark:border-red-500/50 dark:ring-red-500/20' :
                 queued         ? 'border-yellow-300 dark:border-yellow-500/50' :
                                  'border-border hover:border-foreground/30'
             } ${job.skipped ? 'opacity-50 grayscale' : ''}`}
             title={suggestDrag
                 ? `Drag ${job.customer} to a different day to reschedule`
-                : `${job.customer} · ${job.crewSize} crew · ${job.iqJobIds.length} IQ job${job.iqJobIds.length > 1 ? 's' : ''}`}
+                : aiFlagged
+                    ? `${job.customer} · Strata flagged this for capacity review`
+                    : `${job.customer} · ${job.crewSize} crew · ${job.iqJobIds.length} IQ job${job.iqJobIds.length > 1 ? 's' : ''}`}
         >
             {suggestDrag && (
                 <div className="absolute -top-2 -left-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-ai text-background px-1.5 py-0.5 rounded-full shadow-md">
                     <GripVertical className="h-2.5 w-2.5" />
                     Drag me
                 </div>
+            )}
+            {aiFlagged && (
+                <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        window.dispatchEvent(new CustomEvent('clc:capacity-warning-open'))
+                    }}
+                    title="Strata flagged this for capacity review · click to open the report"
+                    aria-label="Open capacity review"
+                    className="absolute -top-2 -left-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-warning text-warning-foreground px-1.5 py-0.5 rounded-full shadow-md animate-pulse hover:scale-105 transition-transform z-10"
+                >
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    Review · AI
+                </button>
             )}
             {canReschedule && (
                 <button

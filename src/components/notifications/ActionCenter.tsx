@@ -424,6 +424,16 @@ const CLC_STEP_NOTIFICATIONS: Record<string, ClcStepNotif> = {
         event: 'clc:inbound-job-open',
         footerText: '1 inbound request',
     },
+    'clc1.4': {
+        badge: '1 alert', badgeColor: 'warning',
+        title: 'Capacity conflict · NY region',
+        desc: 'Week of Jun 1 · 3 NY jobs back-to-back (Jamestown · Fairport · Brockport) · in-house crew at 100%. Strata vetted a third-party installer (Albany Install Co · 4hr radius · prior 7 CLC jobs · COI on file) and drafted the outreach email · drafts only · operator reviews and sends.',
+        sender: 'Strata AI · capacity model · just now',
+        re: 'NY region overload · Albany Install Co suggested',
+        cta: 'Review capacity report →',
+        event: 'clc:capacity-warning-open',
+        footerText: '1 Strata-detected alert',
+    },
 }
 
 // Officeworks Step sc1.0 — MANATT intake (parallel to BFI a1.1 ingest pattern)
