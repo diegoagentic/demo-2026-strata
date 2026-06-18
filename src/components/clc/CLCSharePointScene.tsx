@@ -89,7 +89,7 @@ export default function CLCSharePointScene() {
     const stepId = currentStep?.id
 
     const [modalOpen, setModalOpen] = useState(false)
-    const [initialStage, setInitialStage] = useState<'discover' | 'filter' | 'review' | 'publish'>('discover')
+    const [initialStage, setInitialStage] = useState<'filter' | 'review' | 'publish'>('filter')
     const [published, setPublished] = useState(false)
 
     const [viewMode, setViewMode] = useState<ViewMode>('list')
@@ -114,11 +114,11 @@ export default function CLCSharePointScene() {
     }, [stepId])
 
     // Action Center CTA listener · clc2.1 notification dispatches this event.
-    // Opens the consolidation modal at the discover stage so the operator
-    // sees Strata's "5 IQ jobs found · 2 to exclude" before they decide.
+    // Opens the consolidation modal at the filter stage (Discover collapsed
+    // in · trigger context lives in the AI banner now).
     useEffect(() => {
         const handler = () => {
-            setInitialStage('discover')
+            setInitialStage('filter')
             setModalOpen(true)
         }
         window.addEventListener('clc:sharepoint-trigger', handler)
@@ -283,7 +283,7 @@ export default function CLCSharePointScene() {
                 <div className="px-5 py-2.5 border-t border-border bg-muted/20">
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Sparkles className="h-3 w-3" />
-                        Strata detected the IQ status change · two paths · click the pulsing bell + <strong>Open seed workflow →</strong> · or click <strong>Open</strong> on the Fairport row directly. Either consolidates the 5 IQ jobs.
+                        Strata detected the IQ status change · two paths · click the pulsing bell + <strong>Open seed workflow →</strong> · or click <strong>Open</strong> on the Fairport row directly. Either jumps to the Filter stage where you confirm the 5 IN / 2 OUT decision.
                     </p>
                 </div>
             )}
@@ -303,7 +303,7 @@ export default function CLCSharePointScene() {
 
 // ─── Views ───────────────────────────────────────────────────────────────────
 
-function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProject[]; onOpenProject: (s: 'discover' | 'filter' | 'review' | 'publish') => void; stepId?: string }) {
+function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string }) {
     return (
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <div className="p-3 grid grid-cols-[28px_1fr_180px_120px_120px] gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/40">
@@ -325,8 +325,7 @@ function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProjec
                         onOpen={() => onOpenProject(
                             stepId === 'clc2.4' ? 'publish' :
                             stepId === 'clc2.3' ? 'review' :
-                            stepId === 'clc2.2' ? 'filter' :
-                            'discover'
+                            'filter'
                         )}
                     />
                 ))}
@@ -335,7 +334,7 @@ function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProjec
     )
 }
 
-function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProject[]; onOpenProject: (s: 'discover' | 'filter' | 'review' | 'publish') => void; stepId?: string }) {
+function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string }) {
     const activeCount = projects.filter(p => p.status !== 'archived').length
     const liveCount = projects.filter(p => p.status === 'live').length
     return (
@@ -375,7 +374,7 @@ function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProj
                         ) : col.map(p => {
                             const action = () => p.url
                                 ? window.open(p.url, '_blank')
-                                : onOpenProject(stepId === 'clc2.4' ? 'publish' : stepId === 'clc2.3' ? 'review' : stepId === 'clc2.2' ? 'filter' : 'discover')
+                                : onOpenProject(stepId === 'clc2.4' ? 'publish' : stepId === 'clc2.3' ? 'review' : 'filter')
                             return (
                                 <button
                                     key={p.id}

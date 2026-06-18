@@ -18,7 +18,7 @@ interface Props {
     onPublished?: () => void
 }
 
-type Stage = 'discover' | 'filter' | 'review' | 'publish'
+type Stage = 'filter' | 'review' | 'publish'
 
 /**
  * Asset consolidation modal · refactor to mimic the OfficeworksDocumentReviewModal
@@ -26,29 +26,28 @@ type Stage = 'discover' | 'filter' | 'review' | 'publish'
  * status badges + CTA in the right panel). Diego pasó screenshot del Officeworks
  * modal en spec check · esa es la referencia visual.
  *
- * 4 stages mapped to (Left, Right) panes:
- *   discover · IQ candidates list (5 IN / 2 OUT) · Discovery summary + CTA
- *   filter   · Editable include/exclude list                · Filter completeness + CTA
- *   review   · Asset grid with type tabs + per-row preview  · Asset summary + flag detail + CTA
- *   publish  · Folder structure preview + asset list        · SharePoint URL + email draft + CTA
+ * 3 stages (Discover/clc2.1 + Filter/clc2.2 colapsadas en un solo Filter ·
+ * Diego eliminó el beat puramente narrativo de Discover, el trigger context
+ * vive en el AI banner del Filter ahora):
+ *   filter   · Include/exclude lists (5 IN · 2 OUT) con rationale per row · Decision summary + CTA
+ *   review   · Asset list con type tabs + per-row preview                  · Asset summary + flag detail + CTA
+ *   publish  · Folder structure preview + lista final                      · SharePoint URL + email draft + CTA
  */
 
 /** Contextual AI banner per stage · single line, sits under the header. */
 const STAGE_AI_BANNER: Record<Stage, string> = {
-    discover: 'State-contract structure means one project spans multiple IQ jobs (one per vendor). Strata searched IQ for the customer tag and found 7 candidates · 5 to seed · 2 unrelated.',
-    filter:   'Customer tag matches 5 jobs (TMC · KI · Smith System · Media Tech · Aurora). Tappé punch order + SWBR Q4 use different tags · auto-excluded · operator can override.',
+    filter:   'Trigger detected · Fairport hit Scheduled at 2:14 PM. Strata searched IQ for the customer tag and found 7 candidates · 5 in-project (TMC · KI · Smith System · Media Tech · Aurora) · 2 tag mismatch (Tappé punch order + SWBR Q4) auto-excluded · operator can override.',
     review:   '15 assets staged from the 5 IQ jobs (8 shop drawings · 5 ACKs · 1 site plan · 1 runbook). 1 vendor short-ship flagged on J-44022 ACK · operator confirms before publish.',
     publish:  'Folder structure ready · permissions set for install crew + Director of Operations · installer notification drafted with iPad-friendly link · operator reviews and sends.',
 }
 
 const STAGE_TITLE: Record<Stage, string> = {
-    discover: 'Discover',
     filter:   'Filter',
     review:   'Review',
     publish:  'Publish',
 }
 
-export default function CLCAssetConsolidationModal({ isOpen, onClose, initialStage = 'discover', onPublished }: Props) {
+export default function CLCAssetConsolidationModal({ isOpen, onClose, initialStage = 'filter', onPublished }: Props) {
     const [stage, setStage] = useState<Stage>(initialStage)
     const [previewAsset, setPreviewAsset] = useState<AssetEntry | null>(null)
     // Sidebar-aware offset · 320px sidebar + 64px gap = lg:pl-96 (384px).
@@ -75,14 +74,12 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
     const totalSizeKb = includedAssets.reduce((s, a) => s + a.sizeKb, 0)
 
     const goNext = () => {
-        if (stage === 'discover') setStage('filter')
-        else if (stage === 'filter') setStage('review')
+        if (stage === 'filter') setStage('review')
         else if (stage === 'review') setStage('publish')
     }
     const goPrev = () => {
         if (stage === 'publish') setStage('review')
         else if (stage === 'review') setStage('filter')
-        else if (stage === 'filter') setStage('discover')
     }
 
     const handlePublish = () => {
@@ -130,14 +127,12 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                             <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
                                 {/* Left (3/5) · stage-aware content */}
                                 <div className="lg:col-span-3 overflow-y-auto border-r border-border">
-                                    {stage === 'discover' && <DiscoverLeft included={includedJobs} excluded={excludedJobs} />}
                                     {stage === 'filter'   && <FilterLeft included={includedJobs} excluded={excludedJobs} />}
                                     {stage === 'review'   && <ReviewLeft assets={includedAssets} counts={assetCounts} totalSizeKb={totalSizeKb} onPreview={setPreviewAsset} />}
                                     {stage === 'publish'  && <PublishLeft assets={includedAssets} />}
                                 </div>
                                 {/* Right (2/5) · action panel + primary CTA */}
                                 <div className="lg:col-span-2 overflow-y-auto bg-muted/20">
-                                    {stage === 'discover' && <DiscoverRight includedCount={includedJobs.length} excludedCount={excludedJobs.length} onContinue={goNext} />}
                                     {stage === 'filter'   && <FilterRight includedCount={includedJobs.length} excludedCount={excludedJobs.length} assetCount={includedAssets.length} onContinue={goNext} />}
                                     {stage === 'review'   && <ReviewRight assetCount={includedAssets.length} totalSizeKb={totalSizeKb} onContinue={goNext} />}
                                     {stage === 'publish'  && <PublishRight assetCount={includedAssets.length} totalSizeKb={totalSizeKb} onPublish={handlePublish} />}
@@ -147,7 +142,7 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                             {/* ─── Footer · minimal · Back left, "operator confirms" right ─── */}
                             <div className="border-t border-border px-5 py-2.5 bg-muted/20 flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-2">
-                                    {stage !== 'discover' && (
+                                    {stage !== 'filter' && (
                                         <button onClick={goPrev} className="px-2.5 py-1.5 text-xs font-semibold text-foreground border border-border rounded-md hover:bg-muted transition-colors">
                                             ← Back to {STAGE_TITLE[prevStage(stage)]}
                                         </button>
@@ -207,14 +202,13 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
 }
 
 function prevStage(s: Stage): Stage {
-    return s === 'publish' ? 'review' : s === 'review' ? 'filter' : 'discover'
+    return s === 'publish' ? 'review' : 'filter'
 }
 
 // ─── Stage stepper ──────────────────────────────────────────────────────────
 
 function StageStepper({ current, onJump }: { current: Stage; onJump: (s: Stage) => void }) {
     const stages: { id: Stage; label: string }[] = [
-        { id: 'discover', label: 'Discover' },
         { id: 'filter',   label: 'Filter'   },
         { id: 'review',   label: 'Review'   },
         { id: 'publish',  label: 'Publish'  },
@@ -252,88 +246,7 @@ function StageStepper({ current, onJump }: { current: Stage; onJump: (s: Stage) 
     )
 }
 
-// ─── Discover stage ─────────────────────────────────────────────────────────
-
-function DiscoverLeft({ included, excluded }: { included: typeof FAIRPORT_VENDOR_JOBS; excluded: typeof FAIRPORT_VENDOR_JOBS }) {
-    return (
-        <div className="p-5 space-y-3">
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1">IQ candidates · {included.length + excluded.length} found</div>
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                <div className="divide-y divide-border">
-                    {[...included, ...excluded].map(j => (
-                        <div key={j.iqJobId} className={`flex items-start gap-3 p-3 ${!j.included ? 'opacity-70' : ''}`}>
-                            <div className="shrink-0 mt-0.5">
-                                {j.included ? (
-                                    <div className="h-5 w-5 rounded-full bg-success/15 flex items-center justify-center">
-                                        <Check className="h-3 w-3 text-success" />
-                                    </div>
-                                ) : (
-                                    <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center">
-                                        <X className="h-3 w-3 text-muted-foreground" />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                    <span className={`font-mono text-xs font-bold ${j.included ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{j.iqJobId}</span>
-                                    <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                        j.included
-                                            ? 'bg-success/15 text-success'
-                                            : 'bg-muted text-muted-foreground'
-                                    }`}>
-                                        {j.included ? 'In-project' : 'Excluded'}
-                                    </span>
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{j.vendor}</span>
-                                </div>
-                                <div className={`text-sm leading-snug ${j.included ? 'text-foreground' : 'text-muted-foreground'}`}>{j.description}</div>
-                                <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                                    <span className="font-mono">{j.customerTag}</span> · {j.rationale}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    )
-}
-
-function DiscoverRight({ includedCount, excludedCount, onContinue }: { includedCount: number; excludedCount: number; onContinue: () => void }) {
-    return (
-        <div className="p-5 flex flex-col h-full">
-            <div className="space-y-3 flex-1">
-                <div>
-                    <h3 className="text-base font-bold text-foreground mb-0.5">Discovery summary</h3>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">Strata used the customer tag as the consolidation key · the customer already maintains it.</p>
-                </div>
-
-                <div className="rounded-xl border border-success/30 bg-success/5 p-3">
-                    <div className="text-[10px] font-bold text-success uppercase tracking-wider">In-project · seed</div>
-                    <div className="text-3xl font-bold text-foreground tabular-nums mt-1">{includedCount}</div>
-                    <div className="text-[11px] text-muted-foreground">IQ jobs · matching customer tag</div>
-                </div>
-
-                <div className="rounded-xl border border-border bg-muted/30 p-3">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Excluded · won't seed</div>
-                    <div className="text-3xl font-bold text-foreground tabular-nums mt-1">{excludedCount}</div>
-                    <div className="text-[11px] text-muted-foreground">IQ jobs · tag mismatch (Tappé punch order + SWBR Q4)</div>
-                </div>
-
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Confirm the 5 in / 2 out decision and Strata stages the assets from the 5 included jobs.
-                </p>
-            </div>
-
-            <button
-                onClick={onContinue}
-                className="w-full mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-            >
-                Review the {includedCount} in / {excludedCount} out
-                <ArrowRight className="h-4 w-4" />
-            </button>
-        </div>
-    )
-}
+// (Discover stage colapsado en Filter · trigger context vive en el AI banner ahora)
 
 // ─── Filter stage ───────────────────────────────────────────────────────────
 
@@ -398,15 +311,33 @@ function FilterRight({ includedCount, excludedCount, assetCount, onContinue }: {
         <div className="p-5 flex flex-col h-full">
             <div className="space-y-3 flex-1">
                 <div>
-                    <h3 className="text-base font-bold text-foreground mb-0.5">Filter completeness</h3>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">All decisions match the customer-tag rule · operator can override any row inline.</p>
+                    <h3 className="text-base font-bold text-foreground mb-0.5">Consolidation summary</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">Strata used the customer tag as the consolidation key · the customer already maintains it.</p>
                 </div>
 
-                <div className="space-y-2">
-                    <FilterCheckRow label={`${includedCount} of 7 included · matching customer tag`} ok />
-                    <FilterCheckRow label={`${excludedCount} of 7 excluded · tag mismatch rationale shown`} ok />
-                    <FilterCheckRow label={`No vendor overlap · 5 distinct vendors`} ok />
-                    <FilterCheckRow label={`Estimated ${assetCount} assets ready to stage`} ok />
+                {/* Big KPI cards · moved from old DiscoverRight so the operator
+                    sees the 5/2 split at a glance without a separate stage. */}
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-success/30 bg-success/5 p-3">
+                        <div className="text-[10px] font-bold text-success uppercase tracking-wider">In-project</div>
+                        <div className="text-2xl font-bold text-foreground tabular-nums mt-0.5">{includedCount}</div>
+                        <div className="text-[10px] text-muted-foreground leading-snug mt-0.5">Tag-matched · will seed</div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/30 p-3">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Excluded</div>
+                        <div className="text-2xl font-bold text-foreground tabular-nums mt-0.5">{excludedCount}</div>
+                        <div className="text-[10px] text-muted-foreground leading-snug mt-0.5">Tag mismatch · won't seed</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Completeness checks</div>
+                    <div className="space-y-1.5">
+                        <FilterCheckRow label={`${includedCount} of 7 included · matching customer tag`} ok />
+                        <FilterCheckRow label={`${excludedCount} excluded · rationale shown per row`} ok />
+                        <FilterCheckRow label={`5 distinct vendors · no overlap`} ok />
+                        <FilterCheckRow label={`Estimated ${assetCount} assets ready to stage`} ok />
+                    </div>
                 </div>
 
                 <div className="rounded-xl border border-ai/30 bg-ai/5 p-3 flex items-start gap-2">
