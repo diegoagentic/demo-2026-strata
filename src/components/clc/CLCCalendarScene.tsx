@@ -155,16 +155,19 @@ export default function CLCCalendarScene() {
         }
         if (stepId === 'clc1.2') {
             // Two paths:
-            //   A) User used the Publish modal in 1.1 → fastPath · the modal
-            //      already applied the explicit selection · just swap views,
-            //      do NOT override the user's choice with a bulk-mark.
-            //   B) User advanced via the sidebar Next button without using
-            //      the modal → existing 1500ms autoswap + bulk-mark fallback
-            //      so the demo state still reads "everything sent".
+            //   A) User used a Publish affordance in 1.1 → fastPath · the
+            //      user made an explicit choice already · just swap views,
+            //      do NOT override with a bulk-mark.
+            //   B) User advanced via sidebar/Next without publishing →
+            //      existing 1500ms autoswap + bulk-mark fallback so the
+            //      demo state still reads "everything sent".
             const fastPath = userClickedPublishAllRef.current
             setViewMode('list')
             setPulseMode('calendar')
             const delay = fastPath ? 500 : 1500
+            // Beat between visualization render and the 1.3 auto-bridge ·
+            // long enough for the user to absorb the published calendar.
+            const BRIDGE_TO_13_MS = 3200
             setTimeout(() => {
                 if (userToggledRef.current) return
                 setViewMode('calendar')
@@ -180,6 +183,19 @@ export default function CLCCalendarScene() {
                         }
                         return next
                     })
+                }
+                // Auto-bridge to clc1.3 (drag-drop reschedule) once the
+                // calendar has rendered · only fires when:
+                //   · we came from the publish path (fastPath)
+                //   · we're still in 1.2 at completion time
+                //   · the user hasn't toggled a view (they're not exploring)
+                //   · the demo isn't paused
+                if (fastPath) {
+                    setTimeout(() => {
+                        if (stepIdRef.current !== 'clc1.2') return
+                        if (userToggledRef.current) return
+                        nextStep()
+                    }, BRIDGE_TO_13_MS)
                 }
             }, delay)
             return
@@ -681,7 +697,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
     if (!stepId) return null
     let hint: string | null = null
     if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
-    else if (stepId === 'clc1.2') hint = 'Publishing… Sparkles mark jobs sent to Outlook. Drag-drop unlocks in step 1.3.'
+    else if (stepId === 'clc1.2') hint = 'Calendar visualization rendered · Sparkles mark Strata-scheduled jobs. Auto-continuing to drag-drop in a moment · toggle a view to stay on this step.'
     else if (stepId === 'clc1.3') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
     if (!hint) return null
