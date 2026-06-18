@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Sparkles, Users } from 'lucide-react'
+import { Sparkles, Users, GripVertical } from 'lucide-react'
 import type { InstallJob, WeekColumn, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
 import JobQuickActions from './JobQuickActions'
@@ -24,6 +24,10 @@ interface WeekCalendarGridProps {
     pulseViewActionForJobId?: string | null
     /** Jobs currently in the publish simulation · render "Sending…" overlay. */
     publishingJobIds?: Set<string>
+    /** When set, the specified job gets an ai-tinted ring + animate-pulse +
+        a small grip icon · used in step 1.3 to point the user at the
+        Fairport card that the narrative asks them to drag. */
+    suggestDragJobId?: string | null
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
@@ -53,7 +57,7 @@ function daysBetween(a: string, b: string): number {
  * positioned in the Mon-cell of its start day. Weekends collapsed (most installs
  * are weekday-only). HTML5 drag-and-drop with no dependency.
  */
-export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds }: WeekCalendarGridProps) {
+export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds, suggestDragJobId }: WeekCalendarGridProps) {
     const [dragJobId, setDragJobId] = useState<string | null>(null)
     const [dragOverCell, setDragOverCell] = useState<string | null>(null)
 
@@ -143,7 +147,11 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                         job={job}
                                         highlighted={highlightedJobId === job.id}
                                         queued={queuedJobIds?.has(job.id) ?? false}
-                                        draggable={!!onJobDrop && !job.publishedToOutlook && !job.skipped}
+                                        // Skipped jobs are NOT draggable (user explicitly removed
+                                        // them) · published jobs ARE draggable in steps that allow
+                                        // it (the rescheduling is what 1.3 demos). The step-level
+                                        // gate is onJobDrop being defined.
+                                        draggable={!!onJobDrop && !job.skipped}
                                         onDragStart={(e) => handleDragStart(e, job.id)}
                                         onDragEnd={handleDragEnd}
                                         isDragging={dragJobId === job.id}
@@ -153,6 +161,7 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                         showQuickActions={showQuickActions}
                                         pulseView={pulseViewActionForJobId === job.id}
                                         isPublishing={publishingJobIds?.has(job.id) ?? false}
+                                        suggestDrag={suggestDragJobId === job.id}
                                     />
                                 ))}
                             </div>
@@ -180,9 +189,10 @@ interface JobCardProps {
     showQuickActions: boolean
     pulseView: boolean
     isPublishing: boolean
+    suggestDrag: boolean
 }
 
-function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing }: JobCardProps) {
+function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing, suggestDrag }: JobCardProps) {
     const regionBadge = REGION_BADGE[job.region as Region]
     const hasActions = showQuickActions && !!(onPublish && onView && onSkip)
     return (
@@ -196,12 +206,21 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
                 isDragging ? 'opacity-40 scale-95' : ''
             } ${
                 job.justArrived ? 'border-ai/40 ring-2 ring-ai/30' :
+                suggestDrag    ? 'border-ai ring-2 ring-ai/50 ring-offset-1 ring-offset-card animate-pulse' :
                 highlighted    ? 'border-red-300 ring-2 ring-red-200 dark:border-red-500/50 dark:ring-red-500/20' :
                 queued         ? 'border-yellow-300 dark:border-yellow-500/50' :
                                  'border-border hover:border-foreground/30'
             } ${job.skipped ? 'opacity-50 grayscale' : ''}`}
-            title={`${job.customer} · ${job.crewSize} crew · ${job.iqJobIds.length} IQ job${job.iqJobIds.length > 1 ? 's' : ''}`}
+            title={suggestDrag
+                ? `Drag ${job.customer} to a different day to reschedule`
+                : `${job.customer} · ${job.crewSize} crew · ${job.iqJobIds.length} IQ job${job.iqJobIds.length > 1 ? 's' : ''}`}
         >
+            {suggestDrag && (
+                <div className="absolute -top-2 -left-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-ai text-background px-1.5 py-0.5 rounded-full shadow-md">
+                    <GripVertical className="h-2.5 w-2.5" />
+                    Drag me
+                </div>
+            )}
             <div className="flex items-start gap-1.5 mb-1">
                 <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap ${regionBadge}`}>
                     {REGION_LABEL[job.region as Region]}

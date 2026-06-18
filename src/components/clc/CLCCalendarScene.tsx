@@ -435,6 +435,11 @@ export default function CLCCalendarScene() {
 
     const allowDragDrop = stepId === 'clc1.3' && viewMode === 'calendar'
     const highlightFairport = stepId === 'clc1.4' ? 'job-fairport' : null
+    // In 1.3 · point the user at the Fairport card (matches the step's
+    // userAction: "Drag the Fairport card from Jun 2 to Jun 5"). The visual
+    // is an ai-tinted ring + "Drag me" badge — different language from the
+    // red highlight used for the 1.4 capacity alert.
+    const suggestDragJobId = stepId === 'clc1.3' && !queuedJobIds.has('job-fairport') ? 'job-fairport' : null
     // When the user clicked the notification CTA, the inbound job also gets
     // the highlight ring on the calendar card · same visual language as the
     // capacity-alert highlight in 1.4.
@@ -563,6 +568,7 @@ export default function CLCCalendarScene() {
                             highlightedJobId={highlightedJobId}
                             pulseViewActionForJobId={inboundReviewJobId}
                             publishingJobIds={publishingJobIds}
+                            suggestDragJobId={suggestDragJobId}
                             onJobDrop={allowDragDrop ? handleJobDrop : undefined}
                             queuedJobIds={queuedJobIds}
                             onPublish={handlePublish}
@@ -698,7 +704,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
     let hint: string | null = null
     if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
     else if (stepId === 'clc1.2') hint = 'Calendar visualization rendered · Sparkles mark Strata-scheduled jobs. Auto-continuing to drag-drop in a moment · toggle a view to stay on this step.'
-    else if (stepId === 'clc1.3') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
+    else if (stepId === 'clc1.3') hint = 'Grab the pulsing Fairport Public Library card (Jun 1 row, NY) and drop it on a different weekday cell · the change queues as a nightly IQ batch sync.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
     if (!hint) return null
     return (
