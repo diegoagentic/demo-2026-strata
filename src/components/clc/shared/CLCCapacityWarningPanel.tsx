@@ -1,11 +1,51 @@
 ﻿import { useState } from 'react'
-import { AlertTriangle, ChevronDown, ChevronRight, Sparkles, Mail, Phone } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronRight, Sparkles, Mail, Send } from 'lucide-react'
 import type { RegionCapacity } from './installScheduleData'
 import { CAPACITY_BY_REGION, THIRD_PARTY_INSTALLER, WEEKS } from './installScheduleData'
+import AIEmailComposer from '../../shared/AIEmailComposer'
 
 interface Props {
     /** Step that triggered the panel · controls default-open behavior */
     stepId?: string
+}
+
+type ComposerMode = 'outreach' | 'dispatcher' | null
+
+/** Outreach to the vetted third-party · Albany Install Co. */
+const OUTREACH_DRAFT = {
+    to: 'dispatch@albanyinstall.co · Pat Reilly',
+    subject: 'Subcontract request · CLC NY install support · week of Jun 1',
+    body: [
+        'Hi Pat,',
+        '',
+        'Strata flagged 3 stacked NY library installs the week of Jun 1 (Jamestown · Fairport · Brockport · all anchor jobs). In-house crew is at 100% Mon-Thu.',
+        '',
+        'Looking at your availability window, would Albany Install Co. be able to take Fairport (Tue Jun 2 / Wed Jun 3 · 4-crew · 5 IQ jobs queued)? Standard CLC rate card applies · same terms as the 7 prior jobs we ran together.',
+        '',
+        'Please confirm by Thu end-of-day so we can lock the schedule.',
+        '',
+        'Thanks,',
+        'Sara Chen · Account Manager',
+        'Creative Library Concepts',
+    ].join('\n'),
+}
+
+/** Internal escalation to the NY regional dispatcher. */
+const DISPATCHER_DRAFT = {
+    to: 'Marcus Reed · NY Regional Dispatcher · mreed@clc.example.com',
+    subject: 'NY capacity escalation · week of Jun 1 · Albany Install Co recommended',
+    body: [
+        'Hi Marcus,',
+        '',
+        'Strata flagged an NY capacity conflict for the week of Jun 1 · 3 anchor installs back-to-back (Jamestown / Fairport / Brockport) and in-house crew at 100%.',
+        '',
+        'Recommendation: subcontract Fairport (Tue/Wed Jun 2-3) to Albany Install Co. They have 7 prior jobs with us and COI is on file. Outreach draft is queued · ready for your sign-off before we send.',
+        '',
+        'Can you confirm the subcontract path or surface an alternative crew?',
+        '',
+        'Thanks,',
+        'Sara Chen · Account Manager',
+    ].join('\n'),
 }
 
 /**
@@ -17,6 +57,25 @@ export default function CLCCapacityWarningPanel({ stepId }: Props) {
     const [expandedRegion, setExpandedRegion] = useState<string | null>(
         stepId === 'clc1.4' ? 'ny' : null
     )
+    const [composerMode, setComposerMode] = useState<ComposerMode>(null)
+
+    const handleSendEmail = (kind: 'outreach' | 'dispatcher') => (subject: string, _body: string) => {
+        // Demo · we don't actually send. Fire a success toast event and
+        // close the composer. CLCToastStack picks this up.
+        const customer = kind === 'outreach'
+            ? 'Albany Install Co.'
+            : 'Marcus Reed · NY Dispatcher'
+        window.dispatchEvent(new CustomEvent('clc:job-published', {
+            detail: { jobId: `email-${kind}`, customer: `${customer} · ${subject}` },
+        }))
+        setComposerMode(null)
+    }
+
+    const activeDraft = composerMode === 'outreach'
+        ? OUTREACH_DRAFT
+        : composerMode === 'dispatcher'
+            ? DISPATCHER_DRAFT
+            : null
 
     const statusBadge = (status: RegionCapacity['status']) => {
         switch (status) {
@@ -114,15 +173,19 @@ export default function CLCCapacityWarningPanel({ stepId }: Props) {
                                             </div>
                                             <div className="mt-3 flex items-center gap-2">
                                                 <button
+                                                    onClick={() => setComposerMode('outreach')}
                                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                                                     title="Strata never auto-sends · operator reviews the draft and confirms"
                                                 >
                                                     <Mail className="h-3.5 w-3.5" />
                                                     Open outreach draft
                                                 </button>
-                                                <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-foreground border border-border rounded-md hover:bg-muted transition-colors">
-                                                    <Phone className="h-3.5 w-3.5" />
-                                                    Call dispatcher
+                                                <button
+                                                    onClick={() => setComposerMode('dispatcher')}
+                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-foreground border border-border rounded-md hover:bg-muted transition-colors"
+                                                >
+                                                    <Mail className="h-3.5 w-3.5" />
+                                                    Contact dispatcher
                                                 </button>
                                             </div>
                                         </div>
@@ -133,6 +196,28 @@ export default function CLCCapacityWarningPanel({ stepId }: Props) {
                     )
                 })}
             </div>
+
+            {/* Shared AI email composer · same one used in MBI's AR collection
+                flow. Two contexts (outreach to third-party / internal escalation)
+                share the editor shell · only the seed draft differs. */}
+            <AIEmailComposer
+                isOpen={activeDraft !== null}
+                onClose={() => setComposerMode(null)}
+                title={composerMode === 'outreach' ? 'Outreach · Albany Install Co.' : 'Contact NY dispatcher'}
+                subtitle={composerMode === 'outreach'
+                    ? 'Strata-drafted subcontract request · operator reviews and sends'
+                    : 'Internal escalation · operator confirms the subcontract path'}
+                icon={<Mail className="h-4 w-4" />}
+                to={activeDraft?.to ?? ''}
+                initialSubject={activeDraft?.subject ?? ''}
+                initialBody={activeDraft?.body ?? ''}
+                badge={composerMode === 'outreach'
+                    ? { label: 'Vetted 3rd-party outreach', tone: 'ai', icon: <Sparkles className="h-3 w-3" /> }
+                    : { label: 'Internal escalation', tone: 'warning', icon: <AlertTriangle className="h-3 w-3" /> }}
+                actionLabel={composerMode === 'outreach' ? 'Send to Albany' : 'Send to dispatcher'}
+                actionIcon={<Send className="h-3.5 w-3.5" />}
+                onAction={composerMode === 'outreach' ? handleSendEmail('outreach') : handleSendEmail('dispatcher')}
+            />
         </div>
     )
 }

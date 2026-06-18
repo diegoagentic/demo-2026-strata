@@ -327,8 +327,8 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
             } ${
                 job.justArrived ? 'border-ai/40 ring-2 ring-ai/30' :
                 suggestDrag    ? 'border-ai ring-2 ring-ai/50 ring-offset-1 ring-offset-card animate-pulse' :
-                aiFlagged      ? 'border-warning/60 ring-2 ring-warning/40' :
-                highlighted    ? 'border-red-300 ring-2 ring-red-200 dark:border-red-500/50 dark:ring-red-500/20' :
+                aiFlagged      ? 'border-warning/50' :
+                highlighted    ? 'border-red-300 ring-1 ring-red-200 dark:border-red-500/50 dark:ring-red-500/20' :
                 queued         ? 'border-yellow-300 dark:border-yellow-500/50' :
                                  'border-border hover:border-foreground/30'
             } ${job.skipped ? 'opacity-50 grayscale' : ''}`}
@@ -354,10 +354,10 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
                     }}
                     title="Strata flagged this for capacity review · click to open the report"
                     aria-label="Open capacity review"
-                    className="absolute -top-2 -left-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-warning text-warning-foreground px-1.5 py-0.5 rounded-full shadow-md animate-pulse hover:scale-105 transition-transform z-10"
+                    className="w-full flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-warning/15 text-yellow-800 dark:text-yellow-300 hover:bg-warning/25 px-1.5 py-0.5 rounded mb-1 transition-colors animate-pulse"
                 >
-                    <AlertTriangle className="h-2.5 w-2.5" />
-                    Review · AI
+                    <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                    <span className="truncate">Strata · Review capacity</span>
                 </button>
             )}
             {canReschedule && (

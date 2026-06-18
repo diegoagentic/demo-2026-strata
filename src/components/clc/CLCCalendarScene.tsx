@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
-import { Database, RefreshCw, Clock, Sparkles, ArrowRight, Send, Users, X, Loader2, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
+import { Database, RefreshCw, Clock, Sparkles, ArrowRight, Send, Users, X, Loader2, ChevronLeft, ChevronRight, Calendar as CalendarIcon, AlertTriangle } from 'lucide-react'
 import WeekCalendarGrid from './shared/WeekCalendarGrid'
 import CLCCapacityWarningPanel from './shared/CLCCapacityWarningPanel'
 import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
@@ -636,6 +636,14 @@ export default function CLCCalendarScene() {
                     >
                         <RefreshCw className={`h-3.5 w-3.5 ${isResyncing ? 'animate-spin' : ''}`} />
                         {isResyncing ? 'Syncing…' : 'Resync'}
+                    </button>
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('clc:capacity-warning-open'))}
+                        title="Open the Strata capacity report (per-region load + 3rd-party suggestions)"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-foreground border border-border rounded-lg hover:bg-muted transition-colors"
+                    >
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Capacity report
                     </button>
                     {showPublishAll && (
                         <button
