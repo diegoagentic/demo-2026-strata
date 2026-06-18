@@ -94,68 +94,72 @@ export default function CLCFilterBar({
     }
 
     return (
-        <div className="flex items-center gap-2 flex-wrap px-5 py-2.5 border-b border-border bg-muted/10">
-            <FilterIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        // Two-group layout · filters on the left · actions on the right.
+        // Each group wraps internally if needed, but they never wrap as a
+        // whole · the actions stay aligned with the filters on the same row.
+        <div className="flex items-center justify-between gap-3 px-5 py-2.5 border-b border-border bg-muted/10 flex-wrap">
+            {/* LEFT · filter inputs */}
+            <div className="inline-flex items-center gap-2 flex-wrap min-w-0">
+                <FilterIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 
-            {showDateRange && onDateRange && (
-                <div className="inline-flex items-center gap-1.5">
-                    <input
-                        type="date"
-                        value={dateRange?.from ?? ''}
-                        onChange={e => onDateRange(e.target.value ? { from: e.target.value, to: dateRange?.to ?? e.target.value } : null)}
+                {showDateRange && onDateRange && (
+                    <div className="inline-flex items-center gap-1.5">
+                        <input
+                            type="date"
+                            value={dateRange?.from ?? ''}
+                            onChange={e => onDateRange(e.target.value ? { from: e.target.value, to: dateRange?.to ?? e.target.value } : null)}
+                            className={INPUT_CLASS}
+                            aria-label="From date"
+                        />
+                        <span className="text-xs text-muted-foreground">→</span>
+                        <input
+                            type="date"
+                            value={dateRange?.to ?? ''}
+                            onChange={e => onDateRange(dateRange?.from && e.target.value ? { from: dateRange.from, to: e.target.value } : (e.target.value ? { from: e.target.value, to: e.target.value } : null))}
+                            className={INPUT_CLASS}
+                            aria-label="To date"
+                        />
+                    </div>
+                )}
+
+                {showStatuses && onStatuses && (
+                    <div className="inline-flex items-center gap-1 flex-wrap">
+                        {options.map(opt => {
+                            const isOn = statuses.includes(opt.key)
+                            return (
+                                <button
+                                    key={opt.key}
+                                    type="button"
+                                    onClick={() => toggleStatus(opt.key)}
+                                    aria-pressed={isOn}
+                                    className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${
+                                        isOn
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-background border border-border text-muted-foreground hover:bg-muted'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+                )}
+
+                {showRegion && onRegionFilter && (
+                    <select
+                        value={regionFilter}
+                        onChange={e => onRegionFilter(e.target.value as Region | 'all')}
                         className={INPUT_CLASS}
-                        aria-label="From date"
-                    />
-                    <span className="text-xs text-muted-foreground">→</span>
-                    <input
-                        type="date"
-                        value={dateRange?.to ?? ''}
-                        onChange={e => onDateRange(dateRange?.from && e.target.value ? { from: dateRange.from, to: e.target.value } : (e.target.value ? { from: e.target.value, to: e.target.value } : null))}
-                        className={INPUT_CLASS}
-                        aria-label="To date"
-                    />
-                </div>
-            )}
+                        aria-label="Filter by region"
+                    >
+                        <option value="all">All regions</option>
+                        <option value="ny">{REGION_LABEL.ny} · New York</option>
+                        <option value="nj">{REGION_LABEL.nj} · New Jersey</option>
+                        <option value="pa">{REGION_LABEL.pa} · Pennsylvania</option>
+                    </select>
+                )}
 
-            {showStatuses && onStatuses && (
-                <div className="inline-flex items-center gap-1 flex-wrap">
-                    {options.map(opt => {
-                        const isOn = statuses.includes(opt.key)
-                        return (
-                            <button
-                                key={opt.key}
-                                type="button"
-                                onClick={() => toggleStatus(opt.key)}
-                                aria-pressed={isOn}
-                                className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${
-                                    isOn
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-background border border-border text-muted-foreground hover:bg-muted'
-                                }`}
-                            >
-                                {opt.label}
-                            </button>
-                        )
-                    })}
-                </div>
-            )}
-
-            {showRegion && onRegionFilter && (
-                <select
-                    value={regionFilter}
-                    onChange={e => onRegionFilter(e.target.value as Region | 'all')}
-                    className={INPUT_CLASS}
-                    aria-label="Filter by region"
-                >
-                    <option value="all">All regions</option>
-                    <option value="ny">{REGION_LABEL.ny} · New York</option>
-                    <option value="nj">{REGION_LABEL.nj} · New Jersey</option>
-                    <option value="pa">{REGION_LABEL.pa} · Pennsylvania</option>
-                </select>
-            )}
-
-            {showCustomer && onCustomerQuery && (
-                <div className="inline-flex items-center gap-1.5 ml-auto">
+                {showCustomer && onCustomerQuery && (
                     <div className="relative">
                         <Search className="h-3.5 w-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
@@ -163,33 +167,30 @@ export default function CLCFilterBar({
                             value={customerQuery}
                             onChange={e => onCustomerQuery(e.target.value)}
                             placeholder={customerPlaceholder}
-                            className={`${INPUT_CLASS} pl-7 w-[200px]`}
+                            className={`${INPUT_CLASS} pl-7 w-[180px]`}
                             aria-label="Search customer"
                         />
                     </div>
-                </div>
-            )}
+                )}
 
-            {hasAnyFilter && (
-                <button
-                    type="button"
-                    onClick={resetAll}
-                    title="Clear all filters"
-                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                    <X className="h-3 w-3" />
-                    Reset
-                </button>
-            )}
+                {hasAnyFilter && (
+                    <button
+                        type="button"
+                        onClick={resetAll}
+                        title="Clear all filters"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        <X className="h-3 w-3" />
+                        Reset
+                    </button>
+                )}
+            </div>
 
+            {/* RIGHT · action cluster · stays right-aligned via outer justify-between */}
             {rightSlot && (
-                <>
-                    {/* Push the slot to the right when no customer search is shown */}
-                    {!(showCustomer && onCustomerQuery) && <span className="ml-auto" />}
-                    {/* Subtle divider so the actions read as a distinct cluster */}
-                    <span className="h-5 w-px bg-border hidden sm:inline-block" aria-hidden />
-                    <div className="inline-flex items-center gap-2 flex-wrap">{rightSlot}</div>
-                </>
+                <div className="inline-flex items-center gap-2 flex-wrap shrink-0">
+                    {rightSlot}
+                </div>
             )}
         </div>
     )
