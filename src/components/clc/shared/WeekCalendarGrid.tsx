@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Sparkles, Users, GripVertical, Calendar as CalendarIcon } from 'lucide-react'
 import type { InstallJob, WeekColumn, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
@@ -200,28 +201,83 @@ interface JobCardProps {
 }
 
 function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing, suggestDrag, onReschedule }: JobCardProps) {
+    const cardRef = useRef<HTMLDivElement>(null)
     const [rescheduleOpen, setRescheduleOpen] = useState(false)
     const [rescheduleDraft, setRescheduleDraft] = useState(job.startDate)
+    const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null)
     // Keep the draft in sync with the source date when the card isn't being
     // edited · prevents stale defaults if the job was rescheduled elsewhere.
     useEffect(() => {
         if (!rescheduleOpen) setRescheduleDraft(job.startDate)
     }, [job.startDate, rescheduleOpen])
     const canReschedule = !!onReschedule && !job.skipped
+
+    /** Calculate where the popover should sit · below the card by default,
+        flipped above when there's no room. Right edge clamped to viewport. */
+    const computePopoverPos = () => {
+        if (!cardRef.current) return null
+        const rect = cardRef.current.getBoundingClientRect()
+        const POPOVER_WIDTH = 260
+        const POPOVER_HEIGHT = 200
+        const MARGIN = 12
+        let top = rect.bottom + 4
+        let left = rect.left
+        if (left + POPOVER_WIDTH + MARGIN > window.innerWidth) {
+            left = Math.max(MARGIN, window.innerWidth - POPOVER_WIDTH - MARGIN)
+        }
+        if (top + POPOVER_HEIGHT + MARGIN > window.innerHeight) {
+            top = Math.max(MARGIN, rect.top - POPOVER_HEIGHT - 4)
+        }
+        return { top, left }
+    }
+
+    const openReschedule = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        setRescheduleDraft(job.startDate)
+        const pos = computePopoverPos()
+        if (pos) setPopoverPos(pos)
+        setRescheduleOpen(true)
+    }
     const commitReschedule = () => {
         if (rescheduleDraft && rescheduleDraft !== job.startDate && onReschedule) {
             onReschedule(job.id, rescheduleDraft)
         }
         setRescheduleOpen(false)
+        setPopoverPos(null)
     }
     const cancelReschedule = () => {
         setRescheduleDraft(job.startDate)
         setRescheduleOpen(false)
+        setPopoverPos(null)
     }
+
+    // While the popover is open, recompute its position on scroll/resize so
+    // it stays glued to the card. If the card scrolls off-screen, close.
+    useEffect(() => {
+        if (!rescheduleOpen) return
+        const recalc = () => {
+            if (!cardRef.current) return
+            const rect = cardRef.current.getBoundingClientRect()
+            if (rect.bottom < 0 || rect.top > window.innerHeight) {
+                setRescheduleOpen(false)
+                setPopoverPos(null)
+                return
+            }
+            const pos = computePopoverPos()
+            if (pos) setPopoverPos(pos)
+        }
+        window.addEventListener('scroll', recalc, true)
+        window.addEventListener('resize', recalc)
+        return () => {
+            window.removeEventListener('scroll', recalc, true)
+            window.removeEventListener('resize', recalc)
+        }
+    }, [rescheduleOpen])
     const regionBadge = REGION_BADGE[job.region as Region]
     const hasActions = showQuickActions && !!(onPublish && onView && onSkip)
     return (
         <div
+            ref={cardRef}
             draggable={draggable}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
@@ -246,15 +302,11 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
                     Drag me
                 </div>
             )}
-            {canReschedule && !rescheduleOpen && (
+            {canReschedule && (
                 <button
                     type="button"
                     onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        setRescheduleDraft(job.startDate)
-                        setRescheduleOpen(true)
-                    }}
+                    onClick={openReschedule}
                     title="Reschedule to any date"
                     aria-label="Reschedule"
                     className="absolute top-1 right-1 p-1 rounded bg-card border border-border shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors z-10"
@@ -262,49 +314,64 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
                     <CalendarIcon className="h-3 w-3" />
                 </button>
             )}
-            {canReschedule && rescheduleOpen && (
-                <div
-                    className="absolute top-full mt-1 left-0 z-30 w-[260px] rounded-lg border border-border bg-card shadow-xl p-3 space-y-2"
-                    onClick={(e) => e.stopPropagation()}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onDragStart={(e) => e.preventDefault()}
-                >
-                    <div className="flex items-center gap-1.5">
-                        <CalendarIcon className="h-3.5 w-3.5 text-foreground" />
-                        <h4 className="text-xs font-bold text-foreground">Reschedule</h4>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground leading-snug">
-                        {job.customer} · current: <span className="font-mono">{job.startDate}</span>
-                    </p>
-                    <input
-                        type="date"
-                        value={rescheduleDraft}
-                        onChange={(e) => setRescheduleDraft(e.target.value)}
-                        className="w-full px-2 py-1.5 text-xs font-mono bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        aria-label="New start date"
-                        autoFocus
+            {canReschedule && rescheduleOpen && popoverPos && createPortal(
+                <>
+                    {/* Backdrop · click-outside to dismiss the popover.
+                        Lives above all calendar cards (z-[9998]) so the
+                        popover above it (z-[9999]) is the only interactive
+                        surface · click anywhere outside cancels. */}
+                    <div
+                        className="fixed inset-0 z-[9998]"
+                        onClick={cancelReschedule}
+                        aria-hidden
                     />
-                    <div className="flex items-center justify-end gap-1.5 pt-1">
-                        <button
-                            type="button"
-                            onClick={cancelReschedule}
-                            className="px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={commitReschedule}
-                            disabled={!rescheduleDraft || rescheduleDraft === job.startDate}
-                            className="px-2.5 py-1 text-[10px] font-bold bg-foreground text-background rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            Save
-                        </button>
+                    <div
+                        className="fixed z-[9999] w-[260px] rounded-lg border border-border bg-card shadow-xl p-3 space-y-2"
+                        style={{ top: popoverPos.top, left: popoverPos.left }}
+                        onClick={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onDragStart={(e) => e.preventDefault()}
+                        role="dialog"
+                        aria-label={`Reschedule ${job.customer}`}
+                    >
+                        <div className="flex items-center gap-1.5">
+                            <CalendarIcon className="h-3.5 w-3.5 text-foreground" />
+                            <h4 className="text-xs font-bold text-foreground">Reschedule</h4>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-snug">
+                            {job.customer} · current: <span className="font-mono">{job.startDate}</span>
+                        </p>
+                        <input
+                            type="date"
+                            value={rescheduleDraft}
+                            onChange={(e) => setRescheduleDraft(e.target.value)}
+                            className="w-full px-2 py-1.5 text-xs font-mono bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            aria-label="New start date"
+                            autoFocus
+                        />
+                        <div className="flex items-center justify-end gap-1.5 pt-1">
+                            <button
+                                type="button"
+                                onClick={cancelReschedule}
+                                className="px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={commitReschedule}
+                                disabled={!rescheduleDraft || rescheduleDraft === job.startDate}
+                                className="px-2.5 py-1 text-[10px] font-bold bg-foreground text-background rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                Save
+                            </button>
+                        </div>
+                        <p className="text-[9px] text-muted-foreground italic">
+                            Queues for IQ batch sync · 2am ET
+                        </p>
                     </div>
-                    <p className="text-[9px] text-muted-foreground italic">
-                        Queues for IQ batch sync · 2am ET
-                    </p>
-                </div>
+                </>,
+                document.body,
             )}
             <div className="flex items-start gap-1.5 mb-1">
                 <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap ${regionBadge}`}>
