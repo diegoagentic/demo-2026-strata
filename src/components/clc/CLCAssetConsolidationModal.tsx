@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { X, FolderTree, Sparkles, Check, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy } from 'lucide-react'
+import { useDemo } from '../../context/DemoContext'
 import {
     FAIRPORT_VENDOR_JOBS,
     COMMON_ASSETS,
@@ -31,6 +32,13 @@ type Stage = 'discover' | 'filter' | 'review' | 'publish'
 export default function CLCAssetConsolidationModal({ isOpen, onClose, initialStage = 'discover', onPublished }: Props) {
     const [stage, setStage] = useState<Stage>(initialStage)
     const [previewAsset, setPreviewAsset] = useState<AssetEntry | null>(null)
+    // Sidebar-aware offset · same pattern as MBIDetailSheet. When the demo
+    // tour sidebar is expanded (lg+ viewports), we push the centering
+    // wrapper right by the sidebar width (320px) so the modal sits in
+    // the visible workspace instead of being half-hidden behind the tour.
+    const { isDemoActive, isSidebarCollapsed } = useDemo()
+    const sidebarExpanded = isDemoActive && !isSidebarCollapsed
+    const offsetClass = sidebarExpanded ? 'lg:pl-80' : ''
 
     const includedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => j.included), [])
     const excludedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => !j.included), [])
@@ -71,9 +79,9 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                 <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" />
                 </TransitionChild>
-                <div className="fixed inset-0 flex items-center justify-center p-4">
+                <div className={`fixed inset-0 flex items-center justify-center p-4 ${offsetClass}`}>
                     <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-                        <DialogPanel className="w-[95vw] max-w-[1200px] h-[88vh] max-h-[860px] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col">
+                        <DialogPanel className="w-full max-w-[1200px] h-[88vh] max-h-[860px] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col">
                             {/* Header */}
                             <div className="p-5 border-b border-border">
                                 <div className="flex items-start justify-between gap-3 mb-3">
