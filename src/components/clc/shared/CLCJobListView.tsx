@@ -15,6 +15,8 @@ interface CLCJobListViewProps {
     onPublish?: (jobId: string) => void
     onView?: (jobId: string) => void
     onSkip?: (jobId: string) => void
+    /** When set, the View action of that specific job pulses to draw attention. */
+    pulseViewActionForJobId?: string | null
 }
 
 const STATUS_LABEL: Record<InstallJob['status'], string> = {
@@ -36,7 +38,7 @@ const STATUS_TONE: Record<InstallJob['status'], string> = {
  * Pattern adapted from ThreeWayMatchView grid + the prior SourceListGridFallback
  * in CLCCalendarScene. Sort state is local to the view.
  */
-export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, onJobClick, onPublish, onView, onSkip }: CLCJobListViewProps) {
+export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, onJobClick, onPublish, onView, onSkip, pulseViewActionForJobId }: CLCJobListViewProps) {
     const hasActions = !!(onPublish && onView && onSkip)
     const gridCols = hasActions ? 'grid-cols-[1fr_70px_120px_70px_110px_160px]' : 'grid-cols-[1fr_70px_120px_70px_110px_110px]'
     const [sortKey, setSortKey] = useState<SortKey>('startDate')
@@ -119,6 +121,7 @@ export default function CLCJobListView({ jobs, queuedJobIds, highlightedJobId, o
                                     <JobQuickActions
                                         job={job}
                                         variant="row"
+                                        pulseView={pulseViewActionForJobId === job.id}
                                         onPublish={onPublish!}
                                         onView={onView!}
                                         onSkip={onSkip!}

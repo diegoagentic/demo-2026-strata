@@ -14,6 +14,10 @@ interface JobQuickActionsProps {
     /** When true, hides the action set entirely (used by Calendar variant
         in steps where drag-drop owns the card). */
     disabled?: boolean
+    /** When true, the View button gets a pulse + ring + ai/10 tint to call
+        the user's attention. Used by Flow 1 step 1.1 when the Action Center
+        notification CTA redirects the user to a specific job for review. */
+    pulseView?: boolean
 }
 
 /**
@@ -29,7 +33,7 @@ interface JobQuickActionsProps {
  * a terminal pill instead of the buttons so the user doesn't re-trigger.
  */
 export default function JobQuickActions({
-    job, variant, onPublish, onView, onSkip, disabled,
+    job, variant, onPublish, onView, onSkip, disabled, pulseView,
 }: JobQuickActionsProps) {
     if (disabled) return null
 
@@ -63,8 +67,12 @@ export default function JobQuickActions({
                 </button>
                 <button
                     onClick={handleView}
-                    title="View job details"
-                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+                    title={pulseView ? 'Open install detail' : 'View job details'}
+                    className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-md border text-foreground transition-all ${
+                        pulseView
+                            ? 'border-ai bg-ai/15 ring-2 ring-ai/50 ring-offset-1 ring-offset-card animate-pulse'
+                            : 'border-border hover:bg-muted'
+                    }`}
                 >
                     <Eye className="h-3 w-3" />
                     View
@@ -97,7 +105,11 @@ export default function JobQuickActions({
                     onClick={handleView}
                     title="View details"
                     aria-label="View details"
-                    className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className={`p-1.5 rounded-md transition-all ${
+                        pulseView
+                            ? 'bg-ai/15 text-foreground ring-2 ring-ai/60 animate-pulse'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
                 >
                     <Eye className="h-3.5 w-3.5" />
                 </button>
@@ -116,7 +128,9 @@ export default function JobQuickActions({
     // ── Variant: compact (Calendar hover overlay) ──────────────────────
     return (
         <div
-            className="absolute top-1 right-1 inline-flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-card border border-border rounded-md shadow-sm p-0.5"
+            className={`absolute top-1 right-1 inline-flex items-center gap-0.5 transition-opacity bg-card border border-border rounded-md shadow-sm p-0.5 ${
+                pulseView ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`}
             onPointerDown={stop}
         >
             <button
@@ -131,7 +145,11 @@ export default function JobQuickActions({
                 onClick={handleView}
                 title="View details"
                 aria-label="View details"
-                className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className={`p-1 rounded transition-all ${
+                    pulseView
+                        ? 'bg-ai/15 text-foreground ring-2 ring-ai/60 animate-pulse'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
             >
                 <Eye className="h-3 w-3" />
             </button>

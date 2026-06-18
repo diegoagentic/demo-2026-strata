@@ -43,6 +43,11 @@ export default function CLCCalendarScene() {
     const [publishedJobIds, setPublishedJobIds] = useState<Set<string>>(new Set())
     const [skippedJobIds, setSkippedJobIds] = useState<Set<string>>(new Set())
     const [viewPanelJobId, setViewPanelJobId] = useState<string | null>(null)
+    // Set by the Action Center notification CTA in step 1.1 · forces calendar
+    // mode, highlights the inbound job, and pulses its View button so the
+    // user has a clear next gesture (click View → opens the install detail
+    // panel). Cleared when the user clicks View (or step changes).
+    const [inboundReviewJobId, setInboundReviewJobId] = useState<string | null>(null)
     const userClickedPublishAllRef = useRef(false)
 
     // View mode (step-aware default + user override)
@@ -73,6 +78,9 @@ export default function CLCCalendarScene() {
         if (lastStepRef.current === stepId) return   // already handled this step
         lastStepRef.current = stepId
         userToggledRef.current = false
+        // Always reset the review-target on step transitions · it's a 1.1-only
+        // affordance and would leak into 1.2+ otherwise.
+        setInboundReviewJobId(null)
 
         // eslint-disable-next-line no-console
         console.log('[CLC] enter step', stepId)
@@ -152,16 +160,31 @@ export default function CLCCalendarScene() {
         setPublishedJobIds(prev => new Set(prev).add(jobId))
     const handleSkip = (jobId: string) =>
         setSkippedJobIds(prev => new Set(prev).add(jobId))
-    const handleView = (jobId: string) =>
+    const handleView = (jobId: string) => {
         setViewPanelJobId(jobId)
+        // Clicking the pulsing View action completes the guided redirect ·
+        // stop pulsing so it doesn't compete with the open modal.
+        setInboundReviewJobId(prev => (prev === jobId ? null : prev))
+    }
     const handlePublishAll = () => {
         userClickedPublishAllRef.current = true
         nextStep()
     }
 
-    // Listen for the Action Center notification CTA · opens the View panel.
+    // Listen for the Action Center notification CTA · instead of opening the
+    // modal directly, run a 3-step guided redirect:
+    //   1. force calendar mode so the user sees their schedule context
+    //   2. make sure the inbound job has been delivered to the display set
+    //   3. flag the inbound job so the View button on its card pulses
+    // The user closes the loop by clicking View · that opens the modal and
+    // handleView() above clears the pulse.
     useEffect(() => {
-        const handler = () => setViewPanelJobId('job-troy')
+        const handler = () => {
+            setViewMode('calendar')
+            userToggledRef.current = true   // prevent any in-flight autoswap from overriding
+            setInboundDelivered(true)        // safety · if the CTA fires before the delivery timer
+            setInboundReviewJobId('job-troy')
+        }
         window.addEventListener('clc:inbound-job-open', handler)
         return () => window.removeEventListener('clc:inbound-job-open', handler)
     }, [])
@@ -240,6 +263,10 @@ export default function CLCCalendarScene() {
 
     const allowDragDrop = stepId === 'clc1.3' && viewMode === 'calendar'
     const highlightFairport = stepId === 'clc1.4' ? 'job-fairport' : null
+    // When the user clicked the notification CTA, the inbound job also gets
+    // the highlight ring on the calendar card · same visual language as the
+    // capacity-alert highlight in 1.4.
+    const highlightedJobId = inboundReviewJobId ?? highlightFairport
     const showPublishAll = stepId === 'clc1.1' || stepId === 'clc1.2'
     const publishAllDisabled = displayedJobs.length === 0 || stepId === 'clc1.2'
     const viewedJob = viewPanelJobId ? displayedJobs.find(j => j.id === viewPanelJobId) ?? null : null
@@ -310,7 +337,8 @@ export default function CLCCalendarScene() {
                     <CLCFunnelView
                         jobs={filteredJobs}
                         queuedJobIds={queuedJobIds}
-                        highlightedJobId={highlightFairport}
+                        highlightedJobId={highlightedJobId}
+                        pulseViewActionForJobId={inboundReviewJobId}
                         onPublish={handlePublish}
                         onView={handleView}
                         onSkip={handleSkip}
@@ -320,7 +348,8 @@ export default function CLCCalendarScene() {
                     <CLCJobListView
                         jobs={filteredJobs}
                         queuedJobIds={queuedJobIds}
-                        highlightedJobId={highlightFairport}
+                        highlightedJobId={highlightedJobId}
+                        pulseViewActionForJobId={inboundReviewJobId}
                         onPublish={handlePublish}
                         onView={handleView}
                         onSkip={handleSkip}
@@ -346,7 +375,8 @@ export default function CLCCalendarScene() {
                         <WeekCalendarGrid
                             weeks={WEEKS}
                             jobs={filteredJobs}
-                            highlightedJobId={highlightFairport}
+                            highlightedJobId={highlightedJobId}
+                            pulseViewActionForJobId={inboundReviewJobId}
                             onJobDrop={allowDragDrop ? handleJobDrop : undefined}
                             queuedJobIds={queuedJobIds}
                             onPublish={handlePublish}
@@ -449,7 +479,7 @@ function QueuedJobsList({ queuedJobIds, jobs }: { queuedJobIds: Set<string>; job
 function StepHint({ stepId }: { stepId: string | undefined }) {
     if (!stepId) return null
     let hint: string | null = null
-    if (stepId === 'clc1.1') hint = 'Review the queued jobs. Click Publish all to Outlook to bridge to step 1.2 · or use a card\'s Send to publish individually first.'
+    if (stepId === 'clc1.1') hint = 'Bell pulses · open the Action Center, click the IQ install request, then View on the highlighted card to inspect Troy. Click Publish all to bridge to step 1.2.'
     else if (stepId === 'clc1.2') hint = 'Publishing… Sparkles mark jobs sent to Outlook. Drag-drop unlocks in step 1.3.'
     else if (stepId === 'clc1.3') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
