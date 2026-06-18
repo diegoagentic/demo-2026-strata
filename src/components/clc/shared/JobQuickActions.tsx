@@ -1,4 +1,4 @@
-import { Send, Eye, SkipForward, Sparkles, Check } from 'lucide-react'
+import { Send, Eye, SkipForward, Sparkles, Check, Loader2 } from 'lucide-react'
 import type { InstallJob } from './installScheduleData'
 
 interface JobQuickActionsProps {
@@ -18,6 +18,10 @@ interface JobQuickActionsProps {
         the user's attention. Used by Flow 1 step 1.1 when the Action Center
         notification CTA redirects the user to a specific job for review. */
     pulseView?: boolean
+    /** When true, the action set renders a "Sending to Outlook…" indicator
+        (variant-aware) instead of the buttons · used during the ~1200ms
+        publish simulation between click and the Published terminal state. */
+    isPublishing?: boolean
 }
 
 /**
@@ -33,7 +37,7 @@ interface JobQuickActionsProps {
  * a terminal pill instead of the buttons so the user doesn't re-trigger.
  */
 export default function JobQuickActions({
-    job, variant, onPublish, onView, onSkip, disabled, pulseView,
+    job, variant, onPublish, onView, onSkip, disabled, pulseView, isPublishing,
 }: JobQuickActionsProps) {
     if (disabled) return null
 
@@ -41,6 +45,10 @@ export default function JobQuickActions({
         e.stopPropagation()
     }
 
+    // ── In-flight publish · between click and the published terminal state ──
+    if (isPublishing) {
+        return <PublishingIndicator variant={variant} />
+    }
     // ── Terminal states · once acted on, swap to a static pill ──────────
     if (job.publishedToOutlook) {
         return <PublishedPill variant={variant} />
@@ -189,6 +197,33 @@ function PublishedPill({ variant }: { variant: 'card' | 'row' | 'compact' }) {
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-success/15 text-success">
                 <Sparkles className="h-3 w-3" />
                 Published to Outlook
+            </span>
+        </div>
+    )
+}
+
+function PublishingIndicator({ variant }: { variant: 'card' | 'row' | 'compact' }) {
+    if (variant === 'compact') {
+        return (
+            <div className="absolute top-1 right-1 inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-foreground/10 text-foreground">
+                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                Sending
+            </div>
+        )
+    }
+    if (variant === 'row') {
+        return (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-foreground/10 text-foreground uppercase tracking-wider">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Sending…
+            </span>
+        )
+    }
+    return (
+        <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-foreground/10 text-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Sending to Outlook…
             </span>
         </div>
     )

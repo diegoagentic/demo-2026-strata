@@ -22,6 +22,8 @@ interface WeekCalendarGridProps {
     showQuickActions?: boolean
     /** When set, the View action of that specific job pulses to draw attention. */
     pulseViewActionForJobId?: string | null
+    /** Jobs currently in the publish simulation · render "Sending…" overlay. */
+    publishingJobIds?: Set<string>
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
@@ -51,7 +53,7 @@ function daysBetween(a: string, b: string): number {
  * positioned in the Mon-cell of its start day. Weekends collapsed (most installs
  * are weekday-only). HTML5 drag-and-drop with no dependency.
  */
-export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId }: WeekCalendarGridProps) {
+export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds }: WeekCalendarGridProps) {
     const [dragJobId, setDragJobId] = useState<string | null>(null)
     const [dragOverCell, setDragOverCell] = useState<string | null>(null)
 
@@ -150,6 +152,7 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                         onSkip={onSkip}
                                         showQuickActions={showQuickActions}
                                         pulseView={pulseViewActionForJobId === job.id}
+                                        isPublishing={publishingJobIds?.has(job.id) ?? false}
                                     />
                                 ))}
                             </div>
@@ -176,9 +179,10 @@ interface JobCardProps {
     onSkip?: (jobId: string) => void
     showQuickActions: boolean
     pulseView: boolean
+    isPublishing: boolean
 }
 
-function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView }: JobCardProps) {
+function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing }: JobCardProps) {
     const regionBadge = REGION_BADGE[job.region as Region]
     const hasActions = showQuickActions && !!(onPublish && onView && onSkip)
     return (
@@ -236,6 +240,7 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
                     job={job}
                     variant="compact"
                     pulseView={pulseView}
+                    isPublishing={isPublishing}
                     onPublish={onPublish!}
                     onView={onView!}
                     onSkip={onSkip!}

@@ -13,6 +13,9 @@ interface CLCFunnelViewProps {
     /** When set, the View action of that specific job pulses to draw attention.
         Used in step 1.1 when the notification CTA redirects to a job. */
     pulseViewActionForJobId?: string | null
+    /** Jobs currently in the ~1200ms publish simulation · their action
+        column renders a "Sending…" indicator instead of the buttons. */
+    publishingJobIds?: Set<string>
 }
 
 type FunnelStage = 'pulled' | 'reviewed' | 'scheduled' | 'in-flight' | 'complete'
@@ -59,7 +62,7 @@ const REGION_AVATAR_TEXT: Record<Region, string> = {
     pa: 'text-emerald-800 dark:text-emerald-200',
 }
 
-export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, onPublish, onView, onSkip, pulseViewActionForJobId }: CLCFunnelViewProps) {
+export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, onPublish, onView, onSkip, pulseViewActionForJobId, publishingJobIds }: CLCFunnelViewProps) {
     const byStage: Record<FunnelStage, InstallJob[]> = {
         pulled:     [],
         reviewed:   [],
@@ -113,6 +116,7 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, on
                                             queued={queuedJobIds.has(job.id)}
                                             highlighted={highlightedJobId === job.id}
                                             pulseView={pulseViewActionForJobId === job.id}
+                                            isPublishing={publishingJobIds?.has(job.id) ?? false}
                                             onPublish={onPublish}
                                             onView={onView}
                                             onSkip={onSkip}
@@ -130,11 +134,12 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, on
 
 // ─── Card · aligned with Officeworks context card layout ────────────────────
 
-function JobCard({ job, queued, highlighted, pulseView, onPublish, onView, onSkip }: {
+function JobCard({ job, queued, highlighted, pulseView, isPublishing, onPublish, onView, onSkip }: {
     job: InstallJob
     queued: boolean
     highlighted: boolean
     pulseView: boolean
+    isPublishing: boolean
     onPublish?: (jobId: string) => void
     onView?: (jobId: string) => void
     onSkip?: (jobId: string) => void
@@ -196,6 +201,7 @@ function JobCard({ job, queued, highlighted, pulseView, onPublish, onView, onSki
                     job={job}
                     variant="card"
                     pulseView={pulseView}
+                    isPublishing={isPublishing}
                     onPublish={onPublish!}
                     onView={onView!}
                     onSkip={onSkip!}

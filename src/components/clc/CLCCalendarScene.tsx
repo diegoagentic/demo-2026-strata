@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
-import { Database, RefreshCw, Clock, Sparkles, ArrowRight, Send, Users, X } from 'lucide-react'
+import { Database, RefreshCw, Clock, Sparkles, ArrowRight, Send, Users, X, Loader2 } from 'lucide-react'
 import WeekCalendarGrid from './shared/WeekCalendarGrid'
 import CLCCapacityWarningPanel from './shared/CLCCapacityWarningPanel'
 import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
@@ -9,6 +9,8 @@ import CLCSummaryChipsBar, { type SummaryChip } from './shared/CLCSummaryChipsBa
 import CLCFunnelView from './shared/CLCFunnelView'
 import CLCJobListView from './shared/CLCJobListView'
 import CLCPublishModal from './shared/CLCPublishModal'
+import CLCToastStack from './shared/CLCToastStack'
+import CLCIngestionOverlay from './shared/CLCIngestionOverlay'
 import {
     INITIAL_JOBS, INBOUND_JOB, WEEKS, REGION_BADGE, REGION_LABEL, CAPACITY_BY_REGION,
     type InstallJob, type Region,
@@ -59,6 +61,16 @@ export default function CLCCalendarScene() {
     // needs to refresh on demand. State drives the spinner + the pill label.
     const [isResyncing, setIsResyncing] = useState(false)
     const [syncLabel, setSyncLabel] = useState('Synced from IQ · 2 min ago')
+
+    // Per-job publish simulation · between Send click and the Published
+    // terminal state, the job sits in publishingJobIds for ~1200ms so the
+    // UI can render a "Sending…" indicator (toast fires on completion).
+    const [publishingJobIds, setPublishingJobIds] = useState<Set<string>>(new Set())
+
+    // Ingestion overlay · plays for ~2350ms after the Action Center CTA
+    // click, before the actual scene redirect. Diego asked for a beat
+    // that shows Strata doing real work instead of an instant teleport.
+    const [ingestionInProgress, setIngestionInProgress] = useState(false)
 
     // View mode (step-aware default + user override)
     const [viewMode, setViewMode] = useState<ViewMode>('list')
@@ -169,8 +181,29 @@ export default function CLCCalendarScene() {
     }
 
     // ─── Per-card quick actions ───────────────────────────────────────────
-    const handlePublish = (jobId: string) =>
-        setPublishedJobIds(prev => new Set(prev).add(jobId))
+    const handlePublish = (jobId: string) => {
+        // Idempotent · ignore re-clicks while the job is in-flight.
+        if (publishingJobIds.has(jobId) || publishedJobIds.has(jobId)) return
+        setPublishingJobIds(prev => new Set(prev).add(jobId))
+        // Capture the customer name now · displayedJobs may change between
+        // click and timeout, but the name is stable for this jobId.
+        const customer = displayedJobs.find(j => j.id === jobId)?.customer ?? 'Install job'
+        setTimeout(() => {
+            setPublishingJobIds(prev => {
+                const next = new Set(prev)
+                next.delete(jobId)
+                return next
+            })
+            setPublishedJobIds(prev => new Set(prev).add(jobId))
+            // Toast lives in CLCToastStack · driven by this event.
+            window.dispatchEvent(new CustomEvent('clc:job-published', {
+                detail: { jobId, customer },
+            }))
+            // If the install detail panel is open on this job, close it
+            // so the user sees their action reflected in the calendar.
+            setViewPanelJobId(prev => (prev === jobId ? null : prev))
+        }, 1200)
+    }
     const handleSkip = (jobId: string) =>
         setSkippedJobIds(prev => new Set(prev).add(jobId))
     const handleView = (jobId: string) => {
@@ -207,23 +240,25 @@ export default function CLCCalendarScene() {
         }, 1200)
     }
 
-    // Listen for the Action Center notification CTA · instead of opening the
-    // modal directly, run a 3-step guided redirect:
-    //   1. force calendar mode so the user sees their schedule context
-    //   2. make sure the inbound job has been delivered to the display set
-    //   3. flag the inbound job so the View button on its card pulses
-    // The user closes the loop by clicking View · that opens the modal and
-    // handleView() above clears the pulse.
+    // Listen for the Action Center notification CTA · instead of opening
+    // the modal directly, run a two-stage guided experience:
+    //   stage 1 · Strata ingestion overlay plays for ~2.3s (showing the AI
+    //              pulling the IQ job, parsing the vendor schedule, and
+    //              checking capacity).
+    //   stage 2 · once the overlay finishes, redirect to calendar mode +
+    //              highlight the inbound job + pulse its View button.
     useEffect(() => {
-        const handler = () => {
-            setViewMode('calendar')
-            userToggledRef.current = true   // prevent any in-flight autoswap from overriding
-            setInboundDelivered(true)        // safety · if the CTA fires before the delivery timer
-            setInboundReviewJobId('job-troy')
-        }
+        const handler = () => setIngestionInProgress(true)
         window.addEventListener('clc:inbound-job-open', handler)
         return () => window.removeEventListener('clc:inbound-job-open', handler)
     }, [])
+    const handleIngestionComplete = () => {
+        setIngestionInProgress(false)
+        setViewMode('calendar')
+        userToggledRef.current = true   // prevent any in-flight autoswap from overriding
+        setInboundDelivered(true)        // safety · if the CTA fires before the delivery timer
+        setInboundReviewJobId('job-troy')
+    }
 
     // ─── Display pipeline ─────────────────────────────────────────────────
     // Inject INBOUND_JOB only during clc1.1 (after delivery). Apply
@@ -386,6 +421,7 @@ export default function CLCCalendarScene() {
                         queuedJobIds={queuedJobIds}
                         highlightedJobId={highlightedJobId}
                         pulseViewActionForJobId={inboundReviewJobId}
+                        publishingJobIds={publishingJobIds}
                         onPublish={handlePublish}
                         onView={handleView}
                         onSkip={handleSkip}
@@ -397,6 +433,7 @@ export default function CLCCalendarScene() {
                         queuedJobIds={queuedJobIds}
                         highlightedJobId={highlightedJobId}
                         pulseViewActionForJobId={inboundReviewJobId}
+                        publishingJobIds={publishingJobIds}
                         onPublish={handlePublish}
                         onView={handleView}
                         onSkip={handleSkip}
@@ -424,6 +461,7 @@ export default function CLCCalendarScene() {
                             jobs={filteredJobs}
                             highlightedJobId={highlightedJobId}
                             pulseViewActionForJobId={inboundReviewJobId}
+                            publishingJobIds={publishingJobIds}
                             onJobDrop={allowDragDrop ? handleJobDrop : undefined}
                             queuedJobIds={queuedJobIds}
                             onPublish={handlePublish}
@@ -454,14 +492,27 @@ export default function CLCCalendarScene() {
 
             {/* View panel · opened via per-card View action, Action Center CTA,
                 or the View button inside the bulk-publish modal. Rendered last
-                so it stacks above any concurrent modal. */}
+                so it stacks above any concurrent modal. isPublishing keeps the
+                panel open during the send simulation · handlePublish auto-closes
+                it once the published-state is committed. */}
             {viewedJob && (
                 <ViewJobPanel
                     job={viewedJob}
+                    isPublishing={publishingJobIds.has(viewedJob.id)}
                     onClose={() => setViewPanelJobId(null)}
-                    onPublish={() => { handlePublish(viewedJob.id); setViewPanelJobId(null) }}
+                    onPublish={() => handlePublish(viewedJob.id)}
                 />
             )}
+
+            {/* Strata ingestion overlay · plays when the Action Center CTA fires.
+                onComplete runs the calendar redirect + highlight + pulse. */}
+            {ingestionInProgress && (
+                <CLCIngestionOverlay onComplete={handleIngestionComplete} />
+            )}
+
+            {/* Success toast stack · listens for clc:job-published events
+                dispatched at the end of each handlePublish simulation. */}
+            <CLCToastStack />
         </div>
     )
 }
@@ -560,7 +611,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
 
 // ─── View Job panel ─────────────────────────────────────────────────────────
 
-function ViewJobPanel({ job, onClose, onPublish }: { job: InstallJob; onClose: () => void; onPublish: () => void }) {
+function ViewJobPanel({ job, onClose, onPublish, isPublishing }: { job: InstallJob; onClose: () => void; onPublish: () => void; isPublishing: boolean }) {
     return (
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
             <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onClose} />
@@ -612,13 +663,30 @@ function ViewJobPanel({ job, onClose, onPublish }: { job: InstallJob; onClose: (
                     </div>
                 </div>
                 <footer className="p-3 border-t border-border bg-muted/20 flex items-center justify-end gap-2">
-                    <button onClick={onClose} className="px-3 py-1.5 text-xs font-semibold rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                    <button
+                        onClick={onClose}
+                        disabled={isPublishing}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
                         Close
                     </button>
                     {!job.publishedToOutlook && !job.skipped && (
-                        <button onClick={onPublish} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-foreground text-background hover:opacity-90 transition-opacity">
-                            <Send className="h-3 w-3" />
-                            Send to Outlook
+                        <button
+                            onClick={onPublish}
+                            disabled={isPublishing}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-foreground text-background hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-wait"
+                        >
+                            {isPublishing ? (
+                                <>
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    Sending to Outlook…
+                                </>
+                            ) : (
+                                <>
+                                    <Send className="h-3 w-3" />
+                                    Send to Outlook
+                                </>
+                            )}
                         </button>
                     )}
                 </footer>
