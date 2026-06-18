@@ -34,7 +34,7 @@ import {
  *   clc1.4 → calendar · alert chip pulses red + auto-opens capacity popover
  */
 export default function CLCCalendarScene() {
-    const { currentStep, nextStep } = useDemo()
+    const { currentStep, nextStep, stepClickCount } = useDemo()
     const stepId = currentStep?.id
 
     // Job state (drag-drop reschedules these via WeekCalendarGrid)
@@ -56,6 +56,11 @@ export default function CLCCalendarScene() {
     // Bulk-publish modal · the Publish all to Outlook button opens this
     // instead of advancing directly · the user reviews & selects what to send.
     const [publishModalOpen, setPublishModalOpen] = useState(false)
+    // The wave of jobIds currently being published in bulk · null when no
+    // bulk wave is in flight. Drives the modal's footer mode (progress UI
+    // vs the normal Cancel/Publish CTAs) and is what the modal watches to
+    // compute the live "X of N sent" count.
+    const [bulkPublishIds, setBulkPublishIds] = useState<string[] | null>(null)
 
     // Resync animation · the IQ pull is read-only but the operator still
     // needs to refresh on demand. State drives the spinner + the pill label.
@@ -83,6 +88,10 @@ export default function CLCCalendarScene() {
     // actually change the step don't re-run the per-step logic (and don't
     // cancel the in-flight autoswap timer).
     const lastStepRef = useRef<string | null>(null)
+    // Track the stepClickCount we last reacted to · when this differs from
+    // the current one, the user navigated via the sidebar and we reset
+    // interaction state (instead of preserving it like nextStep does).
+    const lastClickCountRef = useRef<number | null>(null)
 
     // Filter state
     const [statuses, setStatuses] = useState<string[]>([])
@@ -97,15 +106,37 @@ export default function CLCCalendarScene() {
     // or cancelled by every re-render.
     useEffect(() => {
         if (!stepId) return
-        if (lastStepRef.current === stepId) return   // already handled this step
+
+        const stepIdChanged = lastStepRef.current !== stepId
+        const clickCountChanged = lastClickCountRef.current !== null && lastClickCountRef.current !== stepClickCount
+        if (!stepIdChanged && !clickCountChanged) return
+
+        // Sidebar re-entry · wipe interaction state so the demo replays
+        // cleanly. nextStep/prevStep advance stepId without incrementing
+        // stepClickCount, so they fall through this branch and preserve
+        // state (the autoswap → published narrative depends on that).
+        if (clickCountChanged) {
+            setPublishedJobIds(new Set())
+            setSkippedJobIds(new Set())
+            setQueuedJobIds(new Set())
+            setInboundDelivered(false)
+            setPublishingJobIds(new Set())
+            setIngestionInProgress(false)
+            setViewPanelJobId(null)
+            setPublishModalOpen(false)
+            setBulkPublishIds(null)
+            userClickedPublishAllRef.current = false
+        }
+
         lastStepRef.current = stepId
+        lastClickCountRef.current = stepClickCount
         userToggledRef.current = false
         // Always reset the review-target on step transitions · it's a 1.1-only
         // affordance and would leak into 1.2+ otherwise.
         setInboundReviewJobId(null)
 
         // eslint-disable-next-line no-console
-        console.log('[CLC] enter step', stepId)
+        console.log('[CLC] enter step', stepId, { clickCountChanged })
 
         if (stepId === 'clc1.1') {
             setViewMode('list')
@@ -158,7 +189,7 @@ export default function CLCCalendarScene() {
         }
         // Any other step · cleanup the inbound flag so it doesn't leak.
         setInboundDelivered(false)
-    }, [stepId])  // eslint-disable-line react-hooks/exhaustive-deps
+    }, [stepId, stepClickCount])  // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleViewChange = (m: ViewMode) => {
         setViewMode(m)
@@ -219,13 +250,45 @@ export default function CLCCalendarScene() {
     }
     const handlePublishSelected = (selectedIds: Set<string>) => {
         userClickedPublishAllRef.current = true
-        setPublishedJobIds(prev => {
+        const idsArray = Array.from(selectedIds)
+        if (idsArray.length === 0) {
+            setPublishModalOpen(false)
+            nextStep()
+            return
+        }
+        // Open the bulk wave · drives modal into progress-UI mode and
+        // queues every selected job into publishingJobIds at once. The
+        // modal then renders per-row Sending pills as the stagger fires.
+        setBulkPublishIds(idsArray)
+        setPublishingJobIds(prev => {
             const next = new Set(prev)
-            for (const id of selectedIds) next.add(id)
+            for (const id of idsArray) next.add(id)
             return next
         })
-        setPublishModalOpen(false)
-        nextStep()
+        // Adaptive stagger · keeps the total wave between ~1.6s (few jobs)
+        // and ~2.6s (many jobs) so it never feels instant or tedious.
+        const stagger = Math.max(110, Math.min(260, Math.floor(1800 / idsArray.length)))
+        const INITIAL_DELAY = 220
+        const FINAL_PAUSE = 700
+        idsArray.forEach((id, idx) => {
+            setTimeout(() => {
+                setPublishingJobIds(prev => {
+                    const next = new Set(prev)
+                    next.delete(id)
+                    return next
+                })
+                setPublishedJobIds(prev => new Set(prev).add(id))
+            }, INITIAL_DELAY + idx * stagger)
+        })
+        setTimeout(() => {
+            // Summary toast · listened to by CLCToastStack via the count-only payload.
+            window.dispatchEvent(new CustomEvent('clc:bulk-published', {
+                detail: { count: idsArray.length },
+            }))
+            setBulkPublishIds(null)
+            setPublishModalOpen(false)
+            nextStep()
+        }, INITIAL_DELAY + idsArray.length * stagger + FINAL_PAUSE)
     }
     const handleResync = () => {
         if (isResyncing) return
@@ -487,6 +550,8 @@ export default function CLCCalendarScene() {
                     onClose={() => setPublishModalOpen(false)}
                     onPublish={handlePublishSelected}
                     onViewJob={(jobId) => setViewPanelJobId(jobId)}
+                    publishingJobIds={publishingJobIds}
+                    bulkPublishIds={bulkPublishIds}
                 />
             )}
 

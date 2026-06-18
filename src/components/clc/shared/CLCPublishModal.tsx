@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Send, X, Filter as FilterIcon, Sparkles, Eye } from 'lucide-react'
+import { Send, X, Filter as FilterIcon, Sparkles, Eye, Loader2, CheckCircle2 } from 'lucide-react'
 import type { InstallJob, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
 
@@ -13,6 +13,13 @@ interface CLCPublishModalProps {
         NOT close on click (the detail panel stacks above), so the operator
         can review a job and return to their bulk selection. */
     onViewJob?: (jobId: string) => void
+    /** Jobs currently in the per-job publish simulation · rows render a
+        Sending pill instead of the checkbox state. */
+    publishingJobIds?: Set<string>
+    /** Array of jobIds in the current bulk-publish wave · null when no
+        wave in flight. When present the modal switches to progress-UI mode
+        and the footer shows a Publishing progress bar instead of Cancel/Publish. */
+    bulkPublishIds?: string[] | null
 }
 
 const STATUS_OPTIONS: { key: InstallJob['status']; label: string }[] = [
@@ -29,7 +36,16 @@ const STATUS_OPTIONS: { key: InstallJob['status']; label: string }[] = [
  * Replaces the previous "Publish all" header button shortcut, which
  * advanced the step without any user confirmation.
  */
-export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }: CLCPublishModalProps) {
+export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob, publishingJobIds, bulkPublishIds }: CLCPublishModalProps) {
+    // Derived bulk state · drives footer mode + disables close/cancel.
+    const isBulkPublishing = !!bulkPublishIds && bulkPublishIds.length > 0
+    const bulkTotal = bulkPublishIds?.length ?? 0
+    const bulkSent = useMemo(() => {
+        if (!bulkPublishIds) return 0
+        const publishedSet = new Set(jobs.filter(j => j.publishedToOutlook).map(j => j.id))
+        return bulkPublishIds.reduce((acc, id) => acc + (publishedSet.has(id) ? 1 : 0), 0)
+    }, [bulkPublishIds, jobs])
+    const bulkAllDone = isBulkPublishing && bulkSent >= bulkTotal
     // The modal mirrors the calendar · shows ALL displayed jobs with
     // status-aware rendering. Published rows are checked + disabled with
     // a Published pill, skipped rows are disabled + grayed. Only the
@@ -119,7 +135,10 @@ export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }:
             aria-modal="true"
             aria-labelledby="publish-modal-title"
         >
-            <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onClose} />
+            <div
+                className="fixed inset-0 bg-foreground/40 backdrop-blur-sm"
+                onClick={isBulkPublishing ? undefined : onClose}
+            />
             {/* Fixed height · h-[640px] keeps the modal stable as the user
                 filters or selects, instead of growing/shrinking with the
                 visible job count. max-h-[90vh] handles short viewports. */}
@@ -144,7 +163,8 @@ export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }:
                     <button
                         onClick={onClose}
                         aria-label="Close"
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        disabled={isBulkPublishing}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -216,17 +236,20 @@ export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }:
                             {visible.map(job => {
                                 const isPublished = !!job.publishedToOutlook
                                 const isSkipped = !!job.skipped && !isPublished
-                                const isInteractive = !isPublished && !isSkipped
-                                const isSelected = isInteractive && selectedIds.has(job.id)
-                                const checked = isPublished || isSelected
+                                const isSending = !!publishingJobIds?.has(job.id) && !isPublished
+                                const isInteractive = !isPublished && !isSkipped && !isSending && !isBulkPublishing
+                                const isSelected = (isInteractive || isSending) && selectedIds.has(job.id)
+                                const checked = isPublished || isSending || isSelected
 
                                 const rowTone = isPublished
                                     ? 'bg-success/5'
-                                    : isSkipped
-                                        ? 'bg-muted/30 opacity-60'
-                                        : isSelected
-                                            ? 'bg-background hover:bg-muted/30'
-                                            : 'bg-muted/10 hover:bg-muted/30 opacity-70'
+                                    : isSending
+                                        ? 'bg-ai/5'
+                                        : isSkipped
+                                            ? 'bg-muted/30 opacity-60'
+                                            : isSelected
+                                                ? 'bg-background hover:bg-muted/30'
+                                                : 'bg-muted/10 hover:bg-muted/30 opacity-70'
 
                                 return (
                                     <li key={job.id} className={`flex items-center transition-colors ${rowTone}`}>
@@ -245,6 +268,12 @@ export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }:
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-semibold text-foreground truncate flex items-center gap-1.5 flex-wrap">
                                                     <span className="truncate">{job.customer}</span>
+                                                    {isSending && (
+                                                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-ai/15 text-ai uppercase tracking-wider">
+                                                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                            Sending
+                                                        </span>
+                                                    )}
                                                     {isPublished && (
                                                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/15 text-success uppercase tracking-wider">
                                                             <Sparkles className="h-2.5 w-2.5" />
@@ -273,7 +302,7 @@ export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }:
                                                 {job.crewSize}-crew · {job.durationDays}d
                                             </div>
                                         </label>
-                                        {onViewJob && (
+                                                        {onViewJob && !isBulkPublishing && (
                                             <button
                                                 type="button"
                                                 onClick={() => onViewJob(job.id)}
@@ -291,38 +320,73 @@ export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }:
                     )}
                 </div>
 
-                {/* Footer · breakdown + actions */}
-                <footer className="p-3 border-t border-border bg-muted/20 flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                        <span className="font-semibold">Breakdown:</span>
-                        {(['ny', 'nj', 'pa'] as Region[]).map(r => (
-                            <span key={r} className="inline-flex items-center gap-1">
-                                <span className={`inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded uppercase tracking-wider ${REGION_BADGE[r]}`}>
-                                    {REGION_LABEL[r]}
-                                </span>
-                                <span className="tabular-nums text-foreground font-semibold">{regionBreakdown[r]}</span>
+                {/* Footer · two modes:
+                    - default · breakdown + Cancel/Publish CTAs
+                    - bulk publishing · progress bar + "Sending X of N" status */}
+                {isBulkPublishing ? (
+                    <footer className="p-3 border-t border-border bg-muted/20 flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-xs">
+                                {bulkAllDone ? (
+                                    <>
+                                        <CheckCircle2 className="h-4 w-4 text-success" />
+                                        <span className="font-bold text-foreground">
+                                            All {bulkTotal} jobs sent to Outlook
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin text-ai" />
+                                        <span className="font-semibold text-foreground">
+                                            Publishing to Outlook · <span className="tabular-nums">{bulkSent}</span> of <span className="tabular-nums">{bulkTotal}</span> sent
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider tabular-nums">
+                                {Math.round((bulkSent / Math.max(bulkTotal, 1)) * 100)}%
                             </span>
-                        ))}
-                    </div>
-                    <div className="flex items-center gap-2 ml-auto">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-3 py-1.5 text-xs font-semibold rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={selectedCount === 0}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-foreground text-background hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-                        >
-                            <Send className="h-3 w-3" />
-                            Publish {selectedCount}
-                        </button>
-                    </div>
-                </footer>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                                className={`h-full transition-all duration-300 ease-out ${bulkAllDone ? 'bg-success' : 'bg-ai'}`}
+                                style={{ width: `${(bulkSent / Math.max(bulkTotal, 1)) * 100}%` }}
+                            />
+                        </div>
+                    </footer>
+                ) : (
+                    <footer className="p-3 border-t border-border bg-muted/20 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                            <span className="font-semibold">Breakdown:</span>
+                            {(['ny', 'nj', 'pa'] as Region[]).map(r => (
+                                <span key={r} className="inline-flex items-center gap-1">
+                                    <span className={`inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded uppercase tracking-wider ${REGION_BADGE[r]}`}>
+                                        {REGION_LABEL[r]}
+                                    </span>
+                                    <span className="tabular-nums text-foreground font-semibold">{regionBreakdown[r]}</span>
+                                </span>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-2 ml-auto">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="px-3 py-1.5 text-xs font-semibold rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={selectedCount === 0}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-foreground text-background hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                            >
+                                <Send className="h-3 w-3" />
+                                Publish {selectedCount}
+                            </button>
+                        </div>
+                    </footer>
+                )}
             </div>
         </div>
     )

@@ -3,37 +3,59 @@ import { CheckCircle2 } from 'lucide-react'
 
 interface Toast {
     id: string
-    customer: string
+    title: string
+    detail: string
 }
 
 const TOAST_DURATION_MS = 2800
+const BULK_TOAST_DURATION_MS = 3600
 
 /**
- * Listens for `clc:job-published` window events and renders a small
- * stacked toast (top-right of the viewport). Each toast lives for
- * TOAST_DURATION_MS · enough to read without becoming visual noise.
+ * Listens for `clc:job-published` (per-job) and `clc:bulk-published`
+ * (summary) window events and renders a small stacked toast (top-right
+ * of the viewport). Each toast lives for its own duration · enough
+ * to read without becoming visual noise.
  *
  * Mounted once at the top of CLCCalendarScene · no props.
  *
- * Event payload shape:
- *   detail: { jobId: string; customer: string }
+ * Event payload shapes:
+ *   clc:job-published   · detail: { jobId: string; customer: string }
+ *   clc:bulk-published  · detail: { count: number }
  */
 export default function CLCToastStack() {
     const [toasts, setToasts] = useState<Toast[]>([])
 
     useEffect(() => {
-        const handler = (e: Event) => {
+        const perJobHandler = (e: Event) => {
             const detail = (e as CustomEvent).detail as { jobId?: string; customer?: string } | undefined
             if (!detail?.jobId) return
             const id = `${detail.jobId}-${performance.now()}`
             const customer = detail.customer ?? 'Install job'
-            setToasts(prev => [...prev, { id, customer }])
+            setToasts(prev => [...prev, { id, title: 'Sent to Outlook', detail: customer }])
             setTimeout(() => {
                 setToasts(prev => prev.filter(t => t.id !== id))
             }, TOAST_DURATION_MS)
         }
-        window.addEventListener('clc:job-published', handler)
-        return () => window.removeEventListener('clc:job-published', handler)
+        const bulkHandler = (e: Event) => {
+            const detail = (e as CustomEvent).detail as { count?: number } | undefined
+            const count = detail?.count ?? 0
+            if (count <= 0) return
+            const id = `bulk-${performance.now()}`
+            setToasts(prev => [...prev, {
+                id,
+                title: `${count} jobs sent to Outlook`,
+                detail: 'Director of Operations · calendar in sync',
+            }])
+            setTimeout(() => {
+                setToasts(prev => prev.filter(t => t.id !== id))
+            }, BULK_TOAST_DURATION_MS)
+        }
+        window.addEventListener('clc:job-published', perJobHandler)
+        window.addEventListener('clc:bulk-published', bulkHandler)
+        return () => {
+            window.removeEventListener('clc:job-published', perJobHandler)
+            window.removeEventListener('clc:bulk-published', bulkHandler)
+        }
     }, [])
 
     if (toasts.length === 0) return null
@@ -54,8 +76,8 @@ export default function CLCToastStack() {
                     >
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                         <div className="text-xs min-w-0">
-                            <div className="font-bold text-foreground">Sent to Outlook</div>
-                            <div className="text-muted-foreground truncate">{toast.customer}</div>
+                            <div className="font-bold text-foreground">{toast.title}</div>
+                            <div className="text-muted-foreground truncate">{toast.detail}</div>
                         </div>
                     </div>
                 ))}

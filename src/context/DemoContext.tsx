@@ -11,6 +11,11 @@ interface DemoContextType {
     nextStep: () => void;
     prevStep: () => void;
     goToStep: (index: number) => void;
+    /** Increments on every goToStep() call (sidebar navigation), even when
+        the target index equals the current one. Scenes can watch this to
+        reset interaction state on manual step re-entry · nextStep/prevStep
+        do NOT increment so narrative auto-advance preserves state. */
+    stepClickCount: number;
     isDemoActive: boolean;
     setIsDemoActive: (active: boolean) => void;
     isSidebarCollapsed: boolean;
@@ -35,6 +40,7 @@ export const DemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isPaused, setIsPaused] = useState(false);
     const [procCompleteStep, setProcCompleteStep] = useState<string | null>(null);
     const [lupaStep, setLupaStep] = useState<string | null>(null);
+    const [stepClickCount, setStepClickCount] = useState(0);
 
     // Reset step index when profile changes — keep isDemoActive as-is
     useEffect(() => {
@@ -67,6 +73,10 @@ export const DemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const goToStep = (index: number) => {
         if (index >= 0 && index < steps.length) {
             setCurrentStepIndex(index);
+            // Increment on EVERY sidebar click · scenes use this to reset
+            // interaction state · firing even when index === currentStepIndex
+            // is the whole point (lets the user replay the current step).
+            setStepClickCount(c => c + 1);
         }
     };
 
@@ -79,6 +89,7 @@ export const DemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 nextStep,
                 prevStep,
                 goToStep,
+                stepClickCount,
                 isDemoActive,
                 setIsDemoActive,
                 isSidebarCollapsed,
