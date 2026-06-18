@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Sparkles, Users, GripVertical } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { Sparkles, Users, GripVertical, Calendar as CalendarIcon } from 'lucide-react'
 import type { InstallJob, WeekColumn, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
 import JobQuickActions from './JobQuickActions'
@@ -28,6 +28,11 @@ interface WeekCalendarGridProps {
         a small grip icon · used in step 1.3 to point the user at the
         Fairport card that the narrative asks them to drag. */
     suggestDragJobId?: string | null
+    /** When defined, each card shows a small Calendar icon button (top-right)
+        that opens an inline date picker · lets the operator reschedule to
+        any date without leaving the calendar view (skips the View modal
+        and the prev/next navigation chain for far-future dates). */
+    onReschedule?: (jobId: string, newStart: string) => void
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
@@ -57,7 +62,7 @@ function daysBetween(a: string, b: string): number {
  * positioned in the Mon-cell of its start day. Weekends collapsed (most installs
  * are weekday-only). HTML5 drag-and-drop with no dependency.
  */
-export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds, suggestDragJobId }: WeekCalendarGridProps) {
+export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobDrop, queuedJobIds, onPublish, onView, onSkip, showQuickActions = true, pulseViewActionForJobId, publishingJobIds, suggestDragJobId, onReschedule }: WeekCalendarGridProps) {
     const [dragJobId, setDragJobId] = useState<string | null>(null)
     const [dragOverCell, setDragOverCell] = useState<string | null>(null)
 
@@ -162,6 +167,7 @@ export default function WeekCalendarGrid({ weeks, jobs, highlightedJobId, onJobD
                                         pulseView={pulseViewActionForJobId === job.id}
                                         isPublishing={publishingJobIds?.has(job.id) ?? false}
                                         suggestDrag={suggestDragJobId === job.id}
+                                        onReschedule={onReschedule}
                                     />
                                 ))}
                             </div>
@@ -190,9 +196,28 @@ interface JobCardProps {
     pulseView: boolean
     isPublishing: boolean
     suggestDrag: boolean
+    onReschedule?: (jobId: string, newStart: string) => void
 }
 
-function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing, suggestDrag }: JobCardProps) {
+function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, isDragging, onPublish, onView, onSkip, showQuickActions, pulseView, isPublishing, suggestDrag, onReschedule }: JobCardProps) {
+    const [rescheduleOpen, setRescheduleOpen] = useState(false)
+    const [rescheduleDraft, setRescheduleDraft] = useState(job.startDate)
+    // Keep the draft in sync with the source date when the card isn't being
+    // edited · prevents stale defaults if the job was rescheduled elsewhere.
+    useEffect(() => {
+        if (!rescheduleOpen) setRescheduleDraft(job.startDate)
+    }, [job.startDate, rescheduleOpen])
+    const canReschedule = !!onReschedule && !job.skipped
+    const commitReschedule = () => {
+        if (rescheduleDraft && rescheduleDraft !== job.startDate && onReschedule) {
+            onReschedule(job.id, rescheduleDraft)
+        }
+        setRescheduleOpen(false)
+    }
+    const cancelReschedule = () => {
+        setRescheduleDraft(job.startDate)
+        setRescheduleOpen(false)
+    }
     const regionBadge = REGION_BADGE[job.region as Region]
     const hasActions = showQuickActions && !!(onPublish && onView && onSkip)
     return (
@@ -219,6 +244,66 @@ function JobCard({ job, highlighted, queued, draggable, onDragStart, onDragEnd, 
                 <div className="absolute -top-2 -left-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-ai text-background px-1.5 py-0.5 rounded-full shadow-md">
                     <GripVertical className="h-2.5 w-2.5" />
                     Drag me
+                </div>
+            )}
+            {canReschedule && !rescheduleOpen && (
+                <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        setRescheduleDraft(job.startDate)
+                        setRescheduleOpen(true)
+                    }}
+                    title="Reschedule to any date"
+                    aria-label="Reschedule"
+                    className="absolute top-1 right-1 p-1 rounded bg-card border border-border shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors z-10"
+                >
+                    <CalendarIcon className="h-3 w-3" />
+                </button>
+            )}
+            {canReschedule && rescheduleOpen && (
+                <div
+                    className="absolute top-full mt-1 left-0 z-30 w-[260px] rounded-lg border border-border bg-card shadow-xl p-3 space-y-2"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onDragStart={(e) => e.preventDefault()}
+                >
+                    <div className="flex items-center gap-1.5">
+                        <CalendarIcon className="h-3.5 w-3.5 text-foreground" />
+                        <h4 className="text-xs font-bold text-foreground">Reschedule</h4>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-snug">
+                        {job.customer} · current: <span className="font-mono">{job.startDate}</span>
+                    </p>
+                    <input
+                        type="date"
+                        value={rescheduleDraft}
+                        onChange={(e) => setRescheduleDraft(e.target.value)}
+                        className="w-full px-2 py-1.5 text-xs font-mono bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        aria-label="New start date"
+                        autoFocus
+                    />
+                    <div className="flex items-center justify-end gap-1.5 pt-1">
+                        <button
+                            type="button"
+                            onClick={cancelReschedule}
+                            className="px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={commitReschedule}
+                            disabled={!rescheduleDraft || rescheduleDraft === job.startDate}
+                            className="px-2.5 py-1 text-[10px] font-bold bg-foreground text-background rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            Save
+                        </button>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground italic">
+                        Queues for IQ batch sync · 2am ET
+                    </p>
                 </div>
             )}
             <div className="flex items-start gap-1.5 mb-1">

@@ -668,6 +668,7 @@ export default function CLCCalendarScene() {
                             publishingJobIds={publishingJobIds}
                             suggestDragJobId={suggestDragJobId}
                             onJobDrop={allowDragDrop ? handleJobDrop : undefined}
+                            onReschedule={stepId === 'clc1.3' ? handleReschedule : undefined}
                             queuedJobIds={queuedJobIds}
                             onPublish={handlePublish}
                             onView={handleView}
@@ -803,7 +804,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
     let hint: string | null = null
     if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
     else if (stepId === 'clc1.2') hint = 'Calendar visualization rendered · Sparkles mark Strata-scheduled jobs. Auto-continuing to drag-drop in a moment · toggle a view to stay on this step.'
-    else if (stepId === 'clc1.3') hint = 'Grab the pulsing Fairport card and drop it on a different weekday · or open any card and use Reschedule for a date picker. Switch 1w / 4w / 6w period or use the chevrons to navigate weeks.'
+    else if (stepId === 'clc1.3') hint = 'Three ways to reschedule · drag a card to a visible cell · tap the 📅 icon on any card for a quick date picker · open the card and use Reschedule for the full detail view. Switch 1w / 4w / 6w or use the chevrons to browse weeks.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
     if (!hint) return null
     return (
