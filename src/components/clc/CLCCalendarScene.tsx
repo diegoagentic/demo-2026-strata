@@ -8,6 +8,7 @@ import CLCFilterBar from './shared/CLCFilterBar'
 import CLCSummaryChipsBar, { type SummaryChip } from './shared/CLCSummaryChipsBar'
 import CLCFunnelView from './shared/CLCFunnelView'
 import CLCJobListView from './shared/CLCJobListView'
+import CLCPublishModal from './shared/CLCPublishModal'
 import {
     INITIAL_JOBS, INBOUND_JOB, WEEKS, REGION_BADGE, REGION_LABEL, CAPACITY_BY_REGION,
     type InstallJob, type Region,
@@ -49,6 +50,15 @@ export default function CLCCalendarScene() {
     // panel). Cleared when the user clicks View (or step changes).
     const [inboundReviewJobId, setInboundReviewJobId] = useState<string | null>(null)
     const userClickedPublishAllRef = useRef(false)
+
+    // Bulk-publish modal · the Publish all to Outlook button opens this
+    // instead of advancing directly · the user reviews & selects what to send.
+    const [publishModalOpen, setPublishModalOpen] = useState(false)
+
+    // Resync animation · the IQ pull is read-only but the operator still
+    // needs to refresh on demand. State drives the spinner + the pill label.
+    const [isResyncing, setIsResyncing] = useState(false)
+    const [syncLabel, setSyncLabel] = useState('Synced from IQ · 2 min ago')
 
     // View mode (step-aware default + user override)
     const [viewMode, setViewMode] = useState<ViewMode>('list')
@@ -95,10 +105,12 @@ export default function CLCCalendarScene() {
         }
         if (stepId === 'clc1.2') {
             // Two paths:
-            //   A) User clicked "Publish all to Outlook" in clc1.1 →
-            //      fast-path · 500ms swap + bulk-mark all visible jobs as published
-            //   B) User advanced via the sidebar Next button →
-            //      existing 1500ms autoswap unchanged · bulk-mark at swap time
+            //   A) User used the Publish modal in 1.1 → fastPath · the modal
+            //      already applied the explicit selection · just swap views,
+            //      do NOT override the user's choice with a bulk-mark.
+            //   B) User advanced via the sidebar Next button without using
+            //      the modal → existing 1500ms autoswap + bulk-mark fallback
+            //      so the demo state still reads "everything sent".
             const fastPath = userClickedPublishAllRef.current
             setViewMode('list')
             setPulseMode('calendar')
@@ -107,17 +119,18 @@ export default function CLCCalendarScene() {
                 if (userToggledRef.current) return
                 setViewMode('calendar')
                 setPulseMode(null)
-                // Bulk-mark · everything that's not skipped becomes published.
-                setPublishedJobIds(prev => {
-                    const next = new Set(prev)
-                    for (const j of jobs) {
-                        if (!skippedJobIds.has(j.id)) next.add(j.id)
-                    }
-                    if (inboundDelivered && !skippedJobIds.has(INBOUND_JOB.id)) {
-                        next.add(INBOUND_JOB.id)
-                    }
-                    return next
-                })
+                if (!fastPath) {
+                    setPublishedJobIds(prev => {
+                        const next = new Set(prev)
+                        for (const j of jobs) {
+                            if (!skippedJobIds.has(j.id)) next.add(j.id)
+                        }
+                        if (inboundDelivered && !skippedJobIds.has(INBOUND_JOB.id)) {
+                            next.add(INBOUND_JOB.id)
+                        }
+                        return next
+                    })
+                }
             }, delay)
             return
         }
@@ -167,8 +180,31 @@ export default function CLCCalendarScene() {
         setInboundReviewJobId(prev => (prev === jobId ? null : prev))
     }
     const handlePublishAll = () => {
+        // Opens the bulk-publish modal · the actual publish + step advance
+        // happens in handlePublishSelected once the user confirms.
+        setPublishModalOpen(true)
+    }
+    const handlePublishSelected = (selectedIds: Set<string>) => {
         userClickedPublishAllRef.current = true
+        setPublishedJobIds(prev => {
+            const next = new Set(prev)
+            for (const id of selectedIds) next.add(id)
+            return next
+        })
+        setPublishModalOpen(false)
         nextStep()
+    }
+    const handleResync = () => {
+        if (isResyncing) return
+        setIsResyncing(true)
+        setSyncLabel('Pulling from IQ…')
+        // Read-only re-pull · IQ has no write-back, but the operator can
+        // refresh the source data on demand. Short animation feels like a
+        // real round-trip without faking heavy network work.
+        setTimeout(() => {
+            setIsResyncing(false)
+            setSyncLabel('Synced from IQ · just now')
+        }, 1200)
     }
 
     // Listen for the Action Center notification CTA · instead of opening the
@@ -306,16 +342,21 @@ export default function CLCCalendarScene() {
                     {/* Divider · view-mode cluster on the left of it · data actions on the right */}
                     <span className="h-5 w-px bg-border mx-1 hidden sm:inline-block" aria-hidden />
                     <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground px-2 py-1 rounded-md bg-muted">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                        Synced from IQ · 2 min ago
+                        {isResyncing ? (
+                            <RefreshCw className="h-3 w-3 animate-spin text-foreground" />
+                        ) : (
+                            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        )}
+                        {syncLabel}
                     </span>
                     <button
-                        disabled
-                        title="Read-only · IQ API has no write-back · changes queue for nightly batch"
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-muted-foreground border border-border rounded-lg opacity-60 cursor-not-allowed"
+                        onClick={handleResync}
+                        disabled={isResyncing}
+                        title="Re-pull install jobs from IQ"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-foreground border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-60 disabled:cursor-wait"
                     >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        Resync
+                        <RefreshCw className={`h-3.5 w-3.5 ${isResyncing ? 'animate-spin' : ''}`} />
+                        {isResyncing ? 'Syncing…' : 'Resync'}
                     </button>
                     {showPublishAll && (
                         <button
@@ -399,6 +440,15 @@ export default function CLCCalendarScene() {
                     onPublish={() => { handlePublish(viewedJob.id); setViewPanelJobId(null) }}
                 />
             )}
+
+            {/* Bulk publish modal · opened by the Publish all to Outlook header button */}
+            {publishModalOpen && (
+                <CLCPublishModal
+                    jobs={displayedJobs}
+                    onClose={() => setPublishModalOpen(false)}
+                    onPublish={handlePublishSelected}
+                />
+            )}
         </div>
     )
 }
@@ -479,7 +529,7 @@ function QueuedJobsList({ queuedJobIds, jobs }: { queuedJobIds: Set<string>; job
 function StepHint({ stepId }: { stepId: string | undefined }) {
     if (!stepId) return null
     let hint: string | null = null
-    if (stepId === 'clc1.1') hint = 'Bell pulses · open the Action Center, click the IQ install request, then View on the highlighted card to inspect Troy. Click Publish all to bridge to step 1.2.'
+    if (stepId === 'clc1.1') hint = 'Bell pulses · open the Action Center, click the IQ install request, then View on the highlighted card to inspect Troy. Click Publish all to open the review modal and bridge to step 1.2.'
     else if (stepId === 'clc1.2') hint = 'Publishing… Sparkles mark jobs sent to Outlook. Drag-drop unlocks in step 1.3.'
     else if (stepId === 'clc1.3') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
