@@ -92,6 +92,13 @@ export default function CLCCalendarScene() {
     // the current one, the user navigated via the sidebar and we reset
     // interaction state (instead of preserving it like nextStep does).
     const lastClickCountRef = useRef<number | null>(null)
+    // Live ref to the current stepId · used inside setTimeout closures
+    // (handlePublish / handlePublishSelected) to check the step at
+    // COMPLETION time rather than CLICK time. Without this, rapid
+    // individual sends in 1.1 would each fire nextStep at completion and
+    // skip past 1.2.
+    const stepIdRef = useRef<string | undefined>(stepId)
+    useEffect(() => { stepIdRef.current = stepId }, [stepId])
 
     // Filter state
     const [statuses, setStatuses] = useState<string[]>([])
@@ -233,6 +240,16 @@ export default function CLCCalendarScene() {
             // If the install detail panel is open on this job, close it
             // so the user sees their action reflected in the calendar.
             setViewPanelJobId(prev => (prev === jobId ? null : prev))
+            // Bridge to 1.2 · any explicit publish in 1.1 advances the
+            // narrative (matches the bulk modal flow so every Send affordance
+            // converges on the visualization step). stepIdRef check makes
+            // rapid sends collapse to a single nextStep instead of skipping
+            // past 1.2.
+            if (stepIdRef.current === 'clc1.1') {
+                userClickedPublishAllRef.current = true   // preserve the user's explicit selection · 1.2 won't bulk-mark
+                setPublishModalOpen(false)                 // close any open bulk modal too
+                nextStep()
+            }
         }, 1200)
     }
     const handleSkip = (jobId: string) =>
@@ -287,7 +304,12 @@ export default function CLCCalendarScene() {
             }))
             setBulkPublishIds(null)
             setPublishModalOpen(false)
-            nextStep()
+            // Guard · only advance if we're still in 1.1 at completion time
+            // (an individual handlePublish from inside the modal may have
+            // already triggered the transition before the wave finished).
+            if (stepIdRef.current === 'clc1.1') {
+                nextStep()
+            }
         }, INITIAL_DELAY + idsArray.length * stagger + FINAL_PAUSE)
     }
     const handleResync = () => {
@@ -658,7 +680,7 @@ function QueuedJobsList({ queuedJobIds, jobs }: { queuedJobIds: Set<string>; job
 function StepHint({ stepId }: { stepId: string | undefined }) {
     if (!stepId) return null
     let hint: string | null = null
-    if (stepId === 'clc1.1') hint = 'Bell pulses · open the Action Center, click the IQ install request, then View on the highlighted card to inspect Troy. Click Publish all to open the review modal and bridge to step 1.2.'
+    if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
     else if (stepId === 'clc1.2') hint = 'Publishing… Sparkles mark jobs sent to Outlook. Drag-drop unlocks in step 1.3.'
     else if (stepId === 'clc1.3') hint = 'Try · drag the Fairport Public Library card to a different day. The change queues for IQ batch sync.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
