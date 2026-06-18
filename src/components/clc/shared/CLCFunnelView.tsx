@@ -16,16 +16,21 @@ type FunnelStage = 'pulled' | 'reviewed' | 'scheduled' | 'in-flight' | 'complete
 
 /**
  * 5-stage funnel view of install jobs by lifecycle status.
- * Layout aligned with OfficeworksFunnel · semantic column tokens
- * (text-ai / text-info / text-warning / text-primary / text-success) ·
- * card structure: avatar + title/subtitle + description + divider + footer.
+ * Layout aligned with OfficeworksFunnel · card structure: avatar +
+ * title/subtitle + description + divider + footer.
+ *
+ * Column header uses `text-foreground` (high contrast) for the label and
+ * a small colored dot for the per-stage semantic accent — keeps the visual
+ * variety without sacrificing readability. Officeworks does the same:
+ * semantic color tokens only paint the column with the "active" MANATT
+ * card · everything else is text-foreground.
  */
-const STAGES: { id: FunnelStage; label: string; color: string }[] = [
-    { id: 'pulled',    label: 'Pulled from IQ', color: 'text-ai'      },
-    { id: 'reviewed',  label: 'Reviewed',       color: 'text-info'    },
-    { id: 'scheduled', label: 'Scheduled',      color: 'text-warning' },
-    { id: 'in-flight', label: 'In-flight',      color: 'text-primary' },
-    { id: 'complete',  label: 'Complete',       color: 'text-success' },
+const STAGES: { id: FunnelStage; label: string; dot: string }[] = [
+    { id: 'pulled',    label: 'Pulled from IQ', dot: 'bg-ai'      },
+    { id: 'reviewed',  label: 'Reviewed',       dot: 'bg-info'    },
+    { id: 'scheduled', label: 'Scheduled',      dot: 'bg-warning' },
+    { id: 'in-flight', label: 'In-flight',      dot: 'bg-primary' },
+    { id: 'complete',  label: 'Complete',       dot: 'bg-success' },
 ]
 
 function jobStage(job: InstallJob): FunnelStage {
@@ -36,17 +41,19 @@ function jobStage(job: InstallJob): FunnelStage {
     return 'pulled'
 }
 
-// Avatar tokens per region · mirrors the Officeworks avatar pattern
-// (h-8 w-8 circle with bg-{color}/20 + text-{color} initials)
+// Avatar tokens per region · stronger contrast than the Officeworks
+// bg-{token}/20 pattern · those low-alpha bg + semantic text combos read
+// poorly on white. Use higher-saturation light/dark tone pairs (same
+// pattern as the REGION_BADGE used elsewhere).
 const REGION_AVATAR_BG: Record<Region, string> = {
-    ny: 'bg-info/20',
-    nj: 'bg-warning/20',
-    pa: 'bg-success/20',
+    ny: 'bg-blue-100 dark:bg-blue-500/30',
+    nj: 'bg-amber-100 dark:bg-amber-500/30',
+    pa: 'bg-emerald-100 dark:bg-emerald-500/30',
 }
 const REGION_AVATAR_TEXT: Record<Region, string> = {
-    ny: 'text-info',
-    nj: 'text-warning',
-    pa: 'text-success',
+    ny: 'text-blue-800 dark:text-blue-200',
+    nj: 'text-amber-800 dark:text-amber-200',
+    pa: 'text-emerald-800 dark:text-emerald-200',
 }
 
 export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, onPublish, onView, onSkip }: CLCFunnelViewProps) {
@@ -78,11 +85,13 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, on
                         const cards = byStage[stage.id]
                         return (
                             <div key={stage.id} className="space-y-3 min-h-[200px]">
-                                {/* Column header — matches Officeworks pattern */}
+                                {/* Column header — label uses text-foreground (high contrast) ·
+                                    the semantic accent lives in the small colored dot to its left */}
                                 <div className="flex items-center justify-between mb-1 px-1">
-                                    <h4 className={`font-medium text-sm flex items-center gap-2 ${stage.color}`}>
+                                    <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                                        <span className={`inline-block h-2 w-2 rounded-full ${stage.dot}`} aria-hidden="true" />
                                         {stage.label}
-                                        <span className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0.5 rounded-full font-mono tabular-nums">{cards.length}</span>
+                                        <span className="bg-muted text-foreground text-[10px] px-1.5 py-0.5 rounded-full font-mono tabular-nums">{cards.length}</span>
                                     </h4>
                                     <button className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options" aria-label="Column options">
                                         <MoreHorizontal className="h-3.5 w-3.5" />
@@ -157,7 +166,7 @@ function JobCard({ job, queued, highlighted, onPublish, onView, onSkip }: {
                             <Sparkles className="h-3 w-3 text-foreground shrink-0" aria-label="Strata signal" />
                         )}
                         {job.isAnchor && (
-                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 uppercase tracking-wider shrink-0">
                                 Anchor
                             </span>
                         )}
