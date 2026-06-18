@@ -61,6 +61,47 @@ export const WEEKS: WeekColumn[] = [
     { monday: '2026-07-06', label: 'Jul 6' },
 ]
 
+/** Anchor used by the dynamic period selector · matches WEEKS[0] so the
+    default state of the calendar lines up with the seed data. */
+export const INITIAL_ANCHOR_MONDAY = '2026-06-01'
+
+/** Generate `count` consecutive Mon-Fri week columns starting from
+    `anchorMonday`. Used by the calendar period selector (1w / 4w / 6w)
+    so the visible window is no longer hardcoded. */
+export function generateWeeks(anchorMonday: string, count: number): WeekColumn[] {
+    const result: WeekColumn[] = []
+    const [y, m, d] = anchorMonday.split('-').map(Number)
+    let ms = Date.UTC(y, m - 1, d)
+    for (let i = 0; i < count; i++) {
+        const dt = new Date(ms)
+        const monthShort = dt.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })
+        const day = dt.getUTCDate()
+        result.push({
+            monday: dt.toISOString().slice(0, 10),
+            label: `${monthShort} ${day}`,
+        })
+        ms += 7 * 86400000
+    }
+    return result
+}
+
+/** Shift an ISO Monday by N weeks · negative for prev, positive for next. */
+export function shiftMondayByWeeks(monday: string, deltaWeeks: number): string {
+    const [y, m, d] = monday.split('-').map(Number)
+    const ms = Date.UTC(y, m - 1, d) + deltaWeeks * 7 * 86400000
+    return new Date(ms).toISOString().slice(0, 10)
+}
+
+/** Monday of the week containing the given ISO date · used after a
+    reschedule-to-distant-date to auto-shift the visible window. */
+export function mondayOfWeek(iso: string): string {
+    const [y, m, d] = iso.split('-').map(Number)
+    const dt = new Date(Date.UTC(y, m - 1, d))
+    const dayOfWeek = dt.getUTCDay()   // 0 Sun … 6 Sat
+    const offsetToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+    return new Date(dt.getTime() + offsetToMonday * 86400000).toISOString().slice(0, 10)
+}
+
 // ─── Install Jobs ────────────────────────────────────────────────────────────
 
 export const INITIAL_JOBS: InstallJob[] = [

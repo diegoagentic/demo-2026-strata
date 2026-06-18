@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDemo } from '../../context/DemoContext'
-import { Database, RefreshCw, Clock, Sparkles, ArrowRight, Send, Users, X, Loader2 } from 'lucide-react'
+import { Database, RefreshCw, Clock, Sparkles, ArrowRight, Send, Users, X, Loader2, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
 import WeekCalendarGrid from './shared/WeekCalendarGrid'
 import CLCCapacityWarningPanel from './shared/CLCCapacityWarningPanel'
 import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
@@ -12,9 +12,14 @@ import CLCPublishModal from './shared/CLCPublishModal'
 import CLCToastStack from './shared/CLCToastStack'
 import CLCIngestionOverlay from './shared/CLCIngestionOverlay'
 import {
-    INITIAL_JOBS, INBOUND_JOB, WEEKS, REGION_BADGE, REGION_LABEL, CAPACITY_BY_REGION,
+    INITIAL_JOBS, INBOUND_JOB, REGION_BADGE, REGION_LABEL, CAPACITY_BY_REGION,
+    INITIAL_ANCHOR_MONDAY, generateWeeks, shiftMondayByWeeks, mondayOfWeek,
     type InstallJob, type Region,
 } from './shared/installScheduleData'
+
+type CalendarPeriod = '1w' | '4w' | '6w'
+const PERIOD_WEEKS: Record<CalendarPeriod, number> = { '1w': 1, '4w': 4, '6w': 6 }
+const PERIOD_LABEL: Record<CalendarPeriod, string> = { '1w': '1 week', '4w': '4 weeks', '6w': '6 weeks' }
 
 /**
  * Flow 1 · Calendar Sync (refactored to scene shell).
@@ -76,6 +81,13 @@ export default function CLCCalendarScene() {
     // click, before the actual scene redirect. Diego asked for a beat
     // that shows Strata doing real work instead of an instant teleport.
     const [ingestionInProgress, setIngestionInProgress] = useState(false)
+
+    // Calendar period + anchor · drives the weeks rendered in calendar view.
+    // 1w/4w/6w lets the operator zoom in for a single week or zoom out to
+    // the long-range capacity view. The anchor moves with prev/next so they
+    // can see jobs scheduled into future months.
+    const [calendarPeriod, setCalendarPeriod] = useState<CalendarPeriod>('6w')
+    const [calendarAnchor, setCalendarAnchor] = useState<string>(INITIAL_ANCHOR_MONDAY)
 
     // View mode (step-aware default + user override)
     const [viewMode, setViewMode] = useState<ViewMode>('list')
@@ -232,6 +244,33 @@ export default function CLCCalendarScene() {
         }))
         setQueuedJobIds(prev => new Set(prev).add(jobId))
         window.dispatchEvent(new CustomEvent('clc:calendar-writeback-queued', { detail: { jobId, newStart } }))
+    }
+
+    // ─── Calendar period · nav · reschedule auto-shift ────────────────────
+    const visibleWeeks = useMemo(
+        () => generateWeeks(calendarAnchor, PERIOD_WEEKS[calendarPeriod]),
+        [calendarAnchor, calendarPeriod],
+    )
+    const shiftCalendar = (deltaWeeksUnit: number) => {
+        const stride = PERIOD_WEEKS[calendarPeriod]
+        setCalendarAnchor(prev => shiftMondayByWeeks(prev, deltaWeeksUnit * stride))
+    }
+    const goToToday = () => setCalendarAnchor(INITIAL_ANCHOR_MONDAY)
+    /** Reschedule a job to an arbitrary date · used by ViewJobPanel's
+        inline date picker. Reuses handleJobDrop for the state mutation,
+        then auto-shifts the visible window if the new date falls outside. */
+    const handleReschedule = (jobId: string, newStart: string) => {
+        handleJobDrop(jobId, newStart)
+        const newMonday = mondayOfWeek(newStart)
+        const inWindow = visibleWeeks.some(w => w.monday === newMonday)
+        if (!inWindow) {
+            // Anchor the visible window on the new date's Monday so the
+            // updated card is immediately on screen.
+            setCalendarAnchor(newMonday)
+            // Also force calendar view so the user sees the result.
+            setViewMode('calendar')
+            userToggledRef.current = true
+        }
     }
 
     // ─── Per-card quick actions ───────────────────────────────────────────
@@ -562,8 +601,67 @@ export default function CLCCalendarScene() {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Calendar period selector · nav controls.
+                            Left · prev / Today / next (stride = current period).
+                            Right · 1w / 4w / 6w chip group. */}
+                        <div className="mb-3 flex items-center justify-between gap-3 flex-wrap">
+                            <div className="inline-flex items-center gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => shiftCalendar(-1)}
+                                    title={`Previous ${PERIOD_LABEL[calendarPeriod]}`}
+                                    aria-label={`Previous ${PERIOD_LABEL[calendarPeriod]}`}
+                                    className="p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+                                >
+                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={goToToday}
+                                    title="Jump back to Jun 1, 2026"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+                                >
+                                    <CalendarIcon className="h-3.5 w-3.5" />
+                                    Today
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => shiftCalendar(1)}
+                                    title={`Next ${PERIOD_LABEL[calendarPeriod]}`}
+                                    aria-label={`Next ${PERIOD_LABEL[calendarPeriod]}`}
+                                    className="p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+                                >
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                </button>
+                                <span className="ml-2 text-[11px] font-mono text-muted-foreground tabular-nums">
+                                    {visibleWeeks[0]?.label} → {visibleWeeks[visibleWeeks.length - 1]?.label}
+                                </span>
+                            </div>
+                            <div className="inline-flex items-center gap-0.5 bg-muted rounded-md p-0.5" role="group" aria-label="Calendar period">
+                                {(['1w', '4w', '6w'] as CalendarPeriod[]).map(p => {
+                                    const isActive = calendarPeriod === p
+                                    return (
+                                        <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => setCalendarPeriod(p)}
+                                            aria-pressed={isActive}
+                                            className={`px-2.5 py-1 text-[11px] font-semibold rounded transition-colors ${
+                                                isActive
+                                                    ? 'bg-card text-foreground shadow-sm'
+                                                    : 'text-muted-foreground hover:text-foreground'
+                                            }`}
+                                        >
+                                            {PERIOD_LABEL[p]}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
                         <WeekCalendarGrid
-                            weeks={WEEKS}
+                            weeks={visibleWeeks}
                             jobs={filteredJobs}
                             highlightedJobId={highlightedJobId}
                             pulseViewActionForJobId={inboundReviewJobId}
@@ -610,6 +708,7 @@ export default function CLCCalendarScene() {
                     isPublishing={publishingJobIds.has(viewedJob.id)}
                     onClose={() => setViewPanelJobId(null)}
                     onPublish={() => handlePublish(viewedJob.id)}
+                    onReschedule={(newStart) => handleReschedule(viewedJob.id, newStart)}
                 />
             )}
 
@@ -704,7 +803,7 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
     let hint: string | null = null
     if (stepId === 'clc1.1') hint = 'Any Send action bridges to step 1.2 · use a card\'s Send for one job, the detail panel for a single review-then-send, or Publish all for the bulk review modal.'
     else if (stepId === 'clc1.2') hint = 'Calendar visualization rendered · Sparkles mark Strata-scheduled jobs. Auto-continuing to drag-drop in a moment · toggle a view to stay on this step.'
-    else if (stepId === 'clc1.3') hint = 'Grab the pulsing Fairport Public Library card (Jun 1 row, NY) and drop it on a different weekday cell · the change queues as a nightly IQ batch sync.'
+    else if (stepId === 'clc1.3') hint = 'Grab the pulsing Fairport card and drop it on a different weekday · or open any card and use Reschedule for a date picker. Switch 1w / 4w / 6w period or use the chevrons to navigate weeks.'
     else if (stepId === 'clc1.4') hint = 'NY region capacity alert opened automatically · review the third-party installer suggestion.'
     if (!hint) return null
     return (
@@ -720,7 +819,24 @@ function StepHint({ stepId }: { stepId: string | undefined }) {
 
 // ─── View Job panel ─────────────────────────────────────────────────────────
 
-function ViewJobPanel({ job, onClose, onPublish, isPublishing }: { job: InstallJob; onClose: () => void; onPublish: () => void; isPublishing: boolean }) {
+function ViewJobPanel({ job, onClose, onPublish, isPublishing, onReschedule }: { job: InstallJob; onClose: () => void; onPublish: () => void; isPublishing: boolean; onReschedule?: (newStart: string) => void }) {
+    const [rescheduling, setRescheduling] = useState(false)
+    const [newDate, setNewDate] = useState(job.startDate)
+    // When the panel re-opens for a different job, reset the editor state.
+    useEffect(() => {
+        setRescheduling(false)
+        setNewDate(job.startDate)
+    }, [job.id, job.startDate])
+    const canReschedule = !!onReschedule && !isPublishing && !job.skipped
+    const commitReschedule = () => {
+        if (!onReschedule) return
+        if (!newDate || newDate === job.startDate) {
+            setRescheduling(false)
+            return
+        }
+        onReschedule(newDate)
+        setRescheduling(false)
+    }
     return (
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
             <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onClose} />
@@ -745,13 +861,50 @@ function ViewJobPanel({ job, onClose, onPublish, isPublishing }: { job: InstallJ
                             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Crew</div>
                             <div className="inline-flex items-center gap-1 text-sm font-semibold text-foreground"><Users className="h-3.5 w-3.5" />{job.crewSize}</div>
                         </div>
-                        <div>
+                        <div className="col-span-2">
                             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Start</div>
-                            <div className="text-sm font-mono text-foreground">{job.startDate}</div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Duration</div>
-                            <div className="text-sm font-semibold text-foreground">{job.durationDays} day{job.durationDays !== 1 ? 's' : ''}</div>
+                            {!rescheduling ? (
+                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                    <span className="text-sm font-mono text-foreground">{job.startDate}</span>
+                                    <span className="text-xs text-muted-foreground">· {job.durationDays} day{job.durationDays !== 1 ? 's' : ''}</span>
+                                    {canReschedule && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { setRescheduling(true); setNewDate(job.startDate) }}
+                                            className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground hover:bg-muted px-1.5 py-0.5 rounded-md transition-colors"
+                                        >
+                                            <CalendarIcon className="h-3 w-3" />
+                                            Reschedule
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                    <input
+                                        type="date"
+                                        value={newDate}
+                                        onChange={e => setNewDate(e.target.value)}
+                                        className="px-2 py-1 text-xs font-mono bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        aria-label="New start date"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={commitReschedule}
+                                        disabled={!newDate || newDate === job.startDate}
+                                        className="px-2.5 py-1 text-[10px] font-bold bg-foreground text-background rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setRescheduling(false); setNewDate(job.startDate) }}
+                                        className="px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <span className="text-[10px] text-muted-foreground">Queues for IQ batch sync · 2am ET</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div>
