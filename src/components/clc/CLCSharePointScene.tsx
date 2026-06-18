@@ -38,13 +38,16 @@ const STATUS_TONE: Record<SeedingStatus, string> = {
 }
 
 const FUNNEL_STATUSES: SeedingStatus[] = ['ready', 'filtering', 'reviewing', 'publishing', 'live']
-const FUNNEL_COLORS: Record<SeedingStatus, string> = {
-    ready:      'text-ai',
-    filtering:  'text-info',
-    reviewing:  'text-warning',
-    publishing: 'text-primary',
-    live:       'text-success',
-    archived:   'text-muted-foreground',
+/** Per-status semantic dot color · matches the CLCFunnelView pattern of
+    Flow 1 (and OfficeworksFunnel). The dot carries the semantic accent so
+    the column-header text stays high-contrast `text-foreground`. */
+const FUNNEL_DOT: Record<SeedingStatus, string> = {
+    ready:      'bg-ai',
+    filtering:  'bg-info',
+    reviewing:  'bg-warning',
+    publishing: 'bg-primary',
+    live:       'bg-success',
+    archived:   'bg-muted-foreground',
 }
 const FUNNEL_AVATAR_BG: Record<SeedingStatus, string> = {
     ready:      'bg-ai/20',
@@ -333,17 +336,32 @@ function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProjec
 }
 
 function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProject[]; onOpenProject: (s: 'discover' | 'filter' | 'review' | 'publish') => void; stepId?: string }) {
+    const activeCount = projects.filter(p => p.status !== 'archived').length
+    const liveCount = projects.filter(p => p.status === 'live').length
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {FUNNEL_STATUSES.map(status => {
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            {/* Outer header · matches the CLCFunnelView "Install Pipeline" pattern */}
+            <div className="flex items-start justify-between gap-4 p-5 pb-3 border-b border-border flex-wrap">
+                <div>
+                    <h3 className="text-base font-bold text-foreground">Asset Seeding Pipeline</h3>
+                    <p className="text-sm text-muted-foreground">Director of Operations · {activeCount} active · {liveCount} live</p>
+                </div>
+            </div>
+
+            {/* Kanban content */}
+            <div className="p-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {FUNNEL_STATUSES.map(status => {
                 const col = projects.filter(p => p.status === status)
                 return (
                     <div key={status} className="space-y-3 min-h-[200px]">
-                        {/* Column header */}
+                        {/* Column header — label uses text-foreground (high contrast) ·
+                            the semantic accent lives in the small colored dot to its left */}
                         <div className="flex items-center justify-between mb-1 px-1">
-                            <h4 className={`font-medium text-sm flex items-center gap-2 ${FUNNEL_COLORS[status]}`}>
+                            <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                                <span className={`inline-block h-2 w-2 rounded-full ${FUNNEL_DOT[status]}`} aria-hidden="true" />
                                 {STATUS_LABEL[status]}
-                                <span className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0.5 rounded-full font-mono tabular-nums">{col.length}</span>
+                                <span className="bg-muted text-foreground text-[10px] px-1.5 py-0.5 rounded-full font-mono tabular-nums">{col.length}</span>
                             </h4>
                             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options" aria-label="Column options">
                                 <MoreHorizontal className="h-3.5 w-3.5" />
@@ -392,6 +410,8 @@ function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProj
                     </div>
                 )
             })}
+                </div>
+            </div>
         </div>
     )
 }

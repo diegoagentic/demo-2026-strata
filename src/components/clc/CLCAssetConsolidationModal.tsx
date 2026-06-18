@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, FolderTree, Sparkles, Check, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy } from 'lucide-react'
+import { X, FolderTree, Sparkles, Check, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy, Folder, Mail } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import {
     FAIRPORT_VENDOR_JOBS,
@@ -21,24 +21,41 @@ interface Props {
 type Stage = 'discover' | 'filter' | 'review' | 'publish'
 
 /**
- * Asset consolidation modal — adapts the AckReconciliationModal multi-step pattern.
+ * Asset consolidation modal · refactor to mimic the OfficeworksDocumentReviewModal
+ * layout shell (header + stage stepper + AI banner + split-pane 3:2 + per-row
+ * status badges + CTA in the right panel). Diego pasó screenshot del Officeworks
+ * modal en spec check · esa es la referencia visual.
  *
- * Stages renamed for CLC context:
- *   discover → which IQ jobs share the customer tag?
- *   filter   → keep the 5 in-project, exclude the 2 unrelated, with rationale
- *   review   → preview the 15 assets (8 shop drawings · 5 ACKs · 1 site plan · 1 runbook)
- *   publish  → SharePoint URL pinned + installer notification draft
+ * 4 stages mapped to (Left, Right) panes:
+ *   discover · IQ candidates list (5 IN / 2 OUT) · Discovery summary + CTA
+ *   filter   · Editable include/exclude list                · Filter completeness + CTA
+ *   review   · Asset grid with type tabs + per-row preview  · Asset summary + flag detail + CTA
+ *   publish  · Folder structure preview + asset list        · SharePoint URL + email draft + CTA
  */
+
+/** Contextual AI banner per stage · single line, sits under the header. */
+const STAGE_AI_BANNER: Record<Stage, string> = {
+    discover: 'State-contract structure means one project spans multiple IQ jobs (one per vendor). Strata searched IQ for the customer tag and found 7 candidates · 5 to seed · 2 unrelated.',
+    filter:   'Customer tag matches 5 jobs (TMC · KI · Smith System · Media Tech · Aurora). Tappé punch order + SWBR Q4 use different tags · auto-excluded · operator can override.',
+    review:   '15 assets staged from the 5 IQ jobs (8 shop drawings · 5 ACKs · 1 site plan · 1 runbook). 1 vendor short-ship flagged on J-44022 ACK · operator confirms before publish.',
+    publish:  'Folder structure ready · permissions set for install crew + Director of Operations · installer notification drafted with iPad-friendly link · operator reviews and sends.',
+}
+
+const STAGE_TITLE: Record<Stage, string> = {
+    discover: 'Discover',
+    filter:   'Filter',
+    review:   'Review',
+    publish:  'Publish',
+}
+
 export default function CLCAssetConsolidationModal({ isOpen, onClose, initialStage = 'discover', onPublished }: Props) {
     const [stage, setStage] = useState<Stage>(initialStage)
     const [previewAsset, setPreviewAsset] = useState<AssetEntry | null>(null)
-    // Sidebar-aware offset · same pattern as MBIDetailSheet. When the demo
-    // tour sidebar is expanded (lg+ viewports), we push the centering
-    // wrapper right by the sidebar width (320px) so the modal sits in
-    // the visible workspace instead of being half-hidden behind the tour.
+    // Sidebar-aware offset · 320px sidebar + 64px gap = lg:pl-96 (384px).
+    // Diego's "modal pegado al sidebar" needs visible breathing room, not flush.
     const { isDemoActive, isSidebarCollapsed } = useDemo()
     const sidebarExpanded = isDemoActive && !isSidebarCollapsed
-    const offsetClass = sidebarExpanded ? 'lg:pl-80' : ''
+    const offsetClass = sidebarExpanded ? 'lg:pl-96' : ''
 
     const includedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => j.included), [])
     const excludedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => !j.included), [])
@@ -82,61 +99,62 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                 <div className={`fixed inset-0 flex items-center justify-center p-4 ${offsetClass}`}>
                     <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
                         <DialogPanel className="w-full max-w-[1200px] h-[88vh] max-h-[860px] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col">
-                            {/* Header */}
-                            <div className="p-5 border-b border-border">
-                                <div className="flex items-start justify-between gap-3 mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <FolderTree className="h-5 w-5 text-muted-foreground" />
-                                        <div>
-                                            <h2 className="text-base font-bold text-foreground">Consolidate install assets</h2>
-                                            <p className="text-[11px] text-muted-foreground">Fairport Public Library · scheduled Jun 2 · 5 IQ jobs to bundle</p>
-                                        </div>
+                            {/* ─── Header · title + stage stepper to the right + close ─── */}
+                            <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="h-9 w-9 rounded-lg bg-ai/15 flex items-center justify-center shrink-0">
+                                        <Sparkles className="h-4 w-4 text-ai" />
                                     </div>
+                                    <div className="min-w-0">
+                                        <h2 className="text-base font-bold text-foreground truncate">Consolidate install assets — Fairport Library Phase 1</h2>
+                                        <p className="text-[11px] text-muted-foreground truncate">Scheduled Jun 2 · 5 IQ jobs to bundle · 15 assets total</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <StageStepper current={stage} onJump={setStage} />
                                     <button onClick={onClose} aria-label="Close" className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                                         <X className="h-5 w-5" />
                                     </button>
                                 </div>
-                                {/* Stage stepper */}
-                                <StageStepper current={stage} onJump={setStage} />
                             </div>
 
-                            {/* Body */}
-                            <div className="flex-1 overflow-y-auto">
-                                {stage === 'discover' && <DiscoverStage includedCount={includedJobs.length} excludedCount={excludedJobs.length} />}
-                                {stage === 'filter' && <FilterStage included={includedJobs} excluded={excludedJobs} />}
-                                {stage === 'review' && (
-                                    <ReviewStage
-                                        assets={includedAssets}
-                                        counts={assetCounts}
-                                        totalSizeKb={totalSizeKb}
-                                        onPreview={setPreviewAsset}
-                                    />
-                                )}
-                                {stage === 'publish' && <PublishStage assetCount={includedAssets.length} totalSizeKb={totalSizeKb} />}
+                            {/* ─── AI banner · contextual per stage ─── */}
+                            <div className="px-5 py-2.5 border-b border-border bg-ai/5 flex items-start gap-2">
+                                <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
+                                <p className="text-xs text-foreground leading-snug">
+                                    <strong className="text-foreground">Strata AI</strong> · {STAGE_AI_BANNER[stage]}
+                                </p>
                             </div>
 
-                            {/* Footer */}
-                            <div className="border-t border-border p-4 bg-muted/20 flex items-center justify-between gap-3">
-                                <div className="text-[11px] text-muted-foreground">
-                                    Strata never auto-sends · operator confirms each send.
+                            {/* ─── Body · split-pane 3:2 ─── */}
+                            <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
+                                {/* Left (3/5) · stage-aware content */}
+                                <div className="lg:col-span-3 overflow-y-auto border-r border-border">
+                                    {stage === 'discover' && <DiscoverLeft included={includedJobs} excluded={excludedJobs} />}
+                                    {stage === 'filter'   && <FilterLeft included={includedJobs} excluded={excludedJobs} />}
+                                    {stage === 'review'   && <ReviewLeft assets={includedAssets} counts={assetCounts} totalSizeKb={totalSizeKb} onPreview={setPreviewAsset} />}
+                                    {stage === 'publish'  && <PublishLeft assets={includedAssets} />}
                                 </div>
+                                {/* Right (2/5) · action panel + primary CTA */}
+                                <div className="lg:col-span-2 overflow-y-auto bg-muted/20">
+                                    {stage === 'discover' && <DiscoverRight includedCount={includedJobs.length} excludedCount={excludedJobs.length} onContinue={goNext} />}
+                                    {stage === 'filter'   && <FilterRight includedCount={includedJobs.length} excludedCount={excludedJobs.length} assetCount={includedAssets.length} onContinue={goNext} />}
+                                    {stage === 'review'   && <ReviewRight assetCount={includedAssets.length} totalSizeKb={totalSizeKb} onContinue={goNext} />}
+                                    {stage === 'publish'  && <PublishRight assetCount={includedAssets.length} totalSizeKb={totalSizeKb} onPublish={handlePublish} />}
+                                </div>
+                            </div>
+
+                            {/* ─── Footer · minimal · Back left, "operator confirms" right ─── */}
+                            <div className="border-t border-border px-5 py-2.5 bg-muted/20 flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-2">
                                     {stage !== 'discover' && (
-                                        <button onClick={goPrev} className="px-3 py-2 text-xs font-semibold text-foreground border border-border rounded-lg hover:bg-muted transition-colors">
-                                            Back
+                                        <button onClick={goPrev} className="px-2.5 py-1.5 text-xs font-semibold text-foreground border border-border rounded-md hover:bg-muted transition-colors">
+                                            ← Back to {STAGE_TITLE[prevStage(stage)]}
                                         </button>
                                     )}
-                                    {stage !== 'publish' ? (
-                                        <button onClick={goNext} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-                                            {stage === 'discover' ? 'Review the 5 in / 2 out' : stage === 'filter' ? 'Preview assets' : 'Continue to publish'}
-                                            <ArrowRight className="h-4 w-4" />
-                                        </button>
-                                    ) : (
-                                        <button onClick={handlePublish} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-                                            <Check className="h-4 w-4" />
-                                            Publish folder
-                                        </button>
-                                    )}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground italic">
+                                    Strata never auto-sends · operator confirms each send.
                                 </div>
                             </div>
                         </DialogPanel>
@@ -144,12 +162,12 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                 </div>
             </Dialog>
 
-            {/* Asset preview (reuses the floating PDF-style preview pattern · inline iframe substitute) */}
+            {/* Asset preview · floating overlay above the modal */}
             <Transition show={previewAsset !== null} as={Fragment}>
                 <Dialog onClose={() => setPreviewAsset(null)} className="relative z-[220]">
                     <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm" />
-                    <div className="fixed inset-0 flex items-center justify-center p-3">
-                        <DialogPanel className="w-[95vw] h-[90vh] max-w-[1200px] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col">
+                    <div className={`fixed inset-0 flex items-center justify-center p-3 ${offsetClass}`}>
+                        <DialogPanel className="w-full h-[90vh] max-w-[1100px] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col">
                             <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border bg-muted/30">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -188,6 +206,10 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
     )
 }
 
+function prevStage(s: Stage): Stage {
+    return s === 'publish' ? 'review' : s === 'review' ? 'filter' : 'discover'
+}
+
 // ─── Stage stepper ──────────────────────────────────────────────────────────
 
 function StageStepper({ current, onJump }: { current: Stage; onJump: (s: Stage) => void }) {
@@ -199,7 +221,7 @@ function StageStepper({ current, onJump }: { current: Stage; onJump: (s: Stage) 
     ]
     const currentIdx = stages.findIndex(s => s.id === current)
     return (
-        <div className="flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-1.5">
             {stages.map((s, i) => {
                 const isPast = i < currentIdx
                 const isActive = i === currentIdx
@@ -222,7 +244,7 @@ function StageStepper({ current, onJump }: { current: Stage; onJump: (s: Stage) 
                             </span>
                             {s.label}
                         </button>
-                        {i < stages.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                        {i < stages.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
                     </Fragment>
                 )
             })}
@@ -232,137 +254,242 @@ function StageStepper({ current, onJump }: { current: Stage; onJump: (s: Stage) 
 
 // ─── Discover stage ─────────────────────────────────────────────────────────
 
-function DiscoverStage({ includedCount, excludedCount }: { includedCount: number; excludedCount: number }) {
+function DiscoverLeft({ included, excluded }: { included: typeof FAIRPORT_VENDOR_JOBS; excluded: typeof FAIRPORT_VENDOR_JOBS }) {
     return (
-        <div className="p-6 max-w-3xl mx-auto space-y-4">
-            <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="h-4 w-4 text-zinc-800 dark:text-zinc-200" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Strata AI · Discovery</span>
+        <div className="p-5 space-y-3">
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1">IQ candidates · {included.length + excluded.length} found</div>
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="divide-y divide-border">
+                    {[...included, ...excluded].map(j => (
+                        <div key={j.iqJobId} className={`flex items-start gap-3 p-3 ${!j.included ? 'opacity-70' : ''}`}>
+                            <div className="shrink-0 mt-0.5">
+                                {j.included ? (
+                                    <div className="h-5 w-5 rounded-full bg-success/15 flex items-center justify-center">
+                                        <Check className="h-3 w-3 text-success" />
+                                    </div>
+                                ) : (
+                                    <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center">
+                                        <X className="h-3 w-3 text-muted-foreground" />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                    <span className={`font-mono text-xs font-bold ${j.included ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{j.iqJobId}</span>
+                                    <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                        j.included
+                                            ? 'bg-success/15 text-success'
+                                            : 'bg-muted text-muted-foreground'
+                                    }`}>
+                                        {j.included ? 'In-project' : 'Excluded'}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{j.vendor}</span>
+                                </div>
+                                <div className={`text-sm leading-snug ${j.included ? 'text-foreground' : 'text-muted-foreground'}`}>{j.description}</div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                                    <span className="font-mono">{j.customerTag}</span> · {j.rationale}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                <p className="text-sm text-foreground leading-relaxed mb-4">
-                    Fairport Public Library hit <strong>Scheduled</strong> in IQ at 2:14 PM. Strata searched IQ for jobs tagged <span className="font-mono text-foreground bg-muted px-1 rounded">Fairport Library Phase 1</span> and found <strong>{includedCount + excludedCount}</strong> candidates · <strong>{includedCount} in-project</strong> · <strong>{excludedCount} unrelated</strong>.
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-green-200 bg-green-50/60 dark:border-green-500/30 dark:bg-green-500/10 p-3">
-                        <div className="text-[10px] font-bold text-green-700 dark:text-green-300 uppercase tracking-wider mb-1">In-project · seed</div>
-                        <div className="text-2xl font-bold text-foreground">{includedCount}</div>
-                        <div className="text-xs text-muted-foreground">IQ jobs · matching customer tag</div>
-                    </div>
-                    <div className="rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/40 p-3">
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Excluded · won't seed</div>
-                        <div className="text-2xl font-bold text-foreground">{excludedCount}</div>
-                        <div className="text-xs text-muted-foreground">IQ jobs · tag mismatch</div>
-                    </div>
+            </div>
+        </div>
+    )
+}
+
+function DiscoverRight({ includedCount, excludedCount, onContinue }: { includedCount: number; excludedCount: number; onContinue: () => void }) {
+    return (
+        <div className="p-5 flex flex-col h-full">
+            <div className="space-y-3 flex-1">
+                <div>
+                    <h3 className="text-base font-bold text-foreground mb-0.5">Discovery summary</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">Strata used the customer tag as the consolidation key · the customer already maintains it.</p>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-                    State-contract structure means one customer project spans multiple IQ jobs (one per vendor). The customer tag is the consolidation key · the customer already maintains it.
+
+                <div className="rounded-xl border border-success/30 bg-success/5 p-3">
+                    <div className="text-[10px] font-bold text-success uppercase tracking-wider">In-project · seed</div>
+                    <div className="text-3xl font-bold text-foreground tabular-nums mt-1">{includedCount}</div>
+                    <div className="text-[11px] text-muted-foreground">IQ jobs · matching customer tag</div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-muted/30 p-3">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Excluded · won't seed</div>
+                    <div className="text-3xl font-bold text-foreground tabular-nums mt-1">{excludedCount}</div>
+                    <div className="text-[11px] text-muted-foreground">IQ jobs · tag mismatch (Tappé punch order + SWBR Q4)</div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Confirm the 5 in / 2 out decision and Strata stages the assets from the 5 included jobs.
                 </p>
             </div>
+
+            <button
+                onClick={onContinue}
+                className="w-full mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+                Review the {includedCount} in / {excludedCount} out
+                <ArrowRight className="h-4 w-4" />
+            </button>
         </div>
     )
 }
 
 // ─── Filter stage ───────────────────────────────────────────────────────────
 
-function FilterStage({ included, excluded }: { included: typeof FAIRPORT_VENDOR_JOBS; excluded: typeof FAIRPORT_VENDOR_JOBS }) {
+function FilterLeft({ included, excluded }: { included: typeof FAIRPORT_VENDOR_JOBS; excluded: typeof FAIRPORT_VENDOR_JOBS }) {
     return (
-        <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Included */}
-            <div className="rounded-2xl border border-green-200 bg-green-50/40 dark:border-green-500/30 dark:bg-green-500/10 overflow-hidden">
-                <div className="p-3 border-b border-green-200 dark:border-green-500/30 flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-700 dark:text-green-300" />
-                    <h3 className="text-sm font-bold text-foreground">{included.length} IQ jobs · seed into folder</h3>
-                </div>
-                <div className="divide-y divide-green-200/60 dark:divide-green-500/20">
-                    {included.map(j => (
-                        <div key={j.iqJobId} className="p-3">
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="font-mono text-xs font-bold text-foreground">{j.iqJobId}</span>
-                                <span className="text-[10px] font-bold text-green-700 dark:text-green-300 uppercase tracking-wider">{j.vendor}</span>
+        <div className="p-5 space-y-4">
+            <div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Included · {included.length} IQ jobs</div>
+                <div className="rounded-2xl border border-success/30 bg-success/5 overflow-hidden">
+                    <div className="divide-y divide-success/15">
+                        {included.map(j => (
+                            <div key={j.iqJobId} className="p-3 flex items-center gap-3">
+                                <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-success/15 text-success uppercase tracking-wider shrink-0">
+                                    <Check className="h-2.5 w-2.5 mr-0.5" />
+                                    Include
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="font-mono text-xs font-bold text-foreground">{j.iqJobId}</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{j.vendor}</span>
+                                    </div>
+                                    <div className="text-sm text-foreground">{j.description}</div>
+                                    <div className="text-[11px] text-muted-foreground">{j.rationale}</div>
+                                </div>
                             </div>
-                            <div className="text-sm text-foreground mb-0.5">{j.description}</div>
-                            <div className="text-[11px] text-muted-foreground">{j.rationale}</div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Excluded */}
-            <div className="rounded-2xl border border-zinc-200 bg-zinc-50/60 dark:border-zinc-700 dark:bg-zinc-800/40 overflow-hidden">
-                <div className="p-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="text-sm font-bold text-foreground">{excluded.length} IQ jobs · excluded (tag mismatch)</h3>
-                </div>
-                <div className="divide-y divide-zinc-200/60 dark:divide-zinc-700/60">
-                    {excluded.map(j => (
-                        <div key={j.iqJobId} className="p-3 opacity-80">
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="font-mono text-xs font-bold text-muted-foreground line-through">{j.iqJobId}</span>
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{j.vendor}</span>
+            <div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Excluded · {excluded.length} IQ jobs</div>
+                <div className="rounded-2xl border border-border bg-muted/30 overflow-hidden">
+                    <div className="divide-y divide-border">
+                        {excluded.map(j => (
+                            <div key={j.iqJobId} className="p-3 flex items-center gap-3 opacity-80">
+                                <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider shrink-0">
+                                    <X className="h-2.5 w-2.5 mr-0.5" />
+                                    Exclude
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="font-mono text-xs font-bold text-muted-foreground line-through">{j.iqJobId}</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{j.vendor}</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">{j.description}</div>
+                                    <div className="text-[11px] text-muted-foreground">
+                                        <span className="font-mono">{j.customerTag}</span> · {j.rationale}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="text-sm text-muted-foreground mb-0.5">{j.description}</div>
-                            <div className="text-[11px] text-muted-foreground">
-                                <span className="font-mono">{j.customerTag}</span> · {j.rationale}
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
     )
 }
 
+function FilterRight({ includedCount, excludedCount, assetCount, onContinue }: { includedCount: number; excludedCount: number; assetCount: number; onContinue: () => void }) {
+    return (
+        <div className="p-5 flex flex-col h-full">
+            <div className="space-y-3 flex-1">
+                <div>
+                    <h3 className="text-base font-bold text-foreground mb-0.5">Filter completeness</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">All decisions match the customer-tag rule · operator can override any row inline.</p>
+                </div>
+
+                <div className="space-y-2">
+                    <FilterCheckRow label={`${includedCount} of 7 included · matching customer tag`} ok />
+                    <FilterCheckRow label={`${excludedCount} of 7 excluded · tag mismatch rationale shown`} ok />
+                    <FilterCheckRow label={`No vendor overlap · 5 distinct vendors`} ok />
+                    <FilterCheckRow label={`Estimated ${assetCount} assets ready to stage`} ok />
+                </div>
+
+                <div className="rounded-xl border border-ai/30 bg-ai/5 p-3 flex items-start gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-foreground leading-relaxed">
+                        After staging, Strata previews each PDF inline so the operator can verify the install-day pack before publishing.
+                    </p>
+                </div>
+            </div>
+
+            <button
+                onClick={onContinue}
+                className="w-full mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+                Stage {assetCount} assets
+                <ArrowRight className="h-4 w-4" />
+            </button>
+        </div>
+    )
+}
+
+function FilterCheckRow({ label, ok }: { label: string; ok: boolean }) {
+    return (
+        <div className="flex items-center gap-2 text-xs">
+            {ok ? (
+                <div className="h-5 w-5 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                    <Check className="h-3 w-3 text-success" />
+                </div>
+            ) : (
+                <div className="h-5 w-5 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="h-3 w-3 text-warning" />
+                </div>
+            )}
+            <span className="text-foreground">{label}</span>
+        </div>
+    )
+}
+
 // ─── Review stage ───────────────────────────────────────────────────────────
 
-function ReviewStage({ assets, counts, totalSizeKb, onPreview }: { assets: AssetEntry[]; counts: Record<AssetEntry['type'], number>; totalSizeKb: number; onPreview: (a: AssetEntry) => void }) {
+type AssetTypeKey = AssetEntry['type']
+type AssetTab = 'all' | AssetTypeKey
+
+function ReviewLeft({ assets, counts, totalSizeKb, onPreview }: { assets: AssetEntry[]; counts: Record<AssetTypeKey, number>; totalSizeKb: number; onPreview: (a: AssetEntry) => void }) {
+    const [tab, setTab] = useState<AssetTab>('all')
+    const visible = tab === 'all' ? assets : assets.filter(a => a.type === tab)
     return (
-        <div className="p-5">
-            {/* Asset type summary */}
-            <div className="grid grid-cols-4 gap-3 mb-4">
-                {(Object.keys(ASSET_TYPE_META) as AssetEntry['type'][]).map(type => (
-                    <div key={type} className="rounded-lg border border-border bg-card p-3 text-center">
-                        <div className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${ASSET_TYPE_META[type].colorClass}`}>
-                            {ASSET_TYPE_META[type].label}
-                        </div>
-                        <div className="text-2xl font-bold text-foreground mt-1.5">{counts[type]}</div>
-                    </div>
+        <div className="p-5 space-y-3">
+            {/* Tabs */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+                <TabButton label={`All ${assets.length}`} active={tab === 'all'} onClick={() => setTab('all')} />
+                {(Object.keys(counts) as AssetTypeKey[]).map(k => (
+                    <TabButton key={k} label={`${ASSET_TYPE_META[k].label} ${counts[k]}`} active={tab === k} onClick={() => setTab(k)} />
                 ))}
+                <span className="ml-auto text-[11px] text-muted-foreground">{(totalSizeKb / 1024).toFixed(1)} MB total</span>
             </div>
 
-            <div className="mb-3 text-xs text-muted-foreground">
-                <strong className="text-foreground">{assets.length} assets</strong> · {(totalSizeKb / 1024).toFixed(1)} MB · click any row to preview
-            </div>
-
+            {/* Asset list */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                <div className="grid grid-cols-[1fr_120px_80px_40px] gap-2 px-4 py-2 bg-muted/40 border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    <span>File</span>
-                    <span>Type</span>
-                    <span className="text-right">Size</span>
-                    <span></span>
-                </div>
                 <div className="divide-y divide-border">
-                    {assets.map(a => (
+                    {visible.map(a => (
                         <button
                             key={a.id}
                             onClick={() => onPreview(a)}
-                            className="w-full grid grid-cols-[1fr_120px_80px_40px] gap-2 px-4 py-2.5 items-center hover:bg-muted/30 transition-colors text-left"
+                            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left"
                         >
-                            <div className="flex items-center gap-2 min-w-0">
-                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                <span className="text-sm text-foreground font-mono truncate">{a.name}</span>
-                                {a.aiFlagged && (
-                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                                        <Sparkles className="h-3 w-3" />
-                                        Flagged
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm text-foreground font-mono truncate">{a.name}</span>
+                                    <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${ASSET_TYPE_META[a.type].colorClass}`}>
+                                        {ASSET_TYPE_META[a.type].label}
                                     </span>
-                                )}
+                                    {a.aiFlagged && (
+                                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-warning/15 text-warning">
+                                            <Sparkles className="h-3 w-3" />
+                                            Strata flag
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider w-fit ${ASSET_TYPE_META[a.type].colorClass}`}>
-                                {ASSET_TYPE_META[a.type].label}
-                            </span>
-                            <span className="text-xs text-muted-foreground text-right tabular-nums">{(a.sizeKb).toLocaleString()} KB</span>
-                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground tabular-nums shrink-0">{a.sizeKb.toLocaleString()} KB</span>
+                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         </button>
                     ))}
                 </div>
@@ -371,47 +498,153 @@ function ReviewStage({ assets, counts, totalSizeKb, onPreview }: { assets: Asset
     )
 }
 
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md transition-colors ${
+                active ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            }`}
+        >
+            {label}
+        </button>
+    )
+}
+
+function ReviewRight({ assetCount, totalSizeKb, onContinue }: { assetCount: number; totalSizeKb: number; onContinue: () => void }) {
+    const flaggedAsset = FAIRPORT_VENDOR_JOBS.flatMap(j => j.assets).find(a => a.aiFlagged)
+    return (
+        <div className="p-5 flex flex-col h-full">
+            <div className="space-y-3 flex-1">
+                <div>
+                    <h3 className="text-base font-bold text-foreground mb-0.5">Asset summary</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{assetCount} assets · {(totalSizeKb / 1024).toFixed(1)} MB · will be staged to a single SharePoint folder.</p>
+                </div>
+
+                {flaggedAsset && (
+                    <div className="rounded-xl border border-warning/40 bg-warning/5 p-3 space-y-2">
+                        <div className="flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5 text-warning" />
+                            <span className="text-[10px] font-bold text-warning uppercase tracking-wider">1 Strata flag</span>
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-foreground font-mono truncate">{flaggedAsset.name}</div>
+                            <p className="text-[11px] text-foreground leading-snug mt-0.5">{flaggedAsset.flagReason}</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground italic">
+                            Strata never blocks · operator confirms the flag before publishing.
+                        </p>
+                    </div>
+                )}
+
+                <div className="rounded-xl border border-border bg-card p-3 space-y-1.5">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Folder readiness</div>
+                    <FilterCheckRow label="All 15 assets readable from IQ" ok />
+                    <FilterCheckRow label="Installer iPad permissions verified" ok />
+                    <FilterCheckRow label="1 flagged asset · awaiting operator review" ok={false} />
+                </div>
+            </div>
+
+            <button
+                onClick={onContinue}
+                className="w-full mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+                Ready to publish
+                <ArrowRight className="h-4 w-4" />
+            </button>
+        </div>
+    )
+}
+
 // ─── Publish stage ──────────────────────────────────────────────────────────
 
-function PublishStage({ assetCount, totalSizeKb }: { assetCount: number; totalSizeKb: number }) {
+function PublishLeft({ assets }: { assets: AssetEntry[] }) {
+    const grouped = useMemo(() => {
+        const map: Record<AssetTypeKey, AssetEntry[]> = {
+            'shop-drawing': [], 'ack': [], 'site-plan': [], 'runbook': [],
+        }
+        for (const a of assets) map[a.type].push(a)
+        return map
+    }, [assets])
+    return (
+        <div className="p-5 space-y-3">
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1">Folder preview · ready to publish</div>
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b border-border">
+                    <FolderTree className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs font-mono text-foreground">Fairport-Library-Phase1/</span>
+                </div>
+                <div className="p-3 space-y-2.5">
+                    {(Object.keys(grouped) as AssetTypeKey[]).map(type => {
+                        if (grouped[type].length === 0) return null
+                        return (
+                            <div key={type}>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                    <Folder className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="text-xs font-mono font-bold text-foreground">{ASSET_TYPE_META[type].label.toLowerCase().replace(' ', '-')}s/</span>
+                                    <span className="text-[10px] text-muted-foreground">{grouped[type].length}</span>
+                                </div>
+                                <div className="ml-5 space-y-0.5">
+                                    {grouped[type].map(a => (
+                                        <div key={a.id} className="flex items-center gap-1.5 text-[11px] py-0.5">
+                                            <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                                            <span className="font-mono text-muted-foreground truncate flex-1">{a.name}</span>
+                                            {a.aiFlagged && <Sparkles className="h-2.5 w-2.5 text-warning" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function PublishRight({ assetCount, totalSizeKb, onPublish }: { assetCount: number; totalSizeKb: number; onPublish: () => void }) {
     const copyUrl = () => {
         navigator.clipboard?.writeText(SHAREPOINT_FOLDER_URL).catch(() => {})
     }
     return (
-        <div className="p-6 max-w-2xl mx-auto space-y-4">
-            <div className="rounded-2xl border border-green-200 bg-green-50/40 dark:border-green-500/30 dark:bg-green-500/10 p-5">
-                <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="h-4 w-4 text-zinc-800 dark:text-zinc-200" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Ready to publish</span>
+        <div className="p-5 flex flex-col h-full">
+            <div className="space-y-3 flex-1">
+                <div>
+                    <h3 className="text-base font-bold text-foreground mb-0.5">Ready to publish</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{assetCount} assets · {(totalSizeKb / 1024).toFixed(1)} MB · single SharePoint folder · installer iPad accessible.</p>
                 </div>
-                <h3 className="text-base font-bold text-foreground mb-1">Fairport Library Phase 1</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                    {assetCount} assets · {(totalSizeKb / 1024).toFixed(1)} MB · will be staged to a single SharePoint folder accessible from the installer iPad.
-                </p>
-            </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">SharePoint URL</div>
-                <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2">
-                    <code className="text-xs text-foreground flex-1 truncate font-mono">{SHAREPOINT_FOLDER_URL}</code>
-                    <button onClick={copyUrl} className="p-1 rounded hover:bg-muted transition-colors" title="Copy URL">
-                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
+                <div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">SharePoint URL</div>
+                    <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+                        <code className="text-[11px] text-foreground flex-1 truncate font-mono">{SHAREPOINT_FOLDER_URL}</code>
+                        <button onClick={copyUrl} className="p-1 rounded hover:bg-muted transition-colors shrink-0" title="Copy URL">
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Installer notification · draft</div>
-                <div className="text-sm text-foreground leading-relaxed bg-muted/20 rounded-lg p-3 border border-border">
-                    <div className="mb-2"><strong className="text-foreground">Subject:</strong> Fairport Public Library install · Jun 2 · folder ready</div>
-                    <p className="text-xs leading-relaxed">
-                        Hi — your install day folder for Fairport Public Library is live in SharePoint. You'll find 8 shop drawings, 5 vendor ACKs, the site plan and your runbook. One ACK has a Strata flag for short-shipped lounge chairs — please verify on receipt. Tap the link from your iPad to open.
+                <div className="rounded-xl border border-border bg-card p-3 space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Installer notification · draft</span>
+                    </div>
+                    <div className="text-[11px] text-foreground">
+                        <strong>Subject:</strong> Fairport Public Library install · Jun 2 · folder ready
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-snug line-clamp-3">
+                        Hi — your install day folder is live in SharePoint. 8 shop drawings, 5 vendor ACKs, the site plan and your runbook. One ACK has a Strata flag for short-shipped lounge chairs — verify on receipt. Tap the link from your iPad to open.
                     </p>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-2">
-                    Strata never auto-sends · operator reviews and confirms.
-                </p>
             </div>
+
+            <button
+                onClick={onPublish}
+                className="w-full mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+                <Check className="h-4 w-4" />
+                Publish folder
+            </button>
         </div>
     )
 }
