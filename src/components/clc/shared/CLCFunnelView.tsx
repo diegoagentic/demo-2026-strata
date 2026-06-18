@@ -59,43 +59,58 @@ export default function CLCFunnelView({ jobs, queuedJobIds, highlightedJobId, on
     }
     for (const job of jobs) byStage[jobStage(job)].push(job)
 
-    return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {STAGES.map(stage => {
-                const cards = byStage[stage.id]
-                return (
-                    <div key={stage.id} className="space-y-3 min-h-[200px]">
-                        {/* Column header — matches Officeworks pattern */}
-                        <div className="flex items-center justify-between mb-1 px-1">
-                            <h4 className={`font-medium text-sm flex items-center gap-2 ${stage.color}`}>
-                                {stage.label}
-                                <span className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0.5 rounded-full font-mono tabular-nums">{cards.length}</span>
-                            </h4>
-                            <button className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options" aria-label="Column options">
-                                <MoreHorizontal className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
+    const regionsCount = new Set(jobs.map(j => j.region)).size
 
-                        {cards.length === 0 ? (
-                            <div className="border-2 border-dashed border-border rounded-xl p-5 text-center">
-                                <p className="text-xs text-muted-foreground">No projects</p>
+    return (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            {/* Outer header · same shape as OfficeworksFunnel Spec Check Pipeline header */}
+            <div className="flex items-start justify-between gap-4 p-5 pb-3 border-b border-border flex-wrap">
+                <div>
+                    <h3 className="text-base font-bold text-foreground">Install Pipeline</h3>
+                    <p className="text-sm text-muted-foreground">Director of Operations · {jobs.length} active install jobs across {regionsCount} region{regionsCount !== 1 ? 's' : ''}</p>
+                </div>
+            </div>
+
+            {/* Kanban content */}
+            <div className="p-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {STAGES.map(stage => {
+                        const cards = byStage[stage.id]
+                        return (
+                            <div key={stage.id} className="space-y-3 min-h-[200px]">
+                                {/* Column header — matches Officeworks pattern */}
+                                <div className="flex items-center justify-between mb-1 px-1">
+                                    <h4 className={`font-medium text-sm flex items-center gap-2 ${stage.color}`}>
+                                        {stage.label}
+                                        <span className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0.5 rounded-full font-mono tabular-nums">{cards.length}</span>
+                                    </h4>
+                                    <button className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Column options" aria-label="Column options">
+                                        <MoreHorizontal className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+
+                                {cards.length === 0 ? (
+                                    <div className="border-2 border-dashed border-border rounded-xl p-5 text-center">
+                                        <p className="text-xs text-muted-foreground">No projects</p>
+                                    </div>
+                                ) : (
+                                    cards.map(job => (
+                                        <JobCard
+                                            key={job.id}
+                                            job={job}
+                                            queued={queuedJobIds.has(job.id)}
+                                            highlighted={highlightedJobId === job.id}
+                                            onPublish={onPublish}
+                                            onView={onView}
+                                            onSkip={onSkip}
+                                        />
+                                    ))
+                                )}
                             </div>
-                        ) : (
-                            cards.map(job => (
-                                <JobCard
-                                    key={job.id}
-                                    job={job}
-                                    queued={queuedJobIds.has(job.id)}
-                                    highlighted={highlightedJobId === job.id}
-                                    onPublish={onPublish}
-                                    onView={onView}
-                                    onSkip={onSkip}
-                                />
-                            ))
-                        )}
-                    </div>
-                )
-            })}
+                        )
+                    })}
+                </div>
+            </div>
         </div>
     )
 }
