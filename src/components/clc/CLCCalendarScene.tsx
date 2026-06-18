@@ -438,21 +438,28 @@ export default function CLCCalendarScene() {
             {/* Per-step hint */}
             <StepHint stepId={stepId} />
 
-            {/* View panel · opened via per-card View action or Action Center CTA */}
-            {viewedJob && (
-                <ViewJobPanel
-                    job={viewedJob}
-                    onClose={() => setViewPanelJobId(null)}
-                    onPublish={() => { handlePublish(viewedJob.id); setViewPanelJobId(null) }}
-                />
-            )}
-
-            {/* Bulk publish modal · opened by the Publish all to Outlook header button */}
+            {/* Bulk publish modal · opened by the Publish all to Outlook header button.
+                onViewJob does NOT close the modal · the install detail panel
+                stacks above so the operator can review and return to the
+                bulk-selection context. The ViewJobPanel below renders AFTER
+                in the DOM so it sits on top despite sharing z-index. */}
             {publishModalOpen && (
                 <CLCPublishModal
                     jobs={displayedJobs}
                     onClose={() => setPublishModalOpen(false)}
                     onPublish={handlePublishSelected}
+                    onViewJob={(jobId) => setViewPanelJobId(jobId)}
+                />
+            )}
+
+            {/* View panel · opened via per-card View action, Action Center CTA,
+                or the View button inside the bulk-publish modal. Rendered last
+                so it stacks above any concurrent modal. */}
+            {viewedJob && (
+                <ViewJobPanel
+                    job={viewedJob}
+                    onClose={() => setViewPanelJobId(null)}
+                    onPublish={() => { handlePublish(viewedJob.id); setViewPanelJobId(null) }}
                 />
             )}
         </div>

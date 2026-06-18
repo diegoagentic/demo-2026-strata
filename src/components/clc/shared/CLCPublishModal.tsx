@@ -1,13 +1,18 @@
 import { useMemo, useState } from 'react'
-import { Send, X, Filter as FilterIcon, Sparkles } from 'lucide-react'
+import { Send, X, Filter as FilterIcon, Sparkles, Eye } from 'lucide-react'
 import type { InstallJob, Region } from './installScheduleData'
 import { REGION_BADGE, REGION_LABEL } from './installScheduleData'
 
 interface CLCPublishModalProps {
-    /** Full display list · the modal filters internally to !published && !skipped */
+    /** Full display list · the modal shows every job in the calendar, with
+        published/skipped rows rendered read-only. */
     jobs: InstallJob[]
     onClose: () => void
     onPublish: (selectedJobIds: Set<string>) => void
+    /** Opens the install detail panel for any row · the publish modal does
+        NOT close on click (the detail panel stacks above), so the operator
+        can review a job and return to their bulk selection. */
+    onViewJob?: (jobId: string) => void
 }
 
 const STATUS_OPTIONS: { key: InstallJob['status']; label: string }[] = [
@@ -24,7 +29,7 @@ const STATUS_OPTIONS: { key: InstallJob['status']; label: string }[] = [
  * Replaces the previous "Publish all" header button shortcut, which
  * advanced the step without any user confirmation.
  */
-export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublishModalProps) {
+export default function CLCPublishModal({ jobs, onClose, onPublish, onViewJob }: CLCPublishModalProps) {
     // The modal mirrors the calendar · shows ALL displayed jobs with
     // status-aware rendering. Published rows are checked + disabled with
     // a Published pill, skipped rows are disabled + grayed. Only the
@@ -115,7 +120,10 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
             aria-labelledby="publish-modal-title"
         >
             <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            {/* Fixed height · h-[640px] keeps the modal stable as the user
+                filters or selects, instead of growing/shrinking with the
+                visible job count. max-h-[90vh] handles short viewports. */}
+            <div className="relative w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col h-[640px] max-h-[90vh]">
                 <header className="p-4 border-b border-border flex items-start justify-between gap-3">
                     <div>
                         <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Bulk publish</div>
@@ -213,16 +221,16 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
                                 const checked = isPublished || isSelected
 
                                 const rowTone = isPublished
-                                    ? 'bg-success/5 cursor-not-allowed'
+                                    ? 'bg-success/5'
                                     : isSkipped
-                                        ? 'bg-muted/30 cursor-not-allowed opacity-60'
+                                        ? 'bg-muted/30 opacity-60'
                                         : isSelected
-                                            ? 'bg-background hover:bg-muted/30 cursor-pointer'
-                                            : 'bg-muted/10 hover:bg-muted/30 opacity-70 cursor-pointer'
+                                            ? 'bg-background hover:bg-muted/30'
+                                            : 'bg-muted/10 hover:bg-muted/30 opacity-70'
 
                                 return (
-                                    <li key={job.id}>
-                                        <label className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${rowTone}`}>
+                                    <li key={job.id} className={`flex items-center transition-colors ${rowTone}`}>
+                                        <label className={`flex items-center gap-3 px-4 py-2.5 flex-1 min-w-0 ${isInteractive ? 'cursor-pointer' : 'cursor-default'}`}>
                                             <input
                                                 type="checkbox"
                                                 checked={checked}
@@ -265,6 +273,17 @@ export default function CLCPublishModal({ jobs, onClose, onPublish }: CLCPublish
                                                 {job.crewSize}-crew · {job.durationDays}d
                                             </div>
                                         </label>
+                                        {onViewJob && (
+                                            <button
+                                                type="button"
+                                                onClick={() => onViewJob(job.id)}
+                                                title={isPublished ? 'View Outlook entry detail' : 'View install detail'}
+                                                aria-label={`View detail for ${job.customer}`}
+                                                className="shrink-0 mr-3 p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                            >
+                                                <Eye className="h-3.5 w-3.5" />
+                                            </button>
+                                        )}
                                     </li>
                                 )
                             })}
