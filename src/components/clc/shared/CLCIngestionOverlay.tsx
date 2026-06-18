@@ -10,7 +10,7 @@ interface CLCIngestionOverlayProps {
 const PHASES: string[] = [
     'Pulling J-44099 from IQ reporting API',
     'Parsing vendor schedule · KI · 2-crew',
-    'Checking capacity · NY · Jun 22, 2026',
+    'Checking capacity · NY · week of Jun 1, 2026',
     'Ready to publish · no conflicts',
 ]
 

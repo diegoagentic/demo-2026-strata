@@ -322,8 +322,11 @@ export const INBOUND_JOB: InstallJob = {
     project: 'Troy Adult Reading Room',
     region: 'ny',
     vendors: ['KI'],
-    startDate: '2026-06-22',
-    endDate: '2026-06-22',
+    // Wed Jun 3 · empty cell in week 1 (Jun 1 row) so the just-arrived card
+    // sits in the first visible row of the calendar across all period widths
+    // (1w / 4w / 6w) instead of being scrolled below the fold.
+    startDate: '2026-06-03',
+    endDate: '2026-06-03',
     crewSize: 2,
     durationDays: 1,
     status: 'pending',
