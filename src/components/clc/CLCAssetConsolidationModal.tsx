@@ -89,6 +89,20 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
     const [flagAcknowledgedIds, setFlagAcknowledgedIds] = useState<Set<string>>(new Set())
     const [removedAssetIds, setRemovedAssetIds] = useState<Set<string>>(new Set())
 
+    // Per-IQ-job override en Filter stage · operator can flip Strata's
+    // include/exclude decision per row, mirroring the doc's "Rationale
+    // shown inline · operator can override" beat (clc2.2 step messages).
+    // A jobId in jobOverrides means "operator flipped this from Strata's
+    // default" · effective inclusion is computed via XOR with j.included.
+    const [jobOverrides, setJobOverrides] = useState<Set<string>>(new Set())
+    const handleToggleJobOverride = (jobId: string) =>
+        setJobOverrides(prev => {
+            const next = new Set(prev)
+            if (next.has(jobId)) next.delete(jobId)
+            else next.add(jobId)
+            return next
+        })
+
     // Publish-time state · overlay plays for ~2.5s before the modal
     // actually closes, so the operator sees Strata doing the work
     // (folder create + permissions + upload + link gen) instead of an
@@ -111,12 +125,23 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
         setEmailComposerOpen(false)
     }
 
-    const includedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => j.included), [])
-    const excludedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => !j.included), [])
+    // Effective include/exclude based on Strata default XOR operator override.
+    // A job is "effectively included" when its default differs from whether
+    // it's in jobOverrides · so toggling a row flips it across the divider.
+    const effectiveIncludedJobs = useMemo(
+        () => FAIRPORT_VENDOR_JOBS.filter(j => j.included !== jobOverrides.has(j.iqJobId)),
+        [jobOverrides],
+    )
+    const effectiveExcludedJobs = useMemo(
+        () => FAIRPORT_VENDOR_JOBS.filter(j => !(j.included !== jobOverrides.has(j.iqJobId))),
+        [jobOverrides],
+    )
+    // includedAssets now derives from the EFFECTIVE included jobs · downstream
+    // stages (Review, Publish) automatically reflect any operator override.
     const includedAssets = useMemo(() => {
-        const fromVendors = includedJobs.flatMap(j => j.assets)
+        const fromVendors = effectiveIncludedJobs.flatMap(j => j.assets)
         return [...fromVendors, ...COMMON_ASSETS]
-    }, [includedJobs])
+    }, [effectiveIncludedJobs])
 
     // Effective set drives the right-pane summary, the publish folder tree
     // and the email draft counts. The left-pane list shows ALL assets
@@ -235,7 +260,14 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                             <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
                                 {/* Left (3/5) · stage-aware content */}
                                 <div className="lg:col-span-3 overflow-y-auto border-r border-border">
-                                    {stage === 'filter'   && <FilterLeft included={includedJobs} excluded={excludedJobs} />}
+                                    {stage === 'filter'   && (
+                                        <FilterLeft
+                                            included={effectiveIncludedJobs}
+                                            excluded={effectiveExcludedJobs}
+                                            jobOverrides={jobOverrides}
+                                            onToggleJobOverride={handleToggleJobOverride}
+                                        />
+                                    )}
                                     {stage === 'review'   && (
                                         <ReviewLeft
                                             assets={includedAssets}
@@ -254,7 +286,15 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                                 </div>
                                 {/* Right (2/5) · action panel + primary CTA */}
                                 <div className="lg:col-span-2 overflow-y-auto bg-muted/20">
-                                    {stage === 'filter'   && <FilterRight includedCount={includedJobs.length} excludedCount={excludedJobs.length} assetCount={includedAssets.length} onContinue={goNext} />}
+                                    {stage === 'filter'   && (
+                                        <FilterRight
+                                            includedCount={effectiveIncludedJobs.length}
+                                            excludedCount={effectiveExcludedJobs.length}
+                                            assetCount={includedAssets.length}
+                                            overrideCount={jobOverrides.size}
+                                            onContinue={goNext}
+                                        />
+                                    )}
                                     {stage === 'review'   && (
                                         <ReviewRight
                                             assets={includedAssets}
@@ -429,63 +469,179 @@ function StageStepper({ current, onJump }: { current: Stage; onJump: (s: Stage) 
 
 // ─── Filter stage ───────────────────────────────────────────────────────────
 
-function FilterLeft({ included, excluded }: { included: typeof FAIRPORT_VENDOR_JOBS; excluded: typeof FAIRPORT_VENDOR_JOBS }) {
+function FilterLeft({
+    included, excluded, jobOverrides, onToggleJobOverride,
+}: {
+    included: typeof FAIRPORT_VENDOR_JOBS
+    excluded: typeof FAIRPORT_VENDOR_JOBS
+    jobOverrides: Set<string>
+    onToggleJobOverride: (jobId: string) => void
+}) {
+    const totalIncluded = included.length
+    const totalExcluded = excluded.length
+    const originalIncludedCount = FAIRPORT_VENDOR_JOBS.filter(j => j.included).length
+    const originalExcludedCount = FAIRPORT_VENDOR_JOBS.filter(j => !j.included).length
+    const includedDelta = totalIncluded - originalIncludedCount
+    const excludedDelta = totalExcluded - originalExcludedCount
     return (
         <div className="p-5 space-y-4">
+            {/* Included list · effective state · operator can move any row out */}
             <div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Included · {included.length} IQ jobs</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1.5 flex items-center gap-1.5">
+                    <span>Included · {totalIncluded} IQ job{totalIncluded !== 1 ? 's' : ''}</span>
+                    {includedDelta !== 0 && (
+                        <span className="text-amber-700 dark:text-amber-300 normal-case font-semibold">
+                            (was {originalIncludedCount} · {includedDelta > 0 ? '+' : ''}{includedDelta} by operator)
+                        </span>
+                    )}
+                </div>
                 <div className="rounded-2xl border border-success/30 bg-success/5 overflow-hidden">
                     <div className="divide-y divide-success/15">
                         {included.map(j => (
-                            <div key={j.iqJobId} className="p-3 flex items-center gap-3">
-                                <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-success/15 text-success uppercase tracking-wider shrink-0">
-                                    <Check className="h-2.5 w-2.5 mr-0.5" />
-                                    Include
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="font-mono text-xs font-bold text-foreground">{j.iqJobId}</span>
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{j.vendor}</span>
-                                    </div>
-                                    <div className="text-sm text-foreground">{j.description}</div>
-                                    <div className="text-[11px] text-muted-foreground">{j.rationale}</div>
-                                </div>
-                            </div>
+                            <FilterRow
+                                key={j.iqJobId}
+                                job={j}
+                                effectiveIncluded
+                                overridden={jobOverrides.has(j.iqJobId)}
+                                onToggle={() => onToggleJobOverride(j.iqJobId)}
+                            />
                         ))}
                     </div>
                 </div>
             </div>
 
+            {/* Excluded list · effective state · operator can move any row back in */}
             <div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Excluded · {excluded.length} IQ jobs</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1.5 flex items-center gap-1.5">
+                    <span>Excluded · {totalExcluded} IQ job{totalExcluded !== 1 ? 's' : ''}</span>
+                    {excludedDelta !== 0 && (
+                        <span className="text-amber-700 dark:text-amber-300 normal-case font-semibold">
+                            (was {originalExcludedCount} · {excludedDelta > 0 ? '+' : ''}{excludedDelta} by operator)
+                        </span>
+                    )}
+                </div>
                 <div className="rounded-2xl border border-border bg-muted/30 overflow-hidden">
                     <div className="divide-y divide-border">
                         {excluded.map(j => (
-                            <div key={j.iqJobId} className="p-3 flex items-center gap-3 opacity-80">
-                                <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider shrink-0">
-                                    <X className="h-2.5 w-2.5 mr-0.5" />
-                                    Exclude
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="font-mono text-xs font-bold text-muted-foreground line-through">{j.iqJobId}</span>
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{j.vendor}</span>
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">{j.description}</div>
-                                    <div className="text-[11px] text-muted-foreground">
-                                        <span className="font-mono">{j.customerTag}</span> · {j.rationale}
-                                    </div>
-                                </div>
-                            </div>
+                            <FilterRow
+                                key={j.iqJobId}
+                                job={j}
+                                effectiveIncluded={false}
+                                overridden={jobOverrides.has(j.iqJobId)}
+                                onToggle={() => onToggleJobOverride(j.iqJobId)}
+                            />
                         ))}
                     </div>
+                </div>
+            </div>
+
+            {/* Doc-aligned footer · "operator can override" */}
+            <div className="rounded-xl border border-ai/30 bg-ai/5 p-3 flex items-start gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
+                <p className="text-[11px] text-foreground leading-relaxed">
+                    <strong className="text-foreground">Strata never blocks · operator can override.</strong> Default decisions use the customer tag · click any row to move it across the divider if your project context calls for it.
+                </p>
+            </div>
+        </div>
+    )
+}
+
+function FilterRow({
+    job, effectiveIncluded, overridden, onToggle,
+}: {
+    job: typeof FAIRPORT_VENDOR_JOBS[number]
+    effectiveIncluded: boolean
+    overridden: boolean
+    onToggle: () => void
+}) {
+    // Row tone · default Strata decisions use the list bg (success/5 or
+    // muted/30). Overrides get an amber accent stripe + light amber tint so
+    // they're unmistakable across both lists · mirrors the flag pattern in
+    // ReviewLeft (border-l-[3px] border-amber-500).
+    const rowTone = overridden
+        ? 'bg-amber-50/60 dark:bg-amber-500/10 border-l-[3px] border-amber-500'
+        : ''
+    return (
+        <div className={`p-3 flex items-start gap-3 ${rowTone} ${!effectiveIncluded && !overridden ? 'opacity-80' : ''}`}>
+            {/* Leading status badge · 4-way state: Strata include / Strata exclude /
+                Operator include / Operator exclude */}
+            <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 mt-0.5 ${
+                overridden && effectiveIncluded
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
+                    : overridden && !effectiveIncluded
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
+                        : effectiveIncluded
+                            ? 'bg-success/15 text-success'
+                            : 'bg-muted text-muted-foreground'
+            }`}>
+                {overridden ? (
+                    <>
+                        <RotateCcw className="h-2.5 w-2.5 mr-0.5" />
+                        Operator · {effectiveIncluded ? 'include' : 'exclude'}
+                    </>
+                ) : effectiveIncluded ? (
+                    <>
+                        <Check className="h-2.5 w-2.5 mr-0.5" />
+                        Strata · include
+                    </>
+                ) : (
+                    <>
+                        <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                        Strata · exclude
+                    </>
+                )}
+            </span>
+
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                    <span className={`font-mono text-xs font-bold ${effectiveIncluded ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{job.iqJobId}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{job.vendor}</span>
+                </div>
+                <div className={`text-sm leading-snug ${effectiveIncluded ? 'text-foreground' : 'text-muted-foreground'}`}>{job.description}</div>
+                <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                    <span className="font-mono">{job.customerTag}</span> · {job.rationale}
+                </div>
+
+                {/* Per-row action button · doc-aligned: "operator can override" */}
+                <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    {!overridden && effectiveIncluded && (
+                        <button
+                            type="button"
+                            onClick={onToggle}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                            <XCircle className="h-3 w-3" />
+                            Move to excluded
+                        </button>
+                    )}
+                    {!overridden && !effectiveIncluded && (
+                        <button
+                            type="button"
+                            onClick={onToggle}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                        >
+                            <Check className="h-3 w-3" />
+                            Move to included
+                        </button>
+                    )}
+                    {overridden && (
+                        <button
+                            type="button"
+                            onClick={onToggle}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md text-muted-foreground hover:text-foreground hover:underline"
+                        >
+                            <RotateCcw className="h-3 w-3" />
+                            Restore Strata's decision
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
     )
 }
 
-function FilterRight({ includedCount, excludedCount, assetCount, onContinue }: { includedCount: number; excludedCount: number; assetCount: number; onContinue: () => void }) {
+function FilterRight({ includedCount, excludedCount, assetCount, overrideCount, onContinue }: { includedCount: number; excludedCount: number; assetCount: number; overrideCount: number; onContinue: () => void }) {
+    const hasOverrides = overrideCount > 0
     return (
         <div className="p-5 flex flex-col h-full">
             <div className="space-y-3 flex-1">
@@ -494,8 +650,9 @@ function FilterRight({ includedCount, excludedCount, assetCount, onContinue }: {
                     <p className="text-[11px] text-muted-foreground leading-relaxed">Strata used the customer tag as the consolidation key · the customer already maintains it.</p>
                 </div>
 
-                {/* Big KPI cards · moved from old DiscoverRight so the operator
-                    sees the 5/2 split at a glance without a separate stage. */}
+                {/* Big KPI cards · reactive to operator overrides. The amber
+                    pill below each card surfaces "operator override" when the
+                    set was modified, mirroring the per-row badge in the lists. */}
                 <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl border border-success/30 bg-success/5 p-3">
                         <div className="text-[10px] font-bold text-success uppercase tracking-wider">In-project</div>
@@ -509,33 +666,55 @@ function FilterRight({ includedCount, excludedCount, assetCount, onContinue }: {
                     </div>
                 </div>
 
+                {hasOverrides && (
+                    <div className="rounded-xl border border-amber-500/40 bg-amber-50/40 dark:bg-amber-500/5 p-2.5 flex items-start gap-2">
+                        <RotateCcw className="h-3.5 w-3.5 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-foreground leading-snug">
+                            <strong className="text-amber-700 dark:text-amber-300">{overrideCount} operator override{overrideCount !== 1 ? 's' : ''}</strong>
+                            {' · '}publishing with the operator's selection, not Strata's default.
+                        </p>
+                    </div>
+                )}
+
                 <div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Completeness checks</div>
                     <div className="space-y-1.5">
-                        <FilterCheckRow label={`${includedCount} of 7 included · matching customer tag`} ok />
+                        <FilterCheckRow label={`${includedCount} of 7 included · ${hasOverrides ? 'operator-adjusted from customer tag' : 'matching customer tag'}`} ok />
                         <FilterCheckRow label={`${excludedCount} excluded · rationale shown per row`} ok />
-                        <FilterCheckRow label={`5 distinct vendors · no overlap`} ok />
-                        <FilterCheckRow label={`Estimated ${assetCount} assets ready to stage`} ok />
+                        <FilterCheckRow label={`${effectiveVendorCount(includedCount)} distinct vendor${effectiveVendorCount(includedCount) !== 1 ? 's' : ''} · no overlap`} ok />
+                        <FilterCheckRow label={`Estimated ${assetCount} asset${assetCount !== 1 ? 's' : ''} ready to stage`} ok />
                     </div>
                 </div>
 
                 <div className="rounded-xl border border-ai/30 bg-ai/5 p-3 flex items-start gap-2">
                     <Sparkles className="h-3.5 w-3.5 text-ai shrink-0 mt-0.5" />
                     <p className="text-[11px] text-foreground leading-relaxed">
-                        After staging, Strata previews each PDF inline so the operator can verify the install-day pack before publishing.
+                        {hasOverrides
+                            ? 'After staging, Strata previews each PDF inline · the operator override carries through to Review and Publish.'
+                            : 'After staging, Strata previews each PDF inline so the operator can verify the install-day pack before publishing.'}
                     </p>
                 </div>
             </div>
 
             <button
                 onClick={onContinue}
-                className="w-full mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                disabled={assetCount === 0}
+                className="w-full mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-                Stage {assetCount} assets
+                Stage {assetCount} asset{assetCount !== 1 ? 's' : ''}
                 <ArrowRight className="h-4 w-4" />
             </button>
         </div>
     )
+}
+
+/** Vendor count for the completeness row · 1 vendor per included job (5
+    seed jobs map to 5 distinct vendors). Tappé + SWBR aren't vendors per
+    the seed data, so overrides that flip them in/out don't change the
+    vendor count beyond what's in the included list. */
+function effectiveVendorCount(includedCount: number): number {
+    // The 5 seed vendor jobs are 1:1 with vendors · clamp to that bound.
+    return Math.min(includedCount, 5)
 }
 
 function FilterCheckRow({ label, ok }: { label: string; ok: boolean }) {

@@ -319,8 +319,8 @@ export default function CLCSharePointScene() {
             {/* Body */}
             <section className="flex-1 overflow-y-auto px-5 pb-5">
                 {viewMode === 'funnel'
-                    ? <FunnelView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} />
-                    : <ListView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} />
+                    ? <FunnelView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} modalOpen={modalOpen} />
+                    : <ListView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} modalOpen={modalOpen} />
                 }
             </section>
 
@@ -366,7 +366,7 @@ export default function CLCSharePointScene() {
 
 // ─── Views ───────────────────────────────────────────────────────────────────
 
-function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string }) {
+function ListView({ projects, onOpenProject, stepId, modalOpen }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string; modalOpen?: boolean }) {
     return (
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <div className="p-3 grid grid-cols-[28px_1fr_180px_120px_120px] gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/40">
@@ -381,23 +381,33 @@ function ListView({ projects, onOpenProject, stepId }: { projects: SeedingProjec
                     <div className="px-4 py-10 text-center text-xs text-muted-foreground">
                         No projects match the current filters. Adjust the filters above to widen the queue.
                     </div>
-                ) : projects.map(p => (
-                    <SharePointRow
-                        key={p.id}
-                        project={p}
-                        onOpen={() => onOpenProject(
-                            stepId === 'clc2.4' ? 'publish' :
-                            stepId === 'clc2.3' ? 'review' :
-                            'filter'
-                        )}
-                    />
-                ))}
+                ) : projects.map(p => {
+                    // "In progress" affordance · when the modal is already open
+                    // for this active project, the click is a no-op visually.
+                    // Reword the button + tone it ai-tinted to communicate
+                    // "you're already in this flow · keep going in the modal".
+                    const isActiveInModal = modalOpen === true && p.status !== 'archived' && p.status !== 'live'
+                    return (
+                        <SharePointRow
+                            key={p.id}
+                            project={p}
+                            inProgress={isActiveInModal}
+                            onOpen={() => onOpenProject(
+                                stepId === 'clc2.4' ? 'publish' :
+                                stepId === 'clc2.3' ? 'review' :
+                                'filter'
+                            )}
+                        />
+                    )
+                })}
             </div>
         </div>
     )
 }
 
-function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string }) {
+function FunnelView({ projects, onOpenProject, stepId, modalOpen }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string; modalOpen?: boolean }) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _modalOpen = modalOpen // funnel cards stay tappable · the click goes to the same handler
     const activeCount = projects.filter(p => p.status !== 'archived').length
     const liveCount = projects.filter(p => p.status === 'live').length
     return (
@@ -480,7 +490,7 @@ function FunnelView({ projects, onOpenProject, stepId }: { projects: SeedingProj
 
 // ─── Row + panels ────────────────────────────────────────────────────────────
 
-function SharePointRow({ project, onOpen }: { project: SeedingProject; onOpen: () => void }) {
+function SharePointRow({ project, onOpen, inProgress = false }: { project: SeedingProject; onOpen: () => void; inProgress?: boolean }) {
     const tone = STATUS_TONE[project.status]
     const isPrior = project.status === 'archived'
     return (
@@ -514,6 +524,15 @@ function SharePointRow({ project, onOpen }: { project: SeedingProject; onOpen: (
                     </a>
                 ) : isPrior ? (
                     <span className="text-[11px] text-muted-foreground">archived</span>
+                ) : inProgress ? (
+                    <button
+                        onClick={onOpen}
+                        title="The consolidation modal is already open · click resumes focus on it"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold border border-ai/40 text-ai bg-ai/10 rounded-md hover:bg-ai/15 transition-colors"
+                    >
+                        <Sparkles className="h-3 w-3" />
+                        In progress
+                    </button>
                 ) : (
                     <button onClick={onOpen} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
                         Open
