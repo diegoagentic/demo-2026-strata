@@ -7,8 +7,7 @@ import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
 import CLCFilterBar, { type StatusOption } from './shared/CLCFilterBar'
 import CLCSummaryChipsBar, { type SummaryChip } from './shared/CLCSummaryChipsBar'
 import CLCIngestionOverlay from './shared/CLCIngestionOverlay'
-import { FAIRPORT_VENDOR_JOBS, COMMON_ASSETS } from './shared/assetSeedingData'
-import { SHAREPOINT_FOLDER_URL, SCHEDULED_INSTALL_DATE, FAIRPORT_VENDOR_JOBS } from './shared/assetSeedingData'
+import { FAIRPORT_VENDOR_JOBS, COMMON_ASSETS, SHAREPOINT_FOLDER_URL, SCHEDULED_INSTALL_DATE } from './shared/assetSeedingData'
 
 type SeedingStatus = 'ready' | 'filtering' | 'reviewing' | 'publishing' | 'live' | 'archived'
 
