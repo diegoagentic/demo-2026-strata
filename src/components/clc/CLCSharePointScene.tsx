@@ -2,10 +2,12 @@
 import { useDemo } from '../../context/DemoContext'
 import { FolderTree, Folder, FolderOpen, Sparkles, AlertCircle, CheckCircle2, ExternalLink, FileText, Database, MoreHorizontal } from 'lucide-react'
 import CLCAssetConsolidationModal from './CLCAssetConsolidationModal'
+import CLCSharePointFolderModal from './CLCSharePointFolderModal'
 import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
 import CLCFilterBar, { type StatusOption } from './shared/CLCFilterBar'
 import CLCSummaryChipsBar, { type SummaryChip } from './shared/CLCSummaryChipsBar'
 import CLCIngestionOverlay from './shared/CLCIngestionOverlay'
+import { FAIRPORT_VENDOR_JOBS, COMMON_ASSETS } from './shared/assetSeedingData'
 import { SHAREPOINT_FOLDER_URL, SCHEDULED_INSTALL_DATE, FAIRPORT_VENDOR_JOBS } from './shared/assetSeedingData'
 
 type SeedingStatus = 'ready' | 'filtering' | 'reviewing' | 'publishing' | 'live' | 'archived'
@@ -86,7 +88,7 @@ function folderInitials(name: string): string {
  *   clc2.4 → list view + modal at Publish stage · autoswap to Funnel after publish
  */
 export default function CLCSharePointScene() {
-    const { currentStep, nextStep } = useDemo()
+    const { currentStep, nextStep, stepClickCount } = useDemo()
     const stepId = currentStep?.id
     // Live ref to current stepId · used inside event listeners and async
     // callbacks to gate nextStep() on the operator actually being at the
@@ -103,18 +105,40 @@ export default function CLCSharePointScene() {
     // overlay · gives a visible "Strata is analyzing 15 documents across
     // 5 IQ jobs" beat instead of an instant modal teleport.
     const [extractionInProgress, setExtractionInProgress] = useState(false)
+    // SharePoint folder viewer modal · opens when the operator clicks
+    // "Open folder" on a published (Live) project · replaces the old
+    // `<a href={mock-url}>` that 404'd the demo.
+    const [folderViewerOpen, setFolderViewerOpen] = useState(false)
+    // Full default asset list · what the published folder shows · the
+    // viewer is read-only and doesn't reflect operator removals in
+    // Review (intentional simplification per the plan's out-of-scope).
+    const publishedAssets = useMemo(
+        () => [...FAIRPORT_VENDOR_JOBS.filter(j => j.included).flatMap(j => j.assets), ...COMMON_ASSETS],
+        [],
+    )
 
     const [viewMode, setViewMode] = useState<ViewMode>('list')
     const [hasUserToggled, setHasUserToggled] = useState(false)
     const [statuses, setStatuses] = useState<string[]>([])
     const [customerQuery, setCustomerQuery] = useState('')
 
-    // Auto-open modal at the right stage
+    // Auto-open modal + reset narrative state per step. Backward sidebar
+    // nav to 2.1/2.2/2.3 resets `published` (and closes the folder viewer)
+    // so the card status reflects where we ARE narratively, not the future
+    // state from a previous test run.
     useEffect(() => {
-        if (stepId === 'clc2.2') {
+        if (stepId === 'clc2.1') {
+            setPublished(false)
+            setFolderViewerOpen(false)
+            setModalOpen(false)
+        } else if (stepId === 'clc2.2') {
+            setPublished(false)
+            setFolderViewerOpen(false)
             setInitialStage('filter')
             setModalOpen(true)
         } else if (stepId === 'clc2.3') {
+            setPublished(false)
+            setFolderViewerOpen(false)
             setInitialStage('review')
             setModalOpen(true)
         } else if (stepId === 'clc2.4') {
@@ -122,6 +146,7 @@ export default function CLCSharePointScene() {
             setModalOpen(true)
         } else {
             setModalOpen(false)
+            setFolderViewerOpen(false)
         }
     }, [stepId])
 
@@ -319,8 +344,8 @@ export default function CLCSharePointScene() {
             {/* Body */}
             <section className="flex-1 overflow-y-auto px-5 pb-5">
                 {viewMode === 'funnel'
-                    ? <FunnelView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} modalOpen={modalOpen} />
-                    : <ListView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} modalOpen={modalOpen} />
+                    ? <FunnelView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} modalOpen={modalOpen} onOpenFolder={() => setFolderViewerOpen(true)} />
+                    : <ListView projects={filteredProjects} onOpenProject={openModal} stepId={stepId} modalOpen={modalOpen} onOpenFolder={() => setFolderViewerOpen(true)} />
                 }
             </section>
 
@@ -334,7 +359,11 @@ export default function CLCSharePointScene() {
                 </div>
             )}
 
+            {/* key={stepClickCount} fuerza remount del modal cada vez que el
+                operator hace sidebar click · state interno (jobOverrides,
+                flagAck, draft edits) se resetea para una replay limpia. */}
             <CLCAssetConsolidationModal
+                key={stepClickCount}
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
                 initialStage={initialStage}
@@ -342,6 +371,15 @@ export default function CLCSharePointScene() {
                     setPublished(true)
                     setModalOpen(false)
                 }}
+            />
+
+            {/* SharePoint folder viewer · abre cuando el operator click
+                "Open folder" en una published row · simulación read-only
+                del folder live · reemplaza el `<a href={mock}>` que 404'aba. */}
+            <CLCSharePointFolderModal
+                isOpen={folderViewerOpen}
+                onClose={() => setFolderViewerOpen(false)}
+                assets={publishedAssets}
             />
 
             {/* Extraction overlay · plays before the modal opens when the
@@ -366,7 +404,7 @@ export default function CLCSharePointScene() {
 
 // ─── Views ───────────────────────────────────────────────────────────────────
 
-function ListView({ projects, onOpenProject, stepId, modalOpen }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string; modalOpen?: boolean }) {
+function ListView({ projects, onOpenProject, stepId, modalOpen, onOpenFolder }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string; modalOpen?: boolean; onOpenFolder?: () => void }) {
     return (
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <div className="p-3 grid grid-cols-[28px_1fr_180px_120px_120px] gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/40">
@@ -397,6 +435,7 @@ function ListView({ projects, onOpenProject, stepId, modalOpen }: { projects: Se
                                 stepId === 'clc2.3' ? 'review' :
                                 'filter'
                             )}
+                            onOpenFolder={onOpenFolder}
                         />
                     )
                 })}
@@ -405,9 +444,7 @@ function ListView({ projects, onOpenProject, stepId, modalOpen }: { projects: Se
     )
 }
 
-function FunnelView({ projects, onOpenProject, stepId, modalOpen }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string; modalOpen?: boolean }) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _modalOpen = modalOpen // funnel cards stay tappable · the click goes to the same handler
+function FunnelView({ projects, onOpenProject, stepId, onOpenFolder }: { projects: SeedingProject[]; onOpenProject: (s: 'filter' | 'review' | 'publish') => void; stepId?: string; modalOpen?: boolean; onOpenFolder?: () => void }) {
     const activeCount = projects.filter(p => p.status !== 'archived').length
     const liveCount = projects.filter(p => p.status === 'live').length
     return (
@@ -446,7 +483,7 @@ function FunnelView({ projects, onOpenProject, stepId, modalOpen }: { projects: 
                             </div>
                         ) : col.map(p => {
                             const action = () => p.url
-                                ? window.open(p.url, '_blank')
+                                ? onOpenFolder?.()
                                 : onOpenProject(stepId === 'clc2.4' ? 'publish' : stepId === 'clc2.3' ? 'review' : 'filter')
                             return (
                                 <button
@@ -490,7 +527,7 @@ function FunnelView({ projects, onOpenProject, stepId, modalOpen }: { projects: 
 
 // ─── Row + panels ────────────────────────────────────────────────────────────
 
-function SharePointRow({ project, onOpen, inProgress = false }: { project: SeedingProject; onOpen: () => void; inProgress?: boolean }) {
+function SharePointRow({ project, onOpen, inProgress = false, onOpenFolder }: { project: SeedingProject; onOpen: () => void; inProgress?: boolean; onOpenFolder?: () => void }) {
     const tone = STATUS_TONE[project.status]
     const isPrior = project.status === 'archived'
     return (
@@ -519,9 +556,13 @@ function SharePointRow({ project, onOpen, inProgress = false }: { project: Seedi
             </span>
             <div className="text-right">
                 {project.url ? (
-                    <a href={project.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 dark:text-blue-300 hover:underline">
-                        Open <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <button
+                        onClick={onOpenFolder}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 dark:text-blue-300 hover:underline"
+                        title="Open the SharePoint folder · simulated view"
+                    >
+                        Open folder <ExternalLink className="h-3 w-3" />
+                    </button>
                 ) : isPrior ? (
                     <span className="text-[11px] text-muted-foreground">archived</span>
                 ) : inProgress ? (
