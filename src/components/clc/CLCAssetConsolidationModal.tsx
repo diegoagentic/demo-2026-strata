@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, FolderTree, Sparkles, Check, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy, Folder, Mail } from 'lucide-react'
+import { X, FolderTree, Sparkles, Check, CheckCircle2, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy, Folder, Mail, XCircle, RotateCcw } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import {
     FAIRPORT_VENDOR_JOBS,
@@ -56,12 +56,27 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
     const sidebarExpanded = isDemoActive && !isSidebarCollapsed
     const offsetClass = sidebarExpanded ? 'lg:pl-96' : ''
 
+    // Per-flagged-asset agency · operator can Acknowledge ("publish anyway")
+    // or Remove ("don't ship to installer"). Both are reversible. Strata
+    // never blocks the publish CTA · the UI just reflects which decision
+    // the operator made per the doc's "operator confirms each flag" beat.
+    const [flagAcknowledgedIds, setFlagAcknowledgedIds] = useState<Set<string>>(new Set())
+    const [removedAssetIds, setRemovedAssetIds] = useState<Set<string>>(new Set())
+
     const includedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => j.included), [])
     const excludedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => !j.included), [])
     const includedAssets = useMemo(() => {
         const fromVendors = includedJobs.flatMap(j => j.assets)
         return [...fromVendors, ...COMMON_ASSETS]
     }, [includedJobs])
+
+    // Effective set drives the right-pane summary, the publish folder tree
+    // and the email draft counts. The left-pane list shows ALL assets
+    // (including removed) so the operator can undo without re-entering Review.
+    const effectiveAssets = useMemo(
+        () => includedAssets.filter(a => !removedAssetIds.has(a.id)),
+        [includedAssets, removedAssetIds],
+    )
 
     const assetCounts = useMemo(() => {
         const counts: Record<AssetEntry['type'], number> = {
@@ -72,6 +87,30 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
     }, [includedAssets])
 
     const totalSizeKb = includedAssets.reduce((s, a) => s + a.sizeKb, 0)
+    const effectiveSizeKb = effectiveAssets.reduce((s, a) => s + a.sizeKb, 0)
+
+    const handleAcknowledgeFlag = (id: string) =>
+        setFlagAcknowledgedIds(prev => new Set(prev).add(id))
+    const handleUndoAcknowledge = (id: string) =>
+        setFlagAcknowledgedIds(prev => {
+            const next = new Set(prev)
+            next.delete(id)
+            return next
+        })
+    const handleRemoveAsset = (id: string) => {
+        setRemovedAssetIds(prev => new Set(prev).add(id))
+        setFlagAcknowledgedIds(prev => {
+            const next = new Set(prev)
+            next.delete(id)   // a removed asset can't also be acknowledged
+            return next
+        })
+    }
+    const handleUndoRemove = (id: string) =>
+        setRemovedAssetIds(prev => {
+            const next = new Set(prev)
+            next.delete(id)
+            return next
+        })
 
     const goNext = () => {
         if (stage === 'filter') setStage('review')
@@ -128,14 +167,36 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                                 {/* Left (3/5) · stage-aware content */}
                                 <div className="lg:col-span-3 overflow-y-auto border-r border-border">
                                     {stage === 'filter'   && <FilterLeft included={includedJobs} excluded={excludedJobs} />}
-                                    {stage === 'review'   && <ReviewLeft assets={includedAssets} counts={assetCounts} totalSizeKb={totalSizeKb} onPreview={setPreviewAsset} />}
-                                    {stage === 'publish'  && <PublishLeft assets={includedAssets} />}
+                                    {stage === 'review'   && (
+                                        <ReviewLeft
+                                            assets={includedAssets}
+                                            counts={assetCounts}
+                                            totalSizeKb={totalSizeKb}
+                                            onPreview={setPreviewAsset}
+                                            flagAcknowledgedIds={flagAcknowledgedIds}
+                                            removedAssetIds={removedAssetIds}
+                                            onAcknowledgeFlag={handleAcknowledgeFlag}
+                                            onRemoveAsset={handleRemoveAsset}
+                                            onUndoAcknowledge={handleUndoAcknowledge}
+                                            onUndoRemove={handleUndoRemove}
+                                        />
+                                    )}
+                                    {stage === 'publish'  && <PublishLeft assets={effectiveAssets} />}
                                 </div>
                                 {/* Right (2/5) · action panel + primary CTA */}
                                 <div className="lg:col-span-2 overflow-y-auto bg-muted/20">
                                     {stage === 'filter'   && <FilterRight includedCount={includedJobs.length} excludedCount={excludedJobs.length} assetCount={includedAssets.length} onContinue={goNext} />}
-                                    {stage === 'review'   && <ReviewRight assetCount={includedAssets.length} totalSizeKb={totalSizeKb} onContinue={goNext} />}
-                                    {stage === 'publish'  && <PublishRight assetCount={includedAssets.length} totalSizeKb={totalSizeKb} onPublish={handlePublish} />}
+                                    {stage === 'review'   && (
+                                        <ReviewRight
+                                            assets={includedAssets}
+                                            effectiveAssetCount={effectiveAssets.length}
+                                            effectiveSizeKb={effectiveSizeKb}
+                                            flagAcknowledgedIds={flagAcknowledgedIds}
+                                            removedAssetIds={removedAssetIds}
+                                            onContinue={goNext}
+                                        />
+                                    )}
+                                    {stage === 'publish'  && <PublishRight assetCount={effectiveAssets.length} totalSizeKb={effectiveSizeKb} onPublish={handlePublish} />}
                                 </div>
                             </div>
 
@@ -363,13 +424,9 @@ function FilterCheckRow({ label, ok }: { label: string; ok: boolean }) {
     return (
         <div className="flex items-center gap-2 text-xs">
             {ok ? (
-                <div className="h-5 w-5 rounded-full bg-success/15 flex items-center justify-center shrink-0">
-                    <Check className="h-3 w-3 text-success" />
-                </div>
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-                <div className="h-5 w-5 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
-                    <AlertTriangle className="h-3 w-3 text-warning" />
-                </div>
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
             )}
             <span className="text-foreground">{label}</span>
         </div>
@@ -381,12 +438,27 @@ function FilterCheckRow({ label, ok }: { label: string; ok: boolean }) {
 type AssetTypeKey = AssetEntry['type']
 type AssetTab = 'all' | AssetTypeKey
 
-function ReviewLeft({ assets, counts, totalSizeKb, onPreview }: { assets: AssetEntry[]; counts: Record<AssetTypeKey, number>; totalSizeKb: number; onPreview: (a: AssetEntry) => void }) {
+function ReviewLeft({
+    assets, counts, totalSizeKb, onPreview,
+    flagAcknowledgedIds, removedAssetIds,
+    onAcknowledgeFlag, onRemoveAsset, onUndoAcknowledge, onUndoRemove,
+}: {
+    assets: AssetEntry[]
+    counts: Record<AssetTypeKey, number>
+    totalSizeKb: number
+    onPreview: (a: AssetEntry) => void
+    flagAcknowledgedIds: Set<string>
+    removedAssetIds: Set<string>
+    onAcknowledgeFlag: (id: string) => void
+    onRemoveAsset: (id: string) => void
+    onUndoAcknowledge: (id: string) => void
+    onUndoRemove: (id: string) => void
+}) {
     const [tab, setTab] = useState<AssetTab>('all')
     const visible = tab === 'all' ? assets : assets.filter(a => a.type === tab)
     return (
         <div className="p-5 space-y-3">
-            {/* Tabs */}
+            {/* Tabs · counts are static (show original) so labels don't jitter */}
             <div className="flex items-center gap-1.5 flex-wrap">
                 <TabButton label={`All ${assets.length}`} active={tab === 'all'} onClick={() => setTab('all')} />
                 {(Object.keys(counts) as AssetTypeKey[]).map(k => (
@@ -395,34 +467,149 @@ function ReviewLeft({ assets, counts, totalSizeKb, onPreview }: { assets: AssetE
                 <span className="ml-auto text-[11px] text-muted-foreground">{(totalSizeKb / 1024).toFixed(1)} MB total</span>
             </div>
 
-            {/* Asset list */}
+            {/* Asset list · status-aware row treatment per flag state */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="divide-y divide-border">
-                    {visible.map(a => (
-                        <button
-                            key={a.id}
-                            onClick={() => onPreview(a)}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left"
-                        >
-                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-sm text-foreground font-mono truncate">{a.name}</span>
-                                    <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${ASSET_TYPE_META[a.type].colorClass}`}>
-                                        {ASSET_TYPE_META[a.type].label}
-                                    </span>
-                                    {a.aiFlagged && (
-                                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-warning/15 text-warning">
-                                            <Sparkles className="h-3 w-3" />
-                                            Strata flag
-                                        </span>
+                    {visible.map(a => {
+                        const isFlagged = !!a.aiFlagged
+                        const isAck = flagAcknowledgedIds.has(a.id)
+                        const isRemoved = removedAssetIds.has(a.id)
+                        // Status-aware row container · the entire row gets a
+                        // background tint + left-border accent so the flagged
+                        // state is unmissable, not just a pill on the side.
+                        const rowTone = isRemoved
+                            ? 'bg-muted/10 opacity-60'
+                            : isFlagged && isAck
+                                ? 'bg-emerald-50/60 dark:bg-emerald-500/10 border-l-[3px] border-emerald-500'
+                                : isFlagged
+                                    ? 'bg-amber-50/60 dark:bg-amber-500/10 border-l-[3px] border-amber-500'
+                                    : ''
+                        return (
+                            <div key={a.id} className={rowTone}>
+                                {/* Main file row · click previews PDF */}
+                                <button
+                                    onClick={() => onPreview(a)}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/20 transition-colors text-left"
+                                >
+                                    {/* Leading status icon · semantic per row state */}
+                                    {isFlagged && !isAck && !isRemoved ? (
+                                        <div className="h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-500/30 flex items-center justify-center shrink-0">
+                                            <AlertTriangle className="h-3 w-3 text-amber-700 dark:text-amber-300" />
+                                        </div>
+                                    ) : isFlagged && isAck ? (
+                                        <div className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-500/30 flex items-center justify-center shrink-0">
+                                            <CheckCircle2 className="h-3 w-3 text-emerald-700 dark:text-emerald-300" />
+                                        </div>
+                                    ) : isRemoved ? (
+                                        <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                            <XCircle className="h-3 w-3 text-muted-foreground" />
+                                        </div>
+                                    ) : (
+                                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0 mx-0.5" />
                                     )}
-                                </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className={`text-sm font-mono truncate ${isRemoved ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                                {a.name}
+                                            </span>
+                                            <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${ASSET_TYPE_META[a.type].colorClass}`}>
+                                                {ASSET_TYPE_META[a.type].label}
+                                            </span>
+                                            {isFlagged && !isAck && !isRemoved && (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200 uppercase tracking-wider">
+                                                    <Sparkles className="h-2.5 w-2.5" />
+                                                    Strata · review
+                                                </span>
+                                            )}
+                                            {isFlagged && isAck && (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200 uppercase tracking-wider">
+                                                    <CheckCircle2 className="h-2.5 w-2.5" />
+                                                    Operator ack
+                                                </span>
+                                            )}
+                                            {isRemoved && (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground uppercase tracking-wider">
+                                                    <XCircle className="h-2.5 w-2.5" />
+                                                    Removed
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className={`text-xs tabular-nums shrink-0 ${isRemoved ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>
+                                        {a.sizeKb.toLocaleString()} KB
+                                    </span>
+                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                </button>
+
+                                {/* Flag detail + action affordances · only for flagged assets */}
+                                {isFlagged && (
+                                    <div className="px-3 pb-3 pl-11 space-y-2">
+                                        {!isRemoved && (
+                                            <p className="text-[11px] text-foreground leading-snug">
+                                                <strong className="text-foreground">Strata detected · </strong>
+                                                {a.flagReason}
+                                            </p>
+                                        )}
+                                        {!isAck && !isRemoved && (
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onAcknowledgeFlag(a.id)}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                                                >
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                    Acknowledge · publish anyway
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onRemoveAsset(a.id)}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+                                                >
+                                                    <XCircle className="h-3 w-3" />
+                                                    Remove from folder
+                                                </button>
+                                                <span className="text-[10px] text-muted-foreground italic ml-1">
+                                                    Strata never blocks · operator confirms.
+                                                </span>
+                                            </div>
+                                        )}
+                                        {isAck && !isRemoved && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold inline-flex items-center gap-1">
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                    Operator-acknowledged · publishes with the flag noted
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onUndoAcknowledge(a.id)}
+                                                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                                                >
+                                                    <RotateCcw className="h-2.5 w-2.5" />
+                                                    Undo
+                                                </button>
+                                            </div>
+                                        )}
+                                        {isRemoved && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[11px] text-muted-foreground font-semibold inline-flex items-center gap-1">
+                                                    <XCircle className="h-3 w-3" />
+                                                    Removed from the publish folder
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onUndoRemove(a.id)}
+                                                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                                                >
+                                                    <RotateCcw className="h-2.5 w-2.5" />
+                                                    Restore
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            <span className="text-xs text-muted-foreground tabular-nums shrink-0">{a.sizeKb.toLocaleString()} KB</span>
-                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        </button>
-                    ))}
+                        )
+                    })}
                 </div>
             </div>
         </div>
@@ -442,37 +629,77 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
     )
 }
 
-function ReviewRight({ assetCount, totalSizeKb, onContinue }: { assetCount: number; totalSizeKb: number; onContinue: () => void }) {
-    const flaggedAsset = FAIRPORT_VENDOR_JOBS.flatMap(j => j.assets).find(a => a.aiFlagged)
+function ReviewRight({
+    assets, effectiveAssetCount, effectiveSizeKb,
+    flagAcknowledgedIds, removedAssetIds, onContinue,
+}: {
+    assets: AssetEntry[]
+    effectiveAssetCount: number
+    effectiveSizeKb: number
+    flagAcknowledgedIds: Set<string>
+    removedAssetIds: Set<string>
+    onContinue: () => void
+}) {
+    const flaggedAsset = assets.find(a => a.aiFlagged)
+    // Three-way status of the flagged asset · drives the summary card
+    // styling and the folder-readiness row.
+    const flagStatus: 'awaiting' | 'acknowledged' | 'removed' | 'none' =
+        !flaggedAsset ? 'none'
+        : removedAssetIds.has(flaggedAsset.id) ? 'removed'
+        : flagAcknowledgedIds.has(flaggedAsset.id) ? 'acknowledged'
+        : 'awaiting'
     return (
         <div className="p-5 flex flex-col h-full">
             <div className="space-y-3 flex-1">
                 <div>
                     <h3 className="text-base font-bold text-foreground mb-0.5">Asset summary</h3>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">{assetCount} assets · {(totalSizeKb / 1024).toFixed(1)} MB · will be staged to a single SharePoint folder.</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground tabular-nums">{effectiveAssetCount}</strong> asset{effectiveAssetCount !== 1 ? 's' : ''} · {(effectiveSizeKb / 1024).toFixed(1)} MB · will be staged to a single SharePoint folder.
+                        {removedAssetIds.size > 0 && (
+                            <> <span className="text-muted-foreground">({removedAssetIds.size} removed by operator)</span></>
+                        )}
+                    </p>
                 </div>
 
                 {flaggedAsset && (
-                    <div className="rounded-xl border border-warning/40 bg-warning/5 p-3 space-y-2">
+                    <div className={`rounded-xl border p-3 space-y-2 ${
+                        flagStatus === 'awaiting'     ? 'border-amber-500/40 bg-amber-50/40 dark:bg-amber-500/5' :
+                        flagStatus === 'acknowledged' ? 'border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-500/5' :
+                                                        'border-border bg-muted/30'
+                    }`}>
                         <div className="flex items-center gap-1.5">
-                            <Sparkles className="h-3.5 w-3.5 text-warning" />
-                            <span className="text-[10px] font-bold text-warning uppercase tracking-wider">1 Strata flag</span>
+                            {flagStatus === 'awaiting' && <Sparkles className="h-3.5 w-3.5 text-amber-700 dark:text-amber-300" />}
+                            {flagStatus === 'acknowledged' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />}
+                            {flagStatus === 'removed' && <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                flagStatus === 'awaiting' ? 'text-amber-700 dark:text-amber-300' :
+                                flagStatus === 'acknowledged' ? 'text-emerald-700 dark:text-emerald-300' :
+                                'text-muted-foreground'
+                            }`}>
+                                {flagStatus === 'awaiting'     && '1 Strata flag · awaiting operator review'}
+                                {flagStatus === 'acknowledged' && '1 Strata flag · operator-acknowledged'}
+                                {flagStatus === 'removed'      && '1 asset removed by operator'}
+                            </span>
                         </div>
                         <div>
-                            <div className="text-xs font-bold text-foreground font-mono truncate">{flaggedAsset.name}</div>
+                            <div className={`text-xs font-bold font-mono truncate ${flagStatus === 'removed' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                {flaggedAsset.name}
+                            </div>
                             <p className="text-[11px] text-foreground leading-snug mt-0.5">{flaggedAsset.flagReason}</p>
                         </div>
                         <p className="text-[10px] text-muted-foreground italic">
-                            Strata never blocks · operator confirms the flag before publishing.
+                            Strata never blocks · operator confirms each flag before publishing.
                         </p>
                     </div>
                 )}
 
                 <div className="rounded-xl border border-border bg-card p-3 space-y-1.5">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Folder readiness</div>
-                    <FilterCheckRow label="All 15 assets readable from IQ" ok />
-                    <FilterCheckRow label="Installer iPad permissions verified" ok />
-                    <FilterCheckRow label="1 flagged asset · awaiting operator review" ok={false} />
+                    <ReadinessRow label={`All ${effectiveAssetCount} assets readable from IQ`} status="ok" />
+                    <ReadinessRow label="Installer iPad permissions verified" status="ok" />
+                    {flagStatus === 'awaiting'     && <ReadinessRow label="1 flagged asset · awaiting review" status="warn" />}
+                    {flagStatus === 'acknowledged' && <ReadinessRow label="1 flagged asset · operator-acknowledged" status="ok" />}
+                    {flagStatus === 'removed'      && <ReadinessRow label="1 flagged asset · removed by operator" status="muted" />}
                 </div>
             </div>
 
@@ -483,6 +710,23 @@ function ReviewRight({ assetCount, totalSizeKb, onContinue }: { assetCount: numb
                 Ready to publish
                 <ArrowRight className="h-4 w-4" />
             </button>
+        </div>
+    )
+}
+
+function ReadinessRow({ label, status }: { label: string; status: 'ok' | 'warn' | 'muted' }) {
+    return (
+        <div className="flex items-center gap-2 text-xs">
+            {status === 'ok' && (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            )}
+            {status === 'warn' && (
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            )}
+            {status === 'muted' && (
+                <XCircle className="h-4 w-4 text-muted-foreground shrink-0" />
+            )}
+            <span className="text-foreground">{label}</span>
         </div>
     )
 }
