@@ -5,6 +5,7 @@ import CLCAssetConsolidationModal from './CLCAssetConsolidationModal'
 import CLCViewToggle, { type ViewMode } from './shared/CLCViewToggle'
 import CLCFilterBar, { type StatusOption } from './shared/CLCFilterBar'
 import CLCSummaryChipsBar, { type SummaryChip } from './shared/CLCSummaryChipsBar'
+import CLCIngestionOverlay from './shared/CLCIngestionOverlay'
 import { SHAREPOINT_FOLDER_URL, SCHEDULED_INSTALL_DATE, FAIRPORT_VENDOR_JOBS } from './shared/assetSeedingData'
 
 type SeedingStatus = 'ready' | 'filtering' | 'reviewing' | 'publishing' | 'live' | 'archived'
@@ -91,6 +92,11 @@ export default function CLCSharePointScene() {
     const [modalOpen, setModalOpen] = useState(false)
     const [initialStage, setInitialStage] = useState<'filter' | 'review' | 'publish'>('filter')
     const [published, setPublished] = useState(false)
+    // Extraction overlay · plays between the Action Center CTA click and
+    // the consolidation modal opening. Mirrors Flow 1's clc1.1 ingestion
+    // overlay · gives a visible "Strata is analyzing 15 documents across
+    // 5 IQ jobs" beat instead of an instant modal teleport.
+    const [extractionInProgress, setExtractionInProgress] = useState(false)
 
     const [viewMode, setViewMode] = useState<ViewMode>('list')
     const [hasUserToggled, setHasUserToggled] = useState(false)
@@ -114,16 +120,20 @@ export default function CLCSharePointScene() {
     }, [stepId])
 
     // Action Center CTA listener · clc2.1 notification dispatches this event.
-    // Opens the consolidation modal at the filter stage (Discover collapsed
-    // in · trigger context lives in the AI banner now).
+    // Now plays the extraction overlay FIRST (Strata "analyzing 15 docs
+    // across 5 IQ jobs") then opens the consolidation modal at filter
+    // stage when the overlay finishes. Mirrors Flow 1's clc1.1 ingestion
+    // pattern · narrative beat for the AI work.
     useEffect(() => {
-        const handler = () => {
-            setInitialStage('filter')
-            setModalOpen(true)
-        }
+        const handler = () => setExtractionInProgress(true)
         window.addEventListener('clc:sharepoint-trigger', handler)
         return () => window.removeEventListener('clc:sharepoint-trigger', handler)
     }, [])
+    const handleExtractionComplete = () => {
+        setExtractionInProgress(false)
+        setInitialStage('filter')
+        setModalOpen(true)
+    }
 
     // Reset user-toggled flag when step changes
     useEffect(() => {
@@ -297,6 +307,23 @@ export default function CLCSharePointScene() {
                     setModalOpen(false)
                 }}
             />
+
+            {/* Extraction overlay · plays before the modal opens when the
+                user clicks the Action Center CTA. 5 phases · ~2.8s total. */}
+            {extractionInProgress && (
+                <CLCIngestionOverlay
+                    onComplete={handleExtractionComplete}
+                    title="Strata is extracting install assets"
+                    phases={[
+                        'IQ status change detected · Fairport now Scheduled',
+                        'Searching IQ for customer-tag · 7 candidates found',
+                        'Filtering · 5 in-project · 2 tag mismatch (Tappé · SWBR)',
+                        'Extracting 15 assets · 8 shop drawings · 5 ACKs · site plan · runbook',
+                        'Analyzing vendor ACKs · 1 short-ship flagged on KI J-44022',
+                    ]}
+                    footnote="Fairport Public Library · 5 IQ jobs · J-44021 → J-44025 · 11.8 MB"
+                />
+            )}
         </div>
     )
 }
