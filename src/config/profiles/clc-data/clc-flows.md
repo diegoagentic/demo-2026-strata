@@ -9,14 +9,13 @@
 | `clc1.3` | Drag Fairport from Jun 2 → Jun 5 · row flippea a "Queued for IQ batch sync" | Stages change for nightly IQ batch sync (read-only API constraint) | `clc:calendar-writeback-queued` |
 | `clc1.4` | NY region accordion expands · "3 jobs need third-party installer" banner · Albany Install Co. draft email | Surfaces capacity overload · suggests vetted third-party with prior history · drafts outreach | `clc:calendar-capacity-warning` |
 
-## Flow 2 · SharePoint Asset Seeding (clc2.1 → clc2.4)
+## Flow 2 · SharePoint Asset Seeding (clc2.1 → clc2.3)
 
 | Step | What the user sees | What Strata does | Event fired |
 |---|---|---|---|
 | `clc2.1` | SharePoint scene · Fairport row "Ready to seed" | Detects IQ status change to "Scheduled" · triggers folder workflow | `clc:sharepoint-trigger` |
 | `clc2.2` | Consolidation modal · 5 IQ jobs IN · 2 IQ jobs OUT (with rationale) | Uses customer-tag linkage to bundle related jobs · excludes mismatched tags | `clc:sharepoint-consolidate-open` |
-| `clc2.3` | Inline PDF preview of 15 staged assets · Sparkles on flagged ACK | Generates manifest · flags vendor short-ship on J-44022 ACK | `clc:sharepoint-review-open` |
-| `clc2.4` | SharePoint URL pinned to row · installer notification email drafted | Publishes folder · sets permissions · drafts notification (operator sends) | `clc:sharepoint-folder-created` |
+| `clc2.3` | Modal at Review → Publish · inline PDF preview of 15 staged assets · Sparkles on flagged ACK (operator acknowledges or removes) · folder preview + SharePoint URL pinned + installer notification email drafted · operator publishes | Generates manifest · flags vendor short-ship on J-44022 ACK · then publishes folder · sets permissions · drafts notification (operator sends) | `clc:sharepoint-folder-created` |
 
 ## Flow 3 · Intake Validation (clc3.1 → clc3.3)
 

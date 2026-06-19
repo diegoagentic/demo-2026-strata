@@ -20,7 +20,7 @@
 // STRUCTURE: 12 steps across 4 flows
 //
 //   Group 1 — Calendar Sync (Flow 1)        clc1.1 → clc1.4   (IQ → Outlook)
-//   Group 2 — SharePoint Seeding (Flow 2)   clc2.1 → clc2.4   (IQ → SharePoint)
+//   Group 2 — SharePoint Seeding (Flow 2)   clc2.1 → clc2.3   (IQ → SharePoint)
 //   Group 3 — Intake Validation (Flow 3)    clc3.1 → clc3.3   (Survey ↔ IQ)
 //   Group 4 — Data Lake Dashboard (Flow 4)  clc4.1            (persistent tab)
 //
@@ -117,18 +117,8 @@ export const CLC_STEPS: DemoStep[] = [
         id: 'clc2.3',
         groupId: 2,
         groupTitle: 'SharePoint Seeding',
-        title: 'Review consolidated assets · 15 files staged',
-        description: '8 shop drawings · 5 ACKs · 1 site plan · 1 runbook · all pulled from the 5 IQ jobs. Operator previews each PDF inline. Sparkles on files Strata flagged as needing review (1 ACK with vendor short-ship).',
-        app: 'clc-sharepoint',
-        role: 'Director of Operations',
-        flowId: 'sharepoint',
-    },
-    {
-        id: 'clc2.4',
-        groupId: 2,
-        groupTitle: 'SharePoint Seeding',
-        title: 'Publish folder · share link with installer',
-        description: 'Folder published to SharePoint · installer notified via Outlook with iPad-ready link · single source for the install day. URL · creativelibraryconcepts.sharepoint.com/sites/Installs/Fairport-Library-Phase1/',
+        title: 'Review consolidated assets · publish to SharePoint',
+        description: '8 shop drawings · 5 ACKs · 1 site plan · 1 runbook · all pulled from the 5 IQ jobs. Operator previews each PDF inline · Sparkles on the ACK Strata flagged (KI vendor short-ship · operator acknowledges or removes). Then publishes the folder to SharePoint · installer notified via Outlook with iPad-ready link · single source for the install day.',
         app: 'clc-sharepoint',
         role: 'Director of Operations',
         flowId: 'sharepoint',
@@ -194,8 +184,7 @@ export const CLC_STEP_BEHAVIOR: Record<string, StepBehavior> = {
 
     'clc2.1': { mode: 'interactive', userAction: 'Open the Scheduled trigger · review the Fairport job hitting the seed condition' },
     'clc2.2': { mode: 'interactive', userAction: 'Review the 5 IQ jobs included · check the 2 excluded with tag-mismatch rationale · proceed' },
-    'clc2.3': { mode: 'interactive', userAction: 'Preview 2-3 PDFs inline · note the Sparkles-flagged ACK · approve the consolidation' },
-    'clc2.4': { mode: 'interactive', userAction: 'Publish the folder · confirm the SharePoint URL · review the installer notification draft' },
+    'clc2.3': { mode: 'interactive', userAction: 'Preview the staged assets · acknowledge or remove the Strata-flagged ACK · review the SharePoint URL + installer notification draft · publish the folder' },
 
     'clc3.1': { mode: 'interactive', userAction: 'Read the phishing-risk warning · pick the recommended platform delivery channel' },
     'clc3.2': { mode: 'interactive', userAction: 'Watch the conversational survey play through · 10 questions · customer answers stream in' },
@@ -254,14 +243,10 @@ export const CLC_STEP_MESSAGES: Record<string, string[]> = {
         '8 shop drawings · 5 ACKs · 1 site plan · 1 runbook',
         'Sparkles on J-44022 ACK · vendor short-ship flagged',
         'Generating thumbnails · PDF preview ready',
-        'Folder structure mirrors install-day workflow',
-    ],
-    'clc2.4': [
+        'Operator acknowledges or removes the flagged ACK',
         'Publishing to SharePoint · /sites/Installs/Fairport-Library-Phase1/',
         'Setting permissions · install crew + Director of Operations',
-        'Drafting installer notification email · iPad-friendly link',
-        'Folder live · 15 assets · 23.4 MB',
-        'Notification queued · operator reviews and sends',
+        'Folder live · installer notification queued for review',
     ],
     'clc3.1': [
         'Fairport awarded · 10-question survey ready',
@@ -297,7 +282,7 @@ export const CLC_STEP_MESSAGES: Record<string, string[]> = {
 
 export const CLC_SELF_INDICATED: string[] = [
     'clc1.1', 'clc1.2', 'clc1.3', 'clc1.4',
-    'clc2.1', 'clc2.2', 'clc2.3', 'clc2.4',
+    'clc2.1', 'clc2.2', 'clc2.3',
     'clc3.1', 'clc3.2', 'clc3.3',
     'clc4.1',
 ];

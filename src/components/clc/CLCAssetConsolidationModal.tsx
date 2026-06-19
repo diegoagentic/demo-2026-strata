@@ -194,7 +194,9 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
             window.dispatchEvent(new CustomEvent('clc:sharepoint-stage-changed', { detail: { stage: 'review' } }))
         } else if (stage === 'review') {
             setStage('publish')
-            // Same bridge · clc2.3 → clc2.4 · "Approve the consolidation".
+            // Review → Publish · internal stage transition · ya NO mueve el sidebar
+            // (clc2.3 cubre Review + Publish después del merge). El dispatch queda
+            // por compatibilidad pero el scene listener lo ignora.
             window.dispatchEvent(new CustomEvent('clc:sharepoint-stage-changed', { detail: { stage: 'publish' } }))
         }
     }

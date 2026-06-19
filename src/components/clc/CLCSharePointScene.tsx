@@ -84,7 +84,7 @@ function folderInitials(name: string): string {
  *   clc2.1 → list view · Fairport row appears with "Triggered" status
  *   clc2.2 → list view + modal at Filter stage
  *   clc2.3 → list view + modal at Review stage
- *   clc2.4 → list view + modal at Publish stage · autoswap to Funnel after publish
+ *   clc2.3 → list view + modal at Review stage · user navega internamente a Publish · autoswap to Funnel after publish
  */
 export default function CLCSharePointScene() {
     const { currentStep, nextStep, stepClickCount } = useDemo()
@@ -136,12 +136,13 @@ export default function CLCSharePointScene() {
             setInitialStage('filter')
             setModalOpen(true)
         } else if (stepId === 'clc2.3') {
-            setPublished(false)
+            // Merged step · cubre los modal stages Review + Publish · el user
+            // navega internamente vía goNext (sin avanzar el sidebar).
+            // setPublished(false) solo cuando NO está ya published · evita
+            // resetear el Live status si el operator vuelve a clc2.3 después
+            // de un publish exitoso (publish overlay completes → published=true).
             setFolderViewerOpen(false)
             setInitialStage('review')
-            setModalOpen(true)
-        } else if (stepId === 'clc2.4') {
-            setInitialStage('publish')
             setModalOpen(true)
         } else {
             setModalOpen(false)
@@ -179,9 +180,10 @@ export default function CLCSharePointScene() {
         const handler = (e: Event) => {
             const newStage = (e as CustomEvent).detail?.stage as 'review' | 'publish' | undefined
             if (!newStage) return
+            // Solo el bridge 2.2 → 2.3 sobrevive · clc2.3 ahora cubre Review +
+            // Publish del modal · el goNext de Review → Publish queda internal
+            // al modal y NO mueve el sidebar.
             if (newStage === 'review' && stepIdRef.current === 'clc2.2') {
-                nextStep()
-            } else if (newStage === 'publish' && stepIdRef.current === 'clc2.3') {
                 nextStep()
             }
         }
@@ -195,7 +197,7 @@ export default function CLCSharePointScene() {
         setHasUserToggled(false)
     }, [stepId])
 
-    // Autoswap to funnel after publish (clc2.4 outcome)
+    // Autoswap to funnel after publish (clc2.3 outcome · publish action lives inside the merged Review+Publish step)
     useEffect(() => {
         if (!published || hasUserToggled) return
         const t = setTimeout(() => setViewMode('funnel'), 1500)
@@ -212,7 +214,6 @@ export default function CLCSharePointScene() {
         if (stepId?.startsWith('clc2.')) {
             const fairportStatus: SeedingStatus =
                 published ? 'live' :
-                stepId === 'clc2.4' ? 'publishing' :
                 stepId === 'clc2.3' ? 'reviewing' :
                 stepId === 'clc2.2' ? 'filtering' :
                 'ready'
@@ -275,7 +276,7 @@ export default function CLCSharePointScene() {
             label: `${publishedCount} published`,
             count: publishedCount,
             tone: 'success',
-            pulse: published && stepId === 'clc2.4',
+            pulse: published && stepId === 'clc2.3',
             panelTitle: 'Published folders',
             panel: <SimpleList items={projects.filter(p => p.status === 'live').map(p => `${p.name} · ${p.url ?? ''}`)} emptyMessage="No folders published yet." />,
         },
@@ -430,7 +431,6 @@ function ListView({ projects, onOpenProject, stepId, modalOpen, onOpenFolder }: 
                             project={p}
                             inProgress={isActiveInModal}
                             onOpen={() => onOpenProject(
-                                stepId === 'clc2.4' ? 'publish' :
                                 stepId === 'clc2.3' ? 'review' :
                                 'filter'
                             )}
@@ -483,7 +483,7 @@ function FunnelView({ projects, onOpenProject, stepId, onOpenFolder }: { project
                         ) : col.map(p => {
                             const action = () => p.url
                                 ? onOpenFolder?.()
-                                : onOpenProject(stepId === 'clc2.4' ? 'publish' : stepId === 'clc2.3' ? 'review' : 'filter')
+                                : onOpenProject(stepId === 'clc2.3' ? 'review' : 'filter')
                             return (
                                 <button
                                     key={p.id}
