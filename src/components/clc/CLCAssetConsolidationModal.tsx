@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, FolderTree, Sparkles, Check, CheckCircle2, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy, Folder, Mail, XCircle, RotateCcw } from 'lucide-react'
+import { X, FolderTree, Sparkles, Check, CheckCircle2, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy, Folder, Mail, XCircle, RotateCcw, Pencil, Send, Save } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import {
     FAIRPORT_VENDOR_JOBS,
@@ -9,6 +9,8 @@ import {
     SHAREPOINT_FOLDER_URL,
     type AssetEntry,
 } from './shared/assetSeedingData'
+import CLCIngestionOverlay from './shared/CLCIngestionOverlay'
+import AIEmailComposer from '../shared/AIEmailComposer'
 
 interface Props {
     isOpen: boolean
@@ -47,6 +49,24 @@ const STAGE_TITLE: Record<Stage, string> = {
     publish:  'Publish',
 }
 
+/** Default installer notification email · operator can edit via the
+    AIEmailComposer triggered from the publish-stage right pane. */
+const DEFAULT_DRAFT_SUBJECT = 'Fairport Public Library install · Jun 2 · folder ready'
+const DEFAULT_DRAFT_BODY = [
+    'Hi —',
+    '',
+    'Your install day folder for Fairport Public Library is live in SharePoint. You\'ll find 8 shop drawings, 5 vendor ACKs, the site plan and your runbook.',
+    '',
+    'One ACK has a Strata flag for short-shipped lounge chairs (KI · 2 of 24) — vendor proposes back-order. Please verify on receipt and note any discrepancies on the punch list.',
+    '',
+    'Tap the link from your iPad to open · everything you need for the install day is in one place.',
+    '',
+    'Thanks,',
+    'Sara Chen · Account Manager',
+    'Creative Library Concepts',
+].join('\n')
+const DRAFT_RECIPIENT = 'Install crew · Marcus Reed + Tomás Hernandez · iPad delivery'
+
 export default function CLCAssetConsolidationModal({ isOpen, onClose, initialStage = 'filter', onPublished }: Props) {
     const [stage, setStage] = useState<Stage>(initialStage)
     const [previewAsset, setPreviewAsset] = useState<AssetEntry | null>(null)
@@ -62,6 +82,28 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
     // the operator made per the doc's "operator confirms each flag" beat.
     const [flagAcknowledgedIds, setFlagAcknowledgedIds] = useState<Set<string>>(new Set())
     const [removedAssetIds, setRemovedAssetIds] = useState<Set<string>>(new Set())
+
+    // Publish-time state · overlay plays for ~2.5s before the modal
+    // actually closes, so the operator sees Strata doing the work
+    // (folder create + permissions + upload + link gen) instead of an
+    // instant close.
+    const [publishingInProgress, setPublishingInProgress] = useState(false)
+
+    // Installer notification draft · default values seeded, operator can
+    // edit via the AIEmailComposer (same shell used in MBI's AR collection
+    // flow and CLC's capacity outreach panel). `draftEdited` drives the
+    // "edited by operator" indicator next to the draft heading.
+    const [draftSubject, setDraftSubject] = useState(DEFAULT_DRAFT_SUBJECT)
+    const [draftBody, setDraftBody] = useState(DEFAULT_DRAFT_BODY)
+    const [draftEdited, setDraftEdited] = useState(false)
+    const [emailComposerOpen, setEmailComposerOpen] = useState(false)
+
+    const handleSaveDraft = (subject: string, body: string) => {
+        setDraftSubject(subject)
+        setDraftBody(body)
+        setDraftEdited(true)
+        setEmailComposerOpen(false)
+    }
 
     const includedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => j.included), [])
     const excludedJobs = useMemo(() => FAIRPORT_VENDOR_JOBS.filter(j => !j.included), [])
@@ -122,7 +164,19 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
     }
 
     const handlePublish = () => {
-        window.dispatchEvent(new CustomEvent('clc:sharepoint-folder-created', { detail: { url: SHAREPOINT_FOLDER_URL } }))
+        // Start the publishing simulation · overlay plays, modal stays open.
+        setPublishingInProgress(true)
+    }
+    const handlePublishComplete = () => {
+        setPublishingInProgress(false)
+        window.dispatchEvent(new CustomEvent('clc:sharepoint-folder-created', {
+            detail: {
+                url: SHAREPOINT_FOLDER_URL,
+                notificationSubject: draftSubject,
+                notificationBody: draftBody,
+                notificationEdited: draftEdited,
+            },
+        }))
         onPublished?.()
     }
 
@@ -196,7 +250,17 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                                             onContinue={goNext}
                                         />
                                     )}
-                                    {stage === 'publish'  && <PublishRight assetCount={effectiveAssets.length} totalSizeKb={effectiveSizeKb} onPublish={handlePublish} />}
+                                    {stage === 'publish'  && (
+                                        <PublishRight
+                                            assetCount={effectiveAssets.length}
+                                            totalSizeKb={effectiveSizeKb}
+                                            draftSubject={draftSubject}
+                                            draftBody={draftBody}
+                                            draftEdited={draftEdited}
+                                            onOpenEditor={() => setEmailComposerOpen(true)}
+                                            onPublish={handlePublish}
+                                        />
+                                    )}
                                 </div>
                             </div>
 
@@ -258,6 +322,45 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
                     </div>
                 </Dialog>
             </Transition>
+
+            {/* AI Email Composer · same shell used in MBI AR collections + CLC
+                capacity outreach. Opens from the "Edit" button on the
+                installer notification draft. Save updates the local draft
+                state · publish-time event detail carries the latest values. */}
+            <AIEmailComposer
+                isOpen={emailComposerOpen}
+                onClose={() => setEmailComposerOpen(false)}
+                title="Edit installer notification"
+                subtitle="Strata-drafted · operator reviews and sends with the SharePoint link"
+                icon={<Mail className="h-4 w-4" />}
+                to={DRAFT_RECIPIENT}
+                initialSubject={draftSubject}
+                initialBody={draftBody}
+                badge={{ label: 'Installer notification', tone: 'info', icon: <Mail className="h-3 w-3" /> }}
+                actionLabel="Save draft"
+                actionIcon={<Save className="h-3.5 w-3.5" />}
+                onAction={handleSaveDraft}
+            />
+
+            {/* Publish-time overlay · plays for ~2.5s after the operator
+                confirms. Modal stays open behind it so the close animation
+                happens after the publish work "lands". */}
+            {publishingInProgress && (
+                <CLCIngestionOverlay
+                    onComplete={handlePublishComplete}
+                    title="Strata is publishing the install folder"
+                    phases={[
+                        `Creating SharePoint folder · /sites/Installs/Fairport-Library-Phase1/`,
+                        'Setting permissions · install crew + Director of Operations',
+                        `Uploading ${effectiveAssets.length} assets · ${(effectiveSizeKb / 1024).toFixed(1)} MB`,
+                        'Generating iPad-friendly share link',
+                        draftEdited
+                            ? 'Queueing operator-edited installer notification'
+                            : 'Queueing Strata-drafted installer notification',
+                    ]}
+                    footnote={`Fairport Library Phase 1 · ${effectiveAssets.length} assets · ${draftEdited ? 'operator-edited draft' : 'Strata draft'}`}
+                />
+            )}
         </Transition>
     )
 }
@@ -777,10 +880,24 @@ function PublishLeft({ assets }: { assets: AssetEntry[] }) {
     )
 }
 
-function PublishRight({ assetCount, totalSizeKb, onPublish }: { assetCount: number; totalSizeKb: number; onPublish: () => void }) {
+function PublishRight({
+    assetCount, totalSizeKb,
+    draftSubject, draftBody, draftEdited,
+    onOpenEditor, onPublish,
+}: {
+    assetCount: number
+    totalSizeKb: number
+    draftSubject: string
+    draftBody: string
+    draftEdited: boolean
+    onOpenEditor: () => void
+    onPublish: () => void
+}) {
     const copyUrl = () => {
         navigator.clipboard?.writeText(SHAREPOINT_FOLDER_URL).catch(() => {})
     }
+    // Body preview line · first non-empty line of the (possibly edited) draft.
+    const bodyPreview = draftBody.split('\n').find(l => l.trim().length > 0) ?? draftBody
     return (
         <div className="p-5 flex flex-col h-full">
             <div className="space-y-3 flex-1">
@@ -800,15 +917,30 @@ function PublishRight({ assetCount, totalSizeKb, onPublish }: { assetCount: numb
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-3 space-y-1.5">
-                    <div className="flex items-center gap-1.5">
+                    {/* Header · label + Edited badge + Edit button */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
                         <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Installer notification · draft</span>
+                        {draftEdited && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-ai/15 text-ai uppercase tracking-wider">
+                                <Sparkles className="h-2.5 w-2.5" />
+                                Edited
+                            </span>
+                        )}
+                        <button
+                            type="button"
+                            onClick={onOpenEditor}
+                            className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-foreground hover:bg-muted px-1.5 py-0.5 rounded-md transition-colors"
+                        >
+                            <Pencil className="h-3 w-3" />
+                            Edit
+                        </button>
                     </div>
                     <div className="text-[11px] text-foreground">
-                        <strong>Subject:</strong> Fairport Public Library install · Jun 2 · folder ready
+                        <strong>Subject:</strong> {draftSubject}
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-snug line-clamp-3">
-                        Hi — your install day folder is live in SharePoint. 8 shop drawings, 5 vendor ACKs, the site plan and your runbook. One ACK has a Strata flag for short-shipped lounge chairs — verify on receipt. Tap the link from your iPad to open.
+                        {bodyPreview}
                     </p>
                 </div>
             </div>
