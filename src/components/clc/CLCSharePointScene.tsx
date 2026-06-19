@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo, useRef } from 'react'
 import { useDemo } from '../../context/DemoContext'
 import { FolderTree, Folder, FolderOpen, Sparkles, AlertCircle, CheckCircle2, ExternalLink, FileText, Database, MoreHorizontal } from 'lucide-react'
 import CLCAssetConsolidationModal from './CLCAssetConsolidationModal'
@@ -86,8 +86,14 @@ function folderInitials(name: string): string {
  *   clc2.4 → list view + modal at Publish stage · autoswap to Funnel after publish
  */
 export default function CLCSharePointScene() {
-    const { currentStep } = useDemo()
+    const { currentStep, nextStep } = useDemo()
     const stepId = currentStep?.id
+    // Live ref to current stepId · used inside event listeners and async
+    // callbacks to gate nextStep() on the operator actually being at the
+    // expected source step. Without this the auto-bridge could fire from
+    // stale closures when stepId has already advanced.
+    const stepIdRef = useRef(stepId)
+    useEffect(() => { stepIdRef.current = stepId }, [stepId])
 
     const [modalOpen, setModalOpen] = useState(false)
     const [initialStage, setInitialStage] = useState<'filter' | 'review' | 'publish'>('filter')
@@ -133,7 +139,32 @@ export default function CLCSharePointScene() {
         setExtractionInProgress(false)
         setInitialStage('filter')
         setModalOpen(true)
+        // 2.1 → 2.2 bridge · clicking the Action Center CTA is the
+        // documented "Open the Scheduled trigger" action · advance the
+        // sidebar so it stays coherent with what the user is doing.
+        if (stepIdRef.current === 'clc2.1') {
+            nextStep()
+        }
     }
+
+    // 2.2 → 2.3 and 2.3 → 2.4 bridges · the modal dispatches
+    // clc:sharepoint-stage-changed when the operator clicks goNext
+    // (Stage 15 assets → / Ready to publish →). Each is the documented
+    // moment to move the sidebar forward.
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const newStage = (e as CustomEvent).detail?.stage as 'review' | 'publish' | undefined
+            if (!newStage) return
+            if (newStage === 'review' && stepIdRef.current === 'clc2.2') {
+                nextStep()
+            } else if (newStage === 'publish' && stepIdRef.current === 'clc2.3') {
+                nextStep()
+            }
+        }
+        window.addEventListener('clc:sharepoint-stage-changed', handler)
+        return () => window.removeEventListener('clc:sharepoint-stage-changed', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     // Reset user-toggled flag when step changes
     useEffect(() => {
@@ -231,6 +262,11 @@ export default function CLCSharePointScene() {
     const openModal = (stage: typeof initialStage) => {
         setInitialStage(stage)
         setModalOpen(true)
+        // 2.1 → 2.2 bridge · clicking "Open" on the Fairport row also
+        // counts as "Open the Scheduled trigger" per the doc.
+        if (stepIdRef.current === 'clc2.1') {
+            nextStep()
+        }
     }
 
     const handleViewChange = (m: ViewMode) => {

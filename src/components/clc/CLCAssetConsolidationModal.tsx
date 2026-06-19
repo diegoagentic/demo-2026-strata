@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useMemo, useState, useEffect } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { X, FolderTree, Sparkles, Check, CheckCircle2, AlertTriangle, ChevronRight, FileText, ArrowRight, ExternalLink, Copy, Folder, Mail, XCircle, RotateCcw, Pencil, Send, Save } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
@@ -70,6 +70,12 @@ const DRAFT_RECIPIENT = 'Install crew · Marcus Reed + Tomás Hernandez · iPad 
 export default function CLCAssetConsolidationModal({ isOpen, onClose, initialStage = 'filter', onPublished }: Props) {
     const [stage, setStage] = useState<Stage>(initialStage)
     const [previewAsset, setPreviewAsset] = useState<AssetEntry | null>(null)
+    // Sync internal stage when the parent's initialStage prop changes ·
+    // covers backward sidebar nav (e.g. user at clc2.3 jumps back to clc2.2
+    // and we want the modal to reset to the filter stage to match).
+    useEffect(() => {
+        setStage(initialStage)
+    }, [initialStage])
     // Sidebar-aware offset · 320px sidebar + 64px gap = lg:pl-96 (384px).
     // Diego's "modal pegado al sidebar" needs visible breathing room, not flush.
     const { isDemoActive, isSidebarCollapsed } = useDemo()
@@ -155,8 +161,17 @@ export default function CLCAssetConsolidationModal({ isOpen, onClose, initialSta
         })
 
     const goNext = () => {
-        if (stage === 'filter') setStage('review')
-        else if (stage === 'review') setStage('publish')
+        if (stage === 'filter') {
+            setStage('review')
+            // Sidebar bridge · CLCSharePointScene listens and advances
+            // clc2.2 → clc2.3 if applicable. Doc maps "Stage 15 assets" to
+            // the proceed action of clc2.2's userAction.
+            window.dispatchEvent(new CustomEvent('clc:sharepoint-stage-changed', { detail: { stage: 'review' } }))
+        } else if (stage === 'review') {
+            setStage('publish')
+            // Same bridge · clc2.3 → clc2.4 · "Approve the consolidation".
+            window.dispatchEvent(new CustomEvent('clc:sharepoint-stage-changed', { detail: { stage: 'publish' } }))
+        }
     }
     const goPrev = () => {
         if (stage === 'publish') setStage('review')
