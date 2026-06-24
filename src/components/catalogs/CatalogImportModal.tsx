@@ -566,17 +566,17 @@ export default function CatalogImportModal({ isOpen, onClose, onImportComplete }
 
 /**
  * Single source option in the Import Catalog radio group.
- * A11y fixes (Diego's request):
+ * A11y + DS-compliance fixes (Diego's UX review):
  *  - role="radio" + aria-checked · correct semantics for mutually exclusive choice
- *  - tabIndex=0 only on the selected option (or first when none selected) ·
- *    standard radio group keyboard pattern · arrow keys cycle, Tab moves out
- *  - Selected state · the lime accent lives in the BORDER + ICON only · the
- *    label text stays text-foreground (high contrast) regardless of state.
- *    Per Strata DS · "brand-300 lime never as text · only as background."
- *  - Unselected label uses text-foreground too · icon stays muted as accent
- *  - Visible focus ring via focus-visible:ring-2 ring-primary ring-offset-2
- *  - Hover state on unselected · border-foreground/30 + bg-muted/30 for
- *    clear affordance
+ *  - SELECTED state · solid lime bg (bg-primary) + dark icon & label
+ *    (text-primary-foreground) · matches the primary-button pattern of the
+ *    "Next" CTA · extremely clear selection visual without lime-on-lime
+ *    contrast issues. Per Strata DS · brand-300 lime is a background token,
+ *    not a foreground token · so icon AND label use the on-primary pair.
+ *  - UNSELECTED state · neutral card · icon muted as secondary accent · label
+ *    text-foreground (high contrast)
+ *  - Hover unselected · border-foreground/30 + bg-muted/30 (affordance)
+ *  - Visible focus ring · focus-visible:ring-2 ring-primary ring-offset-2
  */
 interface CatalogSourceOptionProps {
     label: string
@@ -593,15 +593,28 @@ function CatalogSourceOption({ label, icon: Icon, selected, onSelect }: CatalogS
             aria-checked={selected}
             onClick={onSelect}
             className={cn(
-                "p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-all text-foreground",
+                "p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-all",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 selected
-                    ? "border-primary bg-primary/10"
-                    : "border-input hover:border-foreground/30 hover:bg-muted/30"
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-input bg-card text-foreground hover:border-foreground/30 hover:bg-muted/30"
             )}
         >
-            <Icon className={cn("w-8 h-8", selected ? "text-primary" : "text-muted-foreground")} />
-            <span className="font-semibold text-sm text-foreground">{label}</span>
+            <Icon
+                className={cn(
+                    "w-8 h-8",
+                    selected ? "text-primary-foreground" : "text-muted-foreground"
+                )}
+                aria-hidden="true"
+            />
+            <span
+                className={cn(
+                    "font-semibold text-sm",
+                    selected ? "text-primary-foreground" : "text-foreground"
+                )}
+            >
+                {label}
+            </span>
         </button>
     )
 }
