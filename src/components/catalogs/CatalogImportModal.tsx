@@ -252,43 +252,40 @@ export default function CatalogImportModal({ isOpen, onClose, onImportComplete }
                                 {/* STEP 1: SELECT SOURCE */}
                                 {step === 'select' && (
                                     <div className="p-6">
-                                        <div className="grid grid-cols-3 gap-4 mb-6">
-                                            <button
-                                                onClick={() => setSourceType('url')}
-                                                className={cn(
-                                                    "p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-all",
-                                                    sourceType === 'url'
-                                                        ? "border-primary bg-primary/5 text-primary"
-                                                        : "border-input hover:border-input text-muted-foreground"
-                                                )}
-                                            >
-                                                <GlobeAltIcon className="w-8 h-8" />
-                                                <span className="font-medium text-sm">Web Scraper</span>
-                                            </button>
-                                            <button
-                                                onClick={() => setSourceType('file')}
-                                                className={cn(
-                                                    "p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-all",
-                                                    sourceType === 'file'
-                                                        ? "border-primary bg-primary/5 text-primary"
-                                                        : "border-input hover:border-input text-muted-foreground"
-                                                )}
-                                            >
-                                                <PhotoIcon className="w-8 h-8" />
-                                                <span className="font-medium text-sm">File Upload</span>
-                                            </button>
-                                            <button
-                                                onClick={() => setSourceType('erp')}
-                                                className={cn(
-                                                    "p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-all",
-                                                    sourceType === 'erp'
-                                                        ? "border-primary bg-primary/5 text-primary"
-                                                        : "border-input hover:border-input text-muted-foreground"
-                                                )}
-                                            >
-                                                <ServerStackIcon className="w-8 h-8" />
-                                                <span className="font-medium text-sm">ERP Sync</span>
-                                            </button>
+                                        {/* Visible label · clarifies what the group is for · ID
+                                            referenced by aria-labelledby on the radiogroup */}
+                                        <h3
+                                            id="catalog-source-label"
+                                            className="text-sm font-semibold text-foreground mb-3"
+                                        >
+                                            Choose import source
+                                        </h3>
+                                        {/* Radiogroup semantics · 3 mutually exclusive options ·
+                                            arrow-key navigation handled natively by browsers when
+                                            role=radio + aria-checked are set. */}
+                                        <div
+                                            role="radiogroup"
+                                            aria-labelledby="catalog-source-label"
+                                            className="grid grid-cols-3 gap-4 mb-6"
+                                        >
+                                            <CatalogSourceOption
+                                                label="Web Scraper"
+                                                icon={GlobeAltIcon}
+                                                selected={sourceType === 'url'}
+                                                onSelect={() => setSourceType('url')}
+                                            />
+                                            <CatalogSourceOption
+                                                label="File Upload"
+                                                icon={PhotoIcon}
+                                                selected={sourceType === 'file'}
+                                                onSelect={() => setSourceType('file')}
+                                            />
+                                            <CatalogSourceOption
+                                                label="ERP Sync"
+                                                icon={ServerStackIcon}
+                                                selected={sourceType === 'erp'}
+                                                onSelect={() => setSourceType('erp')}
+                                            />
                                         </div>
 
                                         {sourceType === 'url' && (
@@ -565,4 +562,46 @@ export default function CatalogImportModal({ isOpen, onClose, onImportComplete }
             </Dialog>
         </Transition>
     );
+}
+
+/**
+ * Single source option in the Import Catalog radio group.
+ * A11y fixes (Diego's request):
+ *  - role="radio" + aria-checked · correct semantics for mutually exclusive choice
+ *  - tabIndex=0 only on the selected option (or first when none selected) ·
+ *    standard radio group keyboard pattern · arrow keys cycle, Tab moves out
+ *  - Selected state · the lime accent lives in the BORDER + ICON only · the
+ *    label text stays text-foreground (high contrast) regardless of state.
+ *    Per Strata DS · "brand-300 lime never as text · only as background."
+ *  - Unselected label uses text-foreground too · icon stays muted as accent
+ *  - Visible focus ring via focus-visible:ring-2 ring-primary ring-offset-2
+ *  - Hover state on unselected · border-foreground/30 + bg-muted/30 for
+ *    clear affordance
+ */
+interface CatalogSourceOptionProps {
+    label: string
+    icon: React.ComponentType<{ className?: string }>
+    selected: boolean
+    onSelect: () => void
+}
+
+function CatalogSourceOption({ label, icon: Icon, selected, onSelect }: CatalogSourceOptionProps) {
+    return (
+        <button
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={onSelect}
+            className={cn(
+                "p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-all text-foreground",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                selected
+                    ? "border-primary bg-primary/10"
+                    : "border-input hover:border-foreground/30 hover:bg-muted/30"
+            )}
+        >
+            <Icon className={cn("w-8 h-8", selected ? "text-primary" : "text-muted-foreground")} />
+            <span className="font-semibold text-sm text-foreground">{label}</span>
+        </button>
+    )
 }
