@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ComponentType } from 'react'
 import { BarChart3, Briefcase, Check, Inbox, KanbanSquare } from 'lucide-react'
 import { useTenant } from './TenantContext'
 import {
@@ -33,7 +33,7 @@ interface PageProps {
 interface ViewHeading {
     crumb: string
     title: string
-    Icon: typeof KanbanSquare
+    Icon: ComponentType<{ className?: string; strokeWidth?: number }>
 }
 
 // Strata CRM · port del standalone (Downloads/strata crm/strata-crm-standalone) ·

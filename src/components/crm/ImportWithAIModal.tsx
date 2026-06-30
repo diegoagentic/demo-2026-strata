@@ -1,6 +1,6 @@
-import { Fragment, useRef, useState } from 'react'
+import { Fragment, useRef, useState, type ComponentType } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { Check, CheckCircle2, FileText, Image as ImageIcon, File as FileIcon, Mail, Paperclip, Ruler, Sparkles, UploadCloud, X } from 'lucide-react'
+import { Check, CheckCircle2, FileText, FileImage, FileIcon, Mail, Paperclip, Ruler, Sparkles, UploadCloud, X } from 'lucide-react'
 import { deriveExtraction, fileKind, prettySize } from '../../config/profiles/crm-data'
 import type { ImportFile, ExtractionResult, Opportunity } from '../../config/profiles/crm-data'
 
@@ -10,14 +10,19 @@ interface Props {
     onCreate: (prefill: Opportunity) => void
 }
 
+// Icon type · simplificado de `typeof Mail` a ComponentType<any> para evitar
+// que TypeScript expanda los tipos generic complejos de lucide-react durante
+// el build · causaba OOM/SIGKILL en Vercel transform step.
+type IconCmp = ComponentType<{ className?: string }>
+
 const KIND_META: Record<
     ImportFile['kind'],
-    { Icon: typeof Mail; bgClass: string; fgClass: string; reads: string }
+    { Icon: IconCmp; bgClass: string; fgClass: string; reads: string }
 > = {
     email: { Icon: Mail, bgClass: 'bg-blue-500/15', fgClass: 'text-blue-700 dark:text-blue-400', reads: 'Stakeholders, intent, timeline' },
     pdf: { Icon: FileText, bgClass: 'bg-red-500/15', fgClass: 'text-red-700 dark:text-red-400', reads: 'Scope, pricing, specifications' },
     cad: { Icon: Ruler, bgClass: 'bg-emerald-500/15', fgClass: 'text-emerald-700 dark:text-emerald-400', reads: 'Station count, layout, square footage' },
-    image: { Icon: ImageIcon, bgClass: 'bg-yellow-500/15', fgClass: 'text-yellow-800 dark:text-yellow-400', reads: 'Site & product context' },
+    image: { Icon: FileImage, bgClass: 'bg-yellow-500/15', fgClass: 'text-yellow-800 dark:text-yellow-400', reads: 'Site & product context' },
     other: { Icon: FileIcon, bgClass: 'bg-muted', fgClass: 'text-muted-foreground', reads: 'Attached for reference' },
 }
 
