@@ -123,9 +123,12 @@ function App() {
   const handleNavigate = (page: string) => {
     // CRM demo · pills internas (Pipeline/Forecast/Intake) navegan vía custom
     // pages 'crm:pipeline' etc · no cambian currentPage · solo el view interno.
+    // 'crm:notes' y 'crm:messages' son placeholders icon-only del header (parity
+    // con standalone) · no tienen view asociado · no-op.
     if (page.startsWith('crm:')) {
-      const view = page.slice(4) as 'pipeline' | 'forecast' | 'intake' | 'detail'
-      setCrmView(view)
+      const sub = page.slice(4)
+      if (sub === 'notes' || sub === 'messages') return
+      setCrmView(sub as 'pipeline' | 'forecast' | 'intake' | 'detail')
       if (currentPage !== 'crm') setCurrentPage('crm')
       return
     }
@@ -187,6 +190,8 @@ function App() {
   const getSimulationConfig = () => {
     // CRM demo (noTour) · inyectar pills internas en el Navbar global ·
     // pages 'crm:*' interceptadas en handleNavigate para cambiar crmView.
+    // Notes y Messages son icon-only placeholders (parity con standalone header) ·
+    // handleNavigate los ignora (no-op).
     if (demoProfile.id === 'crm') {
       return {
         appName: 'Strata CRM',
@@ -195,6 +200,8 @@ function App() {
           { name: 'Pipeline', page: 'crm:pipeline', icon: KanbanSquareIcon },
           { name: 'Forecast', page: 'crm:forecast', icon: BarChart3Icon },
           { name: 'Design Intake', page: 'crm:intake', icon: InboxIcon },
+          { name: 'Notes', page: 'crm:notes', icon: PencilIcon },
+          { name: 'Messages', page: 'crm:messages', icon: MailIcon },
         ],
       };
     }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BarChart3, Briefcase, Check, Inbox, KanbanSquare, Play } from 'lucide-react'
+import { BarChart3, Briefcase, Check, Inbox, KanbanSquare } from 'lucide-react'
 import { useTenant } from './TenantContext'
 import {
     SEED_OPPS,
@@ -170,17 +170,9 @@ export default function CRM({ view, setView }: PageProps) {
                 onClose={() => setEditing(null)}
             />
 
-            {/* Demo button (parity con standalone · solo display, sin tour activo) */}
-            <button
-                type="button"
-                onClick={() => showToast('Demo mode — sample data only')}
-                className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-sm font-semibold text-background shadow-xl transition-colors hover:bg-foreground/90"
-            >
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
-                    <Play className="h-3 w-3 fill-current" />
-                </span>
-                Demo
-            </button>
+            {/* Demo button removido (Diego ask · 2026-06-30) · el dropdown del
+                Navbar global ya permite cambiar entre demos · no necesitamos
+                FAB redundante. */}
 
             {/* Toast */}
             {toast && (
