@@ -80,11 +80,25 @@ export const DemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    // Safe fallback · profiles con steps:[] (e.g. CRM noTour) hacen que
+    // steps[0] sea undefined · muchos components asumen currentStep existe y
+    // crashean (Transactions:1429, DemoSpotlight:55, etc). Stub con id vacío
+    // mantiene la API estable · ningún componente matchea id==='' por casualidad.
+    const SAFE_STEP: DemoStep = {
+        id: '',
+        groupId: 0,
+        groupTitle: '',
+        title: '',
+        description: '',
+        app: 'dashboard',
+        role: 'Expert',
+    }
+
     return (
         <DemoContext.Provider
             value={{
                 currentStepIndex,
-                currentStep: steps[currentStepIndex],
+                currentStep: steps[currentStepIndex] ?? SAFE_STEP,
                 steps,
                 nextStep,
                 prevStep,
