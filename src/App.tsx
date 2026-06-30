@@ -68,7 +68,7 @@ import logoDarkBrand from './assets/logo-dark-brand.png'
 
 function App() {
   const { user, initialLoading, signOut, showSessionWarning, refreshSession } = useAuth()
-  const { isDemoActive, currentStep, isSidebarCollapsed, steps, goToStep } = useDemo()
+  const { isDemoActive, currentStep, isSidebarCollapsed, steps, goToStep, setIsDemoActive } = useDemo()
   const { activeProfile: demoProfile } = useDemoProfile()
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'detail' | 'quote-detail' | 'order-detail' | 'ack-detail' | 'ack-detail-ai' | 'workspace' | 'inventory' | 'catalogs' | 'mac' | 'transactions' | 'crm' | 'pricing'>('transactions')
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState(false)
@@ -87,10 +87,16 @@ function App() {
 
   // Cuando se selecciona un profile noTour (e.g. Strata CRM) · auto-navegar a su
   // defaultPage para que la UI muestre la experiencia completa sin esperar action.
+  // También forzar isDemoActive=false porque steps:[] crashea los overlays
+  // (DemoSpotlight depende de currentStep.id).
   useEffect(() => {
-    if (demoProfile.noTour && demoProfile.defaultPage) {
-      setCurrentPage(demoProfile.defaultPage as typeof currentPage)
+    if (demoProfile.noTour) {
+      setIsDemoActive(false)
+      if (demoProfile.defaultPage) {
+        setCurrentPage(demoProfile.defaultPage as typeof currentPage)
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [demoProfile.id, demoProfile.noTour, demoProfile.defaultPage])
 
   // Reset in-demo detail navigation when step changes
@@ -561,11 +567,18 @@ function App() {
         onLogout={handleLogout}
       />
 
-      {/* Demo UI Elements */}
-      <DemoSidebar />
-      <DemoSpotlight />
-      <DemoProcessPanel onNavigate={handleNavigate} />
-      <DemoStepBanner />
+      {/* Demo UI Elements · skipped cuando el profile activo es noTour (e.g. Strata CRM)
+          porque esos overlays asumen que currentStep existe · steps:[] crashea (issue #
+          DemoSpotlight.tsx:55 cannot read 'id' of undefined). El profile noTour
+          renderiza su propia experiencia completa sin tour overlay. */}
+      {!demoProfile.noTour && (
+        <>
+          <DemoSidebar />
+          <DemoSpotlight />
+          <DemoProcessPanel onNavigate={handleNavigate} />
+          <DemoStepBanner />
+        </>
+      )}
 
       {/* FIXED NAVBAR (Unified) — hidden for email simulation, WRG Estimator routes & workspace/detail */}
       {/* isBFIMobile: hide navbar for BFI mobile-frame steps (r1.6) so the phone renders full-screen */}
