@@ -50,7 +50,7 @@ import BFIPage, { BFIDashboardPage } from "./components/bfi/BFIPage"
 import WorkspacesPage from "./components/workspaces/WorkspacesPage"
 import OfficeworksPage, { OfficeworksDashboardPage } from "./components/officeworks/OfficeworksPage"
 import CLCPage, { CLCDashboardPage } from "./components/clc/CLCPage"
-import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon, LayoutDashboard as LayoutDashboardIcon, Inbox as InboxIcon, Pencil as PencilIcon, ClipboardCheck as ClipboardCheckIcon, Send as SendIcon, Calendar as CalendarIcon, Folder as FolderIcon } from 'lucide-react'
+import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon, LayoutDashboard as LayoutDashboardIcon, Inbox as InboxIcon, Pencil as PencilIcon, ClipboardCheck as ClipboardCheckIcon, Send as SendIcon, Calendar as CalendarIcon, Folder as FolderIcon, KanbanSquare as KanbanSquareIcon, BarChart3 as BarChart3Icon } from 'lucide-react'
 
 // Leland Demo — 4 app shells (Phase L0 · expanded in L1-L5)
 import { LelandStrataShell, LelandInboxApp, LelandSeradexApp, LelandReviewQueueApp } from "./features/leland"
@@ -71,6 +71,10 @@ function App() {
   const { isDemoActive, currentStep, isSidebarCollapsed, steps, goToStep, setIsDemoActive } = useDemo()
   const { activeProfile: demoProfile } = useDemoProfile()
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'detail' | 'quote-detail' | 'order-detail' | 'ack-detail' | 'ack-detail-ai' | 'workspace' | 'inventory' | 'catalogs' | 'mac' | 'transactions' | 'crm' | 'pricing'>('transactions')
+  // CRM view interno (Pipeline/Forecast/Design Intake) · controlado desde el
+  // Navbar global vía customNavigation con pages 'crm:*'. CRM.tsx lo recibe
+  // como prop para sincronizar con el activeTab del navbar.
+  const [crmView, setCrmView] = useState<'pipeline' | 'forecast' | 'intake' | 'detail'>('pipeline')
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState(false)
   const [showArchSlide, setShowArchSlide] = useState(false)
   const [bfiLoginActive, setBfiLoginActive] = useState(false)
@@ -117,6 +121,14 @@ function App() {
   }, [currentStep?.id])
 
   const handleNavigate = (page: string) => {
+    // CRM demo · pills internas (Pipeline/Forecast/Intake) navegan vía custom
+    // pages 'crm:pipeline' etc · no cambian currentPage · solo el view interno.
+    if (page.startsWith('crm:')) {
+      const view = page.slice(4) as 'pipeline' | 'forecast' | 'intake' | 'detail'
+      setCrmView(view)
+      if (currentPage !== 'crm') setCurrentPage('crm')
+      return
+    }
     if (page === 'overview') {
       setCurrentPage('dashboard')
     } else if (page === 'bfi-dashboard') {
@@ -173,6 +185,19 @@ function App() {
   const isOfficeworks = demoProfile.id === 'officeworks';
   const isClc = demoProfile.id === 'clc';
   const getSimulationConfig = () => {
+    // CRM demo (noTour) · inyectar pills internas en el Navbar global ·
+    // pages 'crm:*' interceptadas en handleNavigate para cambiar crmView.
+    if (demoProfile.id === 'crm') {
+      return {
+        appName: 'Strata CRM',
+        companyName: demoProfile.companyName,
+        customNavigation: [
+          { name: 'Pipeline', page: 'crm:pipeline', icon: KanbanSquareIcon },
+          { name: 'Forecast', page: 'crm:forecast', icon: BarChart3Icon },
+          { name: 'Design Intake', page: 'crm:intake', icon: InboxIcon },
+        ],
+      };
+    }
     if (!isDemoActive) return { appName: undefined, companyName: undefined, customNavigation: undefined };
 
     // Standardized app names and company per role
@@ -344,6 +369,12 @@ function App() {
 
   // Determine the correct active nav tab during demo mode
   const getActiveTab = () => {
+    // CRM demo · resaltar la pill activa basado en crmView (Pipeline/Forecast/Intake).
+    // Detail view se trata como Pipeline · usuario sigue en el flujo de pipeline.
+    if (demoProfile.id === 'crm' && currentPage === 'crm') {
+      const v = crmView === 'detail' ? 'pipeline' : crmView
+      return `crm:${v}`
+    }
     if (!isDemoActive) return currentPage;
     const appToTab: Record<string, string> = {
       'dealer-kanban': 'transactions',
@@ -548,7 +579,7 @@ function App() {
         onNavigate={handleNavigate}
       />
     );
-    if (currentPage === 'crm') return <CRM onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
+    if (currentPage === 'crm') return <CRM onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} view={crmView} setView={setCrmView} />;
     if (currentPage === 'pricing') return <Pricing onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
     if (currentPage === 'detail') return <Detail onBack={() => setCurrentPage('dashboard')} onLogout={handleLogout} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
     if (currentPage === 'quote-detail') return <QuoteDetail onBack={() => setCurrentPage('transactions')} onLogout={handleLogout} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;

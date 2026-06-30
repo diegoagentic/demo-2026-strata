@@ -11,7 +11,6 @@ import {
     verticalColor,
 } from './config/profiles/crm-data'
 import type { Opportunity, IntakeCardData } from './config/profiles/crm-data'
-import CRMHeader from './components/crm/CRMHeader'
 import PipelineView from './components/crm/PipelineView'
 import ForecastDashboard from './components/crm/ForecastDashboard'
 import IntakeBoard from './components/crm/IntakeBoard'
@@ -19,14 +18,17 @@ import OpportunityDetail from './components/crm/OpportunityDetail'
 import ImportWithAIModal from './components/crm/ImportWithAIModal'
 import OppFormModal from './components/crm/OppFormModal'
 
+type View = 'pipeline' | 'forecast' | 'intake' | 'detail'
+
 interface PageProps {
     onLogout: () => void
     onNavigateToDetail: () => void
     onNavigateToWorkspace: () => void
     onNavigate: (page: string) => void
+    /** View interno controlado desde el Navbar global vía customNavigation. */
+    view: View
+    setView: (v: View) => void
 }
-
-type View = 'pipeline' | 'forecast' | 'intake' | 'detail'
 
 interface ViewHeading {
     crumb: string
@@ -35,12 +37,12 @@ interface ViewHeading {
 }
 
 // Strata CRM · port del standalone (Downloads/strata crm/strata-crm-standalone) ·
-// 4 vistas con sub-nav local · Pipeline / Forecast / Design Intake / Opportunity Detail.
-// Modales · Import with AI (drag&drop + mock extraction) · OppFormModal (form completo).
-// Sin tour/step · usa CRMHeader custom (NO el Navbar global) replicando el branding del standalone.
-export default function CRM(_props: PageProps) {
+// 4 vistas (Pipeline / Forecast / Design Intake / Opportunity Detail).
+// View controlado desde App.tsx · pills viven en el Navbar global vía
+// customNavigation con pages 'crm:*' (Diego ask · evitar navbar duplicada).
+// Modales · Import with AI (drag&drop + mock extraction) · OppFormModal.
+export default function CRM({ view, setView }: PageProps) {
     const { currentTenant } = useTenant()
-    const [view, setView] = useState<View>('pipeline')
     const [opps, setOpps] = useState<Opportunity[]>(SEED_OPPS)
     const [intake, setIntake] = useState<IntakeCardData[]>(SEED_INTAKE)
     const [selId, setSelId] = useState<string | null>(null)
@@ -101,23 +103,13 @@ export default function CRM(_props: PageProps) {
         },
     }
     const h = HEADING[view]
-    const activeKey: View = view === 'detail' ? 'pipeline' : view
 
     return (
         <div className="min-h-screen bg-background font-sans text-foreground pb-10">
-            {/* CRMHeader · branding Layers + STRATA AI + tenant + nav pills + secondary icons.
-                Réplica del header standalone L424-471. */}
-            <CRMHeader
-                activeView={activeKey}
-                onSelectView={key => setView(key as View)}
-                primaryItems={[
-                    { key: 'pipeline', label: 'Pipeline', Icon: KanbanSquare },
-                    { key: 'forecast', label: 'Forecast', Icon: BarChart3 },
-                ]}
-                secondaryItem={{ key: 'intake', label: 'Design Intake', Icon: Inbox }}
-            />
-
-            <div className="pt-8 px-6 max-w-7xl mx-auto">
+            {/* Navbar global vive en App.tsx · las pills (Pipeline/Forecast/Design Intake)
+                se inyectan vía customNavigation en getSimulationConfig() · click llega a
+                handleNavigate('crm:xxx') → setCrmView. */}
+            <div className="pt-24 px-6 max-w-7xl mx-auto">
                 {/* Page heading · icon tray + crumb + title + rule */}
                 <div className="flex items-center gap-4 mb-5">
                     <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center text-foreground">
