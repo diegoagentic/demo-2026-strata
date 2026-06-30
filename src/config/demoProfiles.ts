@@ -51,7 +51,7 @@ export interface DemoStep {
     flowId?: 'spec-check' | 'labor-delivery' | 'sales' | 'calendar' | 'sharepoint' | 'intake' | 'data-lake';
 }
 
-export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks' | 'clc';
+export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks' | 'clc' | 'crm';
 
 export interface DemoProfile {
     id: DemoProfileId;
@@ -63,11 +63,35 @@ export interface DemoProfile {
     stepBehavior: Record<string, StepBehavior>;
     stepMessages: Record<string, string[]>;
     selfIndicatedSteps: string[];
+    /**
+     * Si true · el profile no usa tour/step overlay (DemoSidebar / Spotlight /
+     * StepBanner). El demo renderiza su propia shell completa (e.g. CRM port).
+     * El switcher del Navbar carga la página directamente · no activa isDemoActive.
+     */
+    noTour?: boolean;
+    /**
+     * Página a la que navegar cuando se selecciona este profile · solo aplica a
+     * profiles con noTour=true. Default · 'crm' para id='crm'.
+     */
+    defaultPage?: string;
 }
 
 // Order: most recently created demo first (newest at top of Switch Demo dropdown).
 // To add a new demo, prepend its entry — do not append.
 export const DEMO_PROFILES: DemoProfile[] = [
+    {
+        id: 'crm',
+        name: 'Strata CRM',
+        companyName: 'Officeworks Inc.',
+        description: 'Sales pipeline · Forecast · AI import (RFP/email/CAD) · Design Intake handoff · sin tour',
+        icon: '📊',
+        steps: [],
+        stepBehavior: {},
+        stepMessages: {},
+        selfIndicatedSteps: [],
+        noTour: true,
+        defaultPage: 'crm',
+    },
     {
         id: 'clc',
         name: 'CLC',

@@ -334,6 +334,10 @@ export default function DemoSidebar() {
         fab: 'bg-white text-zinc-900 border-zinc-200 hover:bg-zinc-50',
     };
 
+    // Profile sin tour (e.g. CRM port) · no mostrar el FAB Play porque no hay
+    // steps para guiar · el demo renderiza su propia experiencia completa.
+    if (activeProfile.noTour) return null;
+
     if (!isDemoActive) {
         return (
             <div className="fixed bottom-6 right-6 z-50">

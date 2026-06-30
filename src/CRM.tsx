@@ -1,32 +1,225 @@
+import { useState } from 'react'
+import { BarChart3, Briefcase, Check, Inbox, KanbanSquare, Play } from 'lucide-react'
 import Navbar from './components/Navbar'
 import { useTenant } from './TenantContext'
+import {
+    SEED_OPPS,
+    SEED_INTAKE,
+    blankOpp,
+    initials,
+    nextOppId,
+    totalRevenue,
+    verticalColor,
+} from './config/profiles/crm-data'
+import type { Opportunity, IntakeCardData } from './config/profiles/crm-data'
+import PipelineView from './components/crm/PipelineView'
+import ForecastDashboard from './components/crm/ForecastDashboard'
+import IntakeBoard from './components/crm/IntakeBoard'
+import OpportunityDetail from './components/crm/OpportunityDetail'
+import ImportWithAIModal from './components/crm/ImportWithAIModal'
+import OppFormModal from './components/crm/OppFormModal'
 
 interface PageProps {
-    onLogout: () => void;
-    onNavigateToDetail: () => void;
-    onNavigateToWorkspace: () => void;
-    onNavigate: (page: string) => void;
+    onLogout: () => void
+    onNavigateToDetail: () => void
+    onNavigateToWorkspace: () => void
+    onNavigate: (page: string) => void
 }
 
-export default function CRM({ onLogout, onNavigateToDetail, onNavigateToWorkspace, onNavigate }: PageProps) {
+type View = 'pipeline' | 'forecast' | 'intake' | 'detail'
+
+interface ViewHeading {
+    crumb: string
+    title: string
+    Icon: typeof KanbanSquare
+}
+
+// Strata CRM · port del standalone (Downloads/strata crm/strata-crm-standalone) ·
+// 4 vistas con sub-nav local · Pipeline / Forecast / Design Intake / Opportunity Detail.
+// Modales · Import with AI (drag&drop + mock extraction) · OppFormModal (form completo).
+// Sin tour/step · demo accesible via dropdown del Navbar profile (CRM profile noTour=true).
+export default function CRM({ onLogout, onNavigateToWorkspace, onNavigate }: PageProps) {
     const { currentTenant } = useTenant()
+    const [view, setView] = useState<View>('pipeline')
+    const [opps, setOpps] = useState<Opportunity[]>(SEED_OPPS)
+    const [intake, setIntake] = useState<IntakeCardData[]>(SEED_INTAKE)
+    const [selId, setSelId] = useState<string | null>(null)
+    const [toast, setToast] = useState<string | null>(null)
+    const [editing, setEditing] = useState<Opportunity | null>(null)
+    const [importing, setImporting] = useState(false)
+
+    const selected = opps.find(o => o.id === selId) ?? null
+
+    const showToast = (msg: string) => {
+        setToast(msg)
+        setTimeout(() => setToast(null), 3200)
+    }
+
+    const updateOpp = (u: Opportunity) => setOpps(prev => prev.map(o => (o.id === u.id ? u : o)))
+
+    const saveOpp = (data: Opportunity) => {
+        const color = verticalColor(data.vertical)
+        if (data.id) {
+            setOpps(prev => prev.map(o => (o.id === data.id ? { ...data, color } : o)))
+            showToast(`${data.id} updated`)
+        } else {
+            const id = nextOppId(opps)
+            setOpps(prev => [...prev, { ...data, id, color }])
+            setSelId(id)
+            setView('detail')
+            showToast(`${id} created`)
+        }
+        setEditing(null)
+    }
+
+    const requestIntake = (opp: Opportunity) => {
+        if (!opp.id) return
+        const card: IntakeCardData = {
+            code: opp.id,
+            badge: initials(opp.company),
+            color: opp.color || 'blue',
+            org: `${opp.company} · ${opp.name.split('—').pop()?.trim() ?? opp.name}`,
+            meta: `Handoff from Sales · ${opp.primaryMfr} · awaiting designer assignment`,
+            assignee: 'Unassigned',
+            amount: totalRevenue(opp.revenue),
+            column: 'Intake',
+        }
+        setIntake(prev => (prev.some(c => c.code === opp.id) ? prev : [card, ...prev]))
+        setOpps(prev => prev.map(o => (o.id === opp.id ? { ...o, stage: 'Quote' } : o)))
+        setView('intake')
+        showToast(`${opp.id} handed off to Strata · Design Intake`)
+    }
+
+    const HEADING: Record<View, ViewHeading> = {
+        forecast: { crumb: `${currentTenant.toUpperCase()} · SALES CRM`, title: 'Forecast', Icon: BarChart3 },
+        pipeline: { crumb: `${currentTenant.toUpperCase()} · SALES CRM`, title: 'Sales Pipeline', Icon: KanbanSquare },
+        intake: { crumb: `${currentTenant.toUpperCase()} · Strata for ${currentTenant}`, title: 'Design Intake', Icon: Inbox },
+        detail: {
+            crumb: `${currentTenant.toUpperCase()} · SALES CRM · ${selected?.id ?? ''}`,
+            title: selected?.name ?? '',
+            Icon: Briefcase,
+        },
+    }
+    const h = HEADING[view]
+
+    // Sub-nav config · 3 tabs visibles (Pipeline / Forecast / Intake) · detail solo se
+    // muestra cuando hay opportunity seleccionada (renderiza inline · no tab).
+    const SUBNAV: { key: View; label: string; Icon: typeof KanbanSquare }[] = [
+        { key: 'pipeline', label: 'Pipeline', Icon: KanbanSquare },
+        { key: 'forecast', label: 'Forecast', Icon: BarChart3 },
+        { key: 'intake', label: 'Design Intake', Icon: Inbox },
+    ]
+    const activeKey: View = view === 'detail' ? 'pipeline' : view
 
     return (
         <div className="min-h-screen bg-background font-sans text-foreground pb-10">
-            <Navbar onLogout={onLogout} activeTab="CRM" onNavigateToWorkspace={onNavigateToWorkspace} onNavigate={onNavigate} />
-            <div className="pt-24 px-4 max-w-7xl mx-auto space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <Navbar
+                onLogout={onLogout}
+                activeTab="CRM"
+                onNavigateToWorkspace={onNavigateToWorkspace}
+                onNavigate={onNavigate}
+                appName="Strata CRM"
+            />
+
+            <div className="pt-24 px-4 max-w-7xl mx-auto">
+                {/* Sub-nav local · 3 vistas principales del CRM */}
+                <nav className="flex items-center gap-1.5 mb-6" aria-label="CRM sections">
+                    {SUBNAV.map(({ key, label, Icon }) => {
+                        const active = activeKey === key
+                        return (
+                            <button
+                                key={key}
+                                type="button"
+                                onClick={() => setView(key)}
+                                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${active
+                                        ? 'bg-brand-300 dark:bg-brand-500 text-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    }`}
+                            >
+                                <Icon className="h-4 w-4" />
+                                {label}
+                            </button>
+                        )
+                    })}
+                </nav>
+
+                {/* Page heading */}
+                <div className="flex items-center gap-4 mb-5">
+                    <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center text-foreground">
+                        <h.Icon className="h-5 w-5" />
+                    </div>
                     <div>
-                        <h1 className="text-3xl font-brand font-bold tracking-tight text-foreground">
-                            {currentTenant} CRM
-                        </h1>
-                        <p className="text-muted-foreground mt-1">Customer Relationship Management.</p>
+                        <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-1">{h.crumb}</div>
+                        <h1 className="text-3xl font-brand font-bold tracking-tight text-foreground">{h.title}</h1>
                     </div>
                 </div>
-                <div className="p-10 border-2 border-dashed border-border rounded-lg text-center text-muted-foreground">
-                    CRM Content Placeholder
-                </div>
+                <hr className="border-t border-border mb-6" />
+
+                {/* Active view */}
+                {view === 'forecast' && <ForecastDashboard opps={opps} />}
+                {view === 'pipeline' && (
+                    <PipelineView
+                        opps={opps}
+                        onSelect={id => {
+                            setSelId(id)
+                            setView('detail')
+                        }}
+                        onNew={() => setEditing(blankOpp())}
+                        onImport={() => setImporting(true)}
+                    />
+                )}
+                {view === 'intake' && <IntakeBoard intake={intake} />}
+                {view === 'detail' && selected && (
+                    <OpportunityDetail
+                        opp={selected}
+                        onBack={() => {
+                            setSelId(null)
+                            setView('pipeline')
+                        }}
+                        onUpdate={updateOpp}
+                        onRequestIntake={requestIntake}
+                        onEdit={() => setEditing(selected)}
+                    />
+                )}
             </div>
+
+            {/* Modales · Import + OppForm */}
+            <ImportWithAIModal
+                isOpen={importing}
+                onClose={() => setImporting(false)}
+                onCreate={prefill => {
+                    setImporting(false)
+                    setEditing(prefill)
+                }}
+            />
+            <OppFormModal
+                isOpen={!!editing}
+                initial={editing}
+                onSave={saveOpp}
+                onClose={() => setEditing(null)}
+            />
+
+            {/* Demo button (parity con standalone · solo display, sin tour activo) */}
+            <button
+                type="button"
+                onClick={() => showToast('Demo mode — sample data only')}
+                className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-sm font-semibold text-background shadow-xl transition-colors hover:bg-foreground/90"
+            >
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
+                    <Play className="h-3 w-3 fill-current" />
+                </span>
+                Demo
+            </button>
+
+            {/* Toast */}
+            {toast && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2.5 rounded-xl bg-foreground px-4 py-3 text-sm font-medium text-background shadow-2xl animate-in slide-in-from-bottom-2 fade-in duration-200">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-300 text-foreground">
+                        <Check className="h-3 w-3" strokeWidth={3} />
+                    </span>
+                    {toast}
+                </div>
+            )}
         </div>
     )
 }

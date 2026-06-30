@@ -85,6 +85,14 @@ function App() {
     }
   }, [isDemoActive, currentStep?.app, currentStep?.id])
 
+  // Cuando se selecciona un profile noTour (e.g. Strata CRM) · auto-navegar a su
+  // defaultPage para que la UI muestre la experiencia completa sin esperar action.
+  useEffect(() => {
+    if (demoProfile.noTour && demoProfile.defaultPage) {
+      setCurrentPage(demoProfile.defaultPage as typeof currentPage)
+    }
+  }, [demoProfile.id, demoProfile.noTour, demoProfile.defaultPage])
+
   // Reset in-demo detail navigation when step changes
   useEffect(() => {
     if (isDemoActive && (currentPage === 'order-detail' || currentPage === 'quote-detail' || currentPage === 'ack-detail')) {
