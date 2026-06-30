@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { BarChart3, Briefcase, Check, Inbox, KanbanSquare, Play } from 'lucide-react'
-import Navbar from './components/Navbar'
 import { useTenant } from './TenantContext'
 import {
     SEED_OPPS,
@@ -12,6 +11,7 @@ import {
     verticalColor,
 } from './config/profiles/crm-data'
 import type { Opportunity, IntakeCardData } from './config/profiles/crm-data'
+import CRMHeader from './components/crm/CRMHeader'
 import PipelineView from './components/crm/PipelineView'
 import ForecastDashboard from './components/crm/ForecastDashboard'
 import IntakeBoard from './components/crm/IntakeBoard'
@@ -37,8 +37,8 @@ interface ViewHeading {
 // Strata CRM · port del standalone (Downloads/strata crm/strata-crm-standalone) ·
 // 4 vistas con sub-nav local · Pipeline / Forecast / Design Intake / Opportunity Detail.
 // Modales · Import with AI (drag&drop + mock extraction) · OppFormModal (form completo).
-// Sin tour/step · demo accesible via dropdown del Navbar profile (CRM profile noTour=true).
-export default function CRM({ onLogout, onNavigateToWorkspace, onNavigate }: PageProps) {
+// Sin tour/step · usa CRMHeader custom (NO el Navbar global) replicando el branding del standalone.
+export default function CRM(_props: PageProps) {
     const { currentTenant } = useTenant()
     const [view, setView] = useState<View>('pipeline')
     const [opps, setOpps] = useState<Opportunity[]>(SEED_OPPS)
@@ -101,56 +101,35 @@ export default function CRM({ onLogout, onNavigateToWorkspace, onNavigate }: Pag
         },
     }
     const h = HEADING[view]
-
-    // Sub-nav config · 3 tabs visibles (Pipeline / Forecast / Intake) · detail solo se
-    // muestra cuando hay opportunity seleccionada (renderiza inline · no tab).
-    const SUBNAV: { key: View; label: string; Icon: typeof KanbanSquare }[] = [
-        { key: 'pipeline', label: 'Pipeline', Icon: KanbanSquare },
-        { key: 'forecast', label: 'Forecast', Icon: BarChart3 },
-        { key: 'intake', label: 'Design Intake', Icon: Inbox },
-    ]
     const activeKey: View = view === 'detail' ? 'pipeline' : view
 
     return (
         <div className="min-h-screen bg-background font-sans text-foreground pb-10">
-            <Navbar
-                onLogout={onLogout}
-                activeTab="CRM"
-                onNavigateToWorkspace={onNavigateToWorkspace}
-                onNavigate={onNavigate}
-                appName="Strata CRM"
+            {/* CRMHeader · branding Layers + STRATA AI + tenant + nav pills + secondary icons.
+                Réplica del header standalone L424-471. */}
+            <CRMHeader
+                activeView={activeKey}
+                onSelectView={key => setView(key as View)}
+                primaryItems={[
+                    { key: 'pipeline', label: 'Pipeline', Icon: KanbanSquare },
+                    { key: 'forecast', label: 'Forecast', Icon: BarChart3 },
+                ]}
+                secondaryItem={{ key: 'intake', label: 'Design Intake', Icon: Inbox }}
             />
 
-            <div className="pt-24 px-4 max-w-7xl mx-auto">
-                {/* Sub-nav local · 3 vistas principales del CRM */}
-                <nav className="flex items-center gap-1.5 mb-6" aria-label="CRM sections">
-                    {SUBNAV.map(({ key, label, Icon }) => {
-                        const active = activeKey === key
-                        return (
-                            <button
-                                key={key}
-                                type="button"
-                                onClick={() => setView(key)}
-                                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${active
-                                        ? 'bg-brand-300 dark:bg-brand-500 text-foreground shadow-sm'
-                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                    }`}
-                            >
-                                <Icon className="h-4 w-4" />
-                                {label}
-                            </button>
-                        )
-                    })}
-                </nav>
-
-                {/* Page heading */}
+            <div className="pt-8 px-6 max-w-7xl mx-auto">
+                {/* Page heading · icon tray + crumb + title + rule */}
                 <div className="flex items-center gap-4 mb-5">
                     <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center text-foreground">
-                        <h.Icon className="h-5 w-5" />
+                        <h.Icon className="h-5 w-5" strokeWidth={1.8} />
                     </div>
                     <div>
-                        <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-1">{h.crumb}</div>
-                        <h1 className="text-3xl font-brand font-bold tracking-tight text-foreground">{h.title}</h1>
+                        <div className="text-[11px] uppercase tracking-[0.08em] font-bold text-muted-foreground mb-1">
+                            {h.crumb}
+                        </div>
+                        <h1 className="text-3xl font-brand font-bold tracking-tight text-foreground leading-none">
+                            {h.title}
+                        </h1>
                     </div>
                 </div>
                 <hr className="border-t border-border mb-6" />
