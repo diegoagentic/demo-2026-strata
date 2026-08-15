@@ -44,3 +44,4 @@ design-system-audit-report.json
 NUL
 
 .vercel
+.env*

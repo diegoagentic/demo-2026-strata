@@ -143,6 +143,9 @@ export default function DemoSidebar() {
     const isLeland = activeProfile.id === 'leland';
     const isOfficeworks = activeProfile.id === 'officeworks';
     const isClc = activeProfile.id === 'clc';
+    // F74 · Projex demo · 5 flows en paralelo (AP · Vendor onboarding ·
+    // Progress billing · Order entry/PO · Electronic ordering & ACK).
+    const isProjex = activeProfile.id === 'projex';
 
     // Officeworks runs three flows in parallel (Spec Check & Design ·
     // Labor & Delivery · Sales). Tab toggle filters the sidebar to one flow.
@@ -152,6 +155,10 @@ export default function DemoSidebar() {
     // CLC runs four flows in parallel (Calendar · SharePoint · Intake · Data Lake).
     type ClcFlow = 'calendar' | 'sharepoint' | 'intake' | 'data-lake';
     const [activeClcFlow, setActiveClcFlow] = React.useState<ClcFlow>('calendar');
+
+    // F74 · Projex 5 flows.
+    type ProjexFlow = 'projex-ap' | 'projex-vendor-onboarding' | 'projex-billing' | 'projex-order-po' | 'projex-ack';
+    const [activeProjexFlow, setActiveProjexFlow] = React.useState<ProjexFlow>('projex-ap');
 
     // If the user lands directly on a step from a different flow (e.g. resumed
     // session), sync the tab so the active step is visible.
@@ -171,13 +178,23 @@ export default function DemoSidebar() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isClc, activeProfile.id, currentStepIndex]);
 
+    // F74 · Projex sync flow tab ↔ current step (resume-session friendly).
+    React.useEffect(() => {
+        if (!isProjex) return;
+        const curr = steps[currentStepIndex];
+        const f = (curr?.flowId ?? 'projex-ap') as ProjexFlow;
+        if (f !== activeProjexFlow) setActiveProjexFlow(f);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isProjex, activeProfile.id, currentStepIndex]);
+
     // Filtered + original-index-preserving step list for the render loop.
     const displayedSteps = React.useMemo(() => {
         const indexed = steps.map((step, originalIndex) => ({ step, originalIndex }));
         if (isOfficeworks) return indexed.filter(({ step }) => (step.flowId ?? 'spec-check') === activeFlow);
         if (isClc) return indexed.filter(({ step }) => (step.flowId ?? 'calendar') === activeClcFlow);
+        if (isProjex) return indexed.filter(({ step }) => (step.flowId ?? 'projex-ap') === activeProjexFlow);
         return indexed;
-    }, [steps, isOfficeworks, activeFlow, isClc, activeClcFlow]);
+    }, [steps, isOfficeworks, activeFlow, isClc, activeClcFlow, isProjex, activeProjexFlow]);
 
     const flowCounts = React.useMemo(() => {
         if (!isOfficeworks) return { specCheck: 0, laborDelivery: 0, sales: 0 };
@@ -204,6 +221,21 @@ export default function DemoSidebar() {
         return { calendar: c, sharepoint: sp, intake: i, dataLake: dl };
     }, [steps, isClc]);
 
+    // F74 · Projex 5-flow counts.
+    const projexFlowCounts = React.useMemo(() => {
+        if (!isProjex) return { ap: 0, vendor: 0, billing: 0, orderPo: 0, ack: 0 };
+        let ap = 0, vendor = 0, billing = 0, orderPo = 0, ack = 0;
+        for (const step of steps) {
+            const f = step.flowId ?? 'projex-ap';
+            if (f === 'projex-ap') ap++;
+            else if (f === 'projex-vendor-onboarding') vendor++;
+            else if (f === 'projex-billing') billing++;
+            else if (f === 'projex-order-po') orderPo++;
+            else if (f === 'projex-ack') ack++;
+        }
+        return { ap, vendor, billing, orderPo, ack };
+    }, [steps, isProjex]);
+
     // L&D vertical sub-toggle (Furniture vs Walls) · only meaningful inside L&D tab.
     const activeVertical = useOfficeworksVertical()
     const handleVerticalSwitch = (vertical: 'furniture' | 'walls') => {
@@ -224,6 +256,14 @@ export default function DemoSidebar() {
         if (flow === activeClcFlow) return;
         setActiveClcFlow(flow);
         const firstIdx = steps.findIndex(s => (s.flowId ?? 'calendar') === flow);
+        if (firstIdx >= 0) goToStep(firstIdx);
+    };
+
+    // F74 · Projex flow switch handler · jumps to first step of the target flow.
+    const handleProjexFlowSwitch = (flow: ProjexFlow) => {
+        if (flow === activeProjexFlow) return;
+        setActiveProjexFlow(flow);
+        const firstIdx = steps.findIndex(s => (s.flowId ?? 'projex-ap') === flow);
         if (firstIdx >= 0) goToStep(firstIdx);
     };
     const isWorkspaces = activeProfile.id === 'workspaces';
@@ -505,6 +545,78 @@ export default function DemoSidebar() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => { handleClcFlowSwitch(opt.id); close() }}
+                                                                        className={`w-full inline-flex items-center gap-2 px-3 py-2 text-[12px] transition-colors text-left ${
+                                                                            isActive
+                                                                                ? 'bg-primary/10 text-foreground font-semibold'
+                                                                                : 'text-foreground hover:bg-muted/50'
+                                                                        }`}
+                                                                    >
+                                                                        <span className="flex-1 truncate">{opt.label}</span>
+                                                                        <span className="text-[10px] tabular-nums rounded-full bg-zinc-900/10 dark:bg-white/10 px-1.5 text-muted-foreground">
+                                                                            {opt.count}
+                                                                        </span>
+                                                                        {isActive && <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                                                                    </button>
+                                                                </li>
+                                                            )
+                                                        })}
+                                                    </ul>
+                                                )}
+                                            </PopoverPanel>
+                                        </Transition>
+                                    </>
+                                )}
+                            </Popover>
+                        </div>
+                    )
+                })()}
+
+                {/* F74 · Projex · Flow dropdown selector (AP · Vendor onboarding · Progress billing · Order & PO · Electronic ordering & ACK) */}
+                {isProjex && (() => {
+                    const FLOW_OPTIONS = [
+                        { id: 'projex-ap'                 as const, label: 'AP intake & matching',        count: projexFlowCounts.ap },
+                        { id: 'projex-vendor-onboarding'  as const, label: 'Vendor onboarding',           count: projexFlowCounts.vendor },
+                        { id: 'projex-billing'            as const, label: 'Progress billing',            count: projexFlowCounts.billing },
+                        { id: 'projex-order-po'           as const, label: 'Order entry & PO dispatch',   count: projexFlowCounts.orderPo },
+                        { id: 'projex-ack'                as const, label: 'Electronic ordering & ACK',   count: projexFlowCounts.ack },
+                    ]
+                    const activeOpt = FLOW_OPTIONS.find(f => f.id === activeProjexFlow) ?? FLOW_OPTIONS[0]
+                    return (
+                        <div className="mt-4">
+                            <Popover className="relative">
+                                {({ open }) => (
+                                    <>
+                                        <PopoverButton
+                                            className={`w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${c.bgBadgeActive} ${c.textBadgeActive}`}
+                                            aria-label="Switch active Projex flow"
+                                        >
+                                            <span className="truncate">{activeOpt.label}</span>
+                                            <span className="inline-flex items-center gap-1.5 shrink-0">
+                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 ${c.bgBadge} ${c.textBadge}`}>
+                                                    {activeOpt.count}
+                                                </span>
+                                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+                                            </span>
+                                        </PopoverButton>
+                                        <Transition
+                                            as={React.Fragment}
+                                            enter="transition ease-out duration-150"
+                                            enterFrom="opacity-0 -translate-y-1"
+                                            enterTo="opacity-100 translate-y-0"
+                                            leave="transition ease-in duration-100"
+                                            leaveFrom="opacity-100 translate-y-0"
+                                            leaveTo="opacity-0 -translate-y-1"
+                                        >
+                                            <PopoverPanel className="absolute z-50 left-0 right-0 mt-1 rounded-md bg-card border border-border shadow-lg overflow-hidden">
+                                                {({ close }) => (
+                                                    <ul role="listbox" aria-label="Projex flows">
+                                                        {FLOW_OPTIONS.map(opt => {
+                                                            const isActive = activeProjexFlow === opt.id
+                                                            return (
+                                                                <li key={opt.id} role="option" aria-selected={isActive}>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => { handleProjexFlowSwitch(opt.id); close() }}
                                                                         className={`w-full inline-flex items-center gap-2 px-3 py-2 text-[12px] transition-colors text-left ${
                                                                             isActive
                                                                                 ? 'bg-primary/10 text-foreground font-semibold'

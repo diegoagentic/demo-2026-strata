@@ -50,6 +50,8 @@ import BFIPage, { BFIDashboardPage } from "./components/bfi/BFIPage"
 import WorkspacesPage from "./components/workspaces/WorkspacesPage"
 import OfficeworksPage, { OfficeworksDashboardPage } from "./components/officeworks/OfficeworksPage"
 import CLCPage, { CLCDashboardPage } from "./components/clc/CLCPage"
+// F74 · Projex demo · shell + 5 placeholder scenes
+import ProjexPage from "./components/projex/ProjexPage"
 import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon, LayoutDashboard as LayoutDashboardIcon, Inbox as InboxIcon, Pencil as PencilIcon, ClipboardCheck as ClipboardCheckIcon, Send as SendIcon, Calendar as CalendarIcon, Folder as FolderIcon, KanbanSquare as KanbanSquareIcon, BarChart3 as BarChart3Icon } from 'lucide-react'
 
 // Leland Demo — 4 app shells (Phase L0 · expanded in L1-L5)
@@ -61,6 +63,10 @@ import {
   WrenchScrewdriverIcon,
   UserGroupIcon,
   ArchiveBoxIcon,
+  UserPlusIcon,
+  ChartBarIcon,
+  DocumentTextIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline'
 
 import logoLightBrand from './assets/logo-light-brand.png'
@@ -187,6 +193,7 @@ function App() {
   const isWorkspaces = demoProfile.id === 'workspaces';
   const isOfficeworks = demoProfile.id === 'officeworks';
   const isClc = demoProfile.id === 'clc';
+  const isProjex = demoProfile.id === 'projex';
   const getSimulationConfig = () => {
     // CRM demo (noTour) · inyectar pills internas en el Navbar global ·
     // pages 'crm:*' interceptadas en handleNavigate para cambiar crmView.
@@ -265,12 +272,22 @@ function App() {
       : 'Schedule AI';
     const clcCompany = demoProfile.companyName;
 
+    // F74 · Projex — appName follows the active flow; company is Projex Inc.
+    const projexAppName = currentStep.app === 'projex-ap' ? 'AP Intake AI'
+      : currentStep.app === 'projex-vendor-onboarding' ? 'Vendor Onboarding AI'
+      : currentStep.app === 'projex-billing' ? 'Progress Billing AI'
+      : currentStep.app === 'projex-order-po' ? 'Order & PO AI'
+      : currentStep.app === 'projex-ack' ? 'Acknowledgement AI'
+      : 'Projex AI';
+    const projexCompany = demoProfile.companyName;
+
     const resolvedAppName = isContinua ? continuaAppName
       : isLeland ? lelandAppName
       : isBFI ? bfiAppName
       : isWorkspaces ? workspacesAppName
       : isOfficeworks ? officeworksAppName
       : isClc ? clcAppName
+      : isProjex ? projexAppName
       : currentStep.app === 'email-marketplace' ? (isWRG ? 'WRG Mail' : 'Wells Fargo Mail')
       : currentStep.app === 'catalog' ? 'Marketplace'
       : currentStep.app === 'service-now' ? 'ServiceNow'
@@ -288,6 +305,7 @@ function App() {
       : isWorkspaces ? workspacesCompany
       : isOfficeworks ? officeworksCompany
       : isClc ? clcCompany
+      : isProjex ? projexCompany
       : isExpert || isDuplerExpert || isWrgExpert || isWrgDesigner ? 'Strata Services'
       : demoProfile.companyName;
 
@@ -368,7 +386,17 @@ function App() {
       { name: 'Project Intake AI', page: 'clc-intake', icon: ClipboardCheckIcon },
     ];
 
-    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : isOfficeworks ? officeworksNav : isClc ? clcNav : expertNav;
+    // F74 · Projex profile: 5-tab primary nav (1 tab per flow) · fase 0 shows
+    // placeholder scenes · las scenes reales llegan en Phase 1-5.
+    const projexNav = [
+      { name: 'AP Intake', page: 'projex-ap', icon: BanknotesIcon },
+      { name: 'Vendor Onboarding', page: 'projex-vendor-onboarding', icon: UserPlusIcon },
+      { name: 'Progress Billing', page: 'projex-billing', icon: ChartBarIcon },
+      { name: 'Order & PO', page: 'projex-order-po', icon: DocumentTextIcon },
+      { name: 'ACK Processing', page: 'projex-ack', icon: TruckIcon },
+    ];
+
+    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : isOfficeworks ? officeworksNav : isClc ? clcNav : isProjex ? projexNav : expertNav;
     return { appName: resolvedAppName, companyName: resolvedCompany, customNavigation: nav };
   };
 
@@ -558,6 +586,13 @@ function App() {
         return <CLCPage />;
       case 'clc-dashboard':
         return <CLCDashboardPage />;
+      // F74 · Projex · 5 flows todos rutean a ProjexPage (que routea internamente por stepId)
+      case 'projex-ap':
+      case 'projex-vendor-onboarding':
+      case 'projex-billing':
+      case 'projex-order-po':
+      case 'projex-ack':
+        return <ProjexPage />;
       default:
         return (
           <ExpertHubTransactions

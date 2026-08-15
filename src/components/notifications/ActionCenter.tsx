@@ -446,6 +446,270 @@ const CLC_STEP_NOTIFICATIONS: Record<string, ClcStepNotif> = {
     },
 }
 
+// ─── Projex · step notifications (F74 · parallel to BFI/Officeworks/CLC) ─────
+// Contract: add an entry here per step, then the scene listens for `event` via
+// window.addEventListener to advance state (open a modal, spotlight a card,
+// or call nextStep()). MEMORY rule · feedback-notifications-action-center ·
+// nunca crear toasts custom en la scene.
+
+type ProjexStepNotif = BfiStepNotif
+
+const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
+    'p1.1': {
+        badge: '2 need eyes', badgeColor: 'ai',
+        title: 'Overnight AP sweep · 14 bills · 12 auto-matched · 2 held',
+        desc: 'Good morning Daniel · Strata swept the AP inbox overnight and matched 12/14 bills exact-to-the-penny against NetSuite POs. 2 held for review: 1 Teknion partial-ship variance on NCBA (bill 8483) + 1 Warehouse-by-Design install invoice sin PO # (AP9 pattern).',
+        sender: 'Strata AI · ap@projex-inc.com · sweep 02:14 → 08:11',
+        re: 'AP inbox · 14 vendor bills · 3 legal entities · ready for Daniel',
+        cta: 'Open the Teknion 291-line bill →',
+        event: 'projex:ap-open-teknion',
+        footerText: 'Waiting for Daniel',
+    },
+    'p2.1': {
+        badge: 'Open ticket', badgeColor: 'ai',
+        title: 'F2 · Vendor onboarding · Kelly submits structured intake',
+        desc: 'Kelly is opening the structured intake form to onboard Warehouse by Design (install vendor · AP9 pattern · Denver Financial project). Free-text email to Daniel is being replaced by structured form + W-9 upfront.',
+        sender: 'Kelly · Furniture Coordinator',
+        re: 'Vendor onboarding · structured intake · start step',
+        cta: 'Open intake form →',
+        event: 'projex:vendor-intake-open',
+        footerText: 'Kelly typing · will attach W-9',
+    },
+    'p2.2': {
+        badge: 'Ticket received', badgeColor: 'ai',
+        title: 'New vendor request · Warehouse by Design · W-9 attached',
+        desc: 'Kelly submitted structured intake for Warehouse by Design (LLC single-member · install vendor for Denver Financial · $3,200 quote · Aug 12-13). W-9 attached signed 2026-03-12. Strata is ready to run OCR extraction on the source PDF and validate 5 key fields with per-field confidence.',
+        sender: 'Kelly · Furniture Coordinator · via intake form',
+        re: 'TKT-P2-2026-08-14-001 · Warehouse by Design · install vendor request',
+        attachment: 'WarehouseByDesign_W-9_signed.pdf',
+        cta: 'Open OCR review →',
+        event: 'projex:w9-ocr-open',
+        footerText: 'Daniel to review 5 fields',
+    },
+    'p2.3': {
+        badge: 'Fields validated', badgeColor: 'success',
+        title: 'W-9 fields validated · running compliance preflight',
+        desc: 'Daniel validated all 5 W-9 fields (EIN corrected, address confirmed). Strata is now running Jacob\'s 4-check compliance preflight: W-9 signed &lt;12mo · 1099-NEC flag · ACH verified · W-8 BEN-E N/A US. Chain runs pausable · re-runnable if Daniel edits a field.',
+        sender: 'Strata AI · compliance preflight',
+        re: 'Warehouse by Design · Jacob\'s 4-rule compliance chain',
+        cta: 'Open preflight →',
+        event: 'projex:preflight-open',
+        footerText: '4 checks · staggered chain',
+    },
+    'p2.4': {
+        badge: 'Human decision', badgeColor: 'warning',
+        title: 'Ready for Jacob sign-off · all preflight checks passed',
+        desc: 'Compliance preflight ran clean · 4/4 checks passed (W-9 fresh · not 1099-flagged · ACH verified · US address so no W-8 BEN-E needed). Jacob to review W-9 result + preflight result side-by-side · binary decision Release or Reject with reason. Never auto-post per Matt\'s "75% AI + human touch" rule.',
+        sender: 'Strata AI · compliance preflight complete',
+        re: 'Warehouse by Design · vendor onboarding · Jacob approval gate',
+        cta: 'Open Jacob review →',
+        event: 'projex:jacob-gate-open',
+        footerText: 'Human gate · never auto-post',
+    },
+    'p2.5': {
+        badge: 'Vendor added', badgeColor: 'success',
+        title: 'Vendor #734 added to NetSuite master · Warehouse by Design',
+        desc: 'Jacob approved · Warehouse by Design saved to NetSuite Vendor master as record #734. Expiration chip attached (W-9 fresh · 30-day-out warning will fire in ~10 months). Vendor now enters payment pool for Tue Aug 19 payment run.',
+        sender: 'Strata AI · NetSuite Vendor master',
+        re: 'Vendor #734 · Warehouse by Design · saved with expiration tracking',
+        cta: 'Open registry →',
+        event: 'projex:registry-open',
+        footerText: 'Row animate-in from bottom',
+    },
+    'p2.6': {
+        badge: '2 expirations', badgeColor: 'warning',
+        title: 'Kelly · 2 W-9 refresh requests due · West Elm 30d · Ryan expired',
+        desc: 'Kelly\'s active projects now show Warehouse by Design "Ready for AP" (Denver Financial · Tue Aug 19). Two expiration reminders surface: West Elm W-9 expires in 30 days · Ryan\'s Carpentry already expired (payment run blocker). Pre-drafted "Request W-9 refresh" emails ready with Friendlier/Firmer/Shorter toolbar for Kelly to review y send.',
+        sender: 'Strata AI · expiration tracker',
+        re: 'Kelly dealer view · W-9 refresh reminders · 2 accounts',
+        cta: 'Open Dealer view →',
+        event: 'projex:dealer-readiness-open',
+        footerText: 'Send refresh requests · never auto-send',
+    },
+    'p3.1': {
+        badge: '1 threshold', badgeColor: 'warning',
+        title: 'F3 · Threshold trigger · Fairport phase 2 crosses 50%',
+        desc: 'Live billing forecast fires · Fairport HQ phase 2 ordered % crosses 50 en W32. Strata drafts proforma PJX-INV-3421 ($24,500 · 40% draw) for Isabella review. Chart animates threshold crossing · alert lands en Action Center.',
+        sender: 'Strata AI · live billing forecast · just now',
+        re: 'Fairport HQ · Furniture 50/40/10 · 40% draw fires',
+        cta: 'Open forecast + draft →',
+        event: 'projex:threshold-open',
+        footerText: 'Proforma draft ready',
+    },
+    'p3.2': {
+        badge: 'Proforma ready', badgeColor: 'ai',
+        title: 'Isabella · review Fairport proforma draft · $24,500',
+        desc: 'Strata drafted proforma PJX-INV-3421 · print-style replica con 6 line items · deposit deducted (50% · $24,500). Editable line adjustments before release. Isabella keeps final say · never auto-post per Matt\'s "75% AI + human touch" rule.',
+        sender: 'Strata AI · proforma composer',
+        re: 'PJX-INV-3421 · Fairport 40% draw · draft ready',
+        cta: 'Open proforma review →',
+        event: 'projex:proforma-review-open',
+        footerText: 'Isabella to review + release',
+    },
+    'p3.3': {
+        badge: 'WC9 gate', badgeColor: 'warning',
+        title: 'Walls draw · Alec hands off to Stacy for install-complete confirm',
+        desc: 'NCBA install completion · Walls 60/30/10 · 30% draw ($18,740) needs Stacy PM confirmation before fires. Alec releases handoff · Stacy receives ConfirmDialog · 5 punch items complete · 18 photos attached. Today waits en Outlook · often delays fires.',
+        sender: 'Alec Gieser · Walls Director',
+        re: 'NCBA · Walls 30% draw · WC9 installation-complete gate',
+        cta: 'Open PM confirm →',
+        event: 'projex:wc9-open',
+        footerText: 'Stacy to confirm install-complete',
+    },
+    'p3.4': {
+        badge: '7 overdue', badgeColor: 'warning',
+        title: 'AR aging board · 7 accounts past due across 3 buckets',
+        desc: 'Shared AR aging kanban 4-col replaces dead-tracker (AR3). 3 accounts in 31-60 bucket ($55,170 total) · 2 in 61-90 ($49,050 · $1,679 late fee) · 2 in 90+ ($18,650 · $930 late fee). Net 10 + 1.5%/mo late fee. Filter por owner Isabella/Alec/Jacob.',
+        sender: 'Strata AI · AR aging tracker',
+        re: 'AR aging board · shared queue · dead-tracker replaced',
+        cta: 'Open AR board →',
+        event: 'projex:ar-board-open',
+        footerText: 'Isabella + Alec + Jacob shared view',
+    },
+    'p3.5': {
+        badge: '5 drafts', badgeColor: 'ai',
+        title: 'Collection emails drafted · shared queue Isabella + Alec',
+        desc: 'Strata drafted 5 collection emails staged por bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue muestra Isabella + Alec drafts juntos (FC12 fix vs personal Outlook). AIEmailComposer con Friendlier/Firmer/Shorter tone polish · per-draft send.',
+        sender: 'Strata AI · email composer',
+        re: 'Collection queue · 5 drafts · tone polish available',
+        cta: 'Review + send drafts →',
+        event: 'projex:drafts-open',
+        footerText: 'Never batch auto-send · per-draft control',
+    },
+    'p3.6': {
+        badge: 'Invoice posted', badgeColor: 'success',
+        title: 'PJX-INV-3421 posted to NetSuite GL · Fairport 40% draw released',
+        desc: 'Auto. Proforma flips to Customer Invoice · GL journal PJX-JE-2026-0842 balanced ($24,500 AR debit · $24,500 sales credit). PDF filed a Communications tab · SharePoint mirror. Due 2026-08-24 · adds to collections tracker. Cash flow forward updated.',
+        sender: 'Strata AI · NetSuite GL sync',
+        re: 'PJX-INV-3421 · Customer Invoice posted · GL balanced',
+        attachment: '2026-08-14_Fairport_INV-3421_24500.pdf',
+        cta: 'Open GL entry →',
+        event: 'projex:invoice-posted-open',
+        footerText: 'Journal balanced · PDF filed',
+    },
+    'p4.1': {
+        badge: 'Designer email', badgeColor: 'ai',
+        title: 'F4 · Layne (designer) emails MWH PIF · 300 lines · 26 vendor split',
+        desc: 'Layne (Lead Designer at Aspire Design) emails Isabella el MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Isabella opens email · previews attachments · confirms Ingest para start parse.',
+        sender: 'Layne · Lead Designer · layne@aspire-design.example',
+        re: 'MWH residential · PIF + SIF · 300 lines · 26 vendor split',
+        attachment: 'MWH_PIF_2026-08-14.xlsx · MWH_CET_export.sif',
+        cta: 'Open Isabella\'s inbox →',
+        event: 'projex:pif-email-open',
+        footerText: 'Never auto-ingest · human confirm',
+    },
+    'p4.2': {
+        badge: 'Parsing', badgeColor: 'ai',
+        title: 'PIF parse · vertical extraction 300 lines · Walls AI lot line',
+        desc: 'Auto · Strata parses MWH PIF · vertical extraction con cost/margin/design-fee/total-price columns. AI lot line convention agrupa Walls partitions (WC2 fix). Per-cell OCR confidence · Isabella corrections available for <95% cells. ~15m vs 2.5h manual.',
+        sender: 'Strata AI · PIF parser',
+        re: 'MWH · 300 lines · vertical extraction · Walls AI lot lines',
+        cta: 'Open parser →',
+        event: 'projex:pif-parse-open',
+        footerText: 'Sample 24 lines revealed · full 300 available',
+    },
+    'p4.3': {
+        badge: '26 S&H', badgeColor: 'ai',
+        title: 'S&H manual entries · Isabella owns freight rules',
+        desc: 'Isabella adds 26 shipping-and-handling manual entries · EditableLineTable con add-row. Alamir $19 flat rule (<$150) · Nelson prepaid+add · Teknion consolidated · HBF lift-gate delivery. Design fee 8% of product subtotal recomputed live. Isabella keeps override control.',
+        sender: 'Strata AI · freight rules engine',
+        re: 'MWH · 26 S&H entries · per-vendor freight rules',
+        cta: 'Open manual editor →',
+        event: 'projex:manual-lines-open',
+        footerText: 'Isabella owns override control',
+    },
+    'p4.4': {
+        badge: '26 draft POs', badgeColor: 'ai',
+        title: '26 vendor POs drafted · DiffViewer per card',
+        desc: 'Strata drafted 26 vendor POs en flat batch grid · 6 anchor vendors visible (Teknion 3 · HBF 2 · Boss 2 · Alamir 2 · Nelson 1 · West Elm 1 + 14 batched). Per-card DiffViewer muestra auto-draft vs prior human baseline · ConversionStatusBadge (draft/ready/needs-review). Never one-batch button.',
+        sender: 'Strata AI · PO composer',
+        re: 'MWH · 26 PO batch · per-vendor split · DiffViewer inline',
+        cta: 'Open batch grid →',
+        event: 'projex:batch-grid-open',
+        footerText: 'Click cards para DiffViewer',
+    },
+    'p4.5': {
+        badge: 'Ready to release', badgeColor: 'warning',
+        title: 'Per-vendor Send · Isabella releases Teknion primero · never one-batch',
+        desc: 'SubmitPODialog per PO · Isabella sends Teknion (SIF Online) primero para start ACK clock · HBF hold para tomorrow · Boss Design review before send. Banner "Never auto-send" visible arriba. Cada release es intentional act (SOT §12b · FC6 fix · Isabella never trusts auto-send).',
+        sender: 'Strata AI · dispatch orchestrator',
+        re: 'MWH · 26 POs · per-vendor SubmitPODialog · human control',
+        cta: 'Open dispatch console →',
+        event: 'projex:dispatch-open',
+        footerText: 'Never auto-send · 100% intent',
+    },
+    'p4.6': {
+        badge: 'Batch complete', badgeColor: 'success',
+        title: 'F4 batch complete · SnapshotComparisonView tri-way match',
+        desc: 'Isabella released all 26 POs across 6 vendors · Teknion via SIF · HBF via portal · rest via email. Snapshot recorded · draft=sent=NetSuite record tri-way match confirmed. ActivityTimeline per PO · Tracking initialized · awaiting ACKs (monitor en F5). Total ~15m vs 2.5h manual today.',
+        sender: 'Strata AI · snapshot auditor',
+        re: 'MWH · 26 POs · tri-way match · ACK monitoring active',
+        cta: 'Open snapshot audit →',
+        event: 'projex:audit-open',
+        footerText: 'ACK monitoring begins',
+    },
+    'p5.1': {
+        badge: 'SIF uploaded', badgeColor: 'ai',
+        title: 'F5 · SIF uploaded a Teknion Online · 70% del volumen',
+        desc: 'PO-2026-4421 SIF (NCBA · 71 lines) uploaded a Teknion Online portal. Rest 30% del batch (HBF · Boss · Alamir · Nelson · West Elm) via email PDF con SourceBadge per vendor. Split view mock browser + PO summary + progress bar.',
+        sender: 'Strata AI · SIF dispatcher',
+        re: 'Teknion Online · PO-2026-4421 SIF upload',
+        cta: 'Open dispatch panel →',
+        event: 'projex:sif-dispatch-open',
+        footerText: 'ACK expected 2-4h',
+    },
+    'p5.2': {
+        badge: 'ACKs arriving', badgeColor: 'ai',
+        title: 'ACK PDFs arriving drip-drip · per-vendor OCR confidence',
+        desc: 'AcknowledgementUploadModal OCR extraction · per-vendor confidence variable. Teknion 98% excellent · HBF 91% good · Alamir 74% review-recommended (FC9 fix · confidence scored antes de committing effort). 4 ACKs received · 2 pending (Nelson · West Elm).',
+        sender: 'Strata AI · OCR per vendor',
+        re: 'NCBA ACK queue · per-vendor confidence bands',
+        cta: 'Open OCR queue →',
+        event: 'projex:ack-ocr-open',
+        footerText: 'Alamir needs review · 74%',
+    },
+    'p5.3': {
+        badge: '13 CRs', badgeColor: 'warning',
+        title: 'ACK vs PMO · 71 lines + 13 CRs · Teknion taxonomy real',
+        desc: 'AckHeroMatchPanel UN-CUTTABLE hero. Split-pane ACK PDF izq · PMO grid der. 13 CRs Teknion taxonomy: 5 warn (leadtime shifts + width changes) + 8 info (BIFMA advisories + pricer). 58/71 exact match · 13 CRs identified. ThreeWayMatchView per line with status.',
+        sender: 'Strata AI · PMO comparator',
+        re: 'PO-2026-4421 · 71 lines · 13 CRs · CR taxonomy',
+        cta: 'Open PMO comparison →',
+        event: 'projex:pmo-comparison-open',
+        footerText: '5 warn + 8 info CRs',
+    },
+    'p5.4': {
+        badge: 'Sentinels ready', badgeColor: 'ai',
+        title: 'Clear 10/10/2050 sentinels · Multi-Line Edit tool bulk',
+        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) permite bulk-clear los 12 sample lines en un click · Isabella confirms cada CR-affected row antes.',
+        sender: 'Strata AI · sentinel manager',
+        re: 'NCBA PMO · 10/10/2050 → real Teknion dates',
+        cta: 'Open sentinel clear →',
+        event: 'projex:sentinel-clear-open',
+        footerText: 'Bulk update disponible',
+    },
+    'p5.5': {
+        badge: 'Chain ready', badgeColor: 'ai',
+        title: 'Designer chain auto-assembly · Layne → Tate → Josh (FC8)',
+        desc: 'Strata auto-assembles designer chain thread · Layne (Lead) reviews CR-01 leadtime · Tate (Spec) confirms width changes CR-03/07/12 with client · Josh (PM) signs off. Attachments + replies + timestamps preservados. Replaces Isabella\'s Excel manual assembly (FC8 net-new).',
+        sender: 'Strata AI · chain composer',
+        re: 'NCBA designer chain · Layne · Tate · Josh sign-off',
+        cta: 'Open chain thread →',
+        event: 'projex:chain-open',
+        footerText: 'FC8 net-new · replaces Excel',
+    },
+    'p5.6': {
+        badge: 'Daily sweep', badgeColor: 'success',
+        title: 'F5 complete · daily ESD sweep + shipment tracking',
+        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest en production o scheduling. Multi-Line-Edit tool bulk refresh disponible. Isabella cierra MWH cycle · monitor deliveries · next threshold coming.',
+        sender: 'Strata AI · daily sweep · 08:00 AM',
+        re: 'NCBA · 6 shipments tracking · Daily Report saved-search',
+        cta: 'Open tracking grid →',
+        event: 'projex:tracking-open',
+        footerText: 'Isabella monitors · next Tue Aug 19',
+    },
+}
+
 // Officeworks Step sc1.0 — MANATT intake (parallel to BFI a1.1 ingest pattern)
 const OFFICEWORKS_SC10_NOTIFICATIONS: Notification[] = [
     {
@@ -529,6 +793,8 @@ export default function ActionCenter() {
     const [owPanelClosed, setOwPanelClosed] = useState(false);
     // CLC generic step panel (clc1.1 .. clc1.4)
     const [clcPanelClosed, setClcPanelClosed] = useState(false);
+    // Projex generic step panel (p1.1 .. p5.x · F74)
+    const [projexPanelClosed, setProjexPanelClosed] = useState(false);
     // Delay before any notification panel appears (2s after step loads)
     const [notifDelayReady, setNotifDelayReady] = useState(false);
     // Reset all panels when step changes, then reveal after 2s (pause-aware)
@@ -545,6 +811,7 @@ export default function ActionCenter() {
         setSc10bIngestCount(0);
         setOwPanelClosed(false);
         setClcPanelClosed(false);
+        setProjexPanelClosed(false);
         setNotifDelayReady(false);
         const cancel = pauseAwareTimeout(() => setNotifDelayReady(true), 2000);
         return () => cancel?.();
@@ -692,6 +959,9 @@ export default function ActionCenter() {
     const clcStepConfig = isDemoActive ? CLC_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
     const isClcStepActive = !!clcStepConfig && !clcPanelClosed && notifDelayReady;
 
+    const projexStepConfig = isDemoActive ? PROJEX_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
+    const isProjexStepActive = !!projexStepConfig && !projexPanelClosed && notifDelayReady;
+
     const isStepAutoOpen =
         isStep19 || isStep27 ||
         (isStepA11 && !a11PanelClosed && notifDelayReady) ||
@@ -699,7 +969,8 @@ export default function ActionCenter() {
         (isStepSc10 && !sc10PanelClosed && notifDelayReady) ||
         (isStepSc10b && !sc10bPanelClosed && notifDelayReady) ||
         isOwStepActive ||
-        isClcStepActive;
+        isClcStepActive ||
+        isProjexStepActive;
 
     return (
         <>
@@ -1486,6 +1757,84 @@ export default function ActionCenter() {
                         <p className="text-xs font-bold text-ai flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
                             {clcStepConfig.footerText}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Projex Steps p1.1 .. p5.x: Generic incoming-event notification panel (F74) */}
+        {isProjexStepActive && projexStepConfig && (
+            <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] lg:w-[520px] z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
+                <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden">
+                    <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                projexStepConfig.badgeColor === 'warning' ? 'bg-warning/15 text-warning' :
+                                projexStepConfig.badgeColor === 'success' ? 'bg-success/15 text-success' :
+                                'bg-foreground/10 text-foreground'
+                            }`}>{projexStepConfig.badge}</span>
+                        </div>
+                        <button onClick={() => setProjexPanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="px-5 pb-5">
+                        <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden">
+                            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                                <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
+                                <span className="text-sm font-semibold text-foreground flex-1">{projexStepConfig.title}</span>
+                                <span className="text-[10px] text-muted-foreground shrink-0">Today · 08:14 AM</span>
+                            </div>
+                            <div className="px-4 py-3 border-b border-border space-y-1">
+                                <div className="flex gap-2 text-[11px]">
+                                    <span className="text-muted-foreground w-10 shrink-0">From</span>
+                                    <span className="text-foreground font-medium">{projexStepConfig.sender}</span>
+                                </div>
+                                {projexStepConfig.re ? (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Re</span>
+                                        <span className="text-foreground">{projexStepConfig.re}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2 text-[11px]">
+                                        <span className="text-muted-foreground w-10 shrink-0">Info</span>
+                                        <span className="text-foreground">{projexStepConfig.desc}</span>
+                                    </div>
+                                )}
+                            </div>
+                            {projexStepConfig.attachment && (
+                                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide shrink-0">Attachment:</span>
+                                    <span className="flex items-center gap-1 text-[10px] text-success font-medium px-2 py-0.5 rounded bg-success/10 border border-success/20">
+                                        <DocumentTextIcon className="w-3 h-3" /> {projexStepConfig.attachment}
+                                    </span>
+                                </div>
+                            )}
+                            {projexStepConfig.re && (
+                                <div className="px-4 py-3 border-b border-border">
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{projexStepConfig.desc}</p>
+                                </div>
+                            )}
+                            <div className="px-4 py-4">
+                                <button
+                                    onClick={() => {
+                                        setProjexPanelClosed(true);
+                                        window.dispatchEvent(new CustomEvent(projexStepConfig.event));
+                                    }}
+                                    className="w-full py-2.5 text-[12px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                >
+                                    {projexStepConfig.cta}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="px-5 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 backdrop-blur-md flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
+                        <p className="text-xs font-bold text-ai flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
+                            {projexStepConfig.footerText}
                         </p>
                     </div>
                 </div>
