@@ -462,7 +462,7 @@ const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
     // F3 · progress billing · dashboards + reviews con context to scan
     'p3.1': 5000,  // threshold alert · scene shows live forecast chart moving
     // p3.2 · no notif
-    'p3.3': 4500,  // walls PM gate · handoff + punch list to read
+    // p3.3 · no notif
     'p3.4': 5000,  // AR kanban · 4-col exploration across buckets
     'p3.5': 4500,  // collection drafts · shared queue + tone toolbar
 }
@@ -530,16 +530,9 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     // p3.2 · INTERACTIVE step (proforma review) · no AC notif needed ·
     // scene UI muestra proforma modal + Approve/Reject/Request info directamente.
-    'p3.3': {
-        badge: 'WC9 gate', badgeColor: 'warning',
-        title: 'Walls draw · Director hands off to PM for install-complete confirm',
-        desc: 'NCBA install completion · Walls 60/30/10 · 30% draw ($18,740) needs Stacy PM confirmation before fires. Alec releases handoff · Stacy receives ConfirmDialog · 5 punch items complete · 18 photos attached. Today waits en Outlook · often delays fires.',
-        sender: 'Walls Director',
-        re: 'NCBA · Walls 30% draw · WC9 installation-complete gate',
-        cta: 'Open PM confirm →',
-        event: 'projex:wc9-open',
-        footerText: 'Stacy to confirm install-complete',
-    },
+    // p3.3 · INTERACTIVE step (Walls PM WC9 gate) · no AC notif needed ·
+    // scene UI muestra handoff banner + Confirm installation-complete button
+    // directamente · self-explanatory.
     'p3.4': {
         badge: '7 overdue', badgeColor: 'warning',
         title: 'AR aging board · 7 accounts past due across 3 buckets',

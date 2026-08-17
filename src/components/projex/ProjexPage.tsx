@@ -196,8 +196,7 @@ const SCENE_HANDLED_EVENTS = new Set<string>([
     'projex:vendor-intake-open',    // p2.1 · opens intake modal
     'projex:w9-ocr-open',           // p2.2 · queue landing → drill-in OCR
     // F76 · SCENE-OWN-FOCUS · highlight primary CTA (useHighlightOnAcClick hook)
-    // (p2.4 · p2.6 · p3.2 removed 2026-08-17 · notifs deleted · UI self-explanatory)
-    'projex:wc9-open',              // p3.3 · highlight Confirm installation-complete
+    // (p2.4 · p2.6 · p3.2 · p3.3 removed 2026-08-17 · notifs deleted · UI self-explanatory)
     'projex:drafts-open',           // p3.5 · highlight Send follow-up
     'projex:pif-email-open',        // p4.1 · highlight Ingest PIF + SIF
     'projex:dispatch-open',         // p4.5 · highlight Teknion first Send (FC6)
@@ -219,8 +218,7 @@ const STEP_TO_AC_EVENT: Record<string, string> = {
     'p2.2': 'projex:w9-ocr-open',           // SCENE-owned
     // p2.4 · p2.6 removed 2026-08-17 · notifs deleted from ActionCenter
     'p3.1': 'projex:threshold-open',        // KEEP-ADVANCE (view/alert scene)
-    // p3.2 · removed 2026-08-17 · notif deleted (UI self-explanatory)
-    'p3.3': 'projex:wc9-open',              // SCENE-owned (highlight Confirm)
+    // p3.2 · p3.3 removed 2026-08-17 · notifs deleted (UI self-explanatory)
     'p3.4': 'projex:ar-board-open',         // KEEP-ADVANCE (explore kanban)
     'p3.5': 'projex:drafts-open',           // SCENE-owned (highlight Send draft)
     'p4.1': 'projex:pif-email-open',        // SCENE-owned (highlight Ingest)

@@ -17,7 +17,6 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
-import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 
@@ -37,8 +36,8 @@ export default function F3_p33_WallsPMGateScene() {
 
     const [stage, setStage] = useState<'handoff' | 'confirming' | 'confirmed'>('handoff')
 
-    // F76 · AC click highlights Confirm installation-complete button
-    const highlight = useHighlightOnAcClick('projex:wc9-open')
+    // No AC notif · UI is self-explanatory (Confirm button visible)
+    const highlight = false
 
     const handleConfirm = () => {
         if (stage !== 'handoff') return
