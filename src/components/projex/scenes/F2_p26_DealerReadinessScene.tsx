@@ -1,10 +1,10 @@
 /**
  * COMPONENT: F2_p26_DealerReadinessScene (Projex · p2.6)
- * PURPOSE: Kelly opens Dealer view · vendor status per active project.
+ * PURPOSE: Coordinator opens Dealer view · vendor status per active project.
  *          Warehouse by Design ahora "Ready for AP" con next payment run date.
  *          Expiration reminders 30-day-out surface en Action Center · click
  *          abre pre-drafted "Request W-9 refresh" email (Friendlier/Firmer/
- *          Shorter toolbar) para Kelly to review y send.
+ *          Shorter toolbar) para Coordinator to review y send.
  *
  *          Shape LOCK · dealer readiness grid + email composer inline.
  *
@@ -43,7 +43,7 @@ Quick heads-up · your W-9 on file with Projex is approaching its 12-month anniv
 To keep payments flowing without holds, could you send an updated W-9 by end of month? Reply to this email or upload directly at projex-vendors.com/refresh.
 
 Thanks —
-Kelly · Projex Furniture Coordination`,
+Coordinator · Projex Furniture Coordination`,
     },
     {
         id: 'friendlier',
@@ -55,7 +55,7 @@ Hope Q3 is treating you well. Little admin thing · your W-9 with us is almost 1
 Could you shoot over a fresh one whenever you have a sec? Reply here or use projex-vendors.com/refresh. No rush · just want to keep the payment train running smooth 🚂
 
 Thanks so much!
-Kelly`,
+Coordinator`,
     },
     {
         id: 'firmer',
@@ -67,12 +67,12 @@ Per Projex vendor policy · W-9 refresh is required every 12 months. Your curren
 Please submit a signed W-9 by end of month · payments will hold if we do not receive it in time. Reply to this email or upload at projex-vendors.com/refresh.
 
 Thanks —
-Kelly · Projex Furniture Coordination`,
+Coordinator · Projex Furniture Coordination`,
     },
     {
         id: 'shorter',
         label: 'Shorter',
-        body: `Hi West Elm · your Projex W-9 (signed 2025-01-18) expires in 30 days · please send a fresh signed copy to avoid payment holds. Reply here or upload at projex-vendors.com/refresh. Thanks — Kelly`,
+        body: `Hi West Elm · your Projex W-9 (signed 2025-01-18) expires in 30 days · please send a fresh signed copy to avoid payment holds. Reply here or upload at projex-vendors.com/refresh. Thanks — Coordinator`,
     },
 ]
 
@@ -121,7 +121,7 @@ export default function F2_p26_DealerReadinessScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Dealer readiness · Kelly sees vendor status per project + expiration reminders
+                    Dealer readiness · Coordinator sees vendor status per project + expiration reminders
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     Warehouse by Design ahora Ready for AP · 2 expiration reminders 30-day-out surface via Action Center.
@@ -136,7 +136,7 @@ export default function F2_p26_DealerReadinessScene() {
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                            Kelly&apos;s active projects · vendor readiness
+                            Coordinator&apos;s active projects · vendor readiness
                         </span>
                         <span className="ml-auto text-[10px] text-muted-foreground">Next payment run · Tue Aug 19</span>
                     </div>
@@ -240,7 +240,7 @@ export default function F2_p26_DealerReadinessScene() {
                     {/* Send footer */}
                     <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center gap-2">
                         <span className="text-[10px] text-muted-foreground flex-1">
-                            Kelly reviews → sends · draft never auto-goes.
+                            Coordinator reviews → sends · draft never auto-goes.
                         </span>
                         {sendState === 'idle' && (
                             <button
@@ -274,7 +274,7 @@ export default function F2_p26_DealerReadinessScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Action Center · 2 expiration reminders</div>
                     <div className="text-muted-foreground mt-0.5">
-                        West Elm W-9 expires 30 days (above) · Ryan&apos;s Carpentry W-9 already expired (payment run blocker) · both surface via bell del navbar. Kelly clears them without leaving her project view.
+                        West Elm W-9 expires 30 days (above) · Ryan&apos;s Carpentry W-9 already expired (payment run blocker) · both surface via bell del navbar. Coordinator clears them without leaving her project view.
                     </div>
                 </div>
             </div>
@@ -285,7 +285,7 @@ export default function F2_p26_DealerReadinessScene() {
                     <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">F2 vendor onboarding complete</span>
-                        <span className="text-muted-foreground"> · Warehouse by Design added · West Elm refresh requested · Kelly has zero pending expirations.</span>
+                        <span className="text-muted-foreground"> · Warehouse by Design added · West Elm refresh requested · Coordinator has zero pending expirations.</span>
                     </div>
                     <button
                         onClick={restart}

@@ -2,7 +2,7 @@
  * COMPONENT: F4_p42_PifParseScene (Projex · p4.2)
  * PURPOSE: Auto · PIF parse vertical · 24 sample lines de las 300 · cost/margin/
  *          design-fee/total-price columns · AI lot line para Walls (WC2).
- *          Staged reveal · per-cell OCR confidence · Isabella corrections.
+ *          Staged reveal · per-cell OCR confidence · Coordinator corrections.
  *
  * SHAPE · vertical line parser (F4 primary shape · anti-collision con F1 row-diff)
  * REUSE · UI-Dealer/pd-to-sif/PDtoSIF shape (lifted) · mbi/SIFParserPreview
@@ -205,7 +205,7 @@ export default function F4_p42_PifParseScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">"AI lot line" · WC2 fix</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Walls partitions traditionally line-by-line en Excel · Strata groups panel-type A · type B · trim strips into AI lot lines. Reduces Isabella\'s 300-line touch time significantly.
+                        Walls partitions traditionally line-by-line en Excel · Strata groups panel-type A · type B · trim strips into AI lot lines. Reduces Coordinator\'s 300-line touch time significantly.
                     </div>
                 </div>
             </div>

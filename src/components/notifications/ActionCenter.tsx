@@ -476,12 +476,12 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p1.1': {
         badge: '2 need eyes', badgeColor: 'ai',
         title: 'Overnight AP sweep · 14 bills · 12 auto-matched · 2 held',
-        desc: 'Good morning Daniel · Strata swept the AP inbox overnight and matched 12/14 bills exact-to-the-penny against NetSuite POs. 2 held for review: 1 Teknion partial-ship variance on NCBA (bill 8483) + 1 Warehouse-by-Design install invoice sin PO # (AP9 pattern).',
+        desc: 'Good morning Accounting · Strata swept the AP inbox overnight and matched 12/14 bills exact-to-the-penny against NetSuite POs. 2 held for review: 1 Teknion partial-ship variance on NCBA (bill 8483) + 1 Warehouse-by-Design install invoice sin PO # (AP9 pattern).',
         sender: 'Strata AI · ap@projex-inc.com · sweep 02:14 → 08:11',
-        re: 'AP inbox · 14 vendor bills · 3 legal entities · ready for Daniel',
+        re: 'AP inbox · 14 vendor bills · 3 legal entities · ready for Accounting',
         cta: 'Open the Teknion 291-line bill →',
         event: 'projex:ap-open-teknion',
-        footerText: 'Waiting for Daniel',
+        footerText: 'Waiting for Accounting',
     },
     'p1.4': {
         badge: 'Held bill · needs PM', badgeColor: 'warning',
@@ -496,23 +496,23 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p2.1': {
         badge: 'Open ticket', badgeColor: 'ai',
         title: 'F2 · Vendor onboarding · Coordinator submits structured intake',
-        desc: 'Kelly is opening the structured intake form to onboard Warehouse by Design (install vendor · AP9 pattern · Denver Financial project). Free-text email to Daniel is being replaced by structured form + W-9 upfront.',
+        desc: 'Coordinator is opening the structured intake form to onboard Warehouse by Design (install vendor · AP9 pattern · Denver Financial project). Free-text email to Accounting is being replaced by structured form + W-9 upfront.',
         sender: 'Coordinator · Furniture',
         re: 'Vendor onboarding · structured intake · start step',
         cta: 'Open intake form →',
         event: 'projex:vendor-intake-open',
-        footerText: 'Kelly typing · will attach W-9',
+        footerText: 'Coordinator typing · will attach W-9',
     },
     'p2.2': {
         badge: 'Ticket received', badgeColor: 'ai',
         title: 'New vendor request · Warehouse by Design · W-9 attached',
-        desc: 'Kelly submitted structured intake for Warehouse by Design (LLC single-member · install vendor for Denver Financial · $3,200 quote · Aug 12-13). W-9 attached signed 2026-03-12. Strata is ready to run OCR extraction on the source PDF and validate 5 key fields with per-field confidence.',
-        sender: 'Kelly · Furniture Coordinator · via intake form',
+        desc: 'Coordinator submitted structured intake for Warehouse by Design (LLC single-member · install vendor for Denver Financial · $3,200 quote · Aug 12-13). W-9 attached signed 2026-03-12. Strata is ready to run OCR extraction on the source PDF and validate 5 key fields with per-field confidence.',
+        sender: 'Coordinator · Furniture Coordinator · via intake form',
         re: 'TKT-P2-2026-08-14-001 · Warehouse by Design · install vendor request',
         attachment: 'WarehouseByDesign_W-9_signed.pdf',
         cta: 'Open OCR review →',
         event: 'projex:w9-ocr-open',
-        footerText: 'Daniel to review 5 fields',
+        footerText: 'Accounting to review 5 fields',
     },
     // p2.3 · AUTO step (Strata runs compliance preflight) · no AC notif needed ·
     // user does not have an action to take here · scene auto-advances on chain complete.
@@ -524,7 +524,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p3.1': {
         badge: '1 threshold', badgeColor: 'warning',
         title: 'F3 · Threshold trigger · Fairport phase 2 crosses 50%',
-        desc: 'Live billing forecast fires · Fairport HQ phase 2 ordered % crosses 50 en W32. Strata drafts proforma PJX-INV-3421 ($24,500 · 40% draw) for Isabella review. Chart animates threshold crossing · alert lands en Action Center.',
+        desc: 'Live billing forecast fires · Fairport HQ phase 2 ordered % crosses 50 en W32. Strata drafts proforma PJX-INV-3421 ($24,500 · 40% draw) for Coordinator review. Chart animates threshold crossing · alert lands en Action Center.',
         sender: 'Strata AI · live billing forecast · just now',
         re: 'Fairport HQ · Furniture 50/40/10 · 40% draw fires',
         cta: 'Open forecast + draft →',
@@ -539,17 +539,17 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p3.4': {
         badge: '7 overdue', badgeColor: 'warning',
         title: 'AR aging board · 7 accounts past due across 3 buckets',
-        desc: 'Shared AR aging kanban 4-col replaces dead-tracker (AR3). 3 accounts in 31-60 bucket ($55,170 total) · 2 in 61-90 ($49,050 · $1,679 late fee) · 2 in 90+ ($18,650 · $930 late fee). Net 10 + 1.5%/mo late fee. Filter por owner Isabella/Alec/Jacob.',
+        desc: 'Shared AR aging kanban 4-col replaces dead-tracker (AR3). 3 accounts in 31-60 bucket ($55,170 total) · 2 in 61-90 ($49,050 · $1,679 late fee) · 2 in 90+ ($18,650 · $930 late fee). Net 10 + 1.5%/mo late fee. Filter por owner Coordinator/Walls/Compliance.',
         sender: 'Strata AI · AR aging tracker',
         re: 'AR aging board · shared queue · dead-tracker replaced',
         cta: 'Open AR board →',
         event: 'projex:ar-board-open',
-        footerText: 'Isabella + Alec + Jacob shared view',
+        footerText: 'Coordinator + Walls + Compliance shared view',
     },
     'p3.5': {
         badge: '5 drafts', badgeColor: 'ai',
         title: 'Collection emails drafted · shared queue Furniture + Walls',
-        desc: 'Strata drafted 5 collection emails staged por bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue muestra Isabella + Alec drafts juntos (FC12 fix vs personal Outlook). AIEmailComposer con Friendlier/Firmer/Shorter tone polish · per-draft send.',
+        desc: 'Strata drafted 5 collection emails staged por bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue muestra Coordinator + Walls drafts juntos (FC12 fix vs personal Outlook). AIEmailComposer con Friendlier/Firmer/Shorter tone polish · per-draft send.',
         sender: 'Strata AI · email composer',
         re: 'Collection queue · 5 drafts · tone polish available',
         cta: 'Review + send drafts →',
@@ -569,7 +569,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p4.1': {
         badge: 'Designer email', badgeColor: 'ai',
         title: 'F4 · Lead Designer emails MWH PIF · 300 lines · 26 vendor split',
-        desc: 'Layne (Lead Designer at Aspire Design) emails Isabella el MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Isabella opens email · previews attachments · confirms Ingest para start parse.',
+        desc: 'Lead Designer (Aspire Design) emails Coordinator el MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Coordinator opens email · previews attachments · confirms Ingest para start parse.',
         sender: 'Lead Designer · aspire-design.example',
         re: 'MWH residential · PIF + SIF · 300 lines · 26 vendor split',
         attachment: 'MWH_PIF_2026-08-14.xlsx · MWH_CET_export.sif',
@@ -582,12 +582,12 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p4.3': {
         badge: '26 S&H', badgeColor: 'ai',
         title: 'S&H manual entries · Coordinator owns freight rules',
-        desc: 'Isabella adds 26 shipping-and-handling manual entries · EditableLineTable con add-row. Alamir $19 flat rule (<$150) · Nelson prepaid+add · Teknion consolidated · HBF lift-gate delivery. Design fee 8% of product subtotal recomputed live. Isabella keeps override control.',
+        desc: 'Coordinator adds 26 shipping-and-handling manual entries · EditableLineTable con add-row. Alamir $19 flat rule (<$150) · Nelson prepaid+add · Teknion consolidated · HBF lift-gate delivery. Design fee 8% of product subtotal recomputed live. Coordinator keeps override control.',
         sender: 'Strata AI · freight rules engine',
         re: 'MWH · 26 S&H entries · per-vendor freight rules',
         cta: 'Open manual editor →',
         event: 'projex:manual-lines-open',
-        footerText: 'Isabella owns override control',
+        footerText: 'Coordinator owns override control',
     },
     'p4.4': {
         badge: '26 draft POs', badgeColor: 'ai',
@@ -602,7 +602,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p4.5': {
         badge: 'Ready to release', badgeColor: 'warning',
         title: 'Per-vendor Send · release Teknion primero · never one-batch',
-        desc: 'SubmitPODialog per PO · Isabella sends Teknion (SIF Online) primero para start ACK clock · HBF hold para tomorrow · Boss Design review before send. Banner "Never auto-send" visible arriba. Cada release es intentional act (SOT §12b · FC6 fix · Isabella never trusts auto-send).',
+        desc: 'SubmitPODialog per PO · Coordinator sends Teknion (SIF Online) primero para start ACK clock · HBF hold para tomorrow · Boss Design review before send. Banner "Never auto-send" visible arriba. Cada release es intentional act (SOT §12b · FC6 fix · Coordinator never trusts auto-send).',
         sender: 'Strata AI · dispatch orchestrator',
         re: 'MWH · 26 POs · per-vendor SubmitPODialog · human control',
         cta: 'Open dispatch console →',
@@ -628,7 +628,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.4': {
         badge: 'Sentinels ready', badgeColor: 'ai',
         title: 'Clear 10/10/2050 sentinels · Multi-Line Edit tool bulk',
-        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) permite bulk-clear los 12 sample lines en un click · Isabella confirms cada CR-affected row antes.',
+        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) permite bulk-clear los 12 sample lines en un click · Coordinator confirms cada CR-affected row antes.',
         sender: 'Strata AI · sentinel manager',
         re: 'NCBA PMO · 10/10/2050 → real Teknion dates',
         cta: 'Open sentinel clear →',
@@ -638,9 +638,9 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.5': {
         badge: 'Chain ready', badgeColor: 'ai',
         title: 'Designer chain auto-assembly · Lead → Spec → PM (FC8)',
-        desc: 'Strata auto-assembles designer chain thread · Layne (Lead) reviews CR-01 leadtime · Tate (Spec) confirms width changes CR-03/07/12 with client · Josh (PM) signs off. Attachments + replies + timestamps preservados. Replaces Isabella\'s Excel manual assembly (FC8 net-new).',
+        desc: 'Strata auto-assembles designer chain thread · Lead Designer reviews CR-01 leadtime · Spec Designer confirms width changes CR-03/07/12 with client · PM Coordinator signs off. Attachments + replies + timestamps preservados. Replaces Coordinator\'s Excel manual assembly (FC8 net-new).',
         sender: 'Strata AI · chain composer',
-        re: 'NCBA designer chain · Layne · Tate · Josh sign-off',
+        re: 'NCBA designer chain · Lead Designer · Spec Designer · PM Coordinator sign-off',
         cta: 'Open chain thread →',
         event: 'projex:chain-open',
         footerText: 'FC8 net-new · replaces Excel',
@@ -648,12 +648,12 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.6': {
         badge: 'Daily sweep', badgeColor: 'success',
         title: 'F5 complete · daily ESD sweep + shipment tracking',
-        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest en production o scheduling. Multi-Line-Edit tool bulk refresh disponible. Isabella cierra MWH cycle · monitor deliveries · next threshold coming.',
+        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest en production o scheduling. Multi-Line-Edit tool bulk refresh disponible. Coordinator cierra MWH cycle · monitor deliveries · next threshold coming.',
         sender: 'Strata AI · daily sweep · 08:00 AM',
         re: 'NCBA · 6 shipments tracking · Daily Report saved-search',
         cta: 'Open tracking grid →',
         event: 'projex:tracking-open',
-        footerText: 'Isabella monitors · next Tue Aug 19',
+        footerText: 'Coordinator monitors · next Tue Aug 19',
     },
 }
 

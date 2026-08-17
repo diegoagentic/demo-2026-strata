@@ -1,10 +1,10 @@
 /**
  * COMPONENT: APBillPostedScene (Projex · p1.6)
  * PURPOSE: Strata saves the bill record in NetSuite · drops the PDF in the
- *          Communications tab with the naming convention Jacob already uses:
+ *          Communications tab with the naming convention Compliance already uses:
  *          date_vendor_invoice#_amount_PO# · SharePoint mirror in Accounting
  *          Private → Invoices → year/month/company. Activity log records:
- *          extracted by OCR · matched by Strata · approved by Matt · saved by
+ *          extracted by OCR · matched by Strata · approved by CEO · saved by
  *          user (audit trail per legal entity).
  *
  *          Staged reveal · Detecting → Posting → Confirmed. DataSourcesBar
@@ -49,8 +49,8 @@ interface ActivityEntry {
 const ACTIVITY: ActivityEntry[] = [
     { id: '1', icon: Sparkles,     actor: 'Strata OCR',        action: 'Extracted 291 lines from TEK-2026-0847.pdf',                time: '02:14 AM',        tone: 'ai' },
     { id: '2', icon: Sparkles,     actor: 'PO Matcher',        action: 'Matched to PO-2026-4421 · exact-to-the-penny',              time: '02:14 AM',        tone: 'ai' },
-    { id: '3', icon: CheckCircle2, actor: 'Daniel Louw',       action: 'Reviewed line-items · confirmed match',                     time: '08:22 AM',        tone: 'success' },
-    { id: '4', icon: ShieldCheck,  actor: 'Matt Magrann',      action: 'Approved for payment run · Tue batch',                      time: '08:34 AM',        tone: 'primary' },
+    { id: '3', icon: CheckCircle2, actor: 'Accounting',       action: 'Reviewed line-items · confirmed match',                     time: '08:22 AM',        tone: 'success' },
+    { id: '4', icon: ShieldCheck,  actor: 'CEO',      action: 'Approved for payment run · Tue batch',                      time: '08:34 AM',        tone: 'primary' },
     { id: '5', icon: Database,     actor: 'NetSuite Bot',      action: 'Bill record saved · PDF filed · audit trail written',       time: 'just now',        tone: 'success' },
 ]
 
@@ -95,7 +95,7 @@ export default function APBillPostedScene() {
                     <span>AP intake &amp; matching · step 6</span>
                     <span className="text-muted-foreground/60">·</span>
                     <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Consequence of Matt's approval · auto
+                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Consequence of CEO's approval · auto
                     </span>
                     <span className="text-muted-foreground/60">·</span>
                     <span className="inline-flex items-center gap-1 bg-success/10 text-success font-semibold rounded-md px-1.5 py-0.5">
@@ -258,7 +258,7 @@ export default function APBillPostedScene() {
                     <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-foreground">
-                            End of AP flow · Daniel is unblocked · Jacob has full audit trail
+                            End of AP flow · Accounting is unblocked · Compliance has full audit trail
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
                             Next Projex flows in the roadmap · Order &amp; PO dispatch · ACK processing · Progress billing · Vendor onboarding.

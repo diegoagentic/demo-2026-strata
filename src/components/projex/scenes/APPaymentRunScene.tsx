@@ -1,11 +1,11 @@
 /**
  * COMPONENT: APPaymentRunScene (Projex · p1.5)
  * PURPOSE: Tuesday payment run · 47 bills queued (Tue = big batch · Thu = one-offs).
- *          Jacob's twice-weekly financial dashboard (payables tab + AR aging tab)
- *          surfaces the batch to Matt Magrann (CEO) for approval. Matt clicks
+ *          Compliance's twice-weekly financial dashboard (payables tab + AR aging tab)
+ *          surfaces the batch to CEO for approval. CEO clicks
  *          Approve · Strata prepares ACH entries but does NOT release · the
  *          ACH workaround stays visible (NetSuite → bank ACH batch never delivered
- *          · Jacob still enters remittance detail manually in the bank portal ·
+ *          · Compliance still enters remittance detail manually in the bank portal ·
  *          Strata compares last remittance to prevent duplicate payment).
  *
  * DS TOKENS: bg-card · bg-primary + text-primary-foreground · bg-warning/10 +
@@ -155,7 +155,7 @@ export default function APPaymentRunScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Tue payment run · dashboard review · Matt approves the ACH batch
+                    Tue payment run · dashboard review · CEO approves the ACH batch
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     Tuesday = big batch · Thursday = one-offs. {jacob.fullName.split(' ')[0]}'s twice-weekly financial dashboard surfaces the queue to {matt.fullName.split(' ')[0]} · human sign-off is preserved on purpose.
@@ -168,7 +168,7 @@ export default function APPaymentRunScene() {
                     {matt.initials}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CEO · Matt Magrann · verbatim</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CEO · CEO · verbatim</div>
                     <div className="text-sm text-foreground italic mt-0.5">"75% AI with the human touch on it."</div>
                 </div>
             </div>
@@ -284,7 +284,7 @@ export default function APPaymentRunScene() {
                                     )}
                                     {!isDup && !modifyMode && !isExcluded && (stage === 'idle' || stage === 'approving') && (
                                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground bg-muted rounded px-1.5 py-0.5">
-                                            Pending Matt
+                                            Pending CEO
                                         </span>
                                     )}
                                 </span>
@@ -300,7 +300,7 @@ export default function APPaymentRunScene() {
                         <div className="flex-1 min-w-0 text-[11px]">
                             <div className="text-foreground font-semibold">Duplicate-payment control · caught by Strata</div>
                             <div className="text-muted-foreground mt-0.5">
-                                Nelson NLC-99120 matches the last remittance sent 2026-07-08 · same invoice #, same amount, same vendor. Held for Jacob review before release.
+                                Nelson NLC-99120 matches the last remittance sent 2026-07-08 · same invoice #, same amount, same vendor. Held for Compliance review before release.
                             </div>
                         </div>
                     </div>
@@ -459,7 +459,7 @@ export default function APPaymentRunScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">ACH workaround preserved (Phase 1)</div>
                     <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        NetSuite → bank ACH batch upload was never delivered · Jacob still enters remittance detail manually in the bank portal. Strata compares the last remittance to prevent duplicate payment (see Nelson row above). Phase 2 · consider a bank portal RPA once Jacob signs off write permissions.
+                        NetSuite → bank ACH batch upload was never delivered · Compliance still enters remittance detail manually in the bank portal. Strata compares the last remittance to prevent duplicate payment (see Nelson row above). Phase 2 · consider a bank portal RPA once Compliance signs off write permissions.
                     </div>
                 </div>
                 <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 rounded px-1.5 py-0.5">

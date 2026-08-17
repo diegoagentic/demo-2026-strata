@@ -81,32 +81,32 @@ type ArrivalContext = { breadcrumb: string[]; focus?: { label: string; icon?: Re
 
 const ARRIVAL_MAP: Record<string, ArrivalContext> = {
     // F1 · Expert Hub · AP intake flow
-    'p1.2': { breadcrumb: ['Expert Hub', 'Transactions', 'AP inbox', 'Teknion TEK-2026-0847'], focus: { label: 'Daniel clicked row · overnight sweep', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'OCR pipeline · 291 lines' },
-    'p1.3': { breadcrumb: ['Expert Hub', 'Transactions', 'AP inbox', 'TEK-2026-0847 · line-item match'], focus: { label: 'Daniel reconciling 291 lines to PO', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'Match to the penny' },
-    'p1.6': { breadcrumb: ['Expert Hub', 'Transactions', 'AP inbox', 'TEK-2026-0847 · posted'], focus: { label: 'Auto · consequence of Matt approval', tone: 'muted' }, hint: 'NetSuite + SharePoint sync' },
+    'p1.2': { breadcrumb: ['Expert Hub', 'Transactions', 'AP inbox', 'Teknion TEK-2026-0847'], focus: { label: 'Accounting clicked row · overnight sweep', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'OCR pipeline · 291 lines' },
+    'p1.3': { breadcrumb: ['Expert Hub', 'Transactions', 'AP inbox', 'TEK-2026-0847 · line-item match'], focus: { label: 'Accounting reconciling 291 lines to PO', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'Match to the penny' },
+    'p1.6': { breadcrumb: ['Expert Hub', 'Transactions', 'AP inbox', 'TEK-2026-0847 · posted'], focus: { label: 'Auto · consequence of CEO approval', tone: 'muted' }, hint: 'NetSuite + SharePoint sync' },
 
     // F2 · Dealer Experience · vendor onboarding flow
-    'p2.2': { breadcrumb: ['Dealer Experience', 'MAC & Requests', 'Onboarding queue', 'WBD ticket'], focus: { label: "Daniel opened Kelly's WBD ticket", icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'W-9 OCR extraction' },
+    'p2.2': { breadcrumb: ['Dealer Experience', 'MAC & Requests', 'Onboarding queue', 'WBD ticket'], focus: { label: "Accounting opened Coordinator's WBD ticket", icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'W-9 OCR extraction' },
     'p2.3': { breadcrumb: ['Dealer Experience', 'MAC & Requests', 'Onboarding queue', 'WBD ticket'], focus: { label: 'Compliance preflight · 4 checks', icon: <GitCompare className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'W-9 <12mo · 1099 · ACH · W-8 BEN-E' },
-    'p2.4': { breadcrumb: ['Dealer Experience', 'MAC & Requests', 'Onboarding queue', 'WBD ticket'], focus: { label: 'Jacob compliance sign-off gate', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: 'Human decision · release or reject' },
+    'p2.4': { breadcrumb: ['Dealer Experience', 'MAC & Requests', 'Onboarding queue', 'WBD ticket'], focus: { label: 'Compliance sign-off gate', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: 'Human decision · release or reject' },
 
     // F3 · Dealer Experience · progress billing flow
     'p3.1': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast'], focus: { label: 'Fairport crossing 50% threshold', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: '5 active projects watched' },
-    'p3.2': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast', 'Fairport'], focus: { label: 'Isabella reviewing proforma draft', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: '40% tranche · $58,240' },
-    'p3.3': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast', 'MWH Walls'], focus: { label: 'WC9 Walls PM gate · Alec → Stacy', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: 'Install-complete confirmation required' },
+    'p3.2': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast', 'Fairport'], focus: { label: 'Coordinator reviewing proforma draft', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: '40% tranche · $58,240' },
+    'p3.3': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast', 'MWH Walls'], focus: { label: 'WC9 Walls PM gate · Director → PM', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: 'Install-complete confirmation required' },
     'p3.6': { breadcrumb: ['Dealer Experience', 'Transactions', 'Customer Invoices'], focus: { label: 'PJX-INV-3421 · Fairport 40% draw · just posted', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'Open GL sync detail via Action Center' },
 
     // F4 · Expert Hub · PIF → PO dispatch flow
     'p4.1': { breadcrumb: ['Expert Hub', 'Transactions', 'Order intake'], focus: { label: 'MWH residential PIF · just arrived · 300 lines', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'New intake pending review' },
     'p4.2': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · parsing'], focus: { label: 'Strata parsing 300-line PIF', icon: <GitCompare className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'Cost / margin / design fee columns' },
-    'p4.3': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · manual lines'], focus: { label: 'Isabella adding S&H manual rows', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: '26 S&H rows · surcharge · design fee' },
+    'p4.3': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · manual lines'], focus: { label: 'Coordinator adding S&H manual rows', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: '26 S&H rows · surcharge · design fee' },
     'p4.6': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · snapshot'], focus: { label: 'Auto · consequence of vendor sends', tone: 'muted' }, hint: 'Tri-way match · activity trail' },
 
     // F5 · Expert Hub · electronic ordering + ACK flow
-    'p5.1': { breadcrumb: ['Expert Hub', 'Comparisons', 'Dispatch board', 'MWH PO'], focus: { label: 'PO awaiting Teknion Online upload', icon: <Package className="h-3 w-3" aria-hidden="true" />, tone: 'info' }, hint: 'Isabella dispatching · SIF file' },
-    'p5.3': { breadcrumb: ['Expert Hub', 'Comparisons', 'ACK review', 'Teknion PO-DC-0009642'], focus: { label: 'Isabella comparing ACK vs PMO', icon: <GitCompare className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: '71 lines · 13 CRs' },
+    'p5.1': { breadcrumb: ['Expert Hub', 'Comparisons', 'Dispatch board', 'MWH PO'], focus: { label: 'PO awaiting Teknion Online upload', icon: <Package className="h-3 w-3" aria-hidden="true" />, tone: 'info' }, hint: 'Coordinator dispatching · SIF file' },
+    'p5.3': { breadcrumb: ['Expert Hub', 'Comparisons', 'ACK review', 'Teknion PO-DC-0009642'], focus: { label: 'Coordinator comparing ACK vs PMO', icon: <GitCompare className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: '71 lines · 13 CRs' },
     'p5.4': { breadcrumb: ['Expert Hub', 'Comparisons', 'ACK review', 'PO-DC-0009642 · sentinel clear'], focus: { label: 'Multi-Line Edit bulk sentinel clear', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: '10/10/2050 → real Teknion dates' },
-    'p5.5': { breadcrumb: ['Expert Hub', 'Comparisons', 'ACK review', 'Designer chain'], focus: { label: 'Chain · Layne → Tate → Josh', icon: <MessageSquare className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'Isabella assembling ACK chain to designer' },
+    'p5.5': { breadcrumb: ['Expert Hub', 'Comparisons', 'ACK review', 'Designer chain'], focus: { label: 'Chain · Lead → Spec → PM', icon: <MessageSquare className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: 'Coordinator assembling ACK chain to designer' },
 }
 
 export default function ProjexPage() {

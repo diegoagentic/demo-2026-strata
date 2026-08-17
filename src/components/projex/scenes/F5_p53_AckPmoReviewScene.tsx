@@ -61,7 +61,7 @@ export default function F5_p53_AckPmoReviewScene() {
                     ACK vs PMO · 71 lines + 13 CRs · Teknion taxonomy real
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Split-pane comparison · leadtime · BIFMA advisory · width change · pricer comment. AckHeroMatchPanel replaces Isabella\'s manual PDF-vs-Excel comparison.
+                    Split-pane comparison · leadtime · BIFMA advisory · width change · pricer comment. AckHeroMatchPanel replaces Coordinator\'s manual PDF-vs-Excel comparison.
                 </p>
             </div>
 

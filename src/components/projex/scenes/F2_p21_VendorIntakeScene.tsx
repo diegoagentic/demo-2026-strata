@@ -1,10 +1,10 @@
 /**
  * COMPONENT: F2_p21_VendorIntakeScene (Projex · p2.1)
- * PURPOSE: Kelly aterriza en su vendor requests inbox dentro del Dealer
+ * PURPOSE: Coordinator aterriza en su vendor requests inbox dentro del Dealer
  *          Experience · lista de 4-5 requests históricos + CTA `+ Request
  *          new vendor` que abre un modal centered con el form structured
  *          intake. Submit → confirmación in-line + CTA advance a p2.2 donde
- *          Daniel revisa. Replaces the floating form pattern (audit 2026-08-17).
+ *          Accounting revisa. Replaces the floating form pattern (audit 2026-08-17).
  *
  * SHAPE · list landing + centered modal form (F2 primary shape · Dealer)
  * REUSE · shared/AIEmailComposer.tsx presentation="centered" pattern (Dialog)
@@ -141,7 +141,7 @@ export default function F2_p21_VendorIntakeScene() {
                         {kelly.fullName.split(' ')[0]}&apos;s vendor requests · submit new · structured intake
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Kelly aterriza en su queue de requests dentro del Dealer Experience · click <strong className="text-foreground">Request new vendor</strong> abre el form structured (VS1 fix · reemplaza el free-text email a Daniel).
+                        Coordinator aterriza en su queue de requests dentro del Dealer Experience · click <strong className="text-foreground">Request new vendor</strong> abre el form structured (VS1 fix · reemplaza el free-text email a Accounting).
                     </p>
                 </div>
 
@@ -265,12 +265,12 @@ export default function F2_p21_VendorIntakeScene() {
                     <div className="flex-1 min-w-0 text-xs">
                         <div className="text-foreground font-semibold">Why structured intake matters (VS1)</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Free-text email a Daniel bloquea every other payment run · structured intake carries provenance · W-9 upfront · triggers OCR + preflight automáticamente · Daniel solo reviews.
+                            Free-text email a Accounting bloquea every other payment run · structured intake carries provenance · W-9 upfront · triggers OCR + preflight automáticamente · Accounting solo reviews.
                         </div>
                     </div>
                 </div>
 
-                <DataSourcesBar groups={dataGroups} label="Vendor intake · form → provenance → Daniel queue" />
+                <DataSourcesBar groups={dataGroups} label="Vendor intake · form → provenance → Accounting queue" />
             </div>
 
             {/* Centered modal · intake form */}

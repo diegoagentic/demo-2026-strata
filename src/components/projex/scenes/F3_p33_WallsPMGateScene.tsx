@@ -1,10 +1,10 @@
 /**
  * COMPONENT: F3_p33_WallsPMGateScene (Projex · p3.3)
- * PURPOSE: Walls 60/30/10 · 30% draw needs Stacy PM confirmation. Alec handoff
- *          releases · Stacy receives ConfirmDialog · installation photos + punch
+ * PURPOSE: Walls 60/30/10 · 30% draw needs Walls PM PM confirmation. Walls Director handoff
+ *          releases · Walls PM receives ConfirmDialog · installation photos + punch
  *          list attached · WC9 gate. Today waits en Outlook · often delays.
  *
- * SHAPE · handoff banner Alec→Stacy + confirm dialog (F3 secondary shape)
+ * SHAPE · handoff banner Walls Director→Walls PM + confirm dialog (F3 secondary shape)
  * REUSE · mbi/FlowHandoff shape (persona chain viz) · ConfirmDialog primitive
  * NOTIF · dispatchea `projex:wc9-confirmed` on confirm
  */
@@ -68,11 +68,11 @@ export default function F3_p33_WallsPMGateScene() {
                     Walls PM-review gate (WC9) · {alec.fullName.split(' ')[0]} handoff to {stacy.fullName.split(' ')[0]}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Walls 60/30/10 · 30% draw fires only after Stacy confirms installation-complete. Today waits en Outlook · often delays fires.
+                    Walls 60/30/10 · 30% draw fires only after Walls PM confirms installation-complete. Today waits en Outlook · often delays fires.
                 </p>
             </div>
 
-            {/* Handoff banner · persona chain Alec → Stacy */}
+            {/* Handoff banner · persona chain Walls Director → Walls PM */}
             <div className={`
                 rounded-2xl border p-4 flex items-center gap-4 transition-all
                 ${stage === 'handoff' ? 'border-warning/40 bg-warning/5' : ''}
@@ -101,7 +101,7 @@ export default function F3_p33_WallsPMGateScene() {
                 {stage === 'handoff' && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-warning bg-warning/10 rounded px-1.5 py-0.5">
                         <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                        Awaiting Stacy
+                        Awaiting Walls PM
                     </span>
                 )}
                 {stage === 'confirming' && (
@@ -118,7 +118,7 @@ export default function F3_p33_WallsPMGateScene() {
                 )}
             </div>
 
-            {/* Punch list · what Stacy is confirming */}
+            {/* Punch list · what Walls PM is confirming */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
@@ -143,7 +143,7 @@ export default function F3_p33_WallsPMGateScene() {
                     </div>
                 </div>
 
-                {/* Confirm card · Stacy's decision */}
+                {/* Confirm card · Walls PM's decision */}
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Ruler className="h-4 w-4 text-muted-foreground" aria-hidden="true" />

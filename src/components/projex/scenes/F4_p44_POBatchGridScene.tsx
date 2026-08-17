@@ -67,7 +67,7 @@ export default function F4_p44_POBatchGridScene() {
                         Batch PO drafts · 26 tiles multi-vendor · DiffViewer inline
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Never one-batch button (FC6 fix) · per-card review · Isabella opens each PO for DiffViewer + release intent.
+                        Never one-batch button (FC6 fix) · per-card review · Coordinator opens each PO for DiffViewer + release intent.
                     </p>
                 </div>
                 <div className="text-right shrink-0">
@@ -222,7 +222,7 @@ export default function F4_p44_POBatchGridScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Per-vendor release · never one-batch (FC6 fix)</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Click cards to explore diffs · Isabella sends per-vendor en next step (Teknion primero via SIF · rest per delivery timing).
+                        Click cards to explore diffs · Coordinator sends per-vendor en next step (Teknion primero via SIF · rest per delivery timing).
                     </div>
                 </div>
                 <button

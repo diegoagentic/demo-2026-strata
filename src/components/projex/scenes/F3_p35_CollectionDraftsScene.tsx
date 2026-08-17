@@ -1,7 +1,7 @@
 /**
  * COMPONENT: F3_p35_CollectionDraftsScene (Projex · p3.5)
  * PURPOSE: Strata drafts 5 collection emails staged por bucket. Shared queue
- *          Isabella+Alec (FC12 fix). AIEmailComposer con Friendlier/Firmer/
+ *          Coordinator+Walls Director (FC12 fix). AIEmailComposer con Friendlier/Firmer/
  *          Shorter tone polish. Per-draft send · never batch auto.
  *
  * SHAPE · shared draft queue (left) + email composer (right)
@@ -135,7 +135,7 @@ export default function F3_p35_CollectionDraftsScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    AI-drafted collection emails · shared queue (Isabella + Alec)
+                    AI-drafted collection emails · shared queue (Coordinator + Walls Director)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     5 drafts staged por bucket · Friendlier/Firmer/Shorter tone polish · never batch auto-send · FC12 fix.
@@ -145,7 +145,7 @@ export default function F3_p35_CollectionDraftsScene() {
             {/* Layout · shared queue (izq · 380px) + email composer (der) */}
             <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 items-start">
 
-                {/* Shared queue · Isabella + Alec drafts */}
+                {/* Shared queue · Coordinator + Walls Director drafts */}
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -214,7 +214,7 @@ export default function F3_p35_CollectionDraftsScene() {
                     </div>
                     <div className="px-3 py-2 border-t border-border bg-muted/20 flex items-center gap-2 text-[10px]">
                         <Clock className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-                        <span className="text-muted-foreground">Alec sees same queue instantly · FC12 fix</span>
+                        <span className="text-muted-foreground">Walls Director sees same queue instantly · FC12 fix</span>
                     </div>
                 </div>
 
@@ -302,7 +302,7 @@ export default function F3_p35_CollectionDraftsScene() {
 
                     <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center gap-2">
                         <span className="text-[10px] text-muted-foreground flex-1">
-                            Isabella reviews → sends · draft never auto-goes · per-invoice control preserved.
+                            Coordinator reviews → sends · draft never auto-goes · per-invoice control preserved.
                         </span>
                         {sendState === 'idle' && (
                             <button
@@ -337,7 +337,7 @@ export default function F3_p35_CollectionDraftsScene() {
                     <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">{sentIds.size} follow-up{sentIds.size === 1 ? '' : 's'} sent</span>
-                        <span className="text-muted-foreground"> · logged to Communications · Isabella + Alec see updated state in real-time.</span>
+                        <span className="text-muted-foreground"> · logged to Communications · Coordinator + Walls Director see updated state in real-time.</span>
                     </div>
                     <button
                         onClick={nextStep}

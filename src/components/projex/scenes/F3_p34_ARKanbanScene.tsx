@@ -241,7 +241,7 @@ export default function F3_p34_ARKanbanScene() {
                     <div className="flex-1 min-w-0 text-xs">
                         <div className="text-foreground font-semibold">Click a card to explore · or continue to draft collection emails</div>
                         <div className="text-muted-foreground mt-0.5">
-                            <span className="tabular-nums">{PROJEX_AR_RECORDS.filter(r => r.bucket !== '0-30').length} accounts overdue</span> · shared board means Alec sees the same state as Isabella instantly.
+                            <span className="tabular-nums">{PROJEX_AR_RECORDS.filter(r => r.bucket !== '0-30').length} accounts overdue</span> · shared board means Walls Director sees the same state as Coordinator instantly.
                         </div>
                     </div>
                     <button
@@ -260,7 +260,7 @@ export default function F3_p34_ARKanbanScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Bucket taxonomy · net-new for Projex</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Production AR components (mbi/ARStatusBoard) use status taxonomy (escalated/no-response/pending-approval/committed-to-pay) · aquí layered con bucket (0-30/31-60/61-90/90+) porque Jacob CFO reviews by aging days · both visible per card.
+                        Production AR components (mbi/ARStatusBoard) use status taxonomy (escalated/no-response/pending-approval/committed-to-pay) · aquí layered con bucket (0-30/31-60/61-90/90+) porque Compliance CFO reviews by aging days · both visible per card.
                     </div>
                 </div>
                 <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />

@@ -1,8 +1,8 @@
 /**
  * COMPONENT: APLineItemMatchScene (Projex · p1.3)
- * PURPOSE: Line-by-line reconciliation for Teknion NCBA bill · Jacob\'s rule
+ * PURPOSE: Line-by-line reconciliation for Teknion NCBA bill · Compliance\'s rule
  *          "match to the penny". 15 sample lines (12 exact · 2 qty · 1 penny).
- *          Daniel picks Accept or Override per exception · reason capture via
+ *          Accounting picks Accept or Override per exception · reason capture via
  *          ReasonDialog. Multi-Line Edit tool applies overrides to NetSuite
  *          before advancing a install-vendor exception (p1.4).
  *
@@ -17,7 +17,7 @@
  * DS TOKENS: bg-card · bg-success/10 · bg-info/10 · bg-amber-500/10 (mismatch)
  *            · border-l-{success,info,amber-500} · border-border · tabular-nums
  *
- * SOURCE OF TRUTH: SOT §12a · Jacob's mismatch cause taxonomy + Multi-Line Edit tool
+ * SOURCE OF TRUTH: SOT §12a · Compliance's mismatch cause taxonomy + Multi-Line Edit tool
  * REUSE FROM: mbi/NonEDIReconcilerScene shape verbatim (rebrand · Projex data) ·
  *             shared/ReasonDialog + StatusBadge · usePauseAware
  *
@@ -40,10 +40,10 @@ import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 const MISMATCH_BILL_ID = 'PJX-BILL-8483'
 type RowStatus = 'pending' | 'accepted' | 'overridden'
 
-// Jacob\'s mismatch cause taxonomy (SOT §12a · verbatim)
+// Compliance\'s mismatch cause taxonomy (SOT §12a · verbatim)
 const OVERRIDE_CATEGORIES = [
     { id: 'partial-ship',    label: 'Partial shipment · vendor short-shipped' },
-    { id: 'penny-rounding',  label: 'Penny rounding · Jacob\'s common cause' },
+    { id: 'penny-rounding',  label: 'Penny rounding · Compliance\'s common cause' },
     { id: 'tax-rate-change', label: 'Tax rate changed since PO issued' },
     { id: 'out-of-stock',    label: 'Out of stock · reduce quantity' },
     { id: 'substitution',    label: 'Substitution · vendor swapped material/color' },
@@ -78,7 +78,7 @@ export default function APLineItemMatchScene() {
     const [freightAdded, setFreightAdded] = useState(false)
     const [toast, setToast] = useState<{ id: string; message: string; tone: 'success' | 'info' } | null>(null)
 
-    // Multi-Line Edit tool apply state · fires when Daniel confirms all resolved
+    // Multi-Line Edit tool apply state · fires when Accounting confirms all resolved
     type ApplyState = 'idle' | 'applying' | 'applied'
     const [applyState, setApplyState] = useState<ApplyState>('idle')
     const [applyStep, setApplyStep] = useState(0)
@@ -181,10 +181,10 @@ export default function APLineItemMatchScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Line-item match to the penny · Teknion NCBA · Daniel picks a cause
+                    Line-item match to the penny · Teknion NCBA · Accounting picks a cause
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Jacob\'s hard rule · <strong className="text-foreground">match exact-to-the-penny</strong>. Bill 8483 · 15 sample lines representativas del 291-line PO · 12 exact · 3 need Daniel\'s eyes.
+                    Compliance\'s hard rule · <strong className="text-foreground">match exact-to-the-penny</strong>. Bill 8483 · 15 sample lines representativas del 291-line PO · 12 exact · 3 need Accounting\'s eyes.
                 </p>
             </div>
 
@@ -216,7 +216,7 @@ export default function APLineItemMatchScene() {
                             </span>
                             <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-warning/10 text-warning">
                                 <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-                                {flaggedRows.length} awaiting Daniel
+                                {flaggedRows.length} awaiting Accounting
                             </span>
                         </div>
                     </div>
@@ -506,7 +506,7 @@ export default function APLineItemMatchScene() {
                     </div>
                 )}
 
-                {/* Table footer summary · Daniel action state */}
+                {/* Table footer summary · Accounting action state */}
                 <div className="px-5 py-4 border-t border-border bg-muted/20 flex items-center gap-4">
                     <span className="text-[11px] text-muted-foreground">
                         {lines.length - flaggedRows.length} auto-match · <span className="text-success font-semibold">{acceptedCount} accepted</span> · <span className="text-info font-semibold">{overriddenCount} overridden</span> · <span className="text-warning font-semibold">{flaggedRows.length - acceptedCount - overriddenCount} pending</span>
@@ -594,7 +594,7 @@ export default function APLineItemMatchScene() {
                 </div>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="Match pipeline · Jacob\'s rule + Multi-Line Edit tool" />
+            <DataSourcesBar groups={dataGroups} label="Match pipeline · Compliance\'s rule + Multi-Line Edit tool" />
 
             {/* Override reason modal · tone=neutral usa brand lime (LAW 3) · consistent con main CTAs */}
             <ReasonDialog
@@ -607,7 +607,7 @@ export default function APLineItemMatchScene() {
                 contextBanner={{
                     icon: <Wrench className="h-4 w-4" aria-hidden="true" />,
                     title: 'Multi-Line Edit tool workaround',
-                    body: 'Your override + reason gets logged to the NetSuite audit trail · Jacob reviews override taxonomy weekly.',
+                    body: 'Your override + reason gets logged to the NetSuite audit trail · Compliance reviews override taxonomy weekly.',
                 }}
                 categories={OVERRIDE_CATEGORIES}
                 defaultCategoryId="partial-ship"
@@ -640,7 +640,7 @@ export default function APLineItemMatchScene() {
                 </div>
             )}
 
-            {/* Sticky Daniel context banner · shown when pending action */}
+            {/* Sticky Accounting context banner · shown when pending action */}
             {!allDecided && flaggedRows.length > 0 && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 rounded-full bg-card border border-primary/40 shadow-lg px-4 py-2 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="h-6 w-6 rounded-full bg-ai/15 text-ai flex items-center justify-center text-[10px] font-bold">

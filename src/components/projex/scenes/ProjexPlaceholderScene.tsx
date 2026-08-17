@@ -37,8 +37,8 @@ const SCENES: Record<Scene, SceneMeta> = {
         icon: Mail,
         subtitle: 'Vendor bills arrive in the AP inbox · Strata reads them · exact-to-the-penny match against the PO · exceptions rise to the top.',
         painPoints: ['AP1 · 100% manual entry', 'AP2 · partial-invoice match on 100+ line POs', 'AP9 · install-vendor bills sin PO #'],
-        owner: 'Daniel Louw · Senior Accountant',
-        ownerNote: 'Days he spends only on AP · today. Jacob backs up. 2-person Accounting.',
+        owner: 'Accounting · Senior Accountant',
+        ownerNote: 'Days he spends only on AP · today. Compliance backs up. 2-person Accounting.',
         phaseWhen: 'Phase 1 (next)',
         metrics: [
             { label: 'Bills/mo (all entities)', value: '~224' },
@@ -51,7 +51,7 @@ const SCENES: Record<Scene, SceneMeta> = {
             'Email intake · Teknion 291-line PO OCR',
             'Line-by-line reconcile · partial ship + variance',
             'Install-vendor exception (no PO #) · AP follow-up tracking',
-            'Matt Magrann · payment-release approval gate',
+            'CEO · payment-release approval gate',
             'Posted to NetSuite · audit trail',
         ],
     },
@@ -61,7 +61,7 @@ const SCENES: Record<Scene, SceneMeta> = {
         icon: ShieldCheck,
         subtitle: 'Structured intake reemplaza el free-text email · W-9 OCR · compliance registry con date-indexed alerts · dealer readiness self-service.',
         painPoints: ['VS1 · 733 migrated vendor records', 'VS2 · W-9s undated en SharePoint', 'VS3 · payment run blocked ≈ weekly'],
-        owner: 'Kelly (Coord) → Daniel → Jacob (sign-off)',
+        owner: 'Coordinator (Coord) → Accounting → Compliance (sign-off)',
         ownerNote: 'Every other payment run today blocks porque vendor no fully set up. Weekly recurring cost.',
         phaseWhen: 'Phase 5',
         metrics: [
@@ -73,7 +73,7 @@ const SCENES: Record<Scene, SceneMeta> = {
         roadmap: [
             'Coordinator requests new vendor · structured form',
             'W-9 upload + OCR + preflight (date · 1099 · ACH · W-8 BEN-E)',
-            'Jacob compliance sign-off gate',
+            'Compliance compliance sign-off gate',
             'Vendor master · registry entry',
             'Dealer Experience · readiness self-service',
         ],
@@ -84,8 +84,8 @@ const SCENES: Record<Scene, SceneMeta> = {
         icon: TrendingUp,
         subtitle: 'Milestone alerts fire cuando el project cruza su billing threshold · shared follow-up queue reemplaza personal Outlook tasks · AR aging board resurrects el dead tracker.',
         painPoints: ['FC11 · progress invoices fire on judgment', 'FC12 · follow-ups en personal Outlook', 'WC9 · Walls PM-review sin exit criteria', 'AR3 · shared AR tracker dead'],
-        owner: 'Isabella (Furniture) · Alec (Walls)',
-        ownerNote: 'Coordinators own client invoicing end-to-end. Jacob no valida cada invoice · sí tax-rate y direct-bill Teknion.',
+        owner: 'Coordinator (Furniture) · Walls Director (Walls)',
+        ownerNote: 'Coordinators own client invoicing end-to-end. Compliance no valida cada invoice · sí tax-rate y direct-bill Teknion.',
         phaseWhen: 'Phase 4',
         metrics: [
             { label: 'Furniture billing', value: '50/40/10' },
@@ -108,7 +108,7 @@ const SCENES: Record<Scene, SceneMeta> = {
         icon: PackagePlus,
         subtitle: 'PIF workbook parsed to NetSuite draft order lines · batch PO generation across multiple vendors con draft emails ready for coordinator review (never auto-send).',
         painPoints: ['FC6 · multi-vendor PO issuance = per-vendor loop', 'WC2 · Walls jobs typed line-by-line from PIF'],
-        owner: 'Isabella (Coord)',
+        owner: 'Coordinator (Coord)',
         ownerNote: 'MWH project sample · 300 lines · 26 shipping-and-handling manual lines · 26 vendor POs. Cada PO cuesta 5-7 min hoy.',
         phaseWhen: 'Phase 2',
         metrics: [
@@ -132,7 +132,7 @@ const SCENES: Record<Scene, SceneMeta> = {
         icon: Truck,
         subtitle: '~70% del volumen es Teknion direct-bill vía Teknion Online (SIF upload) · ACK PDF returns · Strata OCR + comparison contra NetSuite PMO · designer chain auto-assembled.',
         painPoints: ['FC8 · designer acknowledgement chain (net-new)', 'FC9 · vendor ACKs unstructured PDFs · OCR conf per-vendor'],
-        owner: 'Isabella → Layne / Tate / Josh (designers)',
+        owner: 'Coordinator → Lead Designer / Spec Designer / PM Coordinator (designers)',
         ownerNote: 'Path 5 = client-directed · NO among 12 confirmed-High. OCR confidence per-vendor debe scorear antes de commit. Teknion CR taxonomy real.',
         phaseWhen: 'Phase 3',
         metrics: [

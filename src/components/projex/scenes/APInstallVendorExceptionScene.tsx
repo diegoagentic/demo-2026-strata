@@ -1,11 +1,11 @@
 /**
  * COMPONENT: APInstallVendorExceptionScene (Projex · p1.4)
- * PURPOSE: Daniel abre su AP inbox (vista general). Un nuevo Warehouse by
+ * PURPOSE: Accounting abre su AP inbox (vista general). Un nuevo Warehouse by
  *          Design bill llega sin PO # · Strata resalta la fila + dispara
- *          notif Action Center · "trabajá este primero". Daniel click → abre
+ *          notif Action Center · "trabajá este primero". Accounting click → abre
  *          el canonical AIEmailComposer (slide-over) · Strata pre-drafts el
- *          PM double-check email a Jeff · un click envía. Held bill queda
- *          "awaiting PM confirmation" hasta que Jeff responda con el PO #.
+ *          PM double-check email a PM · un click envía. Held bill queda
+ *          "awaiting PM confirmation" hasta que PM responda con el PO #.
  *
  * SHAPE: Inbox-first list (secondary interaction · F1 kanban is primary).
  *        Composer = shared/AIEmailComposer.tsx (canonical email UI).
@@ -13,7 +13,7 @@
  * DS TOKENS: bg-card · bg-destructive/10 · text-destructive · bg-primary
  *            · text-primary-foreground · bg-ai-light · text-ai · border-border
  *
- * SOURCE OF TRUTH: _SOT_projex.md §12a · Jacob names verbatim · AP9 pattern
+ * SOURCE OF TRUTH: _SOT_projex.md §12a · Compliance names verbatim · AP9 pattern
  * REUSE FROM: shared/AIEmailComposer.tsx (canonical composer · slide-over)
  *             bfi/MichaelApprovalScene.tsx (Send flash pattern reference)
  */
@@ -35,7 +35,7 @@ import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSou
 const HELD_BILL_ID = 'PJX-BILL-8484'
 
 const DRAFT_SUBJECT = 'Please confirm PO # for Warehouse by Design bill WBD-2026-0812 · Denver Financial install'
-const DRAFT_BODY = `Hi Jeff,
+const DRAFT_BODY = `Hi PM,
 
 We received an install invoice from Warehouse by Design for the Denver Financial project (Aug 12-13). It came in with the project name only — no PO # on the vendor's copy.
 
@@ -51,11 +51,11 @@ Vendor · Warehouse by Design
 Reply with the PO # and I'll close it out today.
 
 Thanks,
-Daniel`
+Accounting`
 
-// Jeff-specific tone variants · surfaced via AIEmailComposer's polish toolbar
+// PM-specific tone variants · surfaced via AIEmailComposer's polish toolbar
 const POLISH_TONES: Record<EmailPolishDirection, string> = {
-    friendlier: `Hey Jeff — hope the Denver Financial install wrapped up OK!
+    friendlier: `Hey PM — hope the Denver Financial install wrapped up OK!
 
 We got a Warehouse by Design invoice on the AP inbox this morning with just the project name, no PO # on the vendor's side. Quick sanity check before I save it?
 
@@ -66,8 +66,8 @@ We got a Warehouse by Design invoice on the AP inbox this morning with just the 
 Bill · WBD-2026-0812 · $3,200.00
 
 Any time today works — appreciate it!
-Daniel`,
-    firmer: `Jeff,
+Accounting`,
+    firmer: `PM,
 
 Warehouse by Design invoice WBD-2026-0812 ($3,200) landed in AP with project name only. Per our policy, I cannot post an install-vendor bill without PO # confirmation.
 
@@ -78,8 +78,8 @@ Please confirm today:
 
 Bill is held until I hear back.
 
-Daniel`,
-    shorter: `Hi Jeff — WBD-2026-0812 ($3,200) arrived without a PO #. Which PO does it match, is the install complete, and are we clear to pay? Held until you confirm. Thanks — Daniel`,
+Accounting`,
+    shorter: `Hi PM — WBD-2026-0812 ($3,200) arrived without a PO #. Which PO does it match, is the install complete, and are we clear to pay? Held until you confirm. Thanks — Accounting`,
 }
 
 type Phase = 'inbox' | 'sent'
@@ -121,17 +121,17 @@ const BASELINE_INBOX: InboxEmail[] = [
     },
     {
         id: 'em-alec',
-        from: 'Alec Walker · Walls Director',
+        from: 'Walls Director Walker · Walls Director',
         fromInitials: 'AW',
         subject: 'Re: MWH progress-bill 40% tranche',
-        snippet: 'Stacy has the field verification for zone 3 · will forward by EOD.',
+        snippet: 'Walls PM has the field verification for zone 3 · will forward by EOD.',
         time: 'Today · 9:12 am',
         unread: false,
         tag: { label: 'Internal', tone: 'muted' },
     },
     {
         id: 'em-isabella',
-        from: 'Isabella Chen · Coord',
+        from: 'Coordinator Chen · Coord',
         fromInitials: 'IC',
         subject: 'PIF workbook attached · NCBA reorder',
         snippet: '300 lines + 26 S&H · needs your review before I split POs by vendor.',

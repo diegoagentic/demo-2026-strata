@@ -21,10 +21,10 @@ import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSou
 import { MWH_PO_BATCH } from '../../../config/profiles/projex-data/mwhPif'
 
 const AUDIT_EVENTS = [
-    { id: '1', actor: 'Isabella',   action: 'Released Teknion POs (3) via SIF Online',        time: '10:22 AM' },
-    { id: '2', actor: 'Isabella',   action: 'Released HBF POs (2) via HBF portal',            time: '10:24 AM' },
-    { id: '3', actor: 'Isabella',   action: 'Released Boss Design POs (2) via email',          time: '10:27 AM' },
-    { id: '4', actor: 'Isabella',   action: 'Released Alamir + Nelson + West Elm (4)',        time: '10:31 AM' },
+    { id: '1', actor: 'Coordinator',   action: 'Released Teknion POs (3) via SIF Online',        time: '10:22 AM' },
+    { id: '2', actor: 'Coordinator',   action: 'Released HBF POs (2) via HBF portal',            time: '10:24 AM' },
+    { id: '3', actor: 'Coordinator',   action: 'Released Boss Design POs (2) via email',          time: '10:27 AM' },
+    { id: '4', actor: 'Coordinator',   action: 'Released Alamir + Nelson + West Elm (4)',        time: '10:31 AM' },
     { id: '5', actor: 'Strata AI',  action: 'Snapshot recorded · 12 POs · draft vs sent match', time: '10:32 AM' },
     { id: '6', actor: 'Strata AI',  action: 'Tri-way match confirmed · NetSuite ledger updated', time: '10:33 AM' },
     { id: '7', actor: 'Strata AI',  action: 'Tracking initialized · awaiting first ACK',      time: 'just now' },
@@ -143,7 +143,7 @@ export default function F4_p46_SnapshotAuditScene() {
                         <div className="text-[10px] text-muted-foreground">Auto-generated 08:14 AM</div>
                     </div>
                     <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Sent (Isabella)</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Sent (Coordinator)</div>
                         <div className="text-lg font-bold text-foreground tabular-nums">26 POs</div>
                         <div className="text-xs text-muted-foreground">Total ${(totalSent / 1000).toFixed(1)}k</div>
                         <div className="text-[10px] text-muted-foreground">Released 10:22-10:31 AM</div>

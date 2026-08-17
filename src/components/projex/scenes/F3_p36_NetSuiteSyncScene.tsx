@@ -58,7 +58,7 @@ const SYNC_STEPS = [
 const AUDIT_TIMELINE = [
     { id: '1', actor: 'Strata AI',       action: 'Threshold trigger fired · Fairport 52% ordered',       time: '08:14 AM' },
     { id: '2', actor: 'Strata AI',       action: 'Drafted proforma PJX-INV-3421 · $24,500 · 40% draw',   time: '08:14 AM' },
-    { id: '3', actor: 'Isabella Bressler', action: 'Reviewed line items · approved release',              time: '08:32 AM' },
+    { id: '3', actor: 'Coordinator', action: 'Reviewed line items · approved release',              time: '08:32 AM' },
     { id: '4', actor: 'Strata AI',       action: 'Validated GL account mapping · draft ready',           time: 'just now' },
     { id: '5', actor: 'Strata AI',       action: 'Posted Customer Invoice · GL journal entry',           time: 'just now' },
 ]
@@ -368,7 +368,7 @@ export default function F3_p36_NetSuiteSyncScene() {
                     <FileText className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">F3 progress billing complete</span>
-                        <span className="text-muted-foreground"> · Fairport 40% draw posted · collections queue moved 2 accounts · shared board updated for Alec.</span>
+                        <span className="text-muted-foreground"> · Fairport 40% draw posted · collections queue moved 2 accounts · shared board updated for Walls Director.</span>
                     </div>
                     <button
                         onClick={restart}

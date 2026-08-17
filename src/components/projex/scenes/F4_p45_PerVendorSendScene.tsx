@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F4_p45_PerVendorSendScene (Projex · p4.5)
- * PURPOSE: Isabella opens SubmitPODialog per PO · sends Teknion primero · HBF hold ·
+ * PURPOSE: Coordinator opens SubmitPODialog per PO · sends Teknion primero · HBF hold ·
  *          per-vendor control. Banner "Never auto-send" visible. Cada release
  *          intentional (SOT §12b · FC6 fix).
  *
@@ -95,7 +95,7 @@ export default function F4_p45_PerVendorSendScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Per-vendor Send · Isabella releases Teknion primero · never one-batch
+                    Per-vendor Send · Coordinator releases Teknion primero · never one-batch
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     SubmitPODialog per PO · Teknion (SIF fast) primero · HBF hold para tomorrow · Boss review before send. FC6 human control preserved.
@@ -108,7 +108,7 @@ export default function F4_p45_PerVendorSendScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Banner · Never auto-send (FC6 fix)</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Isabella never trusts auto-send (SOT §12b). Every PO release is intentional act · SubmitPODialog gate per vendor. Isabella controls delivery timing per vendor SLA.
+                        Coordinator never trusts auto-send (SOT §12b). Every PO release is intentional act · SubmitPODialog gate per vendor. Coordinator controls delivery timing per vendor SLA.
                     </div>
                 </div>
                 <div className="text-right shrink-0">

@@ -1,6 +1,6 @@
 /**
  * COMPONENT: APInboxSweepScene (Projex · p1.1)
- * PURPOSE: Daniel opens Strata para su AP day. Overnight sweep de 14 bills:
+ * PURPOSE: Accounting opens Strata para su AP day. Overnight sweep de 14 bills:
  *          12 auto-matched exact-to-the-penny · 2 exceptions surface at the top.
  *          KPI hero counters animate with tabular-nums · kanban shows
  *          Just-Arrived → In Review → Ready to Save → Held.
@@ -18,7 +18,7 @@
  * DS TOKENS: bg-card · bg-primary · bg-ai-light + text-ai · bg-success/10 + text-success ·
  *            border-border · text-muted-foreground · tabular-nums
  *
- * SOURCE OF TRUTH: _SOT_projex.md §12a · Jacob's vocab · "AP inbox" · "match to the penny"
+ * SOURCE OF TRUTH: _SOT_projex.md §12a · Compliance's vocab · "AP inbox" · "match to the penny"
  * REUSE FROM: bfi/BFIProcessKanban.tsx (card shape · column header) ·
  *             notifications/ActionCenter.tsx (notif catalog · Projex block)
  */
@@ -44,7 +44,7 @@ type ColumnId = 'just-arrived' | 'in-review' | 'ready-to-save' | 'held'
 const COLUMNS: { id: ColumnId; label: string; description: string }[] = [
     { id: 'just-arrived',  label: 'Just arrived',   description: 'Overnight sweep' },
     { id: 'in-review',     label: 'Strata matching', description: 'Line-item · to the penny' },
-    { id: 'ready-to-save', label: 'Ready to save',   description: 'Daniel to confirm' },
+    { id: 'ready-to-save', label: 'Ready to save',   description: 'Accounting to confirm' },
     { id: 'held',          label: 'Held bills',      description: 'Needs eyes' },
 ]
 
@@ -292,7 +292,7 @@ export default function APInboxSweepScene() {
     const { nextStep } = useDemo()
 
     // 3 phases · idle at mount · fan-out is user-triggered from Action Center
-    // (NO auto-timers · movement plays when Daniel clicks the notif CTA).
+    // (NO auto-timers · movement plays when Accounting clicks the notif CTA).
     const [phase, setPhase] = useState<'arriving' | 'matched' | 'toast'>('arriving')
 
     // Single handler for the Action Center CTA `projex:ap-open-teknion`.
@@ -325,7 +325,7 @@ export default function APInboxSweepScene() {
         }
     }
 
-    // Highlight the two exceptions so Daniel sees them first
+    // Highlight the two exceptions so Accounting sees them first
     const highlightedId = phase !== 'arriving' ? 'PJX-BILL-8483' : undefined
 
     const daniel = PROJEX_PERSONAS.daniel
@@ -483,13 +483,13 @@ export default function APInboxSweepScene() {
                     <DollarSign className="h-5 w-5 text-foreground" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground">CEO framing · Matt Magrann</div>
+                    <div className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground">CEO framing · CEO</div>
                     <div className="text-sm text-foreground">"75% AI with the human touch on it."</div>
                 </div>
                 <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <div className="text-[10px] text-muted-foreground text-right">
                     <div className="tabular-nums">Sweep · 02:14 → 08:11</div>
-                    <div>Daniel opens Strata · 08:14 AM</div>
+                    <div>Accounting opens Strata · 08:14 AM</div>
                 </div>
             </div>
 

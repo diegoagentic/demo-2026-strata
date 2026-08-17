@@ -215,16 +215,16 @@ export default function F4_p41_DesignerIntakeScene() {
                     <div className="p-4 space-y-3 text-sm">
                         <div className="grid grid-cols-[70px_1fr] gap-y-1.5 gap-x-2 text-[12px]">
                             <span className="text-muted-foreground">From</span>
-                            <span className="text-foreground font-medium">Layne · Lead Designer · layne@aspire-design.example</span>
+                            <span className="text-foreground font-medium">Lead Designer · aspire-design.example</span>
                             <span className="text-muted-foreground">To</span>
-                            <span className="text-foreground">Isabella Bressler · isabella@projex-inc.com</span>
+                            <span className="text-foreground">Coordinator · projex-inc.com</span>
                             <span className="text-muted-foreground">Subject</span>
                             <span className="text-foreground font-semibold">MWH residential · PIF + SIF · 300 lines · 26 vendor split</span>
                         </div>
                         <div className="pt-3 border-t border-border text-[12px] text-foreground/80 leading-relaxed">
-                            Hi Isabella · attaching PIF workbook con full BOM y SIF export from CET. Big project · 300 lines across Teknion + HBF + Boss + Alamir + Nelson + West Elm. Walls partitions include AI lot line for east wing.
+                            Hi Coordinator · attaching PIF workbook con full BOM y SIF export from CET. Big project · 300 lines across Teknion + HBF + Boss + Alamir + Nelson + West Elm. Walls partitions include AI lot line for east wing.
                             Ready for you to parse and dispatch. Let me know si algo needs clarification.
-                            — Layne
+                            — Lead Designer
                         </div>
                         <div className="pt-3 border-t border-border space-y-2">
                             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Attachments</div>

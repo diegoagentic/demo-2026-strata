@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F2_p22_W9OcrScene (Projex · p2.2)
- * PURPOSE: Two-phase scene. Phase 1 · Daniel aterriza en la OCR queue del Dealer
+ * PURPOSE: Two-phase scene. Phase 1 · Accounting aterriza en la OCR queue del Dealer
  *          Experience (MAC/Onboarding) · 6 tickets en distintos estados (in
  *          queue · extracting · needs review · approved). WBD row highlighted
  *          como "Just landed" pero el drill-in NO empieza automático — espera
@@ -54,7 +54,7 @@ interface QueueTicket {
 }
 
 const OCR_QUEUE: QueueTicket[] = [
-    // The one Daniel is about to open
+    // The one Accounting is about to open
     { id: 'tkt-wbd', vendorName: 'Warehouse by Design', initials: 'WB', initialsBg: 'bg-destructive/15 text-destructive', docType: 'W-9', ticketRef: 'TKT-P2-2026-08-14-001', projectRef: 'Denver Financial install', status: 'needs-review', ocrConfidence: 95, submittedBy: 'Coordinator', receivedAgo: 'Just now' },
     // Other queue items for context
     { id: 'tkt-boss', vendorName: 'Boss Design',        initials: 'BD', initialsBg: 'bg-ai/15 text-ai',                    docType: 'W-9', ticketRef: 'TKT-P2-2026-08-13-004', projectRef: 'MWH residential',           status: 'extracting',  ocrProgress: 65,   submittedBy: 'Coordinator', receivedAgo: '18 min ago' },

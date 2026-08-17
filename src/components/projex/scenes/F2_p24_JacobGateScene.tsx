@@ -1,16 +1,16 @@
 /**
  * COMPONENT: F2_p24_JacobGateScene (Projex · p2.4)
- * PURPOSE: Jacob opens review modal · W-9 result + preflight result side-by-side.
+ * PURPOSE: Compliance opens review modal · W-9 result + preflight result side-by-side.
  *          Binary decision · Release (approve · sends to NetSuite master) o
- *          Reject (sends back to Daniel/Kelly con reason capture).
- *          Never auto-post · human touch preserved (Matt "75% AI + human touch").
+ *          Reject (sends back to Accounting/Coordinator con reason capture).
+ *          Never auto-post · human touch preserved (CEO "75% AI + human touch").
  *
  *          Shape LOCK · modal-panes (F2 primary shape) · full-screen approval modal.
  *
  * DS TOKENS: bg-card · bg-primary + text-primary-foreground · ring-2 ring-primary/40
  *            (spotlight) · bg-success/10 · bg-destructive/10 · border-border
  *
- * SOURCE OF TRUTH: SOT §12b · Jacob compliance sign-off · never auto-add rule
+ * SOURCE OF TRUTH: SOT §12b · Compliance compliance sign-off · never auto-add rule
  * REUSE FROM: mbi/ARHoldReviewModal shape (approval con reason capture) ·
  *             shared/ReasonDialog primitive
  *
@@ -90,10 +90,10 @@ export default function F2_p24_JacobGateScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Jacob compliance sign-off gate · Release or Reject
+                    Compliance compliance sign-off gate · Release or Reject
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    W-9 result + preflight result side-by-side. Human decision preserves Matt&apos;s "75% AI + human touch" rule.
+                    W-9 result + preflight result side-by-side. Human decision preserves CEO&apos;s "75% AI + human touch" rule.
                 </p>
             </div>
 
@@ -103,7 +103,7 @@ export default function F2_p24_JacobGateScene() {
                     MM
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CEO framing · Matt Magrann</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CEO framing · CEO</div>
                     <div className="text-sm text-foreground italic mt-0.5">
                         &quot;Never auto-add to the vendor master · human touch on every new vendor.&quot;
                     </div>
@@ -118,7 +118,7 @@ export default function F2_p24_JacobGateScene() {
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-ai" aria-hidden="true" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                            W-9 result · OCR validated by Daniel
+                            W-9 result · OCR validated by Accounting
                         </span>
                     </div>
                     <div className="p-4 space-y-2">
@@ -167,7 +167,7 @@ export default function F2_p24_JacobGateScene() {
                 </div>
             </div>
 
-            {/* Jacob decision card · spotlight until acted upon */}
+            {/* Compliance decision card · spotlight until acted upon */}
             <div className={`
                 rounded-2xl border p-4 flex items-center gap-3 transition-all
                 ${decision === 'pending' ? 'border-primary ring-2 ring-primary/40 bg-primary/5 animate-pulse' : ''}
@@ -189,7 +189,7 @@ export default function F2_p24_JacobGateScene() {
                         {jacob.fullName} · approve Warehouse by Design for the vendor master?
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
-                        All checks clean · vendor is compliant per Jacob&apos;s 4-rule policy. Reject if you want to escalate anyway.
+                        All checks clean · vendor is compliant per Compliance&apos;s 4-rule policy. Reject if you want to escalate anyway.
                     </div>
                 </div>
                 {decision === 'pending' && (
@@ -303,7 +303,7 @@ export default function F2_p24_JacobGateScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Compliance gate · Jacob → NetSuite Vendor master" />
+            <DataSourcesBar groups={dataGroups} label="Compliance gate · Compliance → NetSuite Vendor master" />
         </div>
     )
 }

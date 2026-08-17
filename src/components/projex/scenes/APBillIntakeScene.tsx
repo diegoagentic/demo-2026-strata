@@ -9,7 +9,7 @@
  * DS TOKENS: bg-card · bg-primary · bg-ai-light + text-ai · border-border ·
  *            text-muted-foreground · tabular-nums
  *
- * SOURCE OF TRUTH: _SOT_projex.md §12a · Jacob "20/hr easy · 5/hr tough" ·
+ * SOURCE OF TRUTH: _SOT_projex.md §12a · Compliance "20/hr easy · 5/hr tough" ·
  *                  Multi-Line Edit tool + "match to the penny" rule
  * REUSE FROM: simulations/AgentPipelineStrip.tsx · mbi/EmailInboxDropZone.tsx ·
  *             modals/AIProcessingModal.tsx (multi-phase reveal pattern)
@@ -75,7 +75,7 @@ const PIPELINE_PHASES: { agents: AgentStep[] }[] = [
             { id: 'intake', name: 'EmailIntake', status: 'done', detail: 'Attachment · TEK-0847.pdf' },
             { id: 'ocr', name: 'OCR', status: 'done', detail: 'Conf 97%' },
             { id: 'matcher', name: 'POMatcher', status: 'done', detail: '291 / 291 match' },
-            { id: 'bot', name: 'NetSuiteBot', status: 'done', detail: 'Ready for review · Daniel' },
+            { id: 'bot', name: 'NetSuiteBot', status: 'done', detail: 'Ready for review · Accounting' },
         ],
     },
 ]
@@ -151,7 +151,7 @@ export default function APBillIntakeScene() {
                     Vendor bill in the AP inbox · Teknion 291-line PO (NCBA)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Overnight · a Teknion invoice lands at ap@projex-inc.com · Strata reads all 291 lines in seconds instead of the ~40 min Daniel would spend keying it by hand.
+                    Overnight · a Teknion invoice lands at ap@projex-inc.com · Strata reads all 291 lines in seconds instead of the ~40 min Accounting would spend keying it by hand.
                 </p>
             </div>
 
@@ -244,7 +244,7 @@ export default function APBillIntakeScene() {
                             <div className="animate-in fade-in duration-500 rounded-lg border border-success/40 bg-success/5 px-3 py-2 flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
                                 <span className="text-xs text-foreground">
-                                    All 291 lines mapped exact-to-the-penny · ready for Daniel's line-item review.
+                                    All 291 lines mapped exact-to-the-penny · ready for Accounting's line-item review.
                                 </span>
                                 <button
                                     onClick={nextStep}

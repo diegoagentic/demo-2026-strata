@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F3_p32_ProformaReviewScene (Projex · p3.2)
- * PURPOSE: Isabella opens drafted proforma · print-style replica con line items ·
+ * PURPOSE: Coordinator opens drafted proforma · print-style replica con line items ·
  *          design fee · surcharge · deposit deducted. Editable line adjustments
  *          before release. Human touch preserved.
  *
@@ -336,7 +336,7 @@ export default function F3_p32_ProformaReviewScene() {
                 <FileText className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Never auto-release</div>
-                    <div className="text-muted-foreground mt-0.5">Isabella keeps final say · coordinator judgment preserved (FC11 addressed but not eliminated).</div>
+                    <div className="text-muted-foreground mt-0.5">Coordinator keeps final say · coordinator judgment preserved (FC11 addressed but not eliminated).</div>
                 </div>
                 <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <span className="text-[10px] text-muted-foreground tabular-nums">Due 2026-08-24</span>

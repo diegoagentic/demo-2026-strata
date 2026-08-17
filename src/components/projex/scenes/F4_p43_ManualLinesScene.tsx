@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F4_p43_ManualLinesScene (Projex · p4.3)
- * PURPOSE: Isabella adds 26 S&H manual entries · EditableLineTable con add-row.
+ * PURPOSE: Coordinator adds 26 S&H manual entries · EditableLineTable con add-row.
  *          Alamir $19 flat rule · Nelson prepaid+add · Teknion consolidated.
  *          Design fee 8% recomputed live.
  *
@@ -74,7 +74,7 @@ export default function F4_p43_ManualLinesScene() {
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-ai" aria-hidden="true" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                            S&amp;H editable table · Isabella owns
+                            S&amp;H editable table · Coordinator owns
                         </span>
                         <button
                             onClick={handleAddCustom}
@@ -188,7 +188,7 @@ export default function F4_p43_ManualLinesScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Freight rules · per vendor</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Alamir: $19 flat &lt;$150 · Nelson: prepaid+add · Teknion: consolidated · HBF: lift-gate. Isabella overrides cuando promotion or exception. Never auto-set (FC6 · human control preserved).
+                        Alamir: $19 flat &lt;$150 · Nelson: prepaid+add · Teknion: consolidated · HBF: lift-gate. Coordinator overrides cuando promotion or exception. Never auto-set (FC6 · human control preserved).
                     </div>
                 </div>
             </div>

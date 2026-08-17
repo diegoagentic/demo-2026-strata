@@ -241,7 +241,7 @@ export default function F2_p25_VendorRegistryScene() {
                     <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">Vendor #734 Warehouse by Design</span>
-                        <span className="text-muted-foreground"> · ready for AP · next payment run Tue Aug 19 · appears in Kelly&apos;s dealer view.</span>
+                        <span className="text-muted-foreground"> · ready for AP · next payment run Tue Aug 19 · appears in Coordinator&apos;s dealer view.</span>
                     </div>
                     <button
                         onClick={nextStep}
@@ -259,7 +259,7 @@ export default function F2_p25_VendorRegistryScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Why the expiration chip matters (VS2)</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Today W-9s live undated en SharePoint · vendors get paid con W-9s años viejos. Expiration tracker + 30-day-out warning surface avoids the weekly payment-run block (VS3) · Kelly proactively requests W-9 refresh (next step).
+                        Today W-9s live undated en SharePoint · vendors get paid con W-9s años viejos. Expiration tracker + 30-day-out warning surface avoids the weekly payment-run block (VS3) · Coordinator proactively requests W-9 refresh (next step).
                     </div>
                 </div>
             </div>

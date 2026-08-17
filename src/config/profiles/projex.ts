@@ -16,13 +16,13 @@
 //   Flow 4 · Order entry & PO dispatch           (FC6 · WC2)
 //   Flow 5 · Electronic ordering & ACK           (FC8 · FC9) · client-directed
 //
-// PROTAGONIST: Jacob Swearingen (Director of Accounting) · owns Flows 1-3
-//              backup Daniel Louw (Senior Accountant) · runs day-to-day AP
-// CO-PROTAGONIST: Isabella "Belle" Bressler (Furniture Coord Lead) · owns 3-5
+// PROTAGONIST: Compliance (Director of Accounting) · owns Flows 1-3
+//              backup Accounting (Senior Accountant) · runs day-to-day AP
+// CO-PROTAGONIST: Coordinator (Furniture) (Furniture Coord Lead) · owns 3-5
 //              built her own Claude tool para PO email parsing (grassroots AI)
-// WALLS SIDE: Alec Gieser (Walls Director) · Stacy Aiuppy (sole Walls
-//              coordinator · NEVER interviewed · Isabella secondhand)
-// CEO GATE: Matt Magrann · payment-release approval · "75% AI + human touch"
+// WALLS SIDE: Walls Director (Walls Director) · Walls PM (sole Walls
+//              coordinator · NEVER interviewed · Coordinator secondhand)
+// CEO GATE: CEO · payment-release approval · "75% AI + human touch"
 //
 // DEMO CLIENTS (anchor projects · fidelity ALTA per user 2026-08-14):
 //   - NCBA (National Cattlemen's Beef Association) · single Teknion PO 291 lines
@@ -36,7 +36,7 @@
 //   - 50/40/10 furniture · 60/30/10 Walls (Walls cannot include install en deposit)
 //   - Teknion Online SIF upload = 70% direct-bill · vendor tail = PDF-over-email
 //   - Payment cadence Tue + Thu · ~50 ACH per run · manual entry en bank portal
-//   - Phase 1 read-only against NetSuite (Jacob gates permissions)
+//   - Phase 1 read-only against NetSuite (Compliance gates permissions)
 //
 // STRUCTURE (Phase 1 · 6 steps AP · 4 stubs otros flows):
 //   Group 1 — AP intake & matching         p1.1 → p1.6         (Flow projex-ap · 6 steps)
@@ -47,7 +47,7 @@
 //
 // VOCABULARY RULES (Projex-real · F74 refinement 2026-08-14):
 //   - "AP inbox" (NOT "AP mailbox" · NOT "morning queue")
-//   - "vendor bill" (Jacob's dominant word) · "vendor invoice" (PDF from vendor)
+//   - "vendor bill" (Compliance's dominant word) · "vendor invoice" (PDF from vendor)
 //   - "match to the penny" · "line-item match" (NOT "reconcile" · reserved for BANK)
 //   - "mismatch" / "held bill" (NOT "exception")
 //   - "PM double-check email" (NOT "PM confirmation")
@@ -71,7 +71,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'AP intake & matching',
         title: 'AP inbox sweep · 12 overnight matches ready for review',
-        description: 'Daniel opens Strata para su AP day. Overnight, Strata swept 14 vendor bills from ap@projex-inc.com · 12 matched line-item exact-to-the-penny against NetSuite POs y quedaron en Ready-for-Review · 2 exceptions surface at the top (partial-ship variance + install-vendor sin PO #). Baseline · 224 bills/mo · 287 Q4 peak · today Daniel keys ~20/hr easy vendors, 5/hr tough.',
+        description: 'Accounting opens Strata para su AP day. Overnight, Strata swept 14 vendor bills from ap@projex-inc.com · 12 matched line-item exact-to-the-penny against NetSuite POs y quedaron en Ready-for-Review · 2 exceptions surface at the top (partial-ship variance + install-vendor sin PO #). Baseline · 224 bills/mo · 287 Q4 peak · today Accounting keys ~20/hr easy vendors, 5/hr tough.',
         app: 'projex-ap',
         role: 'Senior Accountant',
         flowId: 'projex-ap',
@@ -91,7 +91,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'AP intake & matching',
         title: 'Line-item match to the penny · partial bill + mismatch',
-        description: 'Strata runs line-item comparison of the vendor bill vs the NetSuite PO · exact-to-the-penny rule (Jacob\'s hard rule). Of 15 sample lines representativas del 291-line total: 12 match · 2 qty mismatch (partial shipment · Teknion split-ship pattern) · 1 price mismatch (penny rounding). Daniel picks override reason from Jacob\'s cause taxonomy: tax rate changed · out of stock · substitution · penny rounding. Multi-Line Edit tool visible como Projex\'s current NetSuite workaround.',
+        description: 'Strata runs line-item comparison of the vendor bill vs the NetSuite PO · exact-to-the-penny rule (Compliance\'s hard rule). Of 15 sample lines representativas del 291-line total: 12 match · 2 qty mismatch (partial shipment · Teknion split-ship pattern) · 1 price mismatch (penny rounding). Accounting picks override reason from Compliance\'s cause taxonomy: tax rate changed · out of stock · substitution · penny rounding. Multi-Line Edit tool visible como Projex\'s current NetSuite workaround.',
         app: 'projex-ap',
         role: 'Senior Accountant',
         flowId: 'projex-ap',
@@ -101,7 +101,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'AP intake & matching',
         title: 'Install-vendor bill without PO # · PM double-check email',
-        description: 'A Warehouse by Design install-vendor invoice comes in con project name only (no PO #) · classic AP9 pattern (Clear Space Solutions y Digital Interior Group do the same). Strata drafts the PM double-check email a Jeff (PM) verbatim: "Which PO does this bill match? + confirm work complete + approved to pay?" · Daniel reviews the draft · one click sends · Strata queues bill como "Held · awaiting PM confirmation" hasta que Jeff responde.',
+        description: 'A Warehouse by Design install-vendor invoice comes in con project name only (no PO #) · classic AP9 pattern (Clear Space Solutions y Digital Interior Group do the same). Strata drafts the PM double-check email a PM verbatim: "Which PO does this bill match? + confirm work complete + approved to pay?" · Accounting reviews the draft · one click sends · Strata queues bill como "Held · awaiting PM confirmation" hasta que PM responde.',
         app: 'projex-ap',
         role: 'Senior Accountant',
         flowId: 'projex-ap',
@@ -111,7 +111,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'AP intake & matching',
         title: 'Tue payment run · dashboard review · CEO approves ACH batch',
-        description: 'Tuesday payment run · 47 bills queued (Tue = big batch, Thu = one-offs). Jacob\'s twice-weekly financial dashboard (payables tab · AR aging tab) surfaces the batch a Matt Magrann (CEO) para approval. Matt clicks Approve · Strata prepares las ACH entries pero NO releases automáticamente · the ACH workaround stays visible (NetSuite→bank ACH batch upload never delivered · Jacob still manually enters remittance detail en bank portal · Strata compares last remittance to prevent duplicate). CEO framing: "75% AI with the human touch on it".',
+        description: 'Tuesday payment run · 47 bills queued (Tue = big batch, Thu = one-offs). Compliance\'s twice-weekly financial dashboard (payables tab · AR aging tab) surfaces the batch a CEO para approval. CEO clicks Approve · Strata prepares las ACH entries pero NO releases automáticamente · the ACH workaround stays visible (NetSuite→bank ACH batch upload never delivered · Compliance still manually enters remittance detail en bank portal · Strata compares last remittance to prevent duplicate). CEO framing: "75% AI with the human touch on it".',
         app: 'projex-ap',
         role: 'CEO',
         flowId: 'projex-ap',
@@ -121,7 +121,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 1,
         groupTitle: 'AP intake & matching',
         title: 'Bill record saved in NetSuite · PDF dropped in Communications tab',
-        description: 'Strata saves el bill record en NetSuite · drops el PDF en Communications tab con el naming convention que Jacob ya usa: `date_vendor_invoice#_amount_PO#` · SharePoint mirror en Accounting Private → Invoices → year/month/company. Activity log records: extracted by OCR · matched by Strata · approved by Matt · saved by user (audit trail per legal entity). Data flow: AP_INBOX_PJX → OCR_AGENT → NETSUITE_BILL → SHAREPOINT_ACCT_PRIVATE.',
+        description: 'Strata saves el bill record en NetSuite · drops el PDF en Communications tab con el naming convention que Compliance ya usa: `date_vendor_invoice#_amount_PO#` · SharePoint mirror en Accounting Private → Invoices → year/month/company. Activity log records: extracted by OCR · matched by Strata · approved by CEO · saved by user (audit trail per legal entity). Data flow: AP_INBOX_PJX → OCR_AGENT → NETSUITE_BILL → SHAREPOINT_ACCT_PRIVATE.',
         app: 'projex-ap',
         role: 'System',
         flowId: 'projex-ap',
@@ -135,7 +135,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Vendor onboarding',
         title: 'Coordinator requests new vendor · structured intake · attach W-9',
-        description: 'Kelly needs to add Warehouse by Design (install vendor · AP9 pattern). Structured intake modal wizard reemplaza el free-text email a Daniel. Kelly types vendor + reason + payment terms + attaches signed W-9. Ticket enters Daniel\'s queue con provenance.',
+        description: 'Coordinator needs to add Warehouse by Design (install vendor · AP9 pattern). Structured intake modal wizard reemplaza el free-text email a Accounting. Coordinator types vendor + reason + payment terms + attaches signed W-9. Ticket enters Accounting\'s queue con provenance.',
         app: 'projex-vendor-onboarding',
         role: 'Furniture Coordinator',
         flowId: 'projex-vendor-onboarding',
@@ -145,7 +145,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Vendor onboarding',
         title: 'W-9 upload + OCR extraction · Accounting reviews 5 fields staggered',
-        description: 'Daniel opens Kelly\'s ticket · sees W-9 source PDF con bounding-box overlay. Strata OCR extracts TIN masked · Legal entity type (Sole prop/LLC/Corp) · EIN · Signed date · Address · with per-field confidence. Daniel validates fields con inline corrections cuando OCR conf <95%.',
+        description: 'Accounting opens Coordinator\'s ticket · sees W-9 source PDF con bounding-box overlay. Strata OCR extracts TIN masked · Legal entity type (Sole prop/LLC/Corp) · EIN · Signed date · Address · with per-field confidence. Accounting validates fields con inline corrections cuando OCR conf <95%.',
         app: 'projex-vendor-onboarding',
         role: 'Senior Accountant',
         flowId: 'projex-vendor-onboarding',
@@ -155,7 +155,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Vendor onboarding',
         title: 'Compliance preflight · 4 checks (W-9 <12mo · 1099 · ACH · W-8 BEN-E)',
-        description: 'Auto. Strata runs Projex compliance rules staged 5-check chain: W-9 signed date freshness (< 12 mo) · 1099-NEC flag for individuals · ACH bank routing verified · W-8 BEN-E N/A for US vendors · OFAC sanction check. Preflight left-rail siderail muestra sections + counters. Popover on each row explica el rule. Fires cuando Daniel edita un field · re-runnable.',
+        description: 'Auto. Strata runs Projex compliance rules staged 5-check chain: W-9 signed date freshness (< 12 mo) · 1099-NEC flag for individuals · ACH bank routing verified · W-8 BEN-E N/A for US vendors · OFAC sanction check. Preflight left-rail siderail muestra sections + counters. Popover on each row explica el rule. Fires cuando Accounting edita un field · re-runnable.',
         app: 'projex-vendor-onboarding',
         role: 'System',
         flowId: 'projex-vendor-onboarding',
@@ -165,7 +165,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Vendor onboarding',
         title: 'Compliance sign-off gate · release / reject with reason',
-        description: 'Jacob opens the review modal · sees W-9 result + preflight result side-by-side. Binary decision · Release approves vendor y sends to NetSuite master · Reject sends back to Daniel/Kelly con reason capture (ACH details missing · TIN mismatch · needs W-8 BEN-E · other). Never auto-post. Human touch preserved (Matt\'s "75% AI + human touch" rule).',
+        description: 'Compliance opens the review modal · sees W-9 result + preflight result side-by-side. Binary decision · Release approves vendor y sends to NetSuite master · Reject sends back to Accounting/Coordinator con reason capture (ACH details missing · TIN mismatch · needs W-8 BEN-E · other). Never auto-post. Human touch preserved (CEO\'s "75% AI + human touch" rule).',
         app: 'projex-vendor-onboarding',
         role: 'Director of Accounting',
         flowId: 'projex-vendor-onboarding',
@@ -185,7 +185,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 2,
         groupTitle: 'Vendor onboarding',
         title: 'Dealer readiness self-service · Coordinator sees vendor status per project',
-        description: 'Kelly opens Dealer view · sees vendor status per active project (Denver Financial · MWH · NCBA · Fairport). Warehouse by Design ahora aparece "Ready for AP" con next payment run date. Expiration reminders 30-day-out surface en Action Center · click abre pre-drafted "Request W-9 refresh" email (Friendlier/Firmer/Shorter toolbar) para vendor · Kelly reviews y sends.',
+        description: 'Coordinator opens Dealer view · sees vendor status per active project (Denver Financial · MWH · NCBA · Fairport). Warehouse by Design ahora aparece "Ready for AP" con next payment run date. Expiration reminders 30-day-out surface en Action Center · click abre pre-drafted "Request W-9 refresh" email (Friendlier/Firmer/Shorter toolbar) para vendor · Coordinator reviews y sends.',
         app: 'projex-vendor-onboarding',
         role: 'Furniture Coordinator',
         flowId: 'projex-vendor-onboarding',
@@ -199,7 +199,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Progress billing & collections',
         title: 'Threshold alert · Fairport phase 2 crosses 50% ordered · Strata drafts proforma',
-        description: 'Auto. Live billing forecast chart shows Fairport HQ phase 2 (Furniture 50/40/10) · ordered % crosses 50 en W32. Strata fires threshold trigger · animates chart · drafts proforma PJX-INV-3421 ($24,500 · 40% draw). Isabella receives alert in Action Center. Was invisible until Isabella spotted it in memory · now surfaces the moment PO/SO ratio crosses target.',
+        description: 'Auto. Live billing forecast chart shows Fairport HQ phase 2 (Furniture 50/40/10) · ordered % crosses 50 en W32. Strata fires threshold trigger · animates chart · drafts proforma PJX-INV-3421 ($24,500 · 40% draw). Coordinator receives alert in Action Center. Was invisible until Coordinator spotted it in memory · now surfaces the moment PO/SO ratio crosses target.',
         app: 'projex-billing',
         role: 'System',
         flowId: 'projex-billing',
@@ -209,7 +209,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Progress billing & collections',
         title: 'Coordinator proforma review · adjust line items + deposit deducted',
-        description: 'Isabella opens the drafted proforma modal · print-style replica con line items · design fee · surcharge · deposit already received deducted. Editable line table para adjustments antes de release. Human touch preserved · Isabella keeps final say. Approve → routes to customer invoicing pipeline.',
+        description: 'Coordinator opens the drafted proforma modal · print-style replica con line items · design fee · surcharge · deposit already received deducted. Editable line table para adjustments antes de release. Human touch preserved · Coordinator keeps final say. Approve → routes to customer invoicing pipeline.',
         app: 'projex-billing',
         role: 'Furniture Coordinator',
         flowId: 'projex-billing',
@@ -219,7 +219,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Progress billing & collections',
         title: 'Walls PM-review gate (WC9) · Director hands off to PM for installation-complete confirm',
-        description: 'For Walls 60/30/10 projects · 30% draw needs Stacy (Walls PM) confirmation that installation is complete before fires. Alec releases handoff · Stacy receives ConfirmDialog · installation photos + punch list attached. WC9 is one of the 4 confirmed-High pain points · today Alec waits en Outlook para Stacy\'s reply · often delays draw fires.',
+        description: 'For Walls 60/30/10 projects · 30% draw needs Walls PM (Walls PM) confirmation that installation is complete before fires. Walls Director releases handoff · Walls PM receives ConfirmDialog · installation photos + punch list attached. WC9 is one of the 4 confirmed-High pain points · today Walls Director waits en Outlook para Walls PM\'s reply · often delays draw fires.',
         app: 'projex-billing',
         role: 'Walls Director',
         flowId: 'projex-billing',
@@ -229,7 +229,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Progress billing & collections',
         title: 'AR aging board · 4-column kanban por bucket (0-30 / 31-60 / 61-90 / 90+)',
-        description: 'Shared AR aging board reemplaza el dead-tracker (AR3 · left with prior team member). 4 buckets kanban · row-per-invoice cards · notes-per-row · ownership assignment (Isabella / Alec / Jacob). 10 records across MWH / Fairport / Denver Financial / NCBA · Net 10 + 1.5%/mo late fee (not Net 30). Filter por owner · click row abre hold-review modal.',
+        description: 'Shared AR aging board reemplaza el dead-tracker (AR3 · left with prior team member). 4 buckets kanban · row-per-invoice cards · notes-per-row · ownership assignment (Coordinator / Walls Director / Compliance). 10 records across MWH / Fairport / Denver Financial / NCBA · Net 10 + 1.5%/mo late fee (not Net 30). Filter por owner · click row abre hold-review modal.',
         app: 'projex-billing',
         role: 'Furniture Coordinator',
         flowId: 'projex-billing',
@@ -239,7 +239,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Progress billing & collections',
         title: 'AI-drafted collection emails · shared queue (Furniture + Walls)',
-        description: 'Strata drafts 5 collection emails staged por bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue muestra drafts de Isabella + Alec juntos · FC12 fix (was personal Outlook tasks). AIEmailComposer con Friendlier/Firmer/Shorter tone polish toolbar · Isabella reviews · edits inline · sends per-draft (never batch auto).',
+        description: 'Strata drafts 5 collection emails staged por bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue muestra drafts de Coordinator + Walls Director juntos · FC12 fix (was personal Outlook tasks). AIEmailComposer con Friendlier/Firmer/Shorter tone polish toolbar · Coordinator reviews · edits inline · sends per-draft (never batch auto).',
         app: 'projex-billing',
         role: 'Furniture Coordinator',
         flowId: 'projex-billing',
@@ -249,7 +249,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Progress billing & collections',
         title: 'Customer Invoice posted + NetSuite GL sync · Fairport 40% draw released',
-        description: 'Auto. Proforma PJX-INV-3421 flips to Customer Invoice · NetSuite journal entry visible en GL. Activity timeline log · state transition proforma → invoice → collections queue. 3-step post sequence (validating → creating → notifying) · saved-time moment surface. Isabella can close out the milestone y move to next threshold monitoring.',
+        description: 'Auto. Proforma PJX-INV-3421 flips to Customer Invoice · NetSuite journal entry visible en GL. Activity timeline log · state transition proforma → invoice → collections queue. 3-step post sequence (validating → creating → notifying) · saved-time moment surface. Coordinator can close out the milestone y move to next threshold monitoring.',
         app: 'projex-billing',
         role: 'System',
         flowId: 'projex-billing',
@@ -263,7 +263,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
         title: 'Designer emails PIF + SIF · intake landing con drop-zone',
-        description: 'Layne (Lead Designer) emails the PIF workbook + SIF files. Email lands en Isabella\'s inbox con attachment metadata visible. Drop-zone accept · Strata previews parse plan. Never auto-ingest · Isabella clicks Ingest cuando confirms scope.',
+        description: 'Lead Designer (Lead Designer) emails the PIF workbook + SIF files. Email lands en Coordinator\'s inbox con attachment metadata visible. Drop-zone accept · Strata previews parse plan. Never auto-ingest · Coordinator clicks Ingest cuando confirms scope.',
         app: 'projex-order-po',
         role: 'System',
         flowId: 'projex-order-po',
@@ -273,7 +273,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
         title: 'PIF-to-Order parse · Walls "AI lot line" + cost/margin/design-fee columns',
-        description: 'MWH residential PIF · 300 lines vertical parser con cost/margin/design-fee/total-price columns. AI lot line convention para Walls (WC2 fix). Per-cell OCR confidence · Isabella corrects fields <95%. Staged reveal · 24 sample lines de las 300.',
+        description: 'MWH residential PIF · 300 lines vertical parser con cost/margin/design-fee/total-price columns. AI lot line convention para Walls (WC2 fix). Per-cell OCR confidence · Coordinator corrects fields <95%. Staged reveal · 24 sample lines de las 300.',
         app: 'projex-order-po',
         role: 'Furniture Coordinator',
         flowId: 'projex-order-po',
@@ -283,7 +283,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
         title: 'Manual line editor · S&H + surcharge + design fee (26 entries)',
-        description: 'Isabella adds 26 shipping-and-handling manual entries · EditableLineTable con add-row affordance · freight per vendor (Alamir $19 flat rule · Nelson prepaid+add · Teknion consolidated). Design fee 8% of subtotal computed. Totals recompute live.',
+        description: 'Coordinator adds 26 shipping-and-handling manual entries · EditableLineTable con add-row affordance · freight per vendor (Alamir $19 flat rule · Nelson prepaid+add · Teknion consolidated). Design fee 8% of subtotal computed. Totals recompute live.',
         app: 'projex-order-po',
         role: 'Furniture Coordinator',
         flowId: 'projex-order-po',
@@ -303,7 +303,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
         title: 'Per-vendor Send · release Teknion first · HBF hold',
-        description: 'Isabella opens SubmitPODialog per PO · sends Teknion (SIF upload) primero para start clock · HBF hold para tomorrow · Boss Design draft email review before send. Banner "Never auto-send" visible. Cada release es intentional act · per-vendor control preserved (SOT §12b · Isabella never trusts auto-send).',
+        description: 'Coordinator opens SubmitPODialog per PO · sends Teknion (SIF upload) primero para start clock · HBF hold para tomorrow · Boss Design draft email review before send. Banner "Never auto-send" visible. Cada release es intentional act · per-vendor control preserved (SOT §12b · Coordinator never trusts auto-send).',
         app: 'projex-order-po',
         role: 'Furniture Coordinator',
         flowId: 'projex-order-po',
@@ -313,7 +313,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
         title: 'Coordinator release complete · SnapshotComparisonView tri-way match + audit trail',
-        description: 'Post-release · SnapshotComparisonView shows three-way match (draft = sent = NetSuite record). ActivityTimeline audit trail per PO. Tracking chips per vendor delivery state. RevisionHistory + ArtifactDownloads available. Isabella closes MWH cycle · monitor ACKs next.',
+        description: 'Post-release · SnapshotComparisonView shows three-way match (draft = sent = NetSuite record). ActivityTimeline audit trail per PO. Tracking chips per vendor delivery state. RevisionHistory + ArtifactDownloads available. Coordinator closes MWH cycle · monitor ACKs next.',
         app: 'projex-order-po',
         role: 'System',
         flowId: 'projex-order-po',
@@ -337,7 +337,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 5,
         groupTitle: 'Electronic ordering & ACK',
         title: 'ACK received · per-vendor OCR confidence (FC9)',
-        description: 'ACK PDFs return drip-drip por vendor. AcknowledgementUploadModal OCR extraction · per-vendor confidence variable (Teknion 98% excellent · HBF 91% good · Alamir 74% review-recommended). FC9 fix · confidence per vendor scored antes de committing effort · Isabella prioritiza review cuando conf <80%.',
+        description: 'ACK PDFs return drip-drip por vendor. AcknowledgementUploadModal OCR extraction · per-vendor confidence variable (Teknion 98% excellent · HBF 91% good · Alamir 74% review-recommended). FC9 fix · confidence per vendor scored antes de committing effort · Coordinator prioritiza review cuando conf <80%.',
         app: 'projex-ack',
         role: 'System',
         flowId: 'projex-ack',
@@ -357,7 +357,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 5,
         groupTitle: 'Electronic ordering & ACK',
         title: 'Clear 10/10/2050 sentinel · update PMO line (Multi-Line Edit tool)',
-        description: 'AckReviewSlideOver full max-w-6xl con PMO line editable. Watch each row\'s ESD transition from 10/10/2050 sentinel → real Teknion date (2026-09-10 · 09-15 · 09-24 · 10-02). EditableLineTable inline · Multi-Line Edit tool call-out (NetSuite artifact) · bulk update option. Isabella confirms cada CR-affected row.',
+        description: 'AckReviewSlideOver full max-w-6xl con PMO line editable. Watch each row\'s ESD transition from 10/10/2050 sentinel → real Teknion date (2026-09-10 · 09-15 · 09-24 · 10-02). EditableLineTable inline · Multi-Line Edit tool call-out (NetSuite artifact) · bulk update option. Coordinator confirms cada CR-affected row.',
         app: 'projex-ack',
         role: 'Furniture Coordinator',
         flowId: 'projex-ack',
@@ -367,7 +367,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 5,
         groupTitle: 'Electronic ordering & ACK',
         title: 'Designer chain assembly · Lead → Spec → PM (FC8 net-new)',
-        description: 'Running chart FC8 net-new · designer chain auto-assembles vs Isabella today builds manually en Excel. Layne (Lead Designer) reviews CR-01 leadtime · Tate (Spec Designer) confirms width changes CR-03/07/12 with client · Josh (PM Coordinator) signs off. Thread completo con attachments + replies + timestamps. CC affordance para additional stakeholders.',
+        description: 'Running chart FC8 net-new · designer chain auto-assembles vs Coordinator today builds manually en Excel. Lead Designer (Lead Designer) reviews CR-01 leadtime · Spec Designer (Spec Designer) confirms width changes CR-03/07/12 with client · PM Coordinator (PM Coordinator) signs off. Thread completo con attachments + replies + timestamps. CC affordance para additional stakeholders.',
         app: 'projex-ack',
         role: 'Furniture Coordinator',
         flowId: 'projex-ack',
@@ -377,7 +377,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 5,
         groupTitle: 'Electronic ordering & ACK',
         title: 'Daily ESD sweep + shipment tracking (Shipment Notification SN)',
-        description: 'OrderTrackerScene grid daily · sweeps 20 PMO lines · Shipment Notification (SN) inbound events per vendor · TrackingModal per shipment. Daily "Daily Report — From POs_Projex Inc." saved-search style · Multi-Line-Edit tool bulk update para bulk PMO refresh. Isabella closes MWH cycle · monitor deliveries.',
+        description: 'OrderTrackerScene grid daily · sweeps 20 PMO lines · Shipment Notification (SN) inbound events per vendor · TrackingModal per shipment. Daily "Daily Report — From POs_Projex Inc." saved-search style · Multi-Line-Edit tool bulk update para bulk PMO refresh. Coordinator closes MWH cycle · monitor deliveries.',
         app: 'projex-ack',
         role: 'Furniture Coordinator',
         flowId: 'projex-ack',
@@ -431,7 +431,7 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
         'Email Capture watching ap@projex-inc.com · 14 new bills overnight',
         '12 auto-matched line-item exact-to-the-penny against NetSuite POs',
         '2 exceptions surfaced · partial-ship variance + install-vendor sin PO #',
-        'Baseline · 224 bills/mo · 287 Q4 peak · Daniel keys ~20/hr easy · 5/hr tough',
+        'Baseline · 224 bills/mo · 287 Q4 peak · Accounting keys ~20/hr easy · 5/hr tough',
     ],
     'p1.2': [
         'Teknion vendor invoice arriving at ap@projex-inc.com',
@@ -440,20 +440,20 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
         'Agent pipeline · Email Intake → OCR → PO Matcher → NetSuite Bot',
     ],
     'p1.3': [
-        'Line-item match to the penny · Jacob\'s hard rule',
+        'Line-item match to the penny · Compliance\'s hard rule',
         '12 of 15 sample lines match exact · 2 qty mismatch · 1 price variance',
         'Cause taxonomy · tax rate · out of stock · substitution · penny rounding',
         'Multi-Line Edit tool visible · Projex\'s current NetSuite workaround',
     ],
     'p1.4': [
         'Warehouse by Design install invoice · project name only · no PO #',
-        'Drafting PM double-check email to Jeff verbatim',
+        'Drafting PM double-check email to PM verbatim',
         '"Which PO does this bill match? + work complete? + approved to pay?"',
         'Bill held · awaiting PM confirmation · timer starts',
     ],
     'p1.5': [
         'Tuesday payment run · 47 bills queued (big batch · Thu = one-offs)',
-        'Financial dashboard · payables tab · Matt reviews',
+        'Financial dashboard · payables tab · CEO reviews',
         'ACH workaround visible · NetSuite → bank never delivered · manual remittance',
         'Duplicate-payment control · comparing last remittance detail',
     ],
@@ -465,27 +465,27 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
     ],
     // F2 · vendor onboarding · 6 steps
     'p2.1': [
-        'Kelly opens structured intake modal · types Warehouse by Design',
+        'Coordinator opens structured intake modal · types Warehouse by Design',
         'Attaches signed W-9 · payment method ACH · Net 10 terms',
-        'Free-text email to Daniel replaced by structured form',
-        'Ticket enters Daniel\'s queue with provenance',
+        'Free-text email to Accounting replaced by structured form',
+        'Ticket enters Accounting\'s queue with provenance',
     ],
     'p2.2': [
-        'Daniel opens Kelly\'s ticket · W-9 source PDF con bounding-box overlay',
+        'Accounting opens Coordinator\'s ticket · W-9 source PDF con bounding-box overlay',
         'Strata OCR extracts TIN masked · entity type · EIN · signed date · address',
-        'Per-field confidence % · Daniel corrects fields < 95%',
+        'Per-field confidence % · Accounting corrects fields < 95%',
         'Save extracted → routes to compliance preflight',
     ],
     'p2.3': [
         'Auto · Strata runs 4-check compliance preflight',
         'W-9 signed <12mo · 1099-NEC flag · ACH verified · W-8 BEN-E N/A US',
         'OFAC sanction check · all clear',
-        'Preflight ready for Jacob review',
+        'Preflight ready for Compliance review',
     ],
     'p2.4': [
-        'Jacob opens review modal · W-9 + preflight side-by-side',
+        'Compliance opens review modal · W-9 + preflight side-by-side',
         'Release approves vendor · Reject sends back with reason',
-        'Never auto-post · human touch preserved (Matt\'s 75% rule)',
+        'Never auto-post · human touch preserved (CEO\'s 75% rule)',
         'Release → NetSuite Vendor master',
     ],
     'p2.5': [
@@ -495,29 +495,29 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
         'Filter by bucket · search by MFG code',
     ],
     'p2.6': [
-        'Kelly opens Dealer view · vendor status per active project',
+        'Coordinator opens Dealer view · vendor status per active project',
         'Warehouse by Design now "Ready for AP" con next payment run date',
         'Expiration reminders 30-day-out surface en Action Center',
-        'Pre-drafted "Request W-9 refresh" email · Kelly reviews and sends',
+        'Pre-drafted "Request W-9 refresh" email · Coordinator reviews and sends',
     ],
     // F3 · progress billing · 6 steps
     'p3.1': [
         'Auto · Fairport phase 2 crosses 50% ordered en W32',
         'Strata drafts proforma PJX-INV-3421 · 40% draw $24,500',
         'Threshold trigger surface en Action Center',
-        'Isabella receives alert · was invisible until spotted in memory',
+        'Coordinator receives alert · was invisible until spotted in memory',
     ],
     'p3.2': [
-        'Isabella opens proforma modal · print-style replica',
+        'Coordinator opens proforma modal · print-style replica',
         'Editable line table · design fee · surcharge · deposit deducted',
         'Adjust before release · human touch preserved',
         'Approve → routes to customer invoicing pipeline',
     ],
     'p3.3': [
-        'Walls 60/30/10 · 30% draw needs Stacy confirmation',
-        'Alec releases handoff · installation photos + punch list attached',
-        'Stacy receives ConfirmDialog · installation-complete gate (WC9)',
-        'Today Alec waits en Outlook · often delays draw fires',
+        'Walls 60/30/10 · 30% draw needs Walls PM confirmation',
+        'Walls Director releases handoff · installation photos + punch list attached',
+        'Walls PM receives ConfirmDialog · installation-complete gate (WC9)',
+        'Today Walls Director waits en Outlook · often delays draw fires',
     ],
     'p3.4': [
         'AR aging kanban · 4 buckets 0-30/31-60/61-90/90+',
@@ -527,21 +527,21 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'p3.5': [
         'Strata drafts 5 collection emails staged por bucket',
-        'Shared queue · drafts de Isabella + Alec juntos (FC12 fix)',
+        'Shared queue · drafts de Coordinator + Walls Director juntos (FC12 fix)',
         'AIEmailComposer con Friendlier/Firmer/Shorter tone polish',
-        'Isabella reviews · edits inline · sends per-draft (never batch auto)',
+        'Coordinator reviews · edits inline · sends per-draft (never batch auto)',
     ],
     'p3.6': [
         'Proforma flips a Customer Invoice · NetSuite GL entry',
         '3-step post · validating → creating → notifying',
         'Activity timeline log · state transition visible',
-        'Isabella closes milestone · monitor next threshold',
+        'Coordinator closes milestone · monitor next threshold',
     ],
     // F4 · order/PO dispatch · 6 steps
     'p4.1': [
-        'Layne (designer) emails PIF + SIF · attachment metadata visible',
+        'Lead Designer (designer) emails PIF + SIF · attachment metadata visible',
         'Drop-zone accept · Strata previews parse plan',
-        'Never auto-ingest · Isabella clicks Ingest',
+        'Never auto-ingest · Coordinator clicks Ingest',
         'MWH residential · 300 lines · 26 POs expected',
     ],
     'p4.2': [
@@ -554,7 +554,7 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
         'EditableLineTable · 26 S&H manual entries',
         'Alamir $19 flat rule · Nelson prepaid+add · Teknion consolidated',
         'Design fee 8% of subtotal · totals recompute live',
-        'Isabella owns manual line control',
+        'Coordinator owns manual line control',
     ],
     'p4.4': [
         '26 PO tiles multi-vendor batch grid',
@@ -564,15 +564,15 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'p4.5': [
         'SubmitPODialog per PO · never batch auto',
-        'Isabella sends Teknion primero · HBF hold · Boss review',
+        'Coordinator sends Teknion primero · HBF hold · Boss review',
         'Banner "Never auto-send" visible',
-        'Per-vendor control preserved (Isabella never trusts auto)',
+        'Per-vendor control preserved (Coordinator never trusts auto)',
     ],
     'p4.6': [
         'SnapshotComparisonView · tri-way match',
         'ActivityTimeline audit trail per PO',
         'Tracking chips per vendor delivery state',
-        'Isabella closes MWH cycle · monitor ACKs next (F5)',
+        'Coordinator closes MWH cycle · monitor ACKs next (F5)',
     ],
     // F5 · electronic ordering & ACK · 6 steps
     'p5.1': [
@@ -597,19 +597,19 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
         'AckReviewSlideOver max-w-6xl con PMO editable',
         'Watch 10/10/2050 sentinel → real Teknion dates',
         'Multi-Line Edit tool call-out · bulk update',
-        'Isabella confirms cada CR-affected row',
+        'Coordinator confirms cada CR-affected row',
     ],
     'p5.5': [
         'Designer chain FC8 net-new · auto-assembles',
-        'Layne (Lead) → Tate (Spec) → Josh (PM)',
+        'Lead Designer (Lead) → Spec Designer (Spec) → PM Coordinator (PM)',
         'Attachments + replies + timestamps · CC affordance',
-        'Replaces Isabella\'s Excel manual assembly',
+        'Replaces Coordinator\'s Excel manual assembly',
     ],
     'p5.6': [
         'OrderTrackerScene daily ESD sweep · 20 lines',
         'Shipment Notification (SN) inbound events',
         'TrackingModal per shipment · Multi-Line-Edit bulk',
-        'Isabella monitors deliveries · closes MWH cycle',
+        'Coordinator monitors deliveries · closes MWH cycle',
     ],
 };
 

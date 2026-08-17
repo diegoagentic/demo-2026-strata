@@ -1,9 +1,9 @@
 /**
  * COMPONENT: F2_p23_PreflightScene (Projex · p2.3)
  * PURPOSE: Auto. Strata runs 4-check compliance preflight sobre validated W-9.
- *          Left rail sidebar con sections + counters (Jacob's compliance rules).
+ *          Left rail sidebar con sections + counters (Compliance's compliance rules).
  *          Popover on each row con detail. Chain de checks pausable via
- *          usePauseAware · re-runnable si Daniel edita un field (pattern del
+ *          usePauseAware · re-runnable si Accounting edita un field (pattern del
  *          PreflightScanChain lifted).
  *
  *          Shape LOCK · modal-panes + preflight-siderail izq (F2 primary shape).
@@ -12,7 +12,7 @@
  *            border-border · bg-success/10 · bg-warning/10 · bg-destructive/10 ·
  *            tabular-nums
  *
- * SOURCE OF TRUTH: SOT §12b · Jacob's compliance rules (W-9 <12mo · 1099 · ACH · W-8)
+ * SOURCE OF TRUTH: SOT §12b · Compliance's compliance rules (W-9 <12mo · 1099 · ACH · W-8)
  * REUSE FROM: mbi/PreflightScanChain shape (5-check pausable pattern) ·
  *             vendor/expert-catalog/create-record/left-rail/PreflightLeftRail ·
  *             vendor/expert-catalog/create-record/PreflightSummaryPopover
@@ -86,11 +86,11 @@ export default function F2_p23_PreflightScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Compliance preflight · Jacob&apos;s 4 rules · staggered check chain
+                    Compliance preflight · Compliance&apos;s 4 rules · staggered check chain
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     Strata runs W-9 freshness · 1099-NEC flag · ACH verification · W-8 BEN-E requirement.
-                    Re-runnable si Daniel edita un field · pause-aware para presenter.
+                    Re-runnable si Accounting edita un field · pause-aware para presenter.
                 </p>
             </div>
 
@@ -177,7 +177,7 @@ export default function F2_p23_PreflightScene() {
                         {done ? (
                             <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded px-1.5 py-0.5">
                                 <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                                Ready for Jacob review
+                                Ready for Compliance review
                             </span>
                         ) : (
                             <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-ai">
@@ -256,7 +256,7 @@ export default function F2_p23_PreflightScene() {
                 </div>
             </div>
 
-            {/* Vendor snapshot strip · what Jacob will see */}
+            {/* Vendor snapshot strip · what Compliance will see */}
             <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3 flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-destructive/15 text-destructive flex items-center justify-center text-[10px] font-bold shrink-0">
                     WBD
@@ -269,7 +269,7 @@ export default function F2_p23_PreflightScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Compliance preflight · Jacob\'s rules · re-runnable" />
+            <DataSourcesBar groups={dataGroups} label="Compliance preflight · Compliance\'s rules · re-runnable" />
         </div>
     )
 }

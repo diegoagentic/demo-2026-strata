@@ -2,7 +2,7 @@
  * COMPONENT: F3_p31_ThresholdAlertScene (Projex · p3.1)
  * PURPOSE: Auto. Live billing forecast chart · Fairport HQ phase 2 crosses 50%
  *          ordered en W32 · Strata fires threshold trigger · animates chart ·
- *          drafts proforma PJX-INV-3421 ($24,500 · 40% draw). Isabella receives
+ *          drafts proforma PJX-INV-3421 ($24,500 · 40% draw). Coordinator receives
  *          alert en Action Center. Threshold-forward-looking · NO KPI-hero opener.
  *
  *          Shape LOCK · threshold-chart bar+line (F3 primary shape start).
@@ -77,7 +77,7 @@ export default function F3_p31_ThresholdAlertScene() {
                     Threshold alert · Fairport phase 2 crosses 50% ordered
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Furniture 50/40/10 · Strata watches PO/SO ratio · fires 40% draw the moment threshold crosses. Was invisible until Isabella spotted it in memory.
+                    Furniture 50/40/10 · Strata watches PO/SO ratio · fires 40% draw the moment threshold crosses. Was invisible until Coordinator spotted it in memory.
                 </p>
             </div>
 
@@ -231,7 +231,7 @@ export default function F3_p31_ThresholdAlertScene() {
                             PJX-INV-3421 · Fairport HQ · 40% draw · <span className="tabular-nums">$24,500</span>
                         </div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
-                            Isabella to review + adjust line items + release · never auto-post.
+                            Coordinator to review + adjust line items + release · never auto-post.
                         </div>
                     </div>
                     <button
