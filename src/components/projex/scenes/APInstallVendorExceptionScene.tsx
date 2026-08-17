@@ -162,8 +162,8 @@ export default function APInstallVendorExceptionScene() {
     const jeff = PROJEX_PERSONAS.jeff
     const daniel = PROJEX_PERSONAS.daniel
 
-    // WBD arrives 900ms after scene mounts · Action Center already scripted
-    // by PROJEX_STEP_NOTIFICATIONS['p1.4'] via step-enter dispatch.
+    // WBD arrives 900ms after scene mounts · Action Center notif for p1.4
+    // (event `projex:pm-double-check-open`) opens the composer when clicked.
     const [wbdArrived, setWbdArrived] = useState(false)
     const [composerOpen, setComposerOpen] = useState(false)
     const [phase, setPhase] = useState<Phase>('inbox')
@@ -171,6 +171,18 @@ export default function APInstallVendorExceptionScene() {
     useEffect(() => {
         pauseAwareTimeout(() => setWbdArrived(true), 900)
     }, [pauseAwareTimeout])
+
+    // Action Center CTA `Draft PM double-check →` opens the composer directly ·
+    // scene-owned event (NOT in AC fallback map) so no auto-advance to p1.5.
+    useEffect(() => {
+        const open = () => {
+            if (phase === 'sent') return
+            setWbdArrived(true) // ensure WBD row is visible even if user clicks fast
+            setComposerOpen(true)
+        }
+        window.addEventListener('projex:pm-double-check-open', open)
+        return () => window.removeEventListener('projex:pm-double-check-open', open)
+    }, [phase])
 
     const emails: InboxEmail[] = wbdArrived
         ? [WBD_EMAIL, ...BASELINE_INBOX]

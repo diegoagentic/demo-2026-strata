@@ -465,6 +465,16 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         event: 'projex:ap-open-teknion',
         footerText: 'Waiting for Daniel',
     },
+    'p1.4': {
+        badge: 'Held bill · needs PM', badgeColor: 'warning',
+        title: 'AP9 install-vendor exception · Warehouse by Design bill without PO #',
+        desc: 'A Warehouse by Design install invoice landed at ap@projex-inc.com with project name only (no PO # on the vendor\'s copy · classic AP9 pattern shared with Clear Space + Digital Interior). Accounting drafts a PM double-check email · bill stays held until PM confirms which PO it matches and whether install is complete.',
+        sender: 'Strata AI · flagged from AP inbox',
+        re: 'WBD-2026-0812 · $3,200 · Denver Financial install (Aug 12-13)',
+        cta: 'Draft PM double-check →',
+        event: 'projex:pm-double-check-open',
+        footerText: 'Bill held until PM replies with PO #',
+    },
     'p2.1': {
         badge: 'Open ticket', badgeColor: 'ai',
         title: 'F2 · Vendor onboarding · Kelly submits structured intake',

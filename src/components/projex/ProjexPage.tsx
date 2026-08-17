@@ -191,39 +191,42 @@ export default function ProjexPage() {
 // double-firing.
 const SCENE_HANDLED_EVENTS = new Set<string>([
     'projex:ap-open-teknion',      // p1.1 · fan-out choreography + auto-advance
+    'projex:pm-double-check-open', // p1.4 · opens PM double-check composer (no advance)
     'projex:vendor-intake-open',   // p2.1 · opens intake modal (no advance)
     'projex:w9-ocr-open',          // p2.2 · queue landing → drill-in OCR simulation
 ])
 
-// Verbatim list of AC event names dispatched by PROJEX_STEP_NOTIFICATIONS
-// in ActionCenter.tsx · scenes in SCENE_HANDLED_EVENTS are excluded at runtime.
-const AC_FALLBACK_EVENTS = [
-    'projex:ap-open-teknion',       // F1 p1.1 (SCENE-owned · filtered at runtime)
-    'projex:invoice-posted-open',   // F1 p1.6 arrival
-    'projex:vendor-intake-open',    // F2 p2.1 (SCENE-owned · filtered at runtime)
-    'projex:w9-ocr-open',           // F2 p2.2
-    'projex:preflight-open',        // F2 p2.3
-    'projex:jacob-gate-open',       // F2 p2.4
-    'projex:registry-open',         // F2 p2.5
-    'projex:dealer-readiness-open', // F2 p2.6
-    'projex:threshold-open',        // F3 p3.1
-    'projex:proforma-review-open',  // F3 p3.2
-    'projex:wc9-open',              // F3 p3.3
-    'projex:ar-board-open',         // F3 p3.4
-    'projex:drafts-open',           // F3 p3.5
-    'projex:pif-email-open',        // F4 p4.1
-    'projex:pif-parse-open',        // F4 p4.2
-    'projex:manual-lines-open',     // F4 p4.3
-    'projex:batch-grid-open',       // F4 p4.4
-    'projex:audit-open',            // F4 p4.6
-    'projex:sif-dispatch-open',     // F5 p5.1
-    'projex:ack-ocr-open',          // F5 p5.2
-    'projex:pmo-comparison-open',   // F5 p5.3
-    'projex:sentinel-clear-open',   // F5 p5.4
-    'projex:chain-open',            // F5 p5.5
-    'projex:tracking-open',         // F5 p5.6
-    'projex:dispatch-open',         // generic dispatch fallback
-]
+// Maps each Projex step to its Action Center CTA event (per
+// PROJEX_STEP_NOTIFICATIONS in ActionCenter.tsx). Used by the Shell's
+// fallback listener to only advance the step when THIS step's own event
+// fires · prevents stale notifs from previous steps advancing the current.
+const STEP_TO_AC_EVENT: Record<string, string> = {
+    'p1.1': 'projex:ap-open-teknion',       // SCENE-owned
+    'p1.4': 'projex:pm-double-check-open',  // SCENE-owned
+    'p2.1': 'projex:vendor-intake-open',    // SCENE-owned
+    'p2.2': 'projex:w9-ocr-open',           // SCENE-owned
+    'p2.4': 'projex:jacob-gate-open',
+    'p2.5': 'projex:registry-open',
+    'p2.6': 'projex:dealer-readiness-open',
+    'p3.1': 'projex:threshold-open',
+    'p3.2': 'projex:proforma-review-open',
+    'p3.3': 'projex:wc9-open',
+    'p3.4': 'projex:ar-board-open',
+    'p3.5': 'projex:drafts-open',
+    'p3.6': 'projex:netsuite-sync-open',
+    'p4.1': 'projex:pif-email-open',
+    'p4.2': 'projex:pif-parse-open',
+    'p4.3': 'projex:manual-lines-open',
+    'p4.4': 'projex:batch-grid-open',
+    'p4.5': 'projex:per-vendor-send-open',
+    'p4.6': 'projex:audit-open',
+    'p5.1': 'projex:sif-dispatch-open',
+    'p5.2': 'projex:ack-ocr-open',
+    'p5.3': 'projex:pmo-comparison-open',
+    'p5.4': 'projex:sentinel-clear-open',
+    'p5.5': 'projex:chain-open',
+    'p5.6': 'projex:tracking-open',
+}
 
 function Shell({ children }: { children: React.ReactNode }) {
     const { currentStep, nextStep } = useDemo()
@@ -231,15 +234,17 @@ function Shell({ children }: { children: React.ReactNode }) {
     const stepId = currentStep?.id ?? ''
     const arrival = ARRIVAL_MAP[stepId]
 
-    // Fallback advance · listen for every AC event NOT owned by a specific scene
+    // Fallback advance · scoped to the CURRENT step's AC event only. Prevents
+    // stale notifs from previous steps (still-open panels, background listeners)
+    // advancing this step. If the current step's event is scene-owned, do
+    // nothing here · the scene handles it (may open a modal instead of advance).
     useEffect(() => {
+        const evt = STEP_TO_AC_EVENT[stepId]
+        if (!evt || SCENE_HANDLED_EVENTS.has(evt)) return
         const advance = () => nextStep()
-        const listened = AC_FALLBACK_EVENTS.filter(e => !SCENE_HANDLED_EVENTS.has(e))
-        listened.forEach(e => window.addEventListener(e, advance))
-        return () => {
-            listened.forEach(e => window.removeEventListener(e, advance))
-        }
-    }, [nextStep])
+        window.addEventListener(evt, advance)
+        return () => window.removeEventListener(evt, advance)
+    }, [nextStep, stepId])
 
     return (
         <ProjexExperienceShell experience={experienceFor(app)} activeTab={activeTabFor(app)}>
