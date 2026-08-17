@@ -498,28 +498,11 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     // p2.3 · AUTO step (Strata runs compliance preflight) · no AC notif needed ·
     // user does not have an action to take here · scene auto-advances on chain complete.
-    'p2.4': {
-        badge: 'Human decision', badgeColor: 'warning',
-        title: 'Ready for compliance sign-off · all preflight checks passed',
-        desc: 'Compliance preflight ran clean · 4/4 checks passed (W-9 fresh · not 1099-flagged · ACH verified · US address so no W-8 BEN-E needed). Jacob to review W-9 result + preflight result side-by-side · binary decision Release or Reject with reason. Never auto-post per Matt\'s "75% AI + human touch" rule.',
-        sender: 'Strata AI · compliance preflight complete',
-        re: 'Warehouse by Design · vendor onboarding · Jacob approval gate',
-        cta: 'Open compliance review →',
-        event: 'projex:jacob-gate-open',
-        footerText: 'Human gate · never auto-post',
-    },
-    // p2.5 · AUTO step (row #734 animates in · 3.5s) · no AC notif needed ·
-    // scene UI narrates itself; notif would be redundant noise + skip-bug tempting.
-    'p2.6': {
-        badge: '2 expirations', badgeColor: 'warning',
-        title: 'Coordinator · 2 W-9 refresh requests due · West Elm 30d · Ryan expired',
-        desc: 'Kelly\'s active projects now show Warehouse by Design "Ready for AP" (Denver Financial · Tue Aug 19). Two expiration reminders surface: West Elm W-9 expires in 30 days · Ryan\'s Carpentry already expired (payment run blocker). Pre-drafted "Request W-9 refresh" emails ready with Friendlier/Firmer/Shorter toolbar for Kelly to review y send.',
-        sender: 'Strata AI · expiration tracker',
-        re: 'Kelly dealer view · W-9 refresh reminders · 2 accounts',
-        cta: 'Open Dealer view →',
-        event: 'projex:dealer-readiness-open',
-        footerText: 'Send refresh requests · never auto-send',
-    },
+    // p2.4 · INTERACTIVE step (compliance sign-off gate) · no AC notif needed ·
+    // scene UI muestra Release/Reject buttons directamente · self-explanatory.
+    // p2.5 · AUTO step (row #734 animates in · 3.5s) · no AC notif needed.
+    // p2.6 · INTERACTIVE step (dealer readiness · refresh emails) · no AC notif ·
+    // scene UI muestra expiration reminders + Send button directamente.
     'p3.1': {
         badge: '1 threshold', badgeColor: 'warning',
         title: 'F3 · Threshold trigger · Fairport phase 2 crosses 50%',

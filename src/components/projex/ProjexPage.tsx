@@ -196,8 +196,7 @@ const SCENE_HANDLED_EVENTS = new Set<string>([
     'projex:vendor-intake-open',    // p2.1 · opens intake modal
     'projex:w9-ocr-open',           // p2.2 · queue landing → drill-in OCR
     // F76 · SCENE-OWN-FOCUS · highlight primary CTA (useHighlightOnAcClick hook)
-    'projex:jacob-gate-open',       // p2.4 · highlight Release to NetSuite
-    'projex:dealer-readiness-open', // p2.6 · highlight Send refresh request
+    // (p2.4 · p2.6 removed 2026-08-17 · notifs deleted · UI self-explanatory)
     'projex:proforma-review-open',  // p3.2 · highlight Approve + release
     'projex:wc9-open',              // p3.3 · highlight Confirm installation-complete
     'projex:drafts-open',           // p3.5 · highlight Send follow-up
@@ -219,8 +218,7 @@ const STEP_TO_AC_EVENT: Record<string, string> = {
     'p1.4': 'projex:pm-double-check-open',  // SCENE-owned
     'p2.1': 'projex:vendor-intake-open',    // SCENE-owned
     'p2.2': 'projex:w9-ocr-open',           // SCENE-owned
-    'p2.4': 'projex:jacob-gate-open',       // SCENE-owned (highlight Release)
-    'p2.6': 'projex:dealer-readiness-open', // SCENE-owned (highlight Send refresh)
+    // p2.4 · p2.6 removed 2026-08-17 · notifs deleted from ActionCenter
     'p3.1': 'projex:threshold-open',        // KEEP-ADVANCE (view/alert scene)
     'p3.2': 'projex:proforma-review-open',  // SCENE-owned (highlight Approve)
     'p3.3': 'projex:wc9-open',              // SCENE-owned (highlight Confirm)

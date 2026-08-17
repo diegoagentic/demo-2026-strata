@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -86,8 +85,8 @@ export default function F2_p26_DealerReadinessScene() {
     const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent'>('idle')
     const activeTone = TONES.find(t => t.id === tone) ?? TONES[0]
 
-    // F76 · AC click highlights Send refresh button (no auto-advance)
-    const highlight = useHighlightOnAcClick('projex:dealer-readiness-open')
+    // F76 · No AC notif for this step · UI is self-explanatory (Send visible).
+    const highlight = false
 
     const handleSend = () => {
         if (sendState !== 'idle') return

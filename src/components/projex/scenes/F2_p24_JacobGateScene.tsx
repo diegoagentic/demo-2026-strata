@@ -27,7 +27,6 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
-import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { WBD_W9, WBD_PREFLIGHT } from '../../../config/profiles/projex-data/w9Records'
@@ -50,9 +49,8 @@ export default function F2_p24_JacobGateScene() {
     const [showReject, setShowReject] = useState(false)
     const [selectedReason, setSelectedReason] = useState<string | null>(null)
 
-    // F76 · Action Center CTA `Open PM confirm →` (event `projex:jacob-gate-open`)
-    // scrolls to + highlights the Release button · user must click to decide.
-    const highlight = useHighlightOnAcClick('projex:jacob-gate-open')
+    // F76 · No AC notif for this step · UI is self-explanatory (Release/Reject visible).
+    const highlight = false
 
     const handleRelease = () => {
         if (decision !== 'pending') return
