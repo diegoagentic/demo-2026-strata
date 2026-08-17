@@ -9,10 +9,10 @@
  * NOTIF · dispatchea `projex:draft-sent` on send · advance p3.6 when 3+ sent
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
     Sparkles, Mail, Send, CheckCircle2, Loader2, Wand2,
-    ArrowRight, User, Clock, Users,
+    ArrowRight, User, Clock, Users, Edit3, RotateCcw,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
@@ -55,6 +55,27 @@ export default function F3_p35_CollectionDraftsScene() {
     const activeDraft = COLLECTION_DRAFTS.find(d => d.id === selectedId) ?? COLLECTION_DRAFTS[0]
     const activeRecord = PROJEX_AR_RECORDS.find(r => r.id === activeDraft.recordId)
     const rewrittenBody = toneRewrite(activeDraft.body, tone)
+
+    // Manual editable body · seeded from tone-rewritten baseline · user can edit
+    // freely · tone click or draft-switch re-seeds. `manualEdits` tracks divergence.
+    const [body, setBody] = useState<string>(rewrittenBody)
+    const [manualEdits, setManualEdits] = useState(false)
+
+    useEffect(() => {
+        setBody(rewrittenBody)
+        setManualEdits(false)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedId, tone])
+
+    const handleBodyChange = (val: string) => {
+        setBody(val)
+        setManualEdits(val !== rewrittenBody)
+    }
+
+    const handleResetToTone = () => {
+        setBody(rewrittenBody)
+        setManualEdits(false)
+    }
 
     // F76 · AC click highlights Send button (per-draft · never batch auto-send)
     const highlight = useHighlightOnAcClick('projex:drafts-open')
@@ -224,12 +245,40 @@ export default function F3_p35_CollectionDraftsScene() {
                                 {TONE_LABELS[t]}
                             </button>
                         ))}
+                        {manualEdits && (
+                            <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-ai bg-ai-light rounded px-1.5 py-0.5">
+                                <Edit3 className="h-2.5 w-2.5" aria-hidden="true" />
+                                Edited manually
+                            </span>
+                        )}
                     </div>
 
-                    <div className="p-4 min-h-[280px]">
-                        <pre className="text-[12px] text-foreground font-sans whitespace-pre-wrap leading-relaxed">
-                            {rewrittenBody}
-                        </pre>
+                    <div className="p-4">
+                        <label className="block">
+                            <span className="sr-only">Email body · editable</span>
+                            <textarea
+                                value={body}
+                                onChange={e => handleBodyChange(e.target.value)}
+                                rows={12}
+                                spellCheck
+                                className="w-full min-h-[280px] bg-background border border-border rounded-lg px-3 py-2 text-[12px] text-foreground font-sans whitespace-pre-wrap leading-relaxed resize-y focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors"
+                            />
+                        </label>
+                        <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[10px] text-muted-foreground tabular-nums">{body.length} chars</span>
+                            <span className="text-muted-foreground/50 text-[10px]">·</span>
+                            <span className="text-[10px] text-muted-foreground">Edit inline · tone toolbar re-seeds · manual edits kept until you switch tone or draft</span>
+                            {manualEdits && (
+                                <button
+                                    onClick={handleResetToTone}
+                                    className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded px-1.5 py-0.5 transition-colors"
+                                    title="Reset to current tone's default"
+                                >
+                                    <RotateCcw className="h-3 w-3" aria-hidden="true" />
+                                    Reset to {TONE_LABELS[tone].toLowerCase()}
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center gap-2">
