@@ -486,16 +486,8 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         event: 'projex:w9-ocr-open',
         footerText: 'Daniel to review 5 fields',
     },
-    'p2.3': {
-        badge: 'Fields validated', badgeColor: 'success',
-        title: 'W-9 fields validated · running compliance preflight',
-        desc: 'Daniel validated all 5 W-9 fields (EIN corrected, address confirmed). Strata is now running Jacob\'s 4-check compliance preflight: W-9 signed &lt;12mo · 1099-NEC flag · ACH verified · W-8 BEN-E N/A US. Chain runs pausable · re-runnable if Daniel edits a field.',
-        sender: 'Strata AI · compliance preflight',
-        re: 'Warehouse by Design · Jacob\'s 4-rule compliance chain',
-        cta: 'Open preflight →',
-        event: 'projex:preflight-open',
-        footerText: '4 checks · staggered chain',
-    },
+    // p2.3 · AUTO step (Strata runs compliance preflight) · no AC notif needed ·
+    // user does not have an action to take here · scene auto-advances on chain complete.
     'p2.4': {
         badge: 'Human decision', badgeColor: 'warning',
         title: 'Ready for Jacob sign-off · all preflight checks passed',

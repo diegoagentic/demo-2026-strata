@@ -27,7 +27,7 @@ import { useEffect, useState } from 'react'
 import {
     Sparkles, FileText, CheckCircle2, AlertTriangle, Loader2,
     Edit3, Save, ArrowRight, Fingerprint, Building2, Calendar, MapPin,
-    ScanText, Clock, Inbox, User,
+    ScanText, Clock, Inbox, User, X as XIcon, RotateCcw,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
@@ -91,7 +91,8 @@ export default function F2_p22_W9OcrScene() {
 
     // Staged reveal · 1 field every ~350ms (only runs in review phase)
     const [revealed, setRevealed] = useState(0)
-    const [correctedIds, setCorrectedIds] = useState<Set<string>>(new Set())
+    // Per-field decision · 'confirmed' | 'rejected' | undefined (pending)
+    const [decisions, setDecisions] = useState<Record<string, 'confirmed' | 'rejected' | undefined>>({})
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
 
     // Action Center CTA `Open OCR review →` (event `projex:w9-ocr-open`) triggers
@@ -112,8 +113,16 @@ export default function F2_p22_W9OcrScene() {
         }
     }, [phase, revealed, pauseAwareTimeout])
 
-    const handleCorrect = (fieldKey: string) => {
-        setCorrectedIds(prev => new Set([...prev, fieldKey]))
+    const handleDecision = (fieldKey: string, decision: 'confirmed' | 'rejected') => {
+        setDecisions(prev => ({ ...prev, [fieldKey]: decision }))
+    }
+
+    const handleUndoDecision = (fieldKey: string) => {
+        setDecisions(prev => {
+            const next = { ...prev }
+            delete next[fieldKey]
+            return next
+        })
     }
 
     const handleSave = () => {
@@ -126,8 +135,11 @@ export default function F2_p22_W9OcrScene() {
     }
 
     const allRevealed = revealed >= WBD_W9.fields.length
-    const correctableCount = WBD_W9.fields.filter(f => f.correctable).length
-    const stillNeedsCorrection = WBD_W9.fields.filter(f => f.correctable && !correctedIds.has(f.key)).length
+    const totalFields = WBD_W9.fields.length
+    const confirmedCount = WBD_W9.fields.filter(f => decisions[f.key] === 'confirmed').length
+    const rejectedCount  = WBD_W9.fields.filter(f => decisions[f.key] === 'rejected').length
+    const decidedCount   = confirmedCount + rejectedCount
+    const pendingCount   = totalFields - decidedCount
     const avgConf = Math.round(WBD_W9.fields.reduce((s, f) => s + f.conf, 0) / WBD_W9.fields.length)
 
     const dataGroups: DataSourceGroup[] = [
@@ -304,8 +316,8 @@ export default function F2_p22_W9OcrScene() {
                         <AlertTriangle className="h-5 w-5 text-warning" aria-hidden="true" />
                     </div>
                     <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{stillNeedsCorrection}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Needs Accounting review</div>
+                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{pendingCount}</div>
+                        <div className="text-[11px] text-muted-foreground mt-1">Pending decision</div>
                     </div>
                 </div>
                 <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
@@ -313,8 +325,11 @@ export default function F2_p22_W9OcrScene() {
                         <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     </div>
                     <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{correctedIds.size}/{correctableCount}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Corrected</div>
+                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">
+                            <span className="text-success">{confirmedCount}</span>
+                            {rejectedCount > 0 && <span className="text-destructive text-base"> · {rejectedCount} rejected</span>}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-1">Confirmed / total {totalFields}</div>
                     </div>
                 </div>
             </div>
@@ -388,35 +403,38 @@ export default function F2_p22_W9OcrScene() {
                     </div>
                 </div>
 
-                {/* Extracted fields with correction affordance */}
+                {/* Extracted fields · per-field decision (confirm · reject · undo) */}
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-ai" aria-hidden="true" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                            Extracted fields · Daniel review
+                            Extracted fields · Accounting review
                         </span>
-                        {allRevealed && stillNeedsCorrection === 0 && (
+                        {allRevealed && pendingCount === 0 && (
                             <span className="ml-auto text-[10px] font-bold text-success bg-success/10 rounded px-1.5 py-0.5">
-                                All corrections done
+                                All decided
                             </span>
                         )}
-                        {allRevealed && stillNeedsCorrection > 0 && (
+                        {allRevealed && pendingCount > 0 && (
                             <span className="ml-auto text-[10px] font-bold text-warning bg-warning/10 rounded px-1.5 py-0.5">
-                                {stillNeedsCorrection} pending
+                                {pendingCount} pending
                             </span>
                         )}
                     </div>
                     <div className="p-4 space-y-2">
                         {WBD_W9.fields.slice(0, revealed).map(f => {
                             const Icon = FIELD_ICONS[f.key] ?? FileText
-                            const isCorrected = correctedIds.has(f.key)
-                            const needsCorrection = f.correctable && !isCorrected
+                            const decision = decisions[f.key]
+                            const isConfirmed = decision === 'confirmed'
+                            const isRejected = decision === 'rejected'
                             return (
                                 <div
                                     key={f.key}
                                     className={`
-                                        animate-in fade-in slide-in-from-right-1 duration-300 rounded-lg border px-3 py-2 flex items-start gap-2
-                                        ${isCorrected ? 'border-success/40 bg-success/5' : needsCorrection ? 'border-warning/40 bg-warning/5' : 'border-border bg-card'}
+                                        animate-in fade-in slide-in-from-right-1 duration-300 rounded-lg border px-3 py-2 flex items-start gap-2 transition-colors
+                                        ${isConfirmed ? 'border-success/40 bg-success/5' : ''}
+                                        ${isRejected ? 'border-destructive/40 bg-destructive/5' : ''}
+                                        ${!decision ? 'border-border bg-card' : ''}
                                     `}
                                 >
                                     <Icon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden="true" />
@@ -431,22 +449,67 @@ export default function F2_p22_W9OcrScene() {
                                                 {f.conf}%
                                             </span>
                                         </div>
-                                        <div className="text-sm text-foreground font-medium mt-0.5 truncate">{f.value}</div>
+                                        <div className={`text-sm font-medium mt-0.5 truncate ${isRejected ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                                            {f.value}
+                                        </div>
                                     </div>
-                                    {needsCorrection && (
-                                        <button
-                                            onClick={() => handleCorrect(f.key)}
-                                            className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-foreground bg-primary/15 hover:bg-primary/25 rounded px-1.5 py-0.5 transition-colors"
-                                        >
-                                            <Edit3 className="h-3 w-3" aria-hidden="true" />
-                                            Confirm
-                                        </button>
+
+                                    {/* Decision UI · pending state = Confirm + Reject */}
+                                    {!decision && (
+                                        <div className="shrink-0 inline-flex items-center gap-1">
+                                            <button
+                                                onClick={() => handleDecision(f.key, 'confirmed')}
+                                                className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-foreground bg-primary hover:opacity-90 rounded px-2 py-1 transition-opacity"
+                                                aria-label={`Confirm ${f.label}`}
+                                            >
+                                                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                Confirm
+                                            </button>
+                                            <button
+                                                onClick={() => handleDecision(f.key, 'rejected')}
+                                                className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive bg-background hover:bg-destructive/10 border border-destructive/30 rounded px-2 py-1 transition-colors"
+                                                aria-label={`Reject ${f.label}`}
+                                            >
+                                                <XIcon className="h-3 w-3" aria-hidden="true" />
+                                                Reject
+                                            </button>
+                                        </div>
                                     )}
-                                    {isCorrected && (
-                                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-success">
-                                            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                                            OK
-                                        </span>
+                                    {/* Confirmed state · shows chip + Undo */}
+                                    {isConfirmed && (
+                                        <div className="shrink-0 inline-flex items-center gap-1">
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success">
+                                                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                Confirmed
+                                            </span>
+                                            <button
+                                                onClick={() => handleUndoDecision(f.key)}
+                                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded px-1.5 py-0.5 transition-colors"
+                                                aria-label={`Undo confirm on ${f.label}`}
+                                                title="Change decision"
+                                            >
+                                                <RotateCcw className="h-3 w-3" aria-hidden="true" />
+                                                Undo
+                                            </button>
+                                        </div>
+                                    )}
+                                    {/* Rejected state · shows chip + Undo */}
+                                    {isRejected && (
+                                        <div className="shrink-0 inline-flex items-center gap-1">
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive">
+                                                <XIcon className="h-3 w-3" aria-hidden="true" />
+                                                Rejected
+                                            </span>
+                                            <button
+                                                onClick={() => handleUndoDecision(f.key)}
+                                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded px-1.5 py-0.5 transition-colors"
+                                                aria-label={`Undo reject on ${f.label}`}
+                                                title="Change decision"
+                                            >
+                                                <RotateCcw className="h-3 w-3" aria-hidden="true" />
+                                                Undo
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             )
@@ -457,12 +520,13 @@ export default function F2_p22_W9OcrScene() {
                     {allRevealed && (
                         <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center gap-2 animate-in fade-in duration-300">
                             <span className="text-[10px] text-muted-foreground flex-1">
-                                Route to compliance preflight when all fields confirmed.
+                                Route to compliance preflight when every field has a decision (confirm or reject).
+                                {rejectedCount > 0 && ` · ${rejectedCount} rejected field${rejectedCount === 1 ? '' : 's'} will re-request from vendor.`}
                             </span>
                             {saveState === 'idle' && (
                                 <button
                                     onClick={handleSave}
-                                    disabled={stillNeedsCorrection > 0}
+                                    disabled={pendingCount > 0}
                                     className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                                 >
                                     <Save className="h-3.5 w-3.5" aria-hidden="true" />
