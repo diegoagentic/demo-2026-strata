@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import { Wand2, Save, X } from 'lucide-react'
 import MBIDetailSheet from '../mbi/MBIDetailSheet'
 import { StatusBadge, type StatusTone } from './index'
@@ -31,6 +32,10 @@ interface AIEmailComposerProps {
     icon?: ReactNode
     /** Floating-sheet width · matches MBIDetailSheet's three sizes. */
     width?: 'sm' | 'md' | 'lg'
+    /** How the composer is presented · slide-over (default · MBIDetailSheet)
+        or centered dialog (matches manufacturer/EmailDraftModal pattern used
+        across the rest of the demos). */
+    presentation?: 'slideover' | 'centered'
 
     /** Recipient label · rendered as read-only mono text in the header. */
     to: string
@@ -96,6 +101,7 @@ export default function AIEmailComposer({
     subtitle,
     icon,
     width = 'lg',
+    presentation = 'slideover',
     to,
     initialSubject,
     initialBody,
@@ -144,16 +150,14 @@ export default function AIEmailComposer({
 
     const ActionIcon = actionIcon ?? <Save className="h-3.5 w-3.5" />
 
-    return (
-        <MBIDetailSheet
-            isOpen={isOpen}
-            onClose={onClose}
-            title={title}
-            subtitle={subtitle}
-            icon={icon}
-            width={width}
-        >
-            <div className="space-y-4">
+    const centeredWidth: Record<NonNullable<AIEmailComposerProps['width']>, string> = {
+        sm: 'max-w-md',
+        md: 'max-w-xl',
+        lg: 'max-w-2xl',
+    }
+
+    const composerBody = (
+        <div className="space-y-4">
                 {/* Header context · recipient + optional badge */}
                 <section className="bg-background/60 dark:bg-zinc-900/40 border border-border rounded-xl p-3 flex flex-wrap items-center gap-2">
                     {badge && (
@@ -237,6 +241,51 @@ export default function AIEmailComposer({
                     </div>
                 </div>
             </div>
+    )
+
+    if (presentation === 'centered') {
+        return (
+            <Transition appear show={isOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-[300]" onClose={onClose}>
+                    <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+                        <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" aria-hidden="true" />
+                    </TransitionChild>
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-start justify-center p-4 pt-16">
+                            <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                                <DialogPanel className={`w-full ${centeredWidth[width]} rounded-xl border border-border bg-card shadow-xl overflow-hidden`}>
+                                    <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+                                        {icon}
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-bold text-foreground truncate">{title}</div>
+                                            {subtitle && <div className="text-[11px] text-muted-foreground truncate">{subtitle}</div>}
+                                        </div>
+                                        <button onClick={onClose} aria-label="Close" className="ml-auto h-7 w-7 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                    <div className="px-5 py-4 max-h-[75vh] overflow-y-auto">
+                                        {composerBody}
+                                    </div>
+                                </DialogPanel>
+                            </TransitionChild>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
+        )
+    }
+
+    return (
+        <MBIDetailSheet
+            isOpen={isOpen}
+            onClose={onClose}
+            title={title}
+            subtitle={subtitle}
+            icon={icon}
+            width={width}
+        >
+            {composerBody}
         </MBIDetailSheet>
     )
 }

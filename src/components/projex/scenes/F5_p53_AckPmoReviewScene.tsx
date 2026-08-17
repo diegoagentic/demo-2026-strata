@@ -12,11 +12,12 @@
 import { useState } from 'react'
 import {
     GitCompare, CheckCircle2, AlertTriangle, ArrowRight, FileText,
-    Sparkles, Ruler, Zap, MessageCircle,
+    Sparkles, Ruler, Zap, MessageCircle, User,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
+import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { NCBA_ACK_CRS, NCBA_ACK_LINES, type CRType } from '../../../config/profiles/projex-data/teknionAck'
 
 const CR_TYPE_ICON: Record<CRType, React.ElementType> = {
@@ -28,6 +29,7 @@ const CR_TYPE_ICON: Record<CRType, React.ElementType> = {
 
 export default function F5_p53_AckPmoReviewScene() {
     const { nextStep } = useDemo()
+    const isabella = PROJEX_PERSONAS.isabella
     const [selectedCR, setSelectedCR] = useState<string | null>(null)
 
     const warnCRs = NCBA_ACK_CRS.filter(c => c.severity === 'warn')
@@ -47,8 +49,12 @@ export default function F5_p53_AckPmoReviewScene() {
                     <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F5</span>
                     <span>Electronic ordering &amp; ACK · step 3</span>
                     <span className="text-muted-foreground/60">·</span>
+                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
+                        <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
+                    </span>
+                    <span className="text-muted-foreground/60">·</span>
                     <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Hero moment · UN-CUTTABLE
+                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Hero moment
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">

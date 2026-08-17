@@ -12,17 +12,19 @@
 import { useState } from 'react'
 import {
     CheckCircle2, Loader2, ArrowRight, Wrench, Calendar,
-    Sparkles, Zap, ArrowUpRight,
+    Sparkles, Zap, ArrowUpRight, User,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
+import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { NCBA_ACK_LINES } from '../../../config/profiles/projex-data/teknionAck'
 
 export default function F5_p54_SentinelClearScene() {
     const { pauseAwareTimeout } = usePauseAware()
     const { nextStep } = useDemo()
+    const isabella = PROJEX_PERSONAS.isabella
 
     const [cleared, setCleared] = useState<Set<number>>(new Set())
     const [applyState, setApplyState] = useState<'idle' | 'applying' | 'applied'>('idle')
@@ -60,6 +62,10 @@ export default function F5_p54_SentinelClearScene() {
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
                     <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F5</span>
                     <span>Electronic ordering &amp; ACK · step 4</span>
+                    <span className="text-muted-foreground/60">·</span>
+                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
+                        <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
+                    </span>
                     <span className="text-muted-foreground/60">·</span>
                     <span className="inline-flex items-center gap-1 bg-warning/10 text-warning font-semibold rounded-md px-1.5 py-0.5">
                         <Wrench className="h-3 w-3" aria-hidden="true" /> Multi-Line Edit tool

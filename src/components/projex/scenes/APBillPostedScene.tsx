@@ -94,6 +94,10 @@ export default function APBillPostedScene() {
                     <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F1</span>
                     <span>AP intake &amp; matching · step 6</span>
                     <span className="text-muted-foreground/60">·</span>
+                    <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
+                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Consequence of Matt's approval · auto
+                    </span>
+                    <span className="text-muted-foreground/60">·</span>
                     <span className="inline-flex items-center gap-1 bg-success/10 text-success font-semibold rounded-md px-1.5 py-0.5">
                         <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Complete
                     </span>
@@ -201,7 +205,7 @@ export default function APBillPostedScene() {
                             <div className="text-xs text-foreground font-mono mt-0.5 break-all">{sharepointPath}</div>
                         </div>
                         <div>
-                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">File · Jacob's naming convention</div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">File · Accounting naming convention</div>
                             <div className="mt-1 flex items-center gap-2 bg-muted/40 border border-border rounded-lg px-3 py-2">
                                 <FileText className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                                 <span className="text-[11px] text-foreground font-mono break-all">{fileName}</span>

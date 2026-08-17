@@ -11,11 +11,12 @@
 import { useState } from 'react'
 import {
     Package, Filter, Search, MoreHorizontal, ArrowRight,
-    CheckCircle2, AlertTriangle, Eye, DollarSign, Building2,
+    CheckCircle2, AlertTriangle, Eye, DollarSign, Building2, User,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
+import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { MWH_PO_BATCH, MWH_TOTALS, type POBatchItem } from '../../../config/profiles/projex-data/mwhPif'
 
 const VENDOR_AVATAR: Record<string, { bg: string; text: string }> = {
@@ -29,6 +30,7 @@ const VENDOR_AVATAR: Record<string, { bg: string; text: string }> = {
 
 export default function F4_p44_POBatchGridScene() {
     const { nextStep } = useDemo()
+    const isabella = PROJEX_PERSONAS.isabella
 
     const [vendorFilter, setVendorFilter] = useState<'all' | string>('all')
     const [selectedPO, setSelectedPO] = useState<POBatchItem | null>(null)
@@ -54,6 +56,10 @@ export default function F4_p44_POBatchGridScene() {
                         <span>Order &amp; PO dispatch · step 4</span>
                         <span className="text-muted-foreground/60">·</span>
                         <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
+                            <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
+                        </span>
+                        <span className="text-muted-foreground/60">·</span>
+                        <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
                             <Package className="h-3 w-3" aria-hidden="true" /> 26 PO batch
                         </span>
                     </div>

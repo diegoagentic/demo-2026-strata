@@ -291,24 +291,27 @@ export default function APInboxSweepScene() {
     const { pauseAwareTimeout } = usePauseAware()
     const { nextStep } = useDemo()
 
-    // 3 phases · matches the Action Center notif cadence (AC opens at ~2s post-step)
+    // 3 phases · idle at mount · fan-out is user-triggered from Action Center
+    // (NO auto-timers · movement plays when Daniel clicks the notif CTA).
     const [phase, setPhase] = useState<'arriving' | 'matched' | 'toast'>('arriving')
 
-    // Choreography: bills "arrive" → matched auto-post (2.4s) → ready-state (3.8s)
+    // Single handler for the Action Center CTA `projex:ap-open-teknion`.
+    // First click · plays the fan-out choreography (arriving → matched → toast)
+    // + auto-advances at the end. If the choreography already played (phase ≠
+    // arriving), advance immediately · matches "Review this bill" click too.
     useEffect(() => {
-        const cancels: Array<() => void> = []
-        cancels.push(pauseAwareTimeout(() => setPhase('matched'), 2400))
-        cancels.push(pauseAwareTimeout(() => setPhase('toast'), 3800))
-        return () => { cancels.forEach(fn => fn()) }
-    }, [pauseAwareTimeout])
-
-    // Action Center CTA → this handler advances to p1.2 (Teknion bill intake).
-    // Same handler fires when the user clicks Review on any held/highlighted card.
-    useEffect(() => {
-        const advance = () => nextStep()
-        window.addEventListener('projex:ap-open-teknion', advance)
-        return () => window.removeEventListener('projex:ap-open-teknion', advance)
-    }, [nextStep])
+        const handler = () => {
+            if (phase !== 'arriving') {
+                nextStep()
+                return
+            }
+            pauseAwareTimeout(() => setPhase('matched'), 300)
+            pauseAwareTimeout(() => setPhase('toast'), 1400)
+            pauseAwareTimeout(() => nextStep(), 3400)
+        }
+        window.addEventListener('projex:ap-open-teknion', handler)
+        return () => window.removeEventListener('projex:ap-open-teknion', handler)
+    }, [nextStep, pauseAwareTimeout, phase])
 
     const justArrivedIds = phase === 'arriving' ? new Set(PROJEX_BILLS_OVERNIGHT.map(b => b.id)) : new Set<string>()
 
@@ -355,7 +358,7 @@ export default function APInboxSweepScene() {
                     </p>
                 </div>
                 <div className="text-right shrink-0">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Daniel's mornings</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Accounting mornings</div>
                     <div className="text-sm font-semibold text-foreground">
                         ~20 bills/hr easy · 5/hr tough vendors
                     </div>

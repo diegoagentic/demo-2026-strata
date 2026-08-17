@@ -12,12 +12,13 @@
 import { useState } from 'react'
 import {
     Send, CheckCircle2, Loader2, AlertTriangle, ArrowRight,
-    Clock, ShieldAlert, Sparkles, Play,
+    Clock, ShieldAlert, Sparkles, Play, User,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
+import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { MWH_PO_BATCH } from '../../../config/profiles/projex-data/mwhPif'
 
 const VENDOR_AVATAR: Record<string, { bg: string; text: string }> = {
@@ -32,6 +33,7 @@ const VENDOR_AVATAR: Record<string, { bg: string; text: string }> = {
 export default function F4_p45_PerVendorSendScene() {
     const { pauseAwareTimeout } = usePauseAware()
     const { nextStep } = useDemo()
+    const isabella = PROJEX_PERSONAS.isabella
 
     const [sentIds, setSentIds] = useState<Set<string>>(new Set())
     const [heldIds, setHeldIds] = useState<Set<string>>(new Set())
@@ -79,6 +81,10 @@ export default function F4_p45_PerVendorSendScene() {
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
                     <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
                     <span>Order &amp; PO dispatch · step 5</span>
+                    <span className="text-muted-foreground/60">·</span>
+                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
+                        <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
+                    </span>
                     <span className="text-muted-foreground/60">·</span>
                     <span className="inline-flex items-center gap-1 bg-destructive/10 text-destructive font-semibold rounded-md px-1.5 py-0.5">
                         <ShieldAlert className="h-3 w-3" aria-hidden="true" /> Never auto-send

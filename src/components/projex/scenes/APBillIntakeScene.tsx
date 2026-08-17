@@ -18,12 +18,13 @@
 import { useEffect, useState } from 'react'
 import {
     Mail, FileText, Sparkles, CheckCircle2, ChevronRight, Loader2,
-    Paperclip, Hash, DollarSign, ScanLine, ArrowRight,
+    Paperclip, Hash, DollarSign, ScanLine, ArrowRight, Eye,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import AgentPipelineStrip, { type AgentStep } from '../../simulations/AgentPipelineStrip'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
+import VendorInvoicePreview from '../VendorInvoicePreview'
 import { PROJEX_BILLS_OVERNIGHT } from '../../../config/profiles/projex-data/bills'
 import { PROJEX_VENDORS } from '../../../config/profiles/projex-data/vendors'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -108,6 +109,10 @@ export default function APBillIntakeScene() {
     const { nextStep } = useDemo()
     const [phase, setPhase] = useState(0)
     const [revealedFields, setRevealedFields] = useState(0)
+    const [previewOpen, setPreviewOpen] = useState(false)
+
+    const bill = PROJEX_BILLS_OVERNIGHT.find(b => b.id === NCBA_BILL_ID)
+    const vendor = PROJEX_VENDORS.find(v => v.id === bill?.vendorId)
 
     // Pipeline choreography · 5 phases · ~1.4s each
     useEffect(() => {
@@ -123,9 +128,6 @@ export default function APBillIntakeScene() {
         const cancel = pauseAwareTimeout(() => setRevealedFields(n => n + 1), 220)
         return cancel
     }, [phase, revealedFields, pauseAwareTimeout])
-
-    const bill = PROJEX_BILLS_OVERNIGHT.find(b => b.id === NCBA_BILL_ID)
-    const vendor = PROJEX_VENDORS.find(v => v.id === 'teknion')
 
     const dataGroups: DataSourceGroup[] = [
         { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
@@ -180,20 +182,29 @@ export default function APBillIntakeScene() {
                         <div className="pt-3 border-t border-border text-[12px] text-foreground/80 leading-relaxed">
                             Please find attached invoice <span className="font-mono">TEK-2026-0847</span> covering line items <span className="tabular-nums">1-291</span> for PO <span className="font-mono">PO-2026-4421</span>. Payment terms Net 10. Thank you.
                         </div>
-                        <div className="mt-2 flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2 border border-border">
+                        <button
+                            type="button"
+                            onClick={() => setPreviewOpen(true)}
+                            className="mt-2 w-full flex items-center gap-2 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 border border-border hover:border-primary/60 transition-colors group text-left"
+                            aria-label="Preview invoice document"
+                        >
                             <Paperclip className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <FileText className="h-4 w-4 text-foreground" aria-hidden="true" />
                             <div className="flex-1 min-w-0">
                                 <div className="text-xs font-semibold text-foreground truncate">TEK-2026-0847.pdf</div>
                                 <div className="text-[10px] text-muted-foreground tabular-nums">14 pages · 291 line items</div>
                             </div>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-foreground bg-background border border-border rounded px-1.5 py-0.5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors">
+                                <Eye className="h-3 w-3" aria-hidden="true" />
+                                Preview
+                            </span>
                             {phase >= 1 && (
-                                <div className="flex items-center gap-1 text-[10px] font-bold text-ai bg-ai-light rounded px-1.5 py-0.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ai bg-ai-light rounded px-1.5 py-0.5">
                                     <ScanLine className="h-3 w-3" aria-hidden="true" />
                                     OCR
-                                </div>
+                                </span>
                             )}
-                        </div>
+                        </button>
                     </div>
                 </div>
 
@@ -237,7 +248,7 @@ export default function APBillIntakeScene() {
                                 </span>
                                 <button
                                     onClick={nextStep}
-                                    className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-foreground text-background py-1.5 px-3 hover:opacity-80 transition-opacity"
+                                    className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-primary text-primary-foreground py-1.5 px-3 hover:opacity-90 transition-opacity shadow-sm"
                                 >
                                     Open line-item review
                                     <ArrowRight className="h-3 w-3" aria-hidden="true" />
@@ -278,6 +289,17 @@ export default function APBillIntakeScene() {
             </div>
 
             <DataSourcesBar groups={dataGroups} label="Intake pipeline · overnight" />
+
+            {/* Vendor invoice preview · mock (no real PDF for fictional Teknion) */}
+            {bill && (
+                <VendorInvoicePreview
+                    isOpen={previewOpen}
+                    onClose={() => setPreviewOpen(false)}
+                    bill={bill}
+                    vendorName={vendor?.name ?? 'Teknion'}
+                    vendorAddress="1150 Flint Rd · Toronto ON M3J 2J5 · Canada"
+                />
+            )}
         </div>
     )
 }

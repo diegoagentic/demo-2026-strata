@@ -25,7 +25,7 @@ const BUCKETS: { id: ARBucket; label: string; description: string; tone: 'succes
     { id: '0-30',  label: '0-30 days',   description: 'Current · watching',       tone: 'success' },
     { id: '31-60', label: '31-60 days',  description: 'Draft friendly follow-up', tone: 'warning' },
     { id: '61-90', label: '61-90 days',  description: 'Firm follow-up',           tone: 'warning' },
-    { id: '90+',   label: '90+ days',    description: 'Escalate to Jacob',        tone: 'destructive' },
+    { id: '90+',   label: '90+ days',    description: 'Escalate to Accounting lead', tone: 'destructive' },
 ]
 
 const OWNER_META = {

@@ -157,7 +157,7 @@ export default function F2_p23_PreflightScene() {
 
                     {/* Rules legend */}
                     <div className="px-4 py-3 border-t border-border">
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Jacob\'s rules</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Compliance rules</div>
                         <ul className="space-y-0.5 text-[11px] text-muted-foreground">
                             <li>W-9 signed &lt; 12 mo</li>
                             <li>1099-NEC per entity type</li>
@@ -242,13 +242,13 @@ export default function F2_p23_PreflightScene() {
                         <div className="px-4 py-3 border-t border-border bg-success/5 flex items-center gap-2 animate-in fade-in duration-300">
                             <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
                             <span className="text-xs text-foreground flex-1">
-                                All checks passed · vendor is compliant. Ready for {jacob.fullName.split(' ')[0]} sign-off.
+                                All checks passed · vendor is compliant. Ready for compliance sign-off.
                             </span>
                             <button
                                 onClick={nextStep}
-                                className="inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-foreground text-background py-1.5 px-3 hover:opacity-80 transition-opacity"
+                                className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-primary text-primary-foreground py-1.5 px-3 hover:opacity-90 transition-opacity shadow-sm"
                             >
-                                Route to Jacob
+                                Route to compliance sign-off
                                 <ArrowRight className="h-3 w-3" aria-hidden="true" />
                             </button>
                         </div>

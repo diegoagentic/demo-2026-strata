@@ -210,7 +210,7 @@ export default function F2_p24_JacobGateScene() {
                 {(decision === 'releasing' || decision === 'rejecting') && (
                     <div className="shrink-0 inline-flex items-center gap-2 text-sm font-bold text-ai animate-pulse">
                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        {decision === 'releasing' ? 'Adding to Vendor master…' : 'Sending back to Daniel…'}
+                        {decision === 'releasing' ? 'Adding to Vendor master…' : 'Sending back to Accounting…'}
                     </div>
                 )}
                 {decision === 'released' && (
@@ -232,7 +232,7 @@ export default function F2_p24_JacobGateScene() {
                     <div className="shrink-0 flex items-center gap-3">
                         <div className="inline-flex items-center gap-2 text-sm font-bold text-warning">
                             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-                            Sent back to Daniel
+                            Sent back to Accounting
                         </div>
                         <button
                             onClick={nextStep}
@@ -250,7 +250,7 @@ export default function F2_p24_JacobGateScene() {
                 <div className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
                     <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-lg overflow-hidden animate-in zoom-in-95 duration-200">
                         <div className="px-5 py-4 border-b border-border">
-                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Reject reason · send back to Daniel</div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Reject reason · send back to Accounting</div>
                             <div className="text-sm font-semibold text-foreground mt-0.5">Warehouse by Design · vendor request</div>
                         </div>
                         <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto">

@@ -151,12 +151,75 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Sales · Mid-Atlantic · Furniture + Walls',
         photo: 'https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=80&h=80&fit=crop&crop=face',
     },
+    // Projex demo personas · F74/F75 · verbatim role labels from projex-data/personas.ts
+    'Projex CEO': {
+        name: 'Matt Magrann',
+        role: 'CEO · Projex Inc.',
+        photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex Dir Accounting': {
+        name: 'Jacob Swearingen',
+        role: 'Director of Accounting',
+        photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex Sr Accountant': {
+        name: 'Daniel Louw',
+        role: 'Senior Accountant',
+        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex Coord Isabella': {
+        name: 'Isabella Bressler',
+        role: 'Furniture Coordination Lead',
+        photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex Coord Kelly': {
+        name: 'Kelly Endres',
+        role: 'Furniture Coordinator',
+        photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex Walls Director': {
+        name: 'Alec Gieser',
+        role: 'Walls Director',
+        photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex Walls Coord': {
+        name: 'Stacy Aiuppy',
+        role: 'Walls Coordinator',
+        photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex PM': {
+        name: 'Jeff Smith',
+        role: 'Project Manager',
+        photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
+    },
+    'Projex System': {
+        name: 'Strata',
+        role: 'AI Assistant · Projex Inc.',
+        photo: 'https://images.unsplash.com/photo-1618044733300-9472054094ee?w=80&h=80&fit=crop&crop=face',
+    },
 };
 
 // Apps that belong to Expert Hub — everything else is Dealer Experience
 const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quote-detail'];
 
 function resolveProfileKey(role: string | undefined, app: string | undefined): string {
+    // Projex demo · F1 Expert Hub · F2/F3 Dealer Experience · F4/F5 Expert Hub
+    // role labels come verbatim from config/profiles/projex-data/personas.ts
+    if (app?.startsWith('projex-')) {
+        if (role === 'CEO')                       return 'Projex CEO';           // Matt
+        if (role === 'Director of Accounting')    return 'Projex Dir Accounting'; // Jacob
+        if (role === 'Senior Accountant')         return 'Projex Sr Accountant'; // Daniel
+        if (role === 'Walls Director')            return 'Projex Walls Director'; // Alec
+        if (role === 'Walls Coordinator (sole)')  return 'Projex Walls Coord';   // Stacy
+        if (role === 'Project Manager')           return 'Projex PM';            // Jeff
+        if (role === 'Furniture Coordinator') {
+            // Both Kelly (F2) and Isabella (F3/F4/F5) use this role label · disambiguate by app
+            if (app === 'projex-vendor-onboarding') return 'Projex Coord Kelly';
+            return 'Projex Coord Isabella';
+        }
+        if (role === 'System')                    return 'Projex System';
+        return 'Projex Coord Isabella'; // safe default within Projex
+    }
     if (app?.startsWith('bfi-')) {
         if (role === 'Project Manager')      return 'BFI Project Manager';
         if (role === 'Finance / AR')         return 'BFI Finance';

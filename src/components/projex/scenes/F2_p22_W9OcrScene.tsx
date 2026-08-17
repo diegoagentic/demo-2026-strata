@@ -127,7 +127,7 @@ export default function F2_p22_W9OcrScene() {
                     </div>
                     <div>
                         <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{stillNeedsCorrection}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Needs Daniel\'s eyes</div>
+                        <div className="text-[11px] text-muted-foreground mt-1">Needs Accounting review</div>
                     </div>
                 </div>
                 <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
