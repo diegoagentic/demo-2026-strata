@@ -9,10 +9,11 @@
  * NOTIF · dispatchea `projex:draft-sent` on send · advance p3.6 when 3+ sent
  */
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
+import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
     Sparkles, Mail, Send, CheckCircle2, Loader2, Wand2,
-    ArrowRight, User, Clock, Users, Edit3, RotateCcw,
+    ArrowRight, User, Clock, Users, Edit3, RotateCcw, X,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
@@ -51,6 +52,8 @@ export default function F3_p35_CollectionDraftsScene() {
     const [tone, setTone] = useState<Tone>('original')
     const [sentIds, setSentIds] = useState<Set<string>>(new Set())
     const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent'>('idle')
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [lastSent, setLastSent] = useState<{ customer: string; invoice: string; amount: number } | null>(null)
 
     const activeDraft = COLLECTION_DRAFTS.find(d => d.id === selectedId) ?? COLLECTION_DRAFTS[0]
     const activeRecord = PROJEX_AR_RECORDS.find(r => r.id === activeDraft.recordId)
@@ -86,17 +89,33 @@ export default function F3_p35_CollectionDraftsScene() {
         pauseAwareTimeout(() => {
             setSendState('sent')
             setSentIds(prev => new Set([...prev, selectedId]))
+            setLastSent({
+                customer: activeRecord?.customer ?? 'Customer',
+                invoice: activeRecord?.invoiceNumber ?? activeDraft.recordId,
+                amount: activeRecord?.amount ?? 0,
+            })
             window.dispatchEvent(new CustomEvent('projex:draft-sent'))
-            pauseAwareTimeout(() => {
-                setSendState('idle')
-                const nextUnsent = COLLECTION_DRAFTS.find(d => d.id !== selectedId && !sentIds.has(d.id))
-                if (nextUnsent) {
-                    setSelectedId(nextUnsent.id)
-                    setTone('original')
-                }
-            }, 900)
+            // Open confirmation modal · user decides next action
+            pauseAwareTimeout(() => setConfirmOpen(true), 400)
         }, 900)
     }
+
+    const handleContinueToNextStep = () => {
+        setConfirmOpen(false)
+        nextStep()
+    }
+
+    const handleSendNextDraft = () => {
+        setConfirmOpen(false)
+        setSendState('idle')
+        const nextUnsent = COLLECTION_DRAFTS.find(d => d.id !== selectedId && !sentIds.has(d.id))
+        if (nextUnsent) {
+            setSelectedId(nextUnsent.id)
+            setTone('original')
+        }
+    }
+
+    const remainingUnsent = COLLECTION_DRAFTS.filter(d => d.id !== selectedId && !sentIds.has(d.id)).length
 
     const dataGroups: DataSourceGroup[] = [
         { sources: [PROJEX_SOURCES.NETSUITE_BILL] },
@@ -331,6 +350,97 @@ export default function F3_p35_CollectionDraftsScene() {
             )}
 
             <DataSourcesBar groups={dataGroups} label="Collection drafts · AI composer → shared queue → NetSuite Communications" />
+
+            {/* Send confirmation modal · centered */}
+            <Transition show={confirmOpen} as={Fragment}>
+                <Dialog onClose={() => setConfirmOpen(false)} className="relative z-[350]">
+                    <TransitionChild
+                        as={Fragment}
+                        enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+                        leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+                    >
+                        <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm" aria-hidden="true" />
+                    </TransitionChild>
+                    <div className="fixed inset-0 flex items-center justify-center p-4">
+                        <TransitionChild
+                            as={Fragment}
+                            enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
+                            leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+                        >
+                            <DialogPanel className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+                                {/* Header */}
+                                <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border bg-muted/30">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center text-success">
+                                            <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-bold text-foreground">Follow-up sent</div>
+                                            <div className="text-[11px] text-muted-foreground">Logged to Communications tab</div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setConfirmOpen(false)}
+                                        aria-label="Close"
+                                        className="h-8 w-8 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                    >
+                                        <X className="h-4 w-4" aria-hidden="true" />
+                                    </button>
+                                </div>
+
+                                {/* Body */}
+                                <div className="px-5 py-4 space-y-3 text-sm">
+                                    {lastSent && (
+                                        <div className="rounded-lg border border-border bg-background p-3 space-y-1.5">
+                                            <div className="flex justify-between gap-3 text-[12px]">
+                                                <span className="text-muted-foreground">Customer</span>
+                                                <span className="text-foreground font-semibold">{lastSent.customer}</span>
+                                            </div>
+                                            <div className="flex justify-between gap-3 text-[12px]">
+                                                <span className="text-muted-foreground">Invoice</span>
+                                                <span className="text-foreground font-mono">{lastSent.invoice}</span>
+                                            </div>
+                                            <div className="flex justify-between gap-3 text-[12px]">
+                                                <span className="text-muted-foreground">Amount</span>
+                                                <span className="text-foreground font-semibold tabular-nums">${lastSent.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <p className="text-[12px] text-muted-foreground leading-relaxed">
+                                        The AR aging tracker + shared queue update in real-time · AP team of the customer will receive the follow-up email within the next few minutes.
+                                    </p>
+                                    {remainingUnsent > 0 && (
+                                        <div className="flex items-start gap-1.5 rounded-lg border border-info/20 bg-info/5 p-2 text-[11px] text-foreground">
+                                            <Mail className="h-3.5 w-3.5 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                                            <span>{remainingUnsent} draft{remainingUnsent === 1 ? '' : 's'} remain in the queue · send them individually or continue.</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Footer */}
+                                <div className="px-5 py-3 border-t border-border bg-muted/20 flex items-center gap-2">
+                                    {remainingUnsent > 0 && (
+                                        <button
+                                            onClick={handleSendNextDraft}
+                                            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-md px-2.5 py-2 transition-colors"
+                                        >
+                                            <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Send next draft
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleContinueToNextStep}
+                                        className="ml-auto inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                                    >
+                                        Continue to next step
+                                        <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </Dialog>
+            </Transition>
         </div>
     )
 }
