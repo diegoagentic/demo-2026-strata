@@ -12,12 +12,12 @@
 import { useState } from 'react'
 import {
     Printer, DollarSign, CheckCircle2, Loader2, ArrowRight,
-    Edit3, User, Calendar, Building2, FileText,
+    Edit3, User, Calendar, Building2, FileText, Ban, MessageSquare, RotateCcw,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
+import ReasonDialog, { type ReasonPayload } from '../../shared/ReasonDialog'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 
@@ -44,14 +44,17 @@ export default function F3_p32_ProformaReviewScene() {
 
     const [lines, setLines] = useState<LineItem[]>(PROFORMA_LINES)
     const [editingId, setEditingId] = useState<string | null>(null)
-    const [releaseState, setReleaseState] = useState<'idle' | 'releasing' | 'released'>('idle')
+    const [releaseState, setReleaseState] = useState<'idle' | 'releasing' | 'released' | 'rejected'>('idle')
+    const [dialogMode, setDialogMode] = useState<null | 'reject' | 'clarify'>(null)
+    const [rejectPayload, setRejectPayload] = useState<ReasonPayload | null>(null)
+    const [clarifyPayload, setClarifyPayload] = useState<ReasonPayload | null>(null)
 
     const subtotal = lines.reduce((s, l) => s + l.qty * l.unitPrice, 0)
     const depositReceived = 24500 // 40% · matches AR-3421 amount from arAging mock
     const drawAmount = subtotal - depositReceived
 
-    // F76 · AC click highlights Approve+release button (no auto-advance)
-    const highlight = useHighlightOnAcClick('projex:proforma-review-open')
+    // No AC notif · UI shows Approve/Reject/Request info directly
+    const highlight = false
 
     const handleQtyChange = (id: string, newQty: number) => {
         setLines(prev => prev.map(l => l.id === id ? { ...l, qty: Math.max(0, newQty) } : l))
@@ -65,6 +68,45 @@ export default function F3_p32_ProformaReviewScene() {
             window.dispatchEvent(new CustomEvent('projex:proforma-approved'))
         }, 1000)
     }
+
+    const handleRejectSubmit = (payload: ReasonPayload) => {
+        setRejectPayload(payload)
+        setDialogMode(null)
+        setReleaseState('rejected')
+    }
+
+    const handleClarifySubmit = (payload: ReasonPayload) => {
+        setClarifyPayload(payload)
+        setDialogMode(null)
+    }
+
+    const handleUndoReject = () => {
+        setRejectPayload(null)
+        setReleaseState('idle')
+    }
+
+    const REJECT_REASONS = [
+        { id: 'line-item-wrong', label: 'Line item incorrect · quantity or unit price off' },
+        { id: 'deposit-mismatch', label: 'Deposit amount doesn\'t match records' },
+        { id: 'wrong-milestone', label: 'Wrong milestone · should be a different draw %' },
+        { id: 'project-scope',   label: 'Project scope changed · re-draft needed' },
+        { id: 'other',           label: 'Other · describe below' },
+    ]
+
+    const CLARIFY_REASONS = [
+        { id: 'confirm-scope',    label: 'Confirm project scope for this milestone' },
+        { id: 'confirm-deposit',  label: 'Confirm deposit was received (bank statement?)' },
+        { id: 'confirm-freight',  label: 'Confirm freight/design fee calculation' },
+        { id: 'confirm-timing',   label: 'Confirm timing · is client ready for this invoice?' },
+        { id: 'other',            label: 'Other · describe below' },
+    ]
+
+    const rejectReasonLabel = rejectPayload
+        ? REJECT_REASONS.find(r => r.id === rejectPayload.categoryId)?.label ?? 'Other'
+        : null
+    const clarifyReasonLabel = clarifyPayload
+        ? CLARIFY_REASONS.find(r => r.id === clarifyPayload.categoryId)?.label ?? 'Other'
+        : null
 
     const dataGroups: DataSourceGroup[] = [
         { sources: [PROJEX_SOURCES.NETSUITE_BILL] },
@@ -215,21 +257,66 @@ export default function F3_p32_ProformaReviewScene() {
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 border-t border-border">
+                    <div className="p-4 border-t border-border space-y-2">
                         {releaseState === 'idle' && (
-                            <button
-                                onClick={handleRelease}
-                                data-ac-highlight
-                                className={`w-full inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2.5 rounded-lg hover:opacity-90 transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
-                            >
-                                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                Approve + release
-                            </button>
+                            <>
+                                <button
+                                    onClick={handleRelease}
+                                    data-ac-highlight
+                                    className={`w-full inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2.5 rounded-lg hover:opacity-90 transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
+                                >
+                                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                                    Approve + release
+                                </button>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => setDialogMode('clarify')}
+                                        className="inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-2.5 py-2 transition-colors"
+                                    >
+                                        <MessageSquare className="h-3 w-3 text-info" aria-hidden="true" />
+                                        Request info
+                                    </button>
+                                    <button
+                                        onClick={() => setDialogMode('reject')}
+                                        className="inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-destructive bg-background hover:bg-destructive/5 border border-destructive/30 rounded-lg px-2.5 py-2 transition-colors"
+                                    >
+                                        <Ban className="h-3 w-3" aria-hidden="true" />
+                                        Reject
+                                    </button>
+                                </div>
+                                {clarifyReasonLabel && (
+                                    <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-info bg-info/10 rounded px-2 py-1 mt-1">
+                                        <MessageSquare className="h-3 w-3" aria-hidden="true" />
+                                        Clarification sent · {clarifyReasonLabel}
+                                    </div>
+                                )}
+                            </>
                         )}
                         {releaseState === 'releasing' && (
                             <div className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-ai animate-pulse py-2.5">
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                                 Releasing…
+                            </div>
+                        )}
+                        {releaseState === 'rejected' && (
+                            <div className="space-y-2">
+                                <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs">
+                                    <div className="inline-flex items-center gap-1.5 font-bold text-destructive">
+                                        <Ban className="h-3.5 w-3.5" aria-hidden="true" />
+                                        Rejected · returned for re-draft
+                                    </div>
+                                    <div className="text-muted-foreground mt-1">
+                                        <strong className="text-foreground font-semibold">Reason:</strong> {rejectReasonLabel}
+                                        {rejectPayload?.notes && <><br />{rejectPayload.notes}</>}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleUndoReject}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-2.5 py-2 transition-colors"
+                                >
+                                    <RotateCcw className="h-3 w-3" aria-hidden="true" />
+                                    Undo rejection
+                                </button>
                             </div>
                         )}
                         {releaseState === 'released' && (
@@ -256,6 +343,54 @@ export default function F3_p32_ProformaReviewScene() {
             </div>
 
             <DataSourcesBar groups={dataGroups} label="Proforma review · NetSuite draft → coordinator release" />
+
+            {/* Request info dialog · info tone */}
+            <ReasonDialog
+                isOpen={dialogMode === 'clarify'}
+                onClose={() => setDialogMode(null)}
+                onSubmit={handleClarifySubmit}
+                tone="info"
+                title="Request info before releasing"
+                subtitle="Approval stays open · question logged + notification sent · re-review when the answer lands."
+                icon={<MessageSquare className="h-5 w-5" aria-hidden="true" />}
+                categories={CLARIFY_REASONS}
+                defaultCategoryId="confirm-scope"
+                categoryPrompt="What to clarify"
+                notesLabel="Question"
+                notesPlaceholder="e.g. Is the client aware of the milestone tranche timing?"
+                notesRequiredForCategoryId="other"
+                notifyToggle={{
+                    defaultOn: true,
+                    title: 'Ping originator on Teams',
+                    description: 'Sends the question immediately · logs the thread to the proforma record.',
+                }}
+                confirmLabel="Send question"
+                confirmLabelWhenNotifying="Send + ping on Teams"
+            />
+
+            {/* Reject dialog · danger tone */}
+            <ReasonDialog
+                isOpen={dialogMode === 'reject'}
+                onClose={() => setDialogMode(null)}
+                onSubmit={handleRejectSubmit}
+                tone="danger"
+                title="Reject proforma draft"
+                subtitle="Return the proforma for re-draft · Strata will queue the correction request + notify the originator."
+                icon={<Ban className="h-5 w-5" aria-hidden="true" />}
+                categories={REJECT_REASONS}
+                defaultCategoryId="line-item-wrong"
+                categoryPrompt="Reason for rejection"
+                notesLabel="Notes (optional)"
+                notesPlaceholder="Add specific corrections needed…"
+                notesRequiredForCategoryId="other"
+                notifyToggle={{
+                    defaultOn: true,
+                    title: 'Notify originator',
+                    description: 'Sends the reason via Action Center + email · logs decision to the audit trail.',
+                }}
+                confirmLabel="Reject draft"
+                confirmLabelWhenNotifying="Reject + notify"
+            />
         </div>
     )
 }

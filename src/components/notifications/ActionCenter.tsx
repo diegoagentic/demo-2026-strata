@@ -461,7 +461,7 @@ type ProjexStepNotif = BfiStepNotif
 const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
     // F3 · progress billing · dashboards + reviews con context to scan
     'p3.1': 5000,  // threshold alert · scene shows live forecast chart moving
-    'p3.2': 5000,  // proforma review · print-style modal · read line items
+    // p3.2 · no notif
     'p3.3': 4500,  // walls PM gate · handoff + punch list to read
     'p3.4': 5000,  // AR kanban · 4-col exploration across buckets
     'p3.5': 4500,  // collection drafts · shared queue + tone toolbar
@@ -528,16 +528,8 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         event: 'projex:threshold-open',
         footerText: 'Proforma draft ready',
     },
-    'p3.2': {
-        badge: 'Proforma ready', badgeColor: 'ai',
-        title: 'Coordinator · review Fairport proforma draft · $24,500',
-        desc: 'Strata drafted proforma PJX-INV-3421 · print-style replica con 6 line items · deposit deducted (50% · $24,500). Editable line adjustments before release. Isabella keeps final say · never auto-post per Matt\'s "75% AI + human touch" rule.',
-        sender: 'Strata AI · proforma composer',
-        re: 'PJX-INV-3421 · Fairport 40% draw · draft ready',
-        cta: 'Open proforma review →',
-        event: 'projex:proforma-review-open',
-        footerText: 'Isabella to review + release',
-    },
+    // p3.2 · INTERACTIVE step (proforma review) · no AC notif needed ·
+    // scene UI muestra proforma modal + Approve/Reject/Request info directamente.
     'p3.3': {
         badge: 'WC9 gate', badgeColor: 'warning',
         title: 'Walls draw · Director hands off to PM for install-complete confirm',
