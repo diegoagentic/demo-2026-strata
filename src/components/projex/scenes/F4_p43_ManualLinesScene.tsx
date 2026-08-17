@@ -57,6 +57,8 @@ export default function F4_p43_ManualLinesScene() {
     const [genState, setGenState] = useState<GenState>('idle')
     const [modalOpen, setModalOpen] = useState(false)
     const [genStepIdx, setGenStepIdx] = useState(0)
+    // Per-vendor selection · all checked by default · user can exclude before Confirm
+    const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set(VENDOR_BREAKDOWN.map(v => v.code)))
 
     const handleRemove = (lineNumber: number) => {
         setAddedIds(prev => {
@@ -72,14 +74,33 @@ export default function F4_p43_ManualLinesScene() {
     }
 
     const handleOpenGenerate = () => {
+        // Reset selection to all-checked when opening (fresh review each time)
+        setSelectedCodes(new Set(VENDOR_BREAKDOWN.map(v => v.code)))
         setGenState('confirming')
         setModalOpen(true)
         setGenStepIdx(0)
     }
 
     const handleConfirmGenerate = () => {
+        if (selectedCodes.size === 0) return
         setGenState('generating')
         setGenStepIdx(0)
+    }
+
+    const handleToggleVendor = (code: string) => {
+        setSelectedCodes(prev => {
+            const next = new Set(prev)
+            if (next.has(code)) next.delete(code)
+            else next.add(code)
+            return next
+        })
+    }
+
+    const handleToggleAll = () => {
+        setSelectedCodes(prev => prev.size === VENDOR_BREAKDOWN.length
+            ? new Set()
+            : new Set(VENDOR_BREAKDOWN.map(v => v.code))
+        )
     }
 
     // Choreograph the generation steps (900ms each)
@@ -113,8 +134,11 @@ export default function F4_p43_ManualLinesScene() {
     const designFee = productSubtotal * 0.08
     const grandTotal = productSubtotal + snhTotal + designFee
 
-    const totalPOs = VENDOR_BREAKDOWN.reduce((s, v) => s + v.pos, 0)
-    const totalVendorAmount = VENDOR_BREAKDOWN.reduce((s, v) => s + v.amount, 0)
+    const selectedVendors = VENDOR_BREAKDOWN.filter(v => selectedCodes.has(v.code))
+    const excludedVendors = VENDOR_BREAKDOWN.filter(v => !selectedCodes.has(v.code))
+    const totalPOs = selectedVendors.reduce((s, v) => s + v.pos, 0)
+    const totalVendorAmount = selectedVendors.reduce((s, v) => s + v.amount, 0)
+    const allSelected = selectedCodes.size === VENDOR_BREAKDOWN.length
 
     const dataGroups: DataSourceGroup[] = [
         { sources: [PROJEX_SOURCES.NETSUITE_PO] },
@@ -251,12 +275,12 @@ export default function F4_p43_ManualLinesScene() {
                             {genState === 'success' ? (
                                 <>
                                     <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                    26 PO drafts generated
+                                    {totalPOs} PO draft{totalPOs === 1 ? '' : 's'} generated
                                 </>
                             ) : (
                                 <>
                                     <Zap className="h-3.5 w-3.5" aria-hidden="true" />
-                                    Generate 26 PO drafts
+                                    Generate PO drafts · select vendors
                                 </>
                             )}
                         </button>
@@ -325,14 +349,23 @@ export default function F4_p43_ManualLinesScene() {
 
                                 {/* Body */}
                                 <div className="px-5 py-4 max-h-[60vh] overflow-y-auto">
-                                    {/* Confirming · show vendor breakdown */}
+                                    {/* Confirming · show vendor breakdown with per-vendor checkboxes */}
                                     {genState === 'confirming' && (
                                         <div className="space-y-3">
                                             <p className="text-xs text-muted-foreground">
-                                                Strata will create <strong className="text-foreground">{totalPOs} vendor POs</strong> from the MWH residential batch · grouped by vendor with S&amp;H rules applied. Total <strong className="text-foreground tabular-nums">${totalVendorAmount.toLocaleString()}</strong>. Drafts land in the Batch tab for per-card review before send.
+                                                Strata will create <strong className="text-foreground">{totalPOs} vendor POs</strong> from the MWH residential batch · grouped by vendor with S&amp;H rules applied. Total <strong className="text-foreground tabular-nums">${totalVendorAmount.toLocaleString()}</strong>. Uncheck any vendor to exclude it from this run (excluded ones stay in draft state, re-runnable). Drafts land in the Batch tab for per-card review before send.
                                             </p>
                                             <div className="rounded-lg border border-border overflow-hidden">
-                                                <div className="grid grid-cols-[60px_1fr_60px_100px_140px] px-3 py-1.5 bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                                <div className="grid grid-cols-[40px_50px_1fr_50px_100px_130px] px-3 py-1.5 bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground items-center">
+                                                    <label className="inline-flex items-center gap-1 cursor-pointer" title={allSelected ? 'Deselect all' : 'Select all'}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={allSelected}
+                                                            onChange={handleToggleAll}
+                                                            className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary/40 cursor-pointer"
+                                                            aria-label={allSelected ? 'Deselect all vendors' : 'Select all vendors'}
+                                                        />
+                                                    </label>
                                                     <span>Code</span>
                                                     <span>Vendor</span>
                                                     <span className="text-center">POs</span>
@@ -340,27 +373,60 @@ export default function F4_p43_ManualLinesScene() {
                                                     <span className="text-right">Method</span>
                                                 </div>
                                                 <ul className="divide-y divide-border">
-                                                    {VENDOR_BREAKDOWN.map(v => (
-                                                        <li key={v.code} className="grid grid-cols-[60px_1fr_60px_100px_140px] px-3 py-2 text-xs items-center">
-                                                            <span className="font-mono font-semibold text-foreground">{v.code}</span>
-                                                            <div className="min-w-0">
-                                                                <div className="text-foreground font-medium truncate">{v.name}</div>
-                                                                <div className="text-[10px] text-muted-foreground">{v.lines} lines</div>
-                                                            </div>
-                                                            <span className="text-center text-foreground tabular-nums font-semibold">{v.pos}</span>
-                                                            <span className="text-right text-foreground tabular-nums font-semibold">${v.amount.toLocaleString()}</span>
-                                                            <span className="text-right text-[10px] text-muted-foreground truncate">{v.method}</span>
-                                                        </li>
-                                                    ))}
+                                                    {VENDOR_BREAKDOWN.map(v => {
+                                                        const checked = selectedCodes.has(v.code)
+                                                        return (
+                                                            <li
+                                                                key={v.code}
+                                                                onClick={() => handleToggleVendor(v.code)}
+                                                                className={`
+                                                                    grid grid-cols-[40px_50px_1fr_50px_100px_130px] px-3 py-2 text-xs items-center cursor-pointer transition-colors
+                                                                    ${checked ? 'hover:bg-muted/40' : 'bg-muted/40 opacity-60 hover:opacity-80'}
+                                                                `}
+                                                            >
+                                                                <label onClick={e => e.stopPropagation()} className="inline-flex items-center gap-1 cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={checked}
+                                                                        onChange={() => handleToggleVendor(v.code)}
+                                                                        className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary/40 cursor-pointer"
+                                                                        aria-label={`${checked ? 'Exclude' : 'Include'} ${v.name}`}
+                                                                    />
+                                                                </label>
+                                                                <span className={`font-mono font-semibold ${checked ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{v.code}</span>
+                                                                <div className="min-w-0">
+                                                                    <div className={`font-medium truncate ${checked ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{v.name}</div>
+                                                                    <div className="text-[10px] text-muted-foreground">{v.lines} lines</div>
+                                                                </div>
+                                                                <span className={`text-center tabular-nums font-semibold ${checked ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{v.pos}</span>
+                                                                <span className={`text-right tabular-nums font-semibold ${checked ? 'text-foreground' : 'text-muted-foreground line-through'}`}>${v.amount.toLocaleString()}</span>
+                                                                <span className="text-right text-[10px] text-muted-foreground truncate">{v.method}</span>
+                                                            </li>
+                                                        )
+                                                    })}
                                                 </ul>
-                                                <div className="px-3 py-2 bg-muted/40 border-t border-border grid grid-cols-[60px_1fr_60px_100px_140px] text-xs">
+                                                <div className="px-3 py-2 bg-muted/40 border-t border-border grid grid-cols-[40px_50px_1fr_50px_100px_130px] text-xs items-center">
                                                     <span></span>
-                                                    <span className="text-foreground font-bold">Total</span>
+                                                    <span></span>
+                                                    <span className="text-foreground font-bold">
+                                                        Selected
+                                                        {excludedVendors.length > 0 && (
+                                                            <span className="text-[10px] text-muted-foreground font-normal ml-1">
+                                                                · {excludedVendors.length} excluded
+                                                            </span>
+                                                        )}
+                                                    </span>
                                                     <span className="text-center text-foreground font-bold tabular-nums">{totalPOs}</span>
                                                     <span className="text-right text-foreground font-bold tabular-nums">${totalVendorAmount.toLocaleString()}</span>
                                                     <span></span>
                                                 </div>
                                             </div>
+                                            {excludedVendors.length > 0 && (
+                                                <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-[11px] text-foreground">
+                                                    <strong className="text-warning">{excludedVendors.length} vendor{excludedVendors.length === 1 ? '' : 's'} excluded:</strong>{' '}
+                                                    {excludedVendors.map(v => v.name).join(' · ')} · these stay in draft · re-run the generator later to include them.
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -404,7 +470,14 @@ export default function F4_p43_ManualLinesScene() {
                                                 </div>
                                                 <div className="flex items-center justify-between text-xs">
                                                     <span className="text-muted-foreground">Vendors</span>
-                                                    <span className="text-foreground font-bold">{VENDOR_BREAKDOWN.length}</span>
+                                                    <span className="text-foreground font-bold">
+                                                        {selectedVendors.length}
+                                                        {excludedVendors.length > 0 && (
+                                                            <span className="text-[10px] text-muted-foreground font-normal ml-1">
+                                                                · {excludedVendors.length} excluded
+                                                            </span>
+                                                        )}
+                                                    </span>
                                                 </div>
                                                 <div className="flex items-center justify-between text-xs">
                                                     <span className="text-muted-foreground">Status</span>
@@ -433,10 +506,13 @@ export default function F4_p43_ManualLinesScene() {
                                             </button>
                                             <button
                                                 onClick={handleConfirmGenerate}
-                                                className="ml-auto inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                                                disabled={selectedCodes.size === 0}
+                                                className="ml-auto inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-sm"
                                             >
                                                 <Play className="h-3.5 w-3.5" aria-hidden="true" />
-                                                Confirm · generate {totalPOs} POs
+                                                {selectedCodes.size === 0
+                                                    ? 'Select at least one vendor'
+                                                    : `Confirm · generate ${totalPOs} PO${totalPOs === 1 ? '' : 's'}`}
                                             </button>
                                         </>
                                     )}
