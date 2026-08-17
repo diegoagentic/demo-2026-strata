@@ -100,6 +100,7 @@ const ARRIVAL_MAP: Record<string, ArrivalContext> = {
     'p4.1': { breadcrumb: ['Expert Hub', 'Transactions', 'Order intake'], focus: { label: 'MWH residential PIF · just arrived · 300 lines', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'New intake pending review' },
     'p4.2': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · parsing'], focus: { label: 'Strata parsing 300-line PIF', icon: <GitCompare className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'Cost / margin / design fee columns' },
     'p4.3': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · manual lines'], focus: { label: 'Coordinator adding S&H manual rows', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: '26 S&H rows · surcharge · design fee' },
+    'p4.4': { breadcrumb: ['Expert Hub', 'Transactions', 'PO drafts batch', 'MWH residential'], focus: { label: '26 draft POs ready for per-card review', icon: <Package className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'Never one-batch button · FC6 fix' },
     'p4.6': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · snapshot'], focus: { label: 'Auto · consequence of vendor sends', tone: 'muted' }, hint: 'Tri-way match · activity trail' },
 
     // F5 · Expert Hub · electronic ordering + ACK flow

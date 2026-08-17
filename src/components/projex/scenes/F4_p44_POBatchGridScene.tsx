@@ -55,19 +55,19 @@ export default function F4_p44_POBatchGridScene() {
                         <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
                         <span>Order &amp; PO dispatch · step 4</span>
                         <span className="text-muted-foreground/60">·</span>
+                        <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
+                            <Building2 className="h-3 w-3" aria-hidden="true" /> Expert Hub · Transactions
+                        </span>
+                        <span className="text-muted-foreground/60">·</span>
                         <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
                             <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
                         </span>
-                        <span className="text-muted-foreground/60">·</span>
-                        <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
-                            <Package className="h-3 w-3" aria-hidden="true" /> 26 PO batch
-                        </span>
                     </div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Batch PO drafts · 26 tiles multi-vendor · DiffViewer inline
+                        Expert Hub · Transactions · 26 draft POs ready for review
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Never one-batch button (FC6 fix) · per-card review · Coordinator opens each PO for DiffViewer + release intent.
+                        Batch PO drafts landed in the Transactions tab · never one-batch button (FC6 fix) · per-card review · Coordinator opens each PO for DiffViewer + release intent.
                     </p>
                 </div>
                 <div className="text-right shrink-0">
