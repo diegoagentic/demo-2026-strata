@@ -201,7 +201,7 @@ const SCENE_HANDLED_EVENTS = new Set<string>([
     'projex:drafts-open',           // p3.5 · highlight Send follow-up
     'projex:invoice-posted-open',   // p3.6 · dealer portal landing → drill-in GL sync
     'projex:pif-email-open',        // p4.1 · highlight Ingest PIF + SIF
-    'projex:dispatch-open',         // p4.5 · highlight Teknion first Send (FC6)
+    // p4.5 · removed 2026-08-17 · notif deleted (UI self-explanatory)
     'projex:sentinel-clear-open',   // p5.4 · highlight Bulk-clear all sentinels
 ])
 
@@ -225,9 +225,9 @@ const STEP_TO_AC_EVENT: Record<string, string> = {
     'p3.4': 'projex:ar-board-open',         // KEEP-ADVANCE (explore kanban)
     'p3.5': 'projex:drafts-open',           // SCENE-owned (highlight Send draft)
     'p4.1': 'projex:pif-email-open',        // SCENE-owned (highlight Ingest)
-    'p4.3': 'projex:manual-lines-open',     // KEEP-ADVANCE (explore editor)
+    // p4.3 · removed 2026-08-17 · notif deleted (UI self-explanatory + Generate modal flow)
     'p4.4': 'projex:batch-grid-open',       // KEEP-ADVANCE (explore grid)
-    'p4.5': 'projex:dispatch-open',         // SCENE-owned (highlight Teknion Send)
+    // p4.5 · removed 2026-08-17 · notif deleted (UI self-explanatory)
     'p5.3': 'projex:pmo-comparison-open',   // KEEP-ADVANCE (explore split-pane)
     'p5.4': 'projex:sentinel-clear-open',   // SCENE-owned (highlight Bulk-clear)
     'p5.5': 'projex:chain-open',            // KEEP-ADVANCE (chain reveal)

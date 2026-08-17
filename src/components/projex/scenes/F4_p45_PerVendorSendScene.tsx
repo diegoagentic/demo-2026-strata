@@ -17,7 +17,6 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
-import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { MWH_PO_BATCH } from '../../../config/profiles/projex-data/mwhPif'
@@ -40,8 +39,8 @@ export default function F4_p45_PerVendorSendScene() {
     const [heldIds, setHeldIds] = useState<Set<string>>(new Set())
     const [sendingId, setSendingId] = useState<string | null>(null)
 
-    // F76 · AC click highlights first-vendor Send button (Teknion · FC6 "never auto-send")
-    const highlight = useHighlightOnAcClick('projex:dispatch-open')
+    // F76 · No AC notif · UI is self-explanatory (per-vendor Send buttons visible)
+    const highlight = false
 
     // Group by vendor for display
     const byVendor = MWH_PO_BATCH.reduce((acc, po) => {

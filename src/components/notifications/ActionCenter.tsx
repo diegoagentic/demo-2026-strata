@@ -579,16 +579,8 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     // p4.2 · AUTO step (staged 14-line reveal · 5.5s) · no AC notif needed ·
     // parse continues from p4.1 Ingest click; scene reveals lines with confidence.
-    'p4.3': {
-        badge: '26 S&H', badgeColor: 'ai',
-        title: 'S&H manual entries · Coordinator owns freight rules',
-        desc: 'Coordinator adds 26 shipping-and-handling manual entries · EditableLineTable con add-row. Alamir $19 flat rule (<$150) · Nelson prepaid+add · Teknion consolidated · HBF lift-gate delivery. Design fee 8% of product subtotal recomputed live. Coordinator keeps override control.',
-        sender: 'Strata AI · freight rules engine',
-        re: 'MWH · 26 S&H entries · per-vendor freight rules',
-        cta: 'Open manual editor →',
-        event: 'projex:manual-lines-open',
-        footerText: 'Coordinator owns override control',
-    },
+    // p4.3 · INTERACTIVE step (S&H manual entries + Generate flow) · no AC notif ·
+    // scene UI muestra editable table + Generate CTA con confirmation modal.
     'p4.4': {
         badge: '26 draft POs', badgeColor: 'ai',
         title: '26 vendor POs drafted · DiffViewer per card',
@@ -599,16 +591,9 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         event: 'projex:batch-grid-open',
         footerText: 'Click cards para DiffViewer',
     },
-    'p4.5': {
-        badge: 'Ready to release', badgeColor: 'warning',
-        title: 'Per-vendor Send · release Teknion primero · never one-batch',
-        desc: 'SubmitPODialog per PO · Coordinator sends Teknion (SIF Online) primero para start ACK clock · HBF hold para tomorrow · Boss Design review before send. Banner "Never auto-send" visible arriba. Cada release es intentional act (SOT §12b · FC6 fix · Coordinator never trusts auto-send).',
-        sender: 'Strata AI · dispatch orchestrator',
-        re: 'MWH · 26 POs · per-vendor SubmitPODialog · human control',
-        cta: 'Open dispatch console →',
-        event: 'projex:dispatch-open',
-        footerText: 'Never auto-send · 100% intent',
-    },
+    // p4.5 · INTERACTIVE step (per-vendor Send) · no AC notif needed ·
+    // scene UI muestra per-vendor strip con SubmitPODialog + Send/Hold buttons ·
+    // Coordinator decides send order manually (FC6 "never auto-send" preserved).
     // p4.6 · AUTO step (audit trail reveal · 4s) · no AC notif needed ·
     // consequence of p4.5 send; scene auto-timelines the snapshot.
     // p5.1 · AUTO step (3-phase SIF upload · 4.5s) · no AC notif needed ·
