@@ -16,7 +16,7 @@
  *          `projex-billing` · `projex-order-po` · `projex-ack`
  */
 
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { User, Mail, GitCompare, FileText, MessageSquare, Package, ClipboardList } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import ProjexExperienceShell, { type ProjexExperience, type ProjexTab } from './ProjexExperienceShell'
@@ -183,11 +183,63 @@ export default function ProjexPage() {
     return <Shell><ProjexPlaceholderScene scene="ap" /></Shell>
 }
 
+// F75 · Global AC-event fallback · maps Action Center CTA events (per
+// PROJEX_STEP_NOTIFICATIONS in ActionCenter.tsx) to nextStep() so every
+// AC CTA advances the demo by default. Scenes that need custom behavior
+// (open a modal, run choreography) handle their event themselves — those
+// events are listed in SCENE_HANDLED_EVENTS and skipped here to avoid
+// double-firing.
+const SCENE_HANDLED_EVENTS = new Set<string>([
+    'projex:ap-open-teknion',      // p1.1 · fan-out choreography + auto-advance
+    'projex:vendor-intake-open',   // p2.1 · opens intake modal (no advance)
+])
+
+// Verbatim list of AC event names dispatched by PROJEX_STEP_NOTIFICATIONS
+// in ActionCenter.tsx · scenes in SCENE_HANDLED_EVENTS are excluded at runtime.
+const AC_FALLBACK_EVENTS = [
+    'projex:ap-open-teknion',       // F1 p1.1 (SCENE-owned · filtered at runtime)
+    'projex:invoice-posted-open',   // F1 p1.6 arrival
+    'projex:vendor-intake-open',    // F2 p2.1 (SCENE-owned · filtered at runtime)
+    'projex:w9-ocr-open',           // F2 p2.2
+    'projex:preflight-open',        // F2 p2.3
+    'projex:jacob-gate-open',       // F2 p2.4
+    'projex:registry-open',         // F2 p2.5
+    'projex:dealer-readiness-open', // F2 p2.6
+    'projex:threshold-open',        // F3 p3.1
+    'projex:proforma-review-open',  // F3 p3.2
+    'projex:wc9-open',              // F3 p3.3
+    'projex:ar-board-open',         // F3 p3.4
+    'projex:drafts-open',           // F3 p3.5
+    'projex:pif-email-open',        // F4 p4.1
+    'projex:pif-parse-open',        // F4 p4.2
+    'projex:manual-lines-open',     // F4 p4.3
+    'projex:batch-grid-open',       // F4 p4.4
+    'projex:audit-open',            // F4 p4.6
+    'projex:sif-dispatch-open',     // F5 p5.1
+    'projex:ack-ocr-open',          // F5 p5.2
+    'projex:pmo-comparison-open',   // F5 p5.3
+    'projex:sentinel-clear-open',   // F5 p5.4
+    'projex:chain-open',            // F5 p5.5
+    'projex:tracking-open',         // F5 p5.6
+    'projex:dispatch-open',         // generic dispatch fallback
+]
+
 function Shell({ children }: { children: React.ReactNode }) {
-    const { currentStep } = useDemo()
+    const { currentStep, nextStep } = useDemo()
     const app = currentStep?.app
     const stepId = currentStep?.id ?? ''
     const arrival = ARRIVAL_MAP[stepId]
+
+    // Fallback advance · listen for every AC event NOT owned by a specific scene
+    useEffect(() => {
+        const advance = () => nextStep()
+        const listened = AC_FALLBACK_EVENTS.filter(e => !SCENE_HANDLED_EVENTS.has(e))
+        listened.forEach(e => window.addEventListener(e, advance))
+        return () => {
+            listened.forEach(e => window.removeEventListener(e, advance))
+        }
+    }, [nextStep])
+
     return (
         <ProjexExperienceShell experience={experienceFor(app)} activeTab={activeTabFor(app)}>
             {arrival && (

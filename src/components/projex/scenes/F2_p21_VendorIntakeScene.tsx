@@ -9,10 +9,11 @@
  * SHAPE · list landing + centered modal form (F2 primary shape · Dealer)
  * REUSE · shared/AIEmailComposer.tsx presentation="centered" pattern (Dialog)
  *         Vendor requests list · custom (MACRequests-inspired shape)
- * NOTIF · dispatchea `projex:vendor-request-submitted` en submit → advance p2.2
+ * NOTIF · listen `projex:vendor-intake-open` (AC CTA) → open modal ·
+ *         dispatch `projex:vendor-request-submitted` en submit → advance p2.2
  */
 
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
     Sparkles, User, Paperclip, FileText, Send, CheckCircle2,
@@ -71,6 +72,16 @@ export default function F2_p21_VendorIntakeScene() {
     const [modalOpen, setModalOpen] = useState(false)
     const [previewOpen, setPreviewOpen] = useState(false)
     const [submitState, setSubmitState] = useState<SubmitState>('idle')
+
+    // Action Center CTA `Open intake form →` dispatchea `projex:vendor-intake-open`
+    // (ver PROJEX_STEP_NOTIFICATIONS['p2.1']) · abre el modal automáticamente.
+    useEffect(() => {
+        const open = () => {
+            if (submitState === 'idle') setModalOpen(true)
+        }
+        window.addEventListener('projex:vendor-intake-open', open)
+        return () => window.removeEventListener('projex:vendor-intake-open', open)
+    }, [submitState])
 
     const handleSubmit = () => {
         if (submitState !== 'idle') return
