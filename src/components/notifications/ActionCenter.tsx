@@ -465,6 +465,7 @@ const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
     // p3.3 · no notif
     'p3.4': 5000,  // AR kanban · 4-col exploration across buckets
     'p3.5': 4500,  // collection drafts · shared queue + tone toolbar
+    'p3.6': 4000,  // invoice posted · dealer portal landing to scan first
 }
 
 const PROJEX_NOTIF_DEFAULT_DELAY_MS = 2000
@@ -553,8 +554,16 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         event: 'projex:drafts-open',
         footerText: 'Never batch auto-send · per-draft control',
     },
-    // p3.6 · AUTO step (3-step GL sync reveal · 4s) · no AC notif needed ·
-    // consequence step of p3.2 approval; scene runs choreography automatically.
+    'p3.6': {
+        badge: 'Invoice posted', badgeColor: 'success',
+        title: 'Invoice PJX-INV-3421 posted to NetSuite GL · review in Dealer portal',
+        desc: 'Customer Invoice created + journaled to GL (PJX-JE-2026-0842 · $24,500 AR debit / $24,500 sales credit). PDF attached to Communications tab · SharePoint mirror complete. AR aging tracker + Dealer portal update in real-time · click to drill into the GL journal + audit trail from the sync detail.',
+        sender: 'Strata AI · NetSuite GL sync complete',
+        re: 'PJX-INV-3421 · Fairport 40% draw · $24,500 · due 2026-08-24',
+        cta: 'Open GL sync detail →',
+        event: 'projex:invoice-posted-open',
+        footerText: 'Auto · consequence of proforma approval',
+    },
     'p4.1': {
         badge: 'Designer email', badgeColor: 'ai',
         title: 'F4 · Lead Designer emails MWH PIF · 300 lines · 26 vendor split',

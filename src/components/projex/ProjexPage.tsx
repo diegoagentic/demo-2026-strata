@@ -94,7 +94,7 @@ const ARRIVAL_MAP: Record<string, ArrivalContext> = {
     'p3.1': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast'], focus: { label: 'Fairport crossing 50% threshold', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: '5 active projects watched' },
     'p3.2': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast', 'Fairport'], focus: { label: 'Isabella reviewing proforma draft', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: '40% tranche · $58,240' },
     'p3.3': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast', 'MWH Walls'], focus: { label: 'WC9 Walls PM gate · Alec → Stacy', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'warning' }, hint: 'Install-complete confirmation required' },
-    'p3.6': { breadcrumb: ['Dealer Experience', 'Dashboard', 'Billing forecast', 'Fairport'], focus: { label: 'Auto · consequence of proforma approval', tone: 'muted' }, hint: 'Invoice posted → NetSuite journal' },
+    'p3.6': { breadcrumb: ['Dealer Experience', 'Transactions', 'Customer Invoices'], focus: { label: 'PJX-INV-3421 · Fairport 40% draw · just posted', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'Open GL sync detail via Action Center' },
 
     // F4 · Expert Hub · PIF → PO dispatch flow
     'p4.1': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH residential'], focus: { label: 'Layne emailed PIF · attachments 2', icon: <Mail className="h-3 w-3" aria-hidden="true" />, tone: 'info' }, hint: 'Isabella receiving order request' },
@@ -198,6 +198,7 @@ const SCENE_HANDLED_EVENTS = new Set<string>([
     // F76 · SCENE-OWN-FOCUS · highlight primary CTA (useHighlightOnAcClick hook)
     // (p2.4 · p2.6 · p3.2 · p3.3 removed 2026-08-17 · notifs deleted · UI self-explanatory)
     'projex:drafts-open',           // p3.5 · highlight Send follow-up
+    'projex:invoice-posted-open',   // p3.6 · dealer portal landing → drill-in GL sync
     'projex:pif-email-open',        // p4.1 · highlight Ingest PIF + SIF
     'projex:dispatch-open',         // p4.5 · highlight Teknion first Send (FC6)
     'projex:sentinel-clear-open',   // p5.4 · highlight Bulk-clear all sentinels
@@ -219,6 +220,7 @@ const STEP_TO_AC_EVENT: Record<string, string> = {
     // p2.4 · p2.6 removed 2026-08-17 · notifs deleted from ActionCenter
     'p3.1': 'projex:threshold-open',        // KEEP-ADVANCE (view/alert scene)
     // p3.2 · p3.3 removed 2026-08-17 · notifs deleted (UI self-explanatory)
+    'p3.6': 'projex:invoice-posted-open',   // SCENE-owned (dealer portal landing)
     'p3.4': 'projex:ar-board-open',         // KEEP-ADVANCE (explore kanban)
     'p3.5': 'projex:drafts-open',           // SCENE-owned (highlight Send draft)
     'p4.1': 'projex:pif-email-open',        // SCENE-owned (highlight Ingest)
