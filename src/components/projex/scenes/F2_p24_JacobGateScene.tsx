@@ -27,6 +27,7 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
+import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { WBD_W9, WBD_PREFLIGHT } from '../../../config/profiles/projex-data/w9Records'
@@ -48,6 +49,10 @@ export default function F2_p24_JacobGateScene() {
     const [decision, setDecision] = useState<'pending' | 'releasing' | 'released' | 'rejecting' | 'rejected'>('pending')
     const [showReject, setShowReject] = useState(false)
     const [selectedReason, setSelectedReason] = useState<string | null>(null)
+
+    // F76 · Action Center CTA `Open PM confirm →` (event `projex:jacob-gate-open`)
+    // scrolls to + highlights the Release button · user must click to decide.
+    const highlight = useHighlightOnAcClick('projex:jacob-gate-open')
 
     const handleRelease = () => {
         if (decision !== 'pending') return
@@ -200,7 +205,8 @@ export default function F2_p24_JacobGateScene() {
                         </button>
                         <button
                             onClick={handleRelease}
-                            className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-bold px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                            data-ac-highlight
+                            className={`inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-bold px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
                         >
                             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                             Release to NetSuite

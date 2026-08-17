@@ -16,6 +16,7 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
+import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { MWH_TOTALS } from '../../../config/profiles/projex-data/mwhPif'
@@ -26,6 +27,9 @@ export default function F4_p41_DesignerIntakeScene() {
     const isabella = PROJEX_PERSONAS.isabella
 
     const [state, setState] = useState<'landing' | 'ingesting' | 'ingested'>('landing')
+
+    // F76 · AC click highlights Ingest button (never auto-ingest)
+    const highlight = useHighlightOnAcClick('projex:pif-email-open')
 
     const handleIngest = () => {
         if (state !== 'landing') return
@@ -151,7 +155,8 @@ export default function F4_p41_DesignerIntakeScene() {
                         {state === 'landing' && (
                             <button
                                 onClick={handleIngest}
-                                className="w-full inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                                data-ac-highlight
+                                className={`w-full inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2.5 rounded-lg hover:opacity-90 transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
                             >
                                 <Play className="h-3.5 w-3.5" aria-hidden="true" />
                                 Ingest PIF + SIF

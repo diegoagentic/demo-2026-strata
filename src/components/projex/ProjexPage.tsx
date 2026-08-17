@@ -190,42 +190,50 @@ export default function ProjexPage() {
 // events are listed in SCENE_HANDLED_EVENTS and skipped here to avoid
 // double-firing.
 const SCENE_HANDLED_EVENTS = new Set<string>([
-    'projex:ap-open-teknion',      // p1.1 · fan-out choreography + auto-advance
-    'projex:pm-double-check-open', // p1.4 · opens PM double-check composer (no advance)
-    'projex:vendor-intake-open',   // p2.1 · opens intake modal (no advance)
-    'projex:w9-ocr-open',          // p2.2 · queue landing → drill-in OCR simulation
+    // Existing (F75 · F76 pre-audit)
+    'projex:ap-open-teknion',       // p1.1 · fan-out choreography + auto-advance
+    'projex:pm-double-check-open',  // p1.4 · opens PM double-check composer
+    'projex:vendor-intake-open',    // p2.1 · opens intake modal
+    'projex:w9-ocr-open',           // p2.2 · queue landing → drill-in OCR
+    // F76 · SCENE-OWN-FOCUS · highlight primary CTA (useHighlightOnAcClick hook)
+    'projex:jacob-gate-open',       // p2.4 · highlight Release to NetSuite
+    'projex:dealer-readiness-open', // p2.6 · highlight Send refresh request
+    'projex:proforma-review-open',  // p3.2 · highlight Approve + release
+    'projex:wc9-open',              // p3.3 · highlight Confirm installation-complete
+    'projex:drafts-open',           // p3.5 · highlight Send follow-up
+    'projex:pif-email-open',        // p4.1 · highlight Ingest PIF + SIF
+    'projex:dispatch-open',         // p4.5 · highlight Teknion first Send (FC6)
+    'projex:sentinel-clear-open',   // p5.4 · highlight Bulk-clear all sentinels
 ])
 
 // Maps each Projex step to its Action Center CTA event (per
 // PROJEX_STEP_NOTIFICATIONS in ActionCenter.tsx). Used by the Shell's
 // fallback listener to only advance the step when THIS step's own event
 // fires · prevents stale notifs from previous steps advancing the current.
+// Maps each step to its AC event · used by Shell for step-scoped listener.
+// Some events are SCENE-owned (handled by the scene directly · fallback skips
+// them). Others fall through to nextStep() when dispatched.
+// F76 audit removed 6 entries (p2.5 · p3.6 · p4.2 · p4.6 · p5.1 · p5.2 · auto steps).
 const STEP_TO_AC_EVENT: Record<string, string> = {
     'p1.1': 'projex:ap-open-teknion',       // SCENE-owned
     'p1.4': 'projex:pm-double-check-open',  // SCENE-owned
     'p2.1': 'projex:vendor-intake-open',    // SCENE-owned
     'p2.2': 'projex:w9-ocr-open',           // SCENE-owned
-    'p2.4': 'projex:jacob-gate-open',
-    'p2.5': 'projex:registry-open',
-    'p2.6': 'projex:dealer-readiness-open',
-    'p3.1': 'projex:threshold-open',
-    'p3.2': 'projex:proforma-review-open',
-    'p3.3': 'projex:wc9-open',
-    'p3.4': 'projex:ar-board-open',
-    'p3.5': 'projex:drafts-open',
-    'p3.6': 'projex:netsuite-sync-open',
-    'p4.1': 'projex:pif-email-open',
-    'p4.2': 'projex:pif-parse-open',
-    'p4.3': 'projex:manual-lines-open',
-    'p4.4': 'projex:batch-grid-open',
-    'p4.5': 'projex:per-vendor-send-open',
-    'p4.6': 'projex:audit-open',
-    'p5.1': 'projex:sif-dispatch-open',
-    'p5.2': 'projex:ack-ocr-open',
-    'p5.3': 'projex:pmo-comparison-open',
-    'p5.4': 'projex:sentinel-clear-open',
-    'p5.5': 'projex:chain-open',
-    'p5.6': 'projex:tracking-open',
+    'p2.4': 'projex:jacob-gate-open',       // SCENE-owned (highlight Release)
+    'p2.6': 'projex:dealer-readiness-open', // SCENE-owned (highlight Send refresh)
+    'p3.1': 'projex:threshold-open',        // KEEP-ADVANCE (view/alert scene)
+    'p3.2': 'projex:proforma-review-open',  // SCENE-owned (highlight Approve)
+    'p3.3': 'projex:wc9-open',              // SCENE-owned (highlight Confirm)
+    'p3.4': 'projex:ar-board-open',         // KEEP-ADVANCE (explore kanban)
+    'p3.5': 'projex:drafts-open',           // SCENE-owned (highlight Send draft)
+    'p4.1': 'projex:pif-email-open',        // SCENE-owned (highlight Ingest)
+    'p4.3': 'projex:manual-lines-open',     // KEEP-ADVANCE (explore editor)
+    'p4.4': 'projex:batch-grid-open',       // KEEP-ADVANCE (explore grid)
+    'p4.5': 'projex:dispatch-open',         // SCENE-owned (highlight Teknion Send)
+    'p5.3': 'projex:pmo-comparison-open',   // KEEP-ADVANCE (explore split-pane)
+    'p5.4': 'projex:sentinel-clear-open',   // SCENE-owned (highlight Bulk-clear)
+    'p5.5': 'projex:chain-open',            // KEEP-ADVANCE (chain reveal)
+    'p5.6': 'projex:tracking-open',         // KEEP-ADVANCE (final tracker)
 }
 
 function Shell({ children }: { children: React.ReactNode }) {

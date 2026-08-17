@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
+import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -84,6 +85,9 @@ export default function F2_p26_DealerReadinessScene() {
     const [tone, setTone] = useState<Tone>('original')
     const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent'>('idle')
     const activeTone = TONES.find(t => t.id === tone) ?? TONES[0]
+
+    // F76 · AC click highlights Send refresh button (no auto-advance)
+    const highlight = useHighlightOnAcClick('projex:dealer-readiness-open')
 
     const handleSend = () => {
         if (sendState !== 'idle') return
@@ -242,7 +246,8 @@ export default function F2_p26_DealerReadinessScene() {
                         {sendState === 'idle' && (
                             <button
                                 onClick={handleSend}
-                                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity"
+                                data-ac-highlight
+                                className={`inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
                             >
                                 <Send className="h-3.5 w-3.5" aria-hidden="true" />
                                 Send refresh request

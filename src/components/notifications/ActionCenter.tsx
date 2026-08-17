@@ -477,9 +477,9 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     'p2.1': {
         badge: 'Open ticket', badgeColor: 'ai',
-        title: 'F2 · Vendor onboarding · Kelly submits structured intake',
+        title: 'F2 · Vendor onboarding · Coordinator submits structured intake',
         desc: 'Kelly is opening the structured intake form to onboard Warehouse by Design (install vendor · AP9 pattern · Denver Financial project). Free-text email to Daniel is being replaced by structured form + W-9 upfront.',
-        sender: 'Kelly · Furniture Coordinator',
+        sender: 'Coordinator · Furniture',
         re: 'Vendor onboarding · structured intake · start step',
         cta: 'Open intake form →',
         event: 'projex:vendor-intake-open',
@@ -500,27 +500,19 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     // user does not have an action to take here · scene auto-advances on chain complete.
     'p2.4': {
         badge: 'Human decision', badgeColor: 'warning',
-        title: 'Ready for Jacob sign-off · all preflight checks passed',
+        title: 'Ready for compliance sign-off · all preflight checks passed',
         desc: 'Compliance preflight ran clean · 4/4 checks passed (W-9 fresh · not 1099-flagged · ACH verified · US address so no W-8 BEN-E needed). Jacob to review W-9 result + preflight result side-by-side · binary decision Release or Reject with reason. Never auto-post per Matt\'s "75% AI + human touch" rule.',
         sender: 'Strata AI · compliance preflight complete',
         re: 'Warehouse by Design · vendor onboarding · Jacob approval gate',
-        cta: 'Open Jacob review →',
+        cta: 'Open compliance review →',
         event: 'projex:jacob-gate-open',
         footerText: 'Human gate · never auto-post',
     },
-    'p2.5': {
-        badge: 'Vendor added', badgeColor: 'success',
-        title: 'Vendor #734 added to NetSuite master · Warehouse by Design',
-        desc: 'Jacob approved · Warehouse by Design saved to NetSuite Vendor master as record #734. Expiration chip attached (W-9 fresh · 30-day-out warning will fire in ~10 months). Vendor now enters payment pool for Tue Aug 19 payment run.',
-        sender: 'Strata AI · NetSuite Vendor master',
-        re: 'Vendor #734 · Warehouse by Design · saved with expiration tracking',
-        cta: 'Open registry →',
-        event: 'projex:registry-open',
-        footerText: 'Row animate-in from bottom',
-    },
+    // p2.5 · AUTO step (row #734 animates in · 3.5s) · no AC notif needed ·
+    // scene UI narrates itself; notif would be redundant noise + skip-bug tempting.
     'p2.6': {
         badge: '2 expirations', badgeColor: 'warning',
-        title: 'Kelly · 2 W-9 refresh requests due · West Elm 30d · Ryan expired',
+        title: 'Coordinator · 2 W-9 refresh requests due · West Elm 30d · Ryan expired',
         desc: 'Kelly\'s active projects now show Warehouse by Design "Ready for AP" (Denver Financial · Tue Aug 19). Two expiration reminders surface: West Elm W-9 expires in 30 days · Ryan\'s Carpentry already expired (payment run blocker). Pre-drafted "Request W-9 refresh" emails ready with Friendlier/Firmer/Shorter toolbar for Kelly to review y send.',
         sender: 'Strata AI · expiration tracker',
         re: 'Kelly dealer view · W-9 refresh reminders · 2 accounts',
@@ -540,7 +532,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     'p3.2': {
         badge: 'Proforma ready', badgeColor: 'ai',
-        title: 'Isabella · review Fairport proforma draft · $24,500',
+        title: 'Coordinator · review Fairport proforma draft · $24,500',
         desc: 'Strata drafted proforma PJX-INV-3421 · print-style replica con 6 line items · deposit deducted (50% · $24,500). Editable line adjustments before release. Isabella keeps final say · never auto-post per Matt\'s "75% AI + human touch" rule.',
         sender: 'Strata AI · proforma composer',
         re: 'PJX-INV-3421 · Fairport 40% draw · draft ready',
@@ -550,9 +542,9 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     'p3.3': {
         badge: 'WC9 gate', badgeColor: 'warning',
-        title: 'Walls draw · Alec hands off to Stacy for install-complete confirm',
+        title: 'Walls draw · Director hands off to PM for install-complete confirm',
         desc: 'NCBA install completion · Walls 60/30/10 · 30% draw ($18,740) needs Stacy PM confirmation before fires. Alec releases handoff · Stacy receives ConfirmDialog · 5 punch items complete · 18 photos attached. Today waits en Outlook · often delays fires.',
-        sender: 'Alec Gieser · Walls Director',
+        sender: 'Walls Director',
         re: 'NCBA · Walls 30% draw · WC9 installation-complete gate',
         cta: 'Open PM confirm →',
         event: 'projex:wc9-open',
@@ -570,7 +562,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     'p3.5': {
         badge: '5 drafts', badgeColor: 'ai',
-        title: 'Collection emails drafted · shared queue Isabella + Alec',
+        title: 'Collection emails drafted · shared queue Furniture + Walls',
         desc: 'Strata drafted 5 collection emails staged por bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue muestra Isabella + Alec drafts juntos (FC12 fix vs personal Outlook). AIEmailComposer con Friendlier/Firmer/Shorter tone polish · per-draft send.',
         sender: 'Strata AI · email composer',
         re: 'Collection queue · 5 drafts · tone polish available',
@@ -578,41 +570,24 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         event: 'projex:drafts-open',
         footerText: 'Never batch auto-send · per-draft control',
     },
-    'p3.6': {
-        badge: 'Invoice posted', badgeColor: 'success',
-        title: 'PJX-INV-3421 posted to NetSuite GL · Fairport 40% draw released',
-        desc: 'Auto. Proforma flips to Customer Invoice · GL journal PJX-JE-2026-0842 balanced ($24,500 AR debit · $24,500 sales credit). PDF filed a Communications tab · SharePoint mirror. Due 2026-08-24 · adds to collections tracker. Cash flow forward updated.',
-        sender: 'Strata AI · NetSuite GL sync',
-        re: 'PJX-INV-3421 · Customer Invoice posted · GL balanced',
-        attachment: '2026-08-14_Fairport_INV-3421_24500.pdf',
-        cta: 'Open GL entry →',
-        event: 'projex:invoice-posted-open',
-        footerText: 'Journal balanced · PDF filed',
-    },
+    // p3.6 · AUTO step (3-step GL sync reveal · 4s) · no AC notif needed ·
+    // consequence step of p3.2 approval; scene runs choreography automatically.
     'p4.1': {
         badge: 'Designer email', badgeColor: 'ai',
-        title: 'F4 · Layne (designer) emails MWH PIF · 300 lines · 26 vendor split',
+        title: 'F4 · Lead Designer emails MWH PIF · 300 lines · 26 vendor split',
         desc: 'Layne (Lead Designer at Aspire Design) emails Isabella el MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Isabella opens email · previews attachments · confirms Ingest para start parse.',
-        sender: 'Layne · Lead Designer · layne@aspire-design.example',
+        sender: 'Lead Designer · aspire-design.example',
         re: 'MWH residential · PIF + SIF · 300 lines · 26 vendor split',
         attachment: 'MWH_PIF_2026-08-14.xlsx · MWH_CET_export.sif',
-        cta: 'Open Isabella\'s inbox →',
+        cta: 'Open Coordinator inbox →',
         event: 'projex:pif-email-open',
         footerText: 'Never auto-ingest · human confirm',
     },
-    'p4.2': {
-        badge: 'Parsing', badgeColor: 'ai',
-        title: 'PIF parse · vertical extraction 300 lines · Walls AI lot line',
-        desc: 'Auto · Strata parses MWH PIF · vertical extraction con cost/margin/design-fee/total-price columns. AI lot line convention agrupa Walls partitions (WC2 fix). Per-cell OCR confidence · Isabella corrections available for <95% cells. ~15m vs 2.5h manual.',
-        sender: 'Strata AI · PIF parser',
-        re: 'MWH · 300 lines · vertical extraction · Walls AI lot lines',
-        cta: 'Open parser →',
-        event: 'projex:pif-parse-open',
-        footerText: 'Sample 24 lines revealed · full 300 available',
-    },
+    // p4.2 · AUTO step (staged 14-line reveal · 5.5s) · no AC notif needed ·
+    // parse continues from p4.1 Ingest click; scene reveals lines with confidence.
     'p4.3': {
         badge: '26 S&H', badgeColor: 'ai',
-        title: 'S&H manual entries · Isabella owns freight rules',
+        title: 'S&H manual entries · Coordinator owns freight rules',
         desc: 'Isabella adds 26 shipping-and-handling manual entries · EditableLineTable con add-row. Alamir $19 flat rule (<$150) · Nelson prepaid+add · Teknion consolidated · HBF lift-gate delivery. Design fee 8% of product subtotal recomputed live. Isabella keeps override control.',
         sender: 'Strata AI · freight rules engine',
         re: 'MWH · 26 S&H entries · per-vendor freight rules',
@@ -632,7 +607,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     'p4.5': {
         badge: 'Ready to release', badgeColor: 'warning',
-        title: 'Per-vendor Send · Isabella releases Teknion primero · never one-batch',
+        title: 'Per-vendor Send · release Teknion primero · never one-batch',
         desc: 'SubmitPODialog per PO · Isabella sends Teknion (SIF Online) primero para start ACK clock · HBF hold para tomorrow · Boss Design review before send. Banner "Never auto-send" visible arriba. Cada release es intentional act (SOT §12b · FC6 fix · Isabella never trusts auto-send).',
         sender: 'Strata AI · dispatch orchestrator',
         re: 'MWH · 26 POs · per-vendor SubmitPODialog · human control',
@@ -640,36 +615,12 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         event: 'projex:dispatch-open',
         footerText: 'Never auto-send · 100% intent',
     },
-    'p4.6': {
-        badge: 'Batch complete', badgeColor: 'success',
-        title: 'F4 batch complete · SnapshotComparisonView tri-way match',
-        desc: 'Isabella released all 26 POs across 6 vendors · Teknion via SIF · HBF via portal · rest via email. Snapshot recorded · draft=sent=NetSuite record tri-way match confirmed. ActivityTimeline per PO · Tracking initialized · awaiting ACKs (monitor en F5). Total ~15m vs 2.5h manual today.',
-        sender: 'Strata AI · snapshot auditor',
-        re: 'MWH · 26 POs · tri-way match · ACK monitoring active',
-        cta: 'Open snapshot audit →',
-        event: 'projex:audit-open',
-        footerText: 'ACK monitoring begins',
-    },
-    'p5.1': {
-        badge: 'SIF uploaded', badgeColor: 'ai',
-        title: 'F5 · SIF uploaded a Teknion Online · 70% del volumen',
-        desc: 'PO-2026-4421 SIF (NCBA · 71 lines) uploaded a Teknion Online portal. Rest 30% del batch (HBF · Boss · Alamir · Nelson · West Elm) via email PDF con SourceBadge per vendor. Split view mock browser + PO summary + progress bar.',
-        sender: 'Strata AI · SIF dispatcher',
-        re: 'Teknion Online · PO-2026-4421 SIF upload',
-        cta: 'Open dispatch panel →',
-        event: 'projex:sif-dispatch-open',
-        footerText: 'ACK expected 2-4h',
-    },
-    'p5.2': {
-        badge: 'ACKs arriving', badgeColor: 'ai',
-        title: 'ACK PDFs arriving drip-drip · per-vendor OCR confidence',
-        desc: 'AcknowledgementUploadModal OCR extraction · per-vendor confidence variable. Teknion 98% excellent · HBF 91% good · Alamir 74% review-recommended (FC9 fix · confidence scored antes de committing effort). 4 ACKs received · 2 pending (Nelson · West Elm).',
-        sender: 'Strata AI · OCR per vendor',
-        re: 'NCBA ACK queue · per-vendor confidence bands',
-        cta: 'Open OCR queue →',
-        event: 'projex:ack-ocr-open',
-        footerText: 'Alamir needs review · 74%',
-    },
+    // p4.6 · AUTO step (audit trail reveal · 4s) · no AC notif needed ·
+    // consequence of p4.5 send; scene auto-timelines the snapshot.
+    // p5.1 · AUTO step (3-phase SIF upload · 4.5s) · no AC notif needed ·
+    // scene runs the SIF dispatch animation start-to-finish.
+    // p5.2 · AUTO step (drip-drip 6-vendor ACK arrival · 5s) · no AC notif needed ·
+    // scene shows arrival cards with per-vendor confidence chips.
     'p5.3': {
         badge: '13 CRs', badgeColor: 'warning',
         title: 'ACK vs PMO · 71 lines + 13 CRs · Teknion taxonomy real',
@@ -692,7 +643,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     },
     'p5.5': {
         badge: 'Chain ready', badgeColor: 'ai',
-        title: 'Designer chain auto-assembly · Layne → Tate → Josh (FC8)',
+        title: 'Designer chain auto-assembly · Lead → Spec → PM (FC8)',
         desc: 'Strata auto-assembles designer chain thread · Layne (Lead) reviews CR-01 leadtime · Tate (Spec) confirms width changes CR-03/07/12 with client · Josh (PM) signs off. Attachments + replies + timestamps preservados. Replaces Isabella\'s Excel manual assembly (FC8 net-new).',
         sender: 'Strata AI · chain composer',
         re: 'NCBA designer chain · Layne · Tate · Josh sign-off',

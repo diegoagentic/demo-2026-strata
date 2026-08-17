@@ -17,6 +17,7 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
+import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { NCBA_ACK_LINES } from '../../../config/profiles/projex-data/teknionAck'
@@ -28,6 +29,9 @@ export default function F5_p54_SentinelClearScene() {
 
     const [cleared, setCleared] = useState<Set<number>>(new Set())
     const [applyState, setApplyState] = useState<'idle' | 'applying' | 'applied'>('idle')
+
+    // F76 · AC click highlights Bulk-clear button (Multi-Line Edit call-out)
+    const highlight = useHighlightOnAcClick('projex:sentinel-clear-open')
 
     const handleClearOne = (lineNumber: number) => {
         setCleared(prev => new Set([...prev, lineNumber]))
@@ -91,7 +95,8 @@ export default function F5_p54_SentinelClearScene() {
                 {applyState === 'idle' && (
                     <button
                         onClick={handleBulkApply}
-                        className="shrink-0 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity"
+                        data-ac-highlight
+                        className={`shrink-0 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
                     >
                         <Zap className="h-3.5 w-3.5" aria-hidden="true" />
                         Bulk-clear all sentinels

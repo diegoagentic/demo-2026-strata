@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
+import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -48,6 +49,9 @@ export default function F3_p32_ProformaReviewScene() {
     const subtotal = lines.reduce((s, l) => s + l.qty * l.unitPrice, 0)
     const depositReceived = 24500 // 40% · matches AR-3421 amount from arAging mock
     const drawAmount = subtotal - depositReceived
+
+    // F76 · AC click highlights Approve+release button (no auto-advance)
+    const highlight = useHighlightOnAcClick('projex:proforma-review-open')
 
     const handleQtyChange = (id: string, newQty: number) => {
         setLines(prev => prev.map(l => l.id === id ? { ...l, qty: Math.max(0, newQty) } : l))
@@ -215,7 +219,8 @@ export default function F3_p32_ProformaReviewScene() {
                         {releaseState === 'idle' && (
                             <button
                                 onClick={handleRelease}
-                                className="w-full inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                                data-ac-highlight
+                                className={`w-full inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2.5 rounded-lg hover:opacity-90 transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
                             >
                                 <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                                 Approve + release

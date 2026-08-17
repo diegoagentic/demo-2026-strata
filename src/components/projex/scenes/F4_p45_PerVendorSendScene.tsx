@@ -17,6 +17,7 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
+import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { MWH_PO_BATCH } from '../../../config/profiles/projex-data/mwhPif'
@@ -38,6 +39,9 @@ export default function F4_p45_PerVendorSendScene() {
     const [sentIds, setSentIds] = useState<Set<string>>(new Set())
     const [heldIds, setHeldIds] = useState<Set<string>>(new Set())
     const [sendingId, setSendingId] = useState<string | null>(null)
+
+    // F76 · AC click highlights first-vendor Send button (Teknion · FC6 "never auto-send")
+    const highlight = useHighlightOnAcClick('projex:dispatch-open')
 
     // Group by vendor for display
     const byVendor = MWH_PO_BATCH.reduce((acc, po) => {
@@ -115,7 +119,7 @@ export default function F4_p45_PerVendorSendScene() {
 
             {/* Per-vendor strips */}
             <div className="space-y-3">
-                {Object.entries(byVendor).map(([vendorCode, pos]) => {
+                {Object.entries(byVendor).map(([vendorCode, pos], vendorIdx) => {
                     const avatar = VENDOR_AVATAR[vendorCode]
                     const vendorName = pos[0].vendorName
                     const vendorTotal = pos.reduce((s, p) => s + p.amount, 0)
@@ -134,10 +138,12 @@ export default function F4_p45_PerVendorSendScene() {
                                 </div>
                             </div>
                             <div className="divide-y divide-border">
-                                {pos.map(po => {
+                                {pos.map((po, poIdx) => {
                                     const isSent = sentIds.has(po.poNumber)
                                     const isHeld = heldIds.has(po.poNumber)
                                     const isSending = sendingId === po.poNumber
+                                    // First PO of first vendor (Teknion) is the AC highlight target
+                                    const isFirstSendable = vendorIdx === 0 && poIdx === 0
                                     return (
                                         <div key={po.poNumber} className="px-4 py-2 flex items-center gap-3 text-xs">
                                             <span className="text-foreground font-mono truncate w-[140px]">{po.poNumber}</span>
@@ -175,7 +181,8 @@ export default function F4_p45_PerVendorSendScene() {
                                                     <button
                                                         onClick={() => handleSend(po.poNumber)}
                                                         disabled={isHeld}
-                                                        className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground rounded px-2 py-1 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                                                        {...(isFirstSendable ? { 'data-ac-highlight': true } : {})}
+                                                        className={`inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground rounded px-2 py-1 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${isFirstSendable && highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
                                                     >
                                                         <Play className="h-2.5 w-2.5" aria-hidden="true" />
                                                         Send

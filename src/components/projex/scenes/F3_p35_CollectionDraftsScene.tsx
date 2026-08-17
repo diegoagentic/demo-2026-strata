@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
+import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -54,6 +55,9 @@ export default function F3_p35_CollectionDraftsScene() {
     const activeDraft = COLLECTION_DRAFTS.find(d => d.id === selectedId) ?? COLLECTION_DRAFTS[0]
     const activeRecord = PROJEX_AR_RECORDS.find(r => r.id === activeDraft.recordId)
     const rewrittenBody = toneRewrite(activeDraft.body, tone)
+
+    // F76 · AC click highlights Send button (per-draft · never batch auto-send)
+    const highlight = useHighlightOnAcClick('projex:drafts-open')
 
     const handleSend = () => {
         if (sendState !== 'idle') return
@@ -236,7 +240,8 @@ export default function F3_p35_CollectionDraftsScene() {
                             <button
                                 onClick={handleSend}
                                 disabled={sentIds.has(activeDraft.id)}
-                                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                                data-ac-highlight
+                                className={`inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${highlight ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
                             >
                                 <Send className="h-3.5 w-3.5" aria-hidden="true" />
                                 {sentIds.has(activeDraft.id) ? 'Sent' : 'Send follow-up'}
