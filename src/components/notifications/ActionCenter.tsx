@@ -454,6 +454,21 @@ const CLC_STEP_NOTIFICATIONS: Record<string, ClcStepNotif> = {
 
 type ProjexStepNotif = BfiStepNotif
 
+// F76 · Per-step notif delay override for Projex · steps donde la scene UI
+// necesita más tiempo para que el user scan/scroll antes de que aparezca el
+// notif. Steps NO listados heredan el default global (2000ms). Todo el
+// delay corre pause-aware · si el user pausa el demo el timer se congela.
+const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
+    // F3 · progress billing · dashboards + reviews con context to scan
+    'p3.1': 5000,  // threshold alert · scene shows live forecast chart moving
+    'p3.2': 5000,  // proforma review · print-style modal · read line items
+    'p3.3': 4500,  // walls PM gate · handoff + punch list to read
+    'p3.4': 5000,  // AR kanban · 4-col exploration across buckets
+    'p3.5': 4500,  // collection drafts · shared queue + tone toolbar
+}
+
+const PROJEX_NOTIF_DEFAULT_DELAY_MS = 2000
+
 const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p1.1': {
         badge: '2 need eyes', badgeColor: 'ai',
@@ -733,6 +748,8 @@ export default function ActionCenter() {
     const [projexPanelClosed, setProjexPanelClosed] = useState(false);
     // Delay before any notification panel appears (2s after step loads)
     const [notifDelayReady, setNotifDelayReady] = useState(false);
+    // F76 · Projex-specific delay ready (respects per-step delay override)
+    const [projexNotifReady, setProjexNotifReady] = useState(false);
     // Reset all panels when step changes, then reveal after 2s (pause-aware)
     useEffect(() => {
         setA11PanelClosed(false);
@@ -749,8 +766,12 @@ export default function ActionCenter() {
         setClcPanelClosed(false);
         setProjexPanelClosed(false);
         setNotifDelayReady(false);
+        setProjexNotifReady(false);
         const cancel = pauseAwareTimeout(() => setNotifDelayReady(true), 2000);
-        return () => cancel?.();
+        // Projex per-step delay (F3 dashboards need more scan time)
+        const projexDelay = PROJEX_NOTIF_DELAY_MS[currentStep?.id ?? ''] ?? PROJEX_NOTIF_DEFAULT_DELAY_MS;
+        const cancelProjex = pauseAwareTimeout(() => setProjexNotifReady(true), projexDelay);
+        return () => { cancel?.(); cancelProjex?.(); };
     }, [currentStep?.id, pauseAwareTimeout]);
 
     // Step 1.10: Auto-open with single notification
@@ -896,7 +917,7 @@ export default function ActionCenter() {
     const isClcStepActive = !!clcStepConfig && !clcPanelClosed && notifDelayReady;
 
     const projexStepConfig = isDemoActive ? PROJEX_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
-    const isProjexStepActive = !!projexStepConfig && !projexPanelClosed && notifDelayReady;
+    const isProjexStepActive = !!projexStepConfig && !projexPanelClosed && projexNotifReady;
 
     const isStepAutoOpen =
         isStep19 || isStep27 ||
