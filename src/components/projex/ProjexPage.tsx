@@ -192,6 +192,7 @@ export default function ProjexPage() {
 const SCENE_HANDLED_EVENTS = new Set<string>([
     'projex:ap-open-teknion',      // p1.1 · fan-out choreography + auto-advance
     'projex:vendor-intake-open',   // p2.1 · opens intake modal (no advance)
+    'projex:w9-ocr-open',          // p2.2 · queue landing → drill-in OCR simulation
 ])
 
 // Verbatim list of AC event names dispatched by PROJEX_STEP_NOTIFICATIONS
