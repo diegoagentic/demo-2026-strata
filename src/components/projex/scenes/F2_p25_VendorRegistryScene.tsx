@@ -1,9 +1,9 @@
 /**
  * COMPONENT: F2_p25_VendorRegistryScene (Projex · p2.5)
  * PURPOSE: Auto. NetSuite Vendor master registry populates · row #734 highlighted
- *          animate-in-from-bottom. Registry grid muestra 733 vendors + el nuevo ·
+ *          animate-in-from-bottom. Registry grid shows 733 vendors + el nuevo ·
  *          expiration chip por row (fresh green · 30-day-out warning · expired
- *          destructive). Filter por bucket + search por MFG code.
+ *          destructive). Filter by bucket + search by MFG code.
  *
  *          Shape LOCK · data-list-table (F2 primary shape · net-new NOT kanban).
  *
@@ -91,7 +91,7 @@ export default function F2_p25_VendorRegistryScene() {
                         NetSuite Vendor master · #734 lands with expiration tracking
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Warehouse by Design animate-in-from-bottom con W-9 fresh chip. Filter por bucket · search por MFG code.
+                        Warehouse by Design animate-in-from-bottom con W-9 fresh chip. Filter by bucket · search by MFG code.
                     </p>
                 </div>
                 <div className="text-right shrink-0">
@@ -259,7 +259,7 @@ export default function F2_p25_VendorRegistryScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Why the expiration chip matters (VS2)</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Today W-9s live undated en SharePoint · vendors get paid con W-9s años viejos. Expiration tracker + 30-day-out warning surface avoids the weekly payment-run block (VS3) · Coordinator proactively requests W-9 refresh (next step).
+                        Today W-9s live undated in SharePoint · vendors get paid con W-9s years old. Expiration tracker + 30-day-out warning surface avoids the weekly payment-run block (VS3) · Coordinator proactively requests W-9 refresh (next step).
                     </div>
                 </div>
             </div>

@@ -198,7 +198,7 @@ export default function F5_p53_AckPmoReviewScene() {
                 <CheckCircle2 className="h-5 w-5 text-foreground" aria-hidden="true" />
                 <div className="flex-1 min-w-0 text-sm">
                     <span className="text-foreground font-semibold">Comparison ready · 5 CRs need PMO update</span>
-                    <span className="text-muted-foreground"> · sentinel 10/10/2050 clear + real ESDs available · Multi-Line Edit tool bulk update en next step.</span>
+                    <span className="text-muted-foreground"> · sentinel 10/10/2050 clear + real ESDs available · Multi-Line Edit tool bulk update in the next step.</span>
                 </div>
                 <button
                     onClick={nextStep}

@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F2_p22_W9OcrScene (Projex · p2.2)
- * PURPOSE: Two-phase scene. Phase 1 · Accounting aterriza en la OCR queue del Dealer
+ * PURPOSE: Two-phase scene. Phase 1 · Accounting lands in la OCR queue del Dealer
  *          Experience (MAC/Onboarding) · 6 tickets en distintos estados (in
  *          queue · extracting · needs review · approved). WBD row highlighted
  *          como "Just landed" pero el drill-in NO empieza automático — espera
@@ -16,7 +16,7 @@
  * DS TOKENS: bg-card · bg-primary + text-primary-foreground · bg-ai-light + text-ai ·
  *            border-border · text-warning · text-success · tabular-nums
  *
- * SOURCE OF TRUTH: SOT §12b · VS2 undated W-9s en SharePoint · fix con OCR
+ * SOURCE OF TRUTH: SOT §12b · VS2 undated W-9s in SharePoint · fix con OCR
  * REUSE FROM: mbi/SIFParserPreview (bounding-box overlay pattern)
  *
  * NOTIF: listens `projex:w9-ocr-open` (AC CTA) → phase='review' + start reveal ·
@@ -168,7 +168,7 @@ export default function F2_p22_W9OcrScene() {
                 <p className="mt-1 text-sm text-muted-foreground">
                     {phase === 'queue'
                         ? 'Multiple onboarding tickets in-flight across the Dealer Experience · Warehouse by Design just landed · open from the Action Center notification or click the highlighted row to start OCR review.'
-                        : 'Source PDF con bounding-box overlay · per-field confidence · Accounting corrects fields con conf <95%.'}
+                        : 'Source PDF with bounding-box overlay · per-field confidence · Accounting corrects fields with confidence <95%.'}
                 </p>
             </div>
 
@@ -337,7 +337,7 @@ export default function F2_p22_W9OcrScene() {
             {/* Layout · split pane · doc preview (left) + fields extracted (right) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-                {/* Doc preview con bounding-box overlay */}
+                {/* Doc preview with bounding-box overlay */}
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -356,7 +356,7 @@ export default function F2_p22_W9OcrScene() {
                                 <div className="text-[10px] text-muted-foreground">Request for Taxpayer Identification Number and Certification</div>
                             </div>
 
-                            {/* Field 1 · legal name · con bounding-box overlay animated */}
+                            {/* Field 1 · legal name · with bounding-box overlay animated */}
                             <div className={`relative p-2 rounded ${revealed >= 1 ? 'ring-2 ring-ai/40 bg-ai/5 animate-in fade-in duration-300' : ''}`}>
                                 <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Name</div>
                                 <div className="text-sm text-foreground">Warehouse by Design LLC</div>

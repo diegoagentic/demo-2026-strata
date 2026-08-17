@@ -10,7 +10,7 @@
  *          Accounting revisa) · notif → drill-in a NetSuite GL entry.
  *
  * SHAPE · dealer portal AR overview (landing) → sync detail (drill-in)
- * REUSE · workspaces/GLCoreSyncScene pattern (3-step post con comment threads)
+ * REUSE · workspaces/GLCoreSyncScene pattern (3-step post with comment threads)
  * NOTIF · listens `projex:invoice-posted-open` → phase='detail'
  */
 

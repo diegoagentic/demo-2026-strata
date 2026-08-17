@@ -90,7 +90,7 @@ export default function F2_p23_PreflightScene() {
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     Strata runs W-9 freshness · 1099-NEC flag · ACH verification · W-8 BEN-E requirement.
-                    Re-runnable si Accounting edita un field · pause-aware para presenter.
+                    Re-runnable si Accounting edita un field · pause-aware for presenters.
                 </p>
             </div>
 

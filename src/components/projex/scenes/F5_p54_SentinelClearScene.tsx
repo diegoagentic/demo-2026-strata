@@ -89,7 +89,7 @@ export default function F5_p54_SentinelClearScene() {
                 <div className="flex-1 min-w-0 text-sm">
                     <div className="text-foreground font-semibold">Multi-Line Edit tool · NetSuite artifact</div>
                     <div className="text-muted-foreground text-xs mt-0.5">
-                        Coordinator typically clears sentinels one-by-one · Multi-Line Edit tool bulk-updates 71 lines en un click cuando ACK ESDs are ready.
+                        Coordinator typically clears sentinels one-by-one · Multi-Line Edit tool bulk-updates 71 lines in one click when the ACK ESDs are ready.
                     </div>
                 </div>
                 {applyState === 'idle' && (

@@ -1,7 +1,7 @@
 /**
  * COMPONENT: F5_p51_SifUploadScene (Projex · p5.1)
- * PURPOSE: Auto · SIF uploaded a Teknion Online (70% del volumen) + email tail
- *          30% con SourceBadge per vendor. Split view mock browser + PO summary.
+ * PURPOSE: Auto · SIF uploaded a Teknion Online (70% of the volume) + email tail
+ *          30% with SourceBadge per vendor. Split view mock browser + PO summary.
  *
  * SHAPE · split view Teknion Online mock + PO summary card (F5 opening)
  * REUSE · simulations/AgentPipelineStrip (mini) · shared/StatusBadge
@@ -69,10 +69,10 @@ export default function F5_p51_SifUploadScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Teknion Online SIF upload · 70% del volumen + email tail 30%
+                    Teknion Online SIF upload · 70% of the volume + email tail 30%
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    PO-2026-4421 (NCBA · 71 lines) via SIF · rest via email PDF con SourceBadge per vendor.
+                    PO-2026-4421 (NCBA · 71 lines) via SIF · rest via email PDF with SourceBadge per vendor.
                 </p>
             </div>
 
@@ -130,7 +130,7 @@ export default function F5_p51_SifUploadScene() {
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Email tail · 30% del volumen</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Email tail · 30% of the volume</span>
                     </div>
                     <div className="p-4 space-y-2">
                         {emailVendors.map(v => (
@@ -160,7 +160,7 @@ export default function F5_p51_SifUploadScene() {
                     <Building2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">SIF dispatched · ACK monitoring active</span>
-                        <span className="text-muted-foreground"> · Teknion portal ACK expected ~2-4h · email tail drip-drip por vendor.</span>
+                        <span className="text-muted-foreground"> · Teknion portal ACK expected ~2-4h · email tail drip-drip per vendor.</span>
                     </div>
                     <button
                         onClick={nextStep}

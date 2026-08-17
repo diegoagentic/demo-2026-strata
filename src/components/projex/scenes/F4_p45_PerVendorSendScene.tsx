@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F4_p45_PerVendorSendScene (Projex · p4.5)
- * PURPOSE: Coordinator opens SubmitPODialog per PO · sends Teknion primero · HBF hold ·
+ * PURPOSE: Coordinator opens SubmitPODialog per PO · sends Teknion first · HBF hold ·
  *          per-vendor control. Banner "Never auto-send" visible. Cada release
  *          intentional (SOT §12b · FC6 fix).
  *
@@ -146,10 +146,10 @@ export default function F4_p45_PerVendorSendScene() {
                     </span>
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">
-                    Per-vendor Send · Coordinator releases Teknion primero · never one-batch
+                    Per-vendor Send · Coordinator releases Teknion first · never one-batch
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    SubmitPODialog per PO · Teknion (SIF fast) primero · HBF hold para tomorrow · Boss review before send. FC6 human control preserved.
+                    SubmitPODialog per PO · Teknion (SIF fast) primero · HBF hold for tomorrow · Boss review before send. FC6 human control preserved.
                 </p>
             </div>
 
@@ -295,7 +295,7 @@ export default function F4_p45_PerVendorSendScene() {
                     <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">{sentCount} POs released</span>
-                        <span className="text-muted-foreground"> · Teknion via SIF Online · rest via email/portal per delivery. Snapshot tri-way match available en next step.</span>
+                        <span className="text-muted-foreground"> · Teknion via SIF Online · rest via email/portal per delivery. Snapshot tri-way match available in the next step.</span>
                     </div>
                     <button
                         onClick={nextStep}

@@ -124,7 +124,7 @@ export default function F2_p26_DealerReadinessScene() {
                     Dealer readiness · Coordinator sees vendor status per project + expiration reminders
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Warehouse by Design ahora Ready for AP · 2 expiration reminders 30-day-out surface via Action Center.
+                    Warehouse by Design now Ready for AP · 2 expiration reminders 30-day-out surface via Action Center.
                 </p>
             </div>
 

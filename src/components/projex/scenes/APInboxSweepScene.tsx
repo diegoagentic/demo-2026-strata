@@ -477,7 +477,7 @@ export default function APInboxSweepScene() {
             {/* ── Footer · CEO framing + data sources ──────────────────────── */}
             {/* Notif del sweep vive en el Action Center (bell del navbar) ·
                 catalog PROJEX_STEP_NOTIFICATIONS['p1.1'] · dispatchea el evento
-                `projex:ap-open-teknion` que este scene escucha para avanzar */}
+                `projex:ap-open-teknion` that this scene listens to for advance */}
             <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
                     <DollarSign className="h-5 w-5 text-foreground" aria-hidden="true" />

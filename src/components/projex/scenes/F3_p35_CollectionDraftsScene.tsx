@@ -1,7 +1,7 @@
 /**
  * COMPONENT: F3_p35_CollectionDraftsScene (Projex · p3.5)
- * PURPOSE: Strata drafts 5 collection emails staged por bucket. Shared queue
- *          Coordinator+Walls Director (FC12 fix). AIEmailComposer con Friendlier/Firmer/
+ * PURPOSE: Strata drafts 5 collection emails staged by bucket. Shared queue
+ *          Coordinator+Walls Director (FC12 fix). AIEmailComposer with Friendlier/Firmer/
  *          Shorter tone polish. Per-draft send · never batch auto.
  *
  * SHAPE · shared draft queue (left) + email composer (right)
@@ -138,7 +138,7 @@ export default function F3_p35_CollectionDraftsScene() {
                     AI-drafted collection emails · shared queue (Coordinator + Walls Director)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    5 drafts staged por bucket · Friendlier/Firmer/Shorter tone polish · never batch auto-send · FC12 fix.
+                    5 drafts staged by bucket · Friendlier/Firmer/Shorter tone polish · never batch auto-send · FC12 fix.
                 </p>
             </div>
 

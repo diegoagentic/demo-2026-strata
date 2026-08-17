@@ -2,7 +2,7 @@
  * COMPONENT: F3_p33_WallsPMGateScene (Projex · p3.3)
  * PURPOSE: Walls 60/30/10 · 30% draw needs Walls PM PM confirmation. Walls Director handoff
  *          releases · Walls PM receives ConfirmDialog · installation photos + punch
- *          list attached · WC9 gate. Today waits en Outlook · often delays.
+ *          list attached · WC9 gate. Today waits in Outlook · often delays.
  *
  * SHAPE · handoff banner Walls Director→Walls PM + confirm dialog (F3 secondary shape)
  * REUSE · mbi/FlowHandoff shape (persona chain viz) · ConfirmDialog primitive
@@ -68,7 +68,7 @@ export default function F3_p33_WallsPMGateScene() {
                     Walls PM-review gate (WC9) · {alec.fullName.split(' ')[0]} handoff to {stacy.fullName.split(' ')[0]}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Walls 60/30/10 · 30% draw fires only after Walls PM confirms installation-complete. Today waits en Outlook · often delays fires.
+                    Walls 60/30/10 · 30% draw fires only after Walls PM confirms installation-complete. Today waits in Outlook · often delays fires.
                 </p>
             </div>
 
@@ -198,7 +198,7 @@ export default function F3_p33_WallsPMGateScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">WC9 · one of 4 confirmed-High pain points</div>
                     <div className="text-muted-foreground mt-0.5">
-                        {stacy.fullName} is the sole Walls coordinator · her sign-off gates every Walls draw fire. Structured handoff con photo evidence surfaces here vs waiting en Outlook.
+                        {stacy.fullName} is the sole Walls coordinator · her sign-off gates every Walls draw fire. Structured handoff with photo evidence surfaces here vs waiting in Outlook.
                     </div>
                 </div>
             </div>

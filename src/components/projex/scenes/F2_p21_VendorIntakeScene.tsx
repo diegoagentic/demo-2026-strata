@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F2_p21_VendorIntakeScene (Projex · p2.1)
- * PURPOSE: Coordinator aterriza en su vendor requests inbox dentro del Dealer
+ * PURPOSE: Coordinator lands in su vendor requests inbox inside the Dealer
  *          Experience · lista de 4-5 requests históricos + CTA `+ Request
  *          new vendor` que abre un modal centered con el form structured
  *          intake. Submit → confirmación in-line + CTA advance a p2.2 donde
@@ -74,7 +74,7 @@ export default function F2_p21_VendorIntakeScene() {
     const [submitState, setSubmitState] = useState<SubmitState>('idle')
 
     // Action Center CTA `Open intake form →` dispatchea `projex:vendor-intake-open`
-    // (ver PROJEX_STEP_NOTIFICATIONS['p2.1']) · abre el modal automáticamente.
+    // (ver PROJEX_STEP_NOTIFICATIONS['p2.1']) · abre el modal automatically.
     useEffect(() => {
         const open = () => {
             if (submitState === 'idle') setModalOpen(true)
@@ -141,7 +141,7 @@ export default function F2_p21_VendorIntakeScene() {
                         {kelly.fullName.split(' ')[0]}&apos;s vendor requests · submit new · structured intake
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Coordinator aterriza en su queue de requests dentro del Dealer Experience · click <strong className="text-foreground">Request new vendor</strong> abre el form structured (VS1 fix · reemplaza el free-text email a Accounting).
+                        Coordinator lands in su queue de requests inside the Dealer Experience · click <strong className="text-foreground">Request new vendor</strong> abre el form structured (VS1 fix · replaces the free-text email a Accounting).
                     </p>
                 </div>
 
@@ -265,7 +265,7 @@ export default function F2_p21_VendorIntakeScene() {
                     <div className="flex-1 min-w-0 text-xs">
                         <div className="text-foreground font-semibold">Why structured intake matters (VS1)</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Free-text email a Accounting bloquea every other payment run · structured intake carries provenance · W-9 upfront · triggers OCR + preflight automáticamente · Accounting solo reviews.
+                            Free-text email a Accounting bloquea every other payment run · structured intake carries provenance · W-9 upfront · triggers OCR + preflight automatically · Accounting solo reviews.
                         </div>
                     </div>
                 </div>
@@ -309,7 +309,7 @@ export default function F2_p21_VendorIntakeScene() {
                                         <div>
                                             <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Why this vendor · project + scope</label>
                                             <div className="mt-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
-                                                Denver Financial · install crew for phase 2 · Aug 12-13 · quote $3,200 · AP9 install pattern (bills sin PO # · needs PM double-check).
+                                                Denver Financial · install crew for phase 2 · Aug 12-13 · quote $3,200 · AP9 install pattern (bills without PO # · needs PM double-check).
                                             </div>
                                         </div>
 

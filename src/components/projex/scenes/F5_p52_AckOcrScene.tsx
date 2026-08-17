@@ -1,8 +1,8 @@
 /**
  * COMPONENT: F5_p52_AckOcrScene (Projex · p5.2)
- * PURPOSE: ACK PDFs return drip-drip por vendor. AcknowledgementUploadModal OCR.
+ * PURPOSE: ACK PDFs return drip-drip per vendor. AcknowledgementUploadModal OCR.
  *          Per-vendor confidence · Teknion 98% · HBF 91% · Alamir 74% review.
- *          FC9 fix · confidence scored antes de committing effort.
+ *          FC9 fix · confidence scored before committing effort.
  *
  * SHAPE · per-vendor ACK arrival queue with confidence badges (F5 second)
  * REUSE · shared/AcknowledgementUploadModal · expert-hub/ocr/OcrDocCard
@@ -68,7 +68,7 @@ export default function F5_p52_AckOcrScene() {
                     ACK received · per-vendor OCR confidence (FC9 fix)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    ACKs return drip-drip · confidence scored per vendor antes de committing effort. Alamir review-recommended con 74%.
+                    ACKs return drip-drip · confidence scored per vendor before committing effort. Alamir review-recommended con 74%.
                 </p>
             </div>
 
@@ -107,7 +107,7 @@ export default function F5_p52_AckOcrScene() {
                 <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                        ACK arrival queue · drip-drip por vendor
+                        ACK arrival queue · drip-drip per vendor
                     </span>
                     {done ? (
                         <span className="ml-auto text-[10px] font-bold text-success bg-success/10 rounded px-1.5 py-0.5">
@@ -180,7 +180,7 @@ export default function F5_p52_AckOcrScene() {
                     <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">4 ACKs received · 2 pending</span>
-                        <span className="text-muted-foreground"> · Teknion ACK ready for comparison · Alamir needs review antes de commit (conf 74%).</span>
+                        <span className="text-muted-foreground"> · Teknion ACK ready for comparison · Alamir needs review before commit (conf 74%).</span>
                     </div>
                     <button
                         onClick={nextStep}

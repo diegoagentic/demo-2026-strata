@@ -222,8 +222,8 @@ export default function F4_p41_DesignerIntakeScene() {
                             <span className="text-foreground font-semibold">MWH residential · PIF + SIF · 300 lines · 26 vendor split</span>
                         </div>
                         <div className="pt-3 border-t border-border text-[12px] text-foreground/80 leading-relaxed">
-                            Hi Coordinator · attaching PIF workbook con full BOM y SIF export from CET. Big project · 300 lines across Teknion + HBF + Boss + Alamir + Nelson + West Elm. Walls partitions include AI lot line for east wing.
-                            Ready for you to parse and dispatch. Let me know si algo needs clarification.
+                            Hi Coordinator · attaching PIF workbook with full BOM and SIF export from CET. Big project · 300 lines across Teknion + HBF + Boss + Alamir + Nelson + West Elm. Walls partitions include AI lot line for east wing.
+                            Ready for you to parse and dispatch. Let me know if anything needs clarification.
                             — Lead Designer
                         </div>
                         <div className="pt-3 border-t border-border space-y-2">
@@ -328,7 +328,7 @@ export default function F4_p41_DesignerIntakeScene() {
                     <div className="flex-1 min-w-0 text-xs">
                         <div className="text-foreground font-semibold">Why never auto-ingest</div>
                         <div className="text-muted-foreground mt-0.5">
-                            Coordinator escalates project scope changes con Lead Designer before parse locks in. 300-line PIF has downstream implications (26 POs · 2.5h manual work if pattern breaks) · confirmation gate protects.
+                            Coordinator escalates project scope changes with Lead Designer before parse locks in. 300-line PIF has downstream implications (26 POs · 2.5h manual work if pattern breaks) · confirmation gate protects.
                         </div>
                     </div>
                 </div>

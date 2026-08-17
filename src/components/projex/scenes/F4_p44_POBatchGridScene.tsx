@@ -222,7 +222,7 @@ export default function F4_p44_POBatchGridScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Per-vendor release · never one-batch (FC6 fix)</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Click cards to explore diffs · Coordinator sends per-vendor en next step (Teknion primero via SIF · rest per delivery timing).
+                        Click cards to explore diffs · Coordinator sends per-vendor in the next step (Teknion first via SIF · rest per delivery timing).
                     </div>
                 </div>
                 <button

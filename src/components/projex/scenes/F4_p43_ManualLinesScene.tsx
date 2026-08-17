@@ -1,6 +1,6 @@
 /**
  * COMPONENT: F4_p43_ManualLinesScene (Projex · p4.3)
- * PURPOSE: Coordinator adds 26 S&H manual entries · EditableLineTable con add-row.
+ * PURPOSE: Coordinator adds 26 S&H manual entries · EditableLineTable with add-row.
  *          Alamir $19 flat rule · Nelson prepaid+add · Teknion consolidated.
  *          Design fee 8% recomputed live.
  *
@@ -293,7 +293,7 @@ export default function F4_p43_ManualLinesScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Freight rules · per vendor</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Alamir: $19 flat &lt;$150 · Nelson: prepaid+add · Teknion: consolidated · HBF: lift-gate. Coordinator overrides cuando promotion or exception. Never auto-set (FC6 · human control preserved).
+                        Alamir: $19 flat &lt;$150 · Nelson: prepaid+add · Teknion: consolidated · HBF: lift-gate. Coordinator overrides when a promotion applies or exception. Never auto-set (FC6 · human control preserved).
                     </div>
                 </div>
             </div>

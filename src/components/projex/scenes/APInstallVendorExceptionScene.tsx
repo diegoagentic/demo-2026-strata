@@ -1,8 +1,8 @@
 /**
  * COMPONENT: APInstallVendorExceptionScene (Projex · p1.4)
  * PURPOSE: Accounting abre su AP inbox (vista general). Un nuevo Warehouse by
- *          Design bill llega sin PO # · Strata resalta la fila + dispara
- *          notif Action Center · "trabajá este primero". Accounting click → abre
+ *          Design bill llega without PO # · Strata resalta la fila + dispara
+ *          notif Action Center · "work this one first". Accounting click → abre
  *          el canonical AIEmailComposer (slide-over) · Strata pre-drafts el
  *          PM double-check email a PM · un click envía. Held bill queda
  *          "awaiting PM confirmation" hasta que PM responda con el PO #.

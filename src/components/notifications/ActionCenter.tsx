@@ -476,7 +476,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p1.1': {
         badge: '2 need eyes', badgeColor: 'ai',
         title: 'Overnight AP sweep · 14 bills · 12 auto-matched · 2 held',
-        desc: 'Good morning Accounting · Strata swept the AP inbox overnight and matched 12/14 bills exact-to-the-penny against NetSuite POs. 2 held for review: 1 Teknion partial-ship variance on NCBA (bill 8483) + 1 Warehouse-by-Design install invoice sin PO # (AP9 pattern).',
+        desc: 'Good morning Accounting · Strata swept the AP inbox overnight and matched 12/14 bills exact-to-the-penny against NetSuite POs. 2 held for review: 1 Teknion partial-ship variance on NCBA (bill 8483) + 1 Warehouse-by-Design install invoice without PO # (AP9 pattern).',
         sender: 'Strata AI · ap@projex-inc.com · sweep 02:14 → 08:11',
         re: 'AP inbox · 14 vendor bills · 3 legal entities · ready for Accounting',
         cta: 'Open the Teknion 291-line bill →',
@@ -539,7 +539,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p3.4': {
         badge: '7 overdue', badgeColor: 'warning',
         title: 'AR aging board · 7 accounts past due across 3 buckets',
-        desc: 'Shared AR aging kanban 4-col replaces dead-tracker (AR3). 3 accounts in 31-60 bucket ($55,170 total) · 2 in 61-90 ($49,050 · $1,679 late fee) · 2 in 90+ ($18,650 · $930 late fee). Net 10 + 1.5%/mo late fee. Filter por owner Coordinator/Walls/Compliance.',
+        desc: 'Shared AR aging kanban 4-col replaces dead-tracker (AR3). 3 accounts in 31-60 bucket ($55,170 total) · 2 in 61-90 ($49,050 · $1,679 late fee) · 2 in 90+ ($18,650 · $930 late fee). Net 10 + 1.5%/mo late fee. Filter by owner Coordinator/Walls/Compliance.',
         sender: 'Strata AI · AR aging tracker',
         re: 'AR aging board · shared queue · dead-tracker replaced',
         cta: 'Open AR board →',
@@ -549,7 +549,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p3.5': {
         badge: '5 drafts', badgeColor: 'ai',
         title: 'Collection emails drafted · shared queue Furniture + Walls',
-        desc: 'Strata drafted 5 collection emails staged por bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue muestra Coordinator + Walls drafts juntos (FC12 fix vs personal Outlook). AIEmailComposer con Friendlier/Firmer/Shorter tone polish · per-draft send.',
+        desc: 'Strata drafted 5 collection emails staged by bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue shows Coordinator + Walls drafts juntos (FC12 fix vs personal Outlook). AIEmailComposer with Friendlier/Firmer/Shorter tone polish · per-draft send.',
         sender: 'Strata AI · email composer',
         re: 'Collection queue · 5 drafts · tone polish available',
         cta: 'Review + send drafts →',
@@ -569,7 +569,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p4.1': {
         badge: 'Designer email', badgeColor: 'ai',
         title: 'F4 · Lead Designer emails MWH PIF · 300 lines · 26 vendor split',
-        desc: 'Lead Designer (Aspire Design) emails Coordinator el MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Coordinator opens email · previews attachments · confirms Ingest para start parse.',
+        desc: 'Lead Designer (Aspire Design) emails Coordinator el MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Coordinator opens email · previews attachments · confirms Ingest to start the parse.',
         sender: 'Lead Designer · aspire-design.example',
         re: 'MWH residential · PIF + SIF · 300 lines · 26 vendor split',
         attachment: 'MWH_PIF_2026-08-14.xlsx · MWH_CET_export.sif',
@@ -584,15 +584,15 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p4.4': {
         badge: '26 draft POs', badgeColor: 'ai',
         title: '26 vendor POs drafted · DiffViewer per card',
-        desc: 'Strata drafted 26 vendor POs en flat batch grid · 6 anchor vendors visible (Teknion 3 · HBF 2 · Boss 2 · Alamir 2 · Nelson 1 · West Elm 1 + 14 batched). Per-card DiffViewer muestra auto-draft vs prior human baseline · ConversionStatusBadge (draft/ready/needs-review). Never one-batch button.',
+        desc: 'Strata drafted 26 vendor POs in the flat batch grid · 6 anchor vendors visible (Teknion 3 · HBF 2 · Boss 2 · Alamir 2 · Nelson 1 · West Elm 1 + 14 batched). Per-card DiffViewer shows auto-draft vs prior human baseline · ConversionStatusBadge (draft/ready/needs-review). Never one-batch button.',
         sender: 'Strata AI · PO composer',
         re: 'MWH · 26 PO batch · per-vendor split · DiffViewer inline',
         cta: 'Open batch grid →',
         event: 'projex:batch-grid-open',
-        footerText: 'Click cards para DiffViewer',
+        footerText: 'Click cards for DiffViewer',
     },
     // p4.5 · INTERACTIVE step (per-vendor Send) · no AC notif needed ·
-    // scene UI muestra per-vendor strip con SubmitPODialog + Send/Hold buttons ·
+    // scene UI muestra per-vendor strip with SubmitPODialog + Send/Hold buttons ·
     // Coordinator decides send order manually (FC6 "never auto-send" preserved).
     // p4.6 · AUTO step (audit trail reveal · 4s) · no AC notif needed ·
     // consequence of p4.5 send; scene auto-timelines the snapshot.
@@ -613,7 +613,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.4': {
         badge: 'Sentinels ready', badgeColor: 'ai',
         title: 'Clear 10/10/2050 sentinels · Multi-Line Edit tool bulk',
-        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) permite bulk-clear los 12 sample lines en un click · Coordinator confirms cada CR-affected row antes.',
+        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) allows bulk-clear los 12 sample lines in one click · Coordinator confirms each CR-affected row antes.',
         sender: 'Strata AI · sentinel manager',
         re: 'NCBA PMO · 10/10/2050 → real Teknion dates',
         cta: 'Open sentinel clear →',
@@ -633,7 +633,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.6': {
         badge: 'Daily sweep', badgeColor: 'success',
         title: 'F5 complete · daily ESD sweep + shipment tracking',
-        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest en production o scheduling. Multi-Line-Edit tool bulk refresh disponible. Coordinator cierra MWH cycle · monitor deliveries · next threshold coming.',
+        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest in production or scheduling. Multi-Line-Edit tool bulk refresh disponible. Coordinator closes the MWH cycle · monitor deliveries · next threshold coming.',
         sender: 'Strata AI · daily sweep · 08:00 AM',
         re: 'NCBA · 6 shipments tracking · Daily Report saved-search',
         cta: 'Open tracking grid →',

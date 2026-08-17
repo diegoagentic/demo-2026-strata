@@ -180,7 +180,7 @@ export default function ProjexPage() {
         return <Shell><APInboxSweepScene /></Shell>
     }
 
-    // Final fallback · shouldn't hit but keeps placeholder available para future
+    // Final fallback · shouldn't hit but keeps placeholder available for future use
     return <Shell><ProjexPlaceholderScene scene="ap" /></Shell>
 }
 

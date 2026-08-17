@@ -54,7 +54,7 @@ export default function F5_p55_DesignerChainScene() {
                     Designer chain assembly · Lead Designer → Spec Designer → PM Coordinator (FC8 net-new)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Auto-assembled thread con attachments + replies + timestamps. Replaces Coordinator\'s manual Excel assembly.
+                    Auto-assembled thread with attachments + replies + timestamps. Replaces Coordinator\'s manual Excel assembly.
                 </p>
             </div>
 
@@ -127,7 +127,7 @@ export default function F5_p55_DesignerChainScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">FC8 net-new · replaces Coordinator\'s Excel</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Today Coordinator manually threads emails between Lead Designer · Spec Designer · PM Coordinator en Excel · loses attachments · chases sign-offs. Strata auto-assembles chain con attachments preservados + timestamps + CC affordance.
+                        Today Coordinator manually threads emails between Lead Designer · Spec Designer · PM Coordinator in Excel · loses attachments · chases sign-offs. Strata auto-assembles chain with attachments preservados + timestamps + CC affordance.
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@ export default function F5_p55_DesignerChainScene() {
                     <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                     <div className="flex-1 min-w-0 text-sm">
                         <span className="text-foreground font-semibold">Chain signed off by PM Coordinator (PM)</span>
-                        <span className="text-muted-foreground"> · CRs reviewed · PMO ready · shipment tracking begins en next step.</span>
+                        <span className="text-muted-foreground"> · CRs reviewed · PMO ready · shipment tracking begins in the next step.</span>
                     </div>
                     <button
                         onClick={nextStep}

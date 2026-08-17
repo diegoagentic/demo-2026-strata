@@ -182,7 +182,7 @@ export default function F5_p56_ShipmentTrackingScene() {
                 <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
                 <div className="flex-1 min-w-0 text-sm">
                     <span className="text-foreground font-semibold">F5 electronic ordering &amp; ACK complete</span>
-                    <span className="text-muted-foreground"> · NCBA sentinel clear · designer chain assembled · 6 shipments tracked. Coordinator cierra MWH cycle · monitor deliveries.</span>
+                    <span className="text-muted-foreground"> · NCBA sentinel clear · designer chain assembled · 6 shipments tracked. Coordinator closes the MWH cycle · monitor deliveries.</span>
                 </div>
                 <button
                     onClick={restart}

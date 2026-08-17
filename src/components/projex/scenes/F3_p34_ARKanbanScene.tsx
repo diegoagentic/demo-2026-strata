@@ -1,11 +1,11 @@
 /**
  * COMPONENT: F3_p34_ARKanbanScene (Projex · p3.4)
- * PURPOSE: Shared AR aging kanban 4-col por bucket (0-30/31-60/61-90/90+).
+ * PURPOSE: Shared AR aging kanban 4-col by bucket (0-30/31-60/61-90/90+).
  *          Row-per-invoice cards · notes-per-row · ownership assignment.
  *          Replaces dead-tracker (AR3) · Net 10 + 1.5%/mo late fee.
  *
  * SHAPE LOCK · kanban 4-col (F3 primary shape · anti-collision con F1 kanban ·
- * F3 groups por bucket · F1 groups por status)
+ * F3 groups by bucket · F1 groups por status)
  * REUSE · mbi/ARStatusBoard shape adapted a bucket taxonomy (net-new per plan)
  * NOTIF · dispatchea `projex:ar-explored` on any card click
  */
@@ -78,7 +78,7 @@ export default function F3_p34_ARKanbanScene() {
                         </span>
                     </div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        AR aging board · 4-column kanban por bucket
+                        AR aging board · 4-column kanban by bucket
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Replaces dead-tracker (AR3) · Net 10 + 1.5%/mo late fee · notes-per-row · ownership per invoice.
@@ -260,7 +260,7 @@ export default function F3_p34_ARKanbanScene() {
                 <div className="flex-1 min-w-0 text-xs">
                     <div className="text-foreground font-semibold">Bucket taxonomy · net-new for Projex</div>
                     <div className="text-muted-foreground mt-0.5">
-                        Production AR components (mbi/ARStatusBoard) use status taxonomy (escalated/no-response/pending-approval/committed-to-pay) · aquí layered con bucket (0-30/31-60/61-90/90+) porque Compliance CFO reviews by aging days · both visible per card.
+                        Production AR components (mbi/ARStatusBoard) use status taxonomy (escalated/no-response/pending-approval/committed-to-pay) · here layered with bucket (0-30/31-60/61-90/90+) porque Compliance CFO reviews by aging days · both visible per card.
                     </div>
                 </div>
                 <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
