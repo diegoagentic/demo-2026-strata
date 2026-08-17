@@ -97,7 +97,7 @@ const ARRIVAL_MAP: Record<string, ArrivalContext> = {
     'p3.6': { breadcrumb: ['Dealer Experience', 'Transactions', 'Customer Invoices'], focus: { label: 'PJX-INV-3421 · Fairport 40% draw · just posted', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'Open GL sync detail via Action Center' },
 
     // F4 · Expert Hub · PIF → PO dispatch flow
-    'p4.1': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH residential'], focus: { label: 'Layne emailed PIF · attachments 2', icon: <Mail className="h-3 w-3" aria-hidden="true" />, tone: 'info' }, hint: 'Isabella receiving order request' },
+    'p4.1': { breadcrumb: ['Expert Hub', 'Transactions', 'Order intake'], focus: { label: 'MWH residential PIF · just arrived · 300 lines', icon: <FileText className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'New intake pending review' },
     'p4.2': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · parsing'], focus: { label: 'Strata parsing 300-line PIF', icon: <GitCompare className="h-3 w-3" aria-hidden="true" />, tone: 'ai' }, hint: 'Cost / margin / design fee columns' },
     'p4.3': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · manual lines'], focus: { label: 'Isabella adding S&H manual rows', icon: <User className="h-3 w-3" aria-hidden="true" />, tone: 'primary' }, hint: '26 S&H rows · surcharge · design fee' },
     'p4.6': { breadcrumb: ['Expert Hub', 'Transactions', 'PIF inbox', 'MWH PIF · snapshot'], focus: { label: 'Auto · consequence of vendor sends', tone: 'muted' }, hint: 'Tri-way match · activity trail' },

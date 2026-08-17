@@ -466,6 +466,8 @@ const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
     'p3.4': 5000,  // AR kanban · 4-col exploration across buckets
     'p3.5': 4500,  // collection drafts · shared queue + tone toolbar
     'p3.6': 4000,  // invoice posted · dealer portal landing to scan first
+    // F4 · order/PO dispatch · transactions landing needs scan time
+    'p4.1': 4500,  // Expert Hub Transactions · MWH PIF just arrived · scan list first
 }
 
 const PROJEX_NOTIF_DEFAULT_DELAY_MS = 2000
