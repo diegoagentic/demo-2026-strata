@@ -239,7 +239,7 @@ export const PROJEX_STEPS: DemoStep[] = [
         groupId: 3,
         groupTitle: 'Progress billing & collections',
         title: 'AI-drafted collection emails · shared queue (Furniture + Walls)',
-        description: 'Strata drafts 5 collection emails staged by bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue shows drafts from Coordinator + Walls Director juntos · FC12 fix (was personal Outlook tasks). AIEmailComposer with Friendlier/Firmer/Shorter tone polish toolbar · Coordinator reviews · edits inline · sends per-draft (never batch auto).',
+        description: 'Strata drafts 5 collection emails staged by bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue shows drafts from Coordinator + Walls Director together · FC12 fix (was personal Outlook tasks). AIEmailComposer with Friendlier/Firmer/Shorter tone polish toolbar · Coordinator reviews · edits inline · sends per-draft (never batch auto).',
         app: 'projex-billing',
         role: 'Furniture Coordinator',
         flowId: 'projex-billing',
@@ -502,7 +502,7 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
     ],
     // F3 · progress billing · 6 steps
     'p3.1': [
-        'Auto · Fairport phase 2 crosses 50% ordered en W32',
+        'Auto · Fairport phase 2 crosses 50% ordered in W32',
         'Strata drafts proforma PJX-INV-3421 · 40% draw $24,500',
         'Threshold trigger surface in the Action Center',
         'Coordinator receives alert · was invisible until spotted in memory',
@@ -527,12 +527,12 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
     ],
     'p3.5': [
         'Strata drafts 5 collection emails staged by bucket',
-        'Shared queue · drafts from Coordinator + Walls Director juntos (FC12 fix)',
+        'Shared queue · drafts from Coordinator + Walls Director together (FC12 fix)',
         'AIEmailComposer with Friendlier/Firmer/Shorter tone polish',
         'Coordinator reviews · edits inline · sends per-draft (never batch auto)',
     ],
     'p3.6': [
-        'Proforma flips a Customer Invoice · NetSuite GL entry',
+        'Proforma flips to Customer Invoice · NetSuite GL entry',
         '3-step post · validating → creating → notifying',
         'Activity timeline log · state transition visible',
         'Coordinator closes milestone · monitor next threshold',
@@ -594,7 +594,7 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
         '5 warn CRs (width + leadtime) + 8 info',
     ],
     'p5.4': [
-        'AckReviewSlideOver max-w-6xl with PMO editable editable',
+        'AckReviewSlideOver max-w-6xl with PMO editable',
         'Watch 10/10/2050 sentinel → real Teknion dates',
         'Multi-Line Edit tool call-out · bulk update',
         'Coordinator confirms each CR-affected row',
