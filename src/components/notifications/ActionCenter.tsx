@@ -524,7 +524,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p3.1': {
         badge: '1 threshold', badgeColor: 'warning',
         title: 'F3 · Threshold trigger · Fairport phase 2 crosses 50%',
-        desc: 'Live billing forecast fires · Fairport HQ phase 2 ordered % crosses 50 en W32. Strata drafts proforma PJX-INV-3421 ($24,500 · 40% draw) for Coordinator review. Chart animates threshold crossing · alert lands en Action Center.',
+        desc: 'Live billing forecast fires · Fairport HQ phase 2 ordered % crosses 50 in W32. Strata drafts proforma PJX-INV-3421 ($24,500 · 40% draw) for Coordinator review. Chart animates threshold crossing · alert lands in the Action Center.',
         sender: 'Strata AI · live billing forecast · just now',
         re: 'Fairport HQ · Furniture 50/40/10 · 40% draw fires',
         cta: 'Open forecast + draft →',
@@ -549,7 +549,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p3.5': {
         badge: '5 drafts', badgeColor: 'ai',
         title: 'Collection emails drafted · shared queue Furniture + Walls',
-        desc: 'Strata drafted 5 collection emails staged by bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue shows Coordinator + Walls drafts juntos (FC12 fix vs personal Outlook). AIEmailComposer with Friendlier/Firmer/Shorter tone polish · per-draft send.',
+        desc: 'Strata drafted 5 collection emails staged by bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue shows Coordinator + Walls drafts together (FC12 fix vs personal Outlook). AIEmailComposer with Friendlier/Firmer/Shorter tone polish · per-draft send.',
         sender: 'Strata AI · email composer',
         re: 'Collection queue · 5 drafts · tone polish available',
         cta: 'Review + send drafts →',
@@ -569,7 +569,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p4.1': {
         badge: 'Designer email', badgeColor: 'ai',
         title: 'F4 · Lead Designer emails MWH PIF · 300 lines · 26 vendor split',
-        desc: 'Lead Designer (Aspire Design) emails Coordinator el MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Coordinator opens email · previews attachments · confirms Ingest to start the parse.',
+        desc: 'Lead Designer (Aspire Design) emails Coordinator the MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Coordinator opens email · previews attachments · confirms Ingest to start the parse.',
         sender: 'Lead Designer · aspire-design.example',
         re: 'MWH residential · PIF + SIF · 300 lines · 26 vendor split',
         attachment: 'MWH_PIF_2026-08-14.xlsx · MWH_CET_export.sif',
@@ -603,7 +603,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.3': {
         badge: '13 CRs', badgeColor: 'warning',
         title: 'ACK vs PMO · 71 lines + 13 CRs · Teknion taxonomy real',
-        desc: 'AckHeroMatchPanel UN-CUTTABLE hero. Split-pane ACK PDF izq · PMO grid der. 13 CRs Teknion taxonomy: 5 warn (leadtime shifts + width changes) + 8 info (BIFMA advisories + pricer). 58/71 exact match · 13 CRs identified. ThreeWayMatchView per line with status.',
+        desc: 'AckHeroMatchPanel UN-CUTTABLE hero. Split-pane ACK PDF left · PMO grid right. 13 CRs Teknion taxonomy: 5 warn (leadtime shifts + width changes) + 8 info (BIFMA advisories + pricer). 58/71 exact match · 13 CRs identified. ThreeWayMatchView per line with status.',
         sender: 'Strata AI · PMO comparator',
         re: 'PO-2026-4421 · 71 lines · 13 CRs · CR taxonomy',
         cta: 'Open PMO comparison →',
@@ -613,17 +613,17 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.4': {
         badge: 'Sentinels ready', badgeColor: 'ai',
         title: 'Clear 10/10/2050 sentinels · Multi-Line Edit tool bulk',
-        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) allows bulk-clear los 12 sample lines in one click · Coordinator confirms each CR-affected row antes.',
+        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) allows bulk-clear of the 12 sample lines in one click · Coordinator confirms each CR-affected row first.',
         sender: 'Strata AI · sentinel manager',
         re: 'NCBA PMO · 10/10/2050 → real Teknion dates',
         cta: 'Open sentinel clear →',
         event: 'projex:sentinel-clear-open',
-        footerText: 'Bulk update disponible',
+        footerText: 'Bulk update available',
     },
     'p5.5': {
         badge: 'Chain ready', badgeColor: 'ai',
         title: 'Designer chain auto-assembly · Lead → Spec → PM (FC8)',
-        desc: 'Strata auto-assembles designer chain thread · Lead Designer reviews CR-01 leadtime · Spec Designer confirms width changes CR-03/07/12 with client · PM Coordinator signs off. Attachments + replies + timestamps preservados. Replaces Coordinator\'s Excel manual assembly (FC8 net-new).',
+        desc: 'Strata auto-assembles designer chain thread · Lead Designer reviews CR-01 leadtime · Spec Designer confirms width changes CR-03/07/12 with client · PM Coordinator signs off. Attachments + replies + timestamps preserved. Replaces Coordinator\'s Excel manual assembly (FC8 net-new).',
         sender: 'Strata AI · chain composer',
         re: 'NCBA designer chain · Lead Designer · Spec Designer · PM Coordinator sign-off',
         cta: 'Open chain thread →',
@@ -633,7 +633,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p5.6': {
         badge: 'Daily sweep', badgeColor: 'success',
         title: 'F5 complete · daily ESD sweep + shipment tracking',
-        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest in production or scheduling. Multi-Line-Edit tool bulk refresh disponible. Coordinator closes the MWH cycle · monitor deliveries · next threshold coming.',
+        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest in production or scheduling. Multi-Line-Edit tool bulk refresh available. Coordinator closes the MWH cycle · monitor deliveries · next threshold coming.',
         sender: 'Strata AI · daily sweep · 08:00 AM',
         re: 'NCBA · 6 shipments tracking · Daily Report saved-search',
         cta: 'Open tracking grid →',
