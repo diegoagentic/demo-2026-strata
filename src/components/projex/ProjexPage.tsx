@@ -68,12 +68,17 @@ import F5_p56_ShipmentTrackingScene from './scenes/F5_p56_ShipmentTrackingScene'
 const experienceFor = experienceOf
 
 // F75 · Active platform tab per flow (visual-only in shell)
+// F80.5 · Diego 2026-08-21 · Dealer flows re-mapeados al nuevo shell 4-tab
+// (D11 Figma) · vendor onboarding → OCR (W-9 document flow) · billing →
+// Transactions (proforma/customer invoice records). El shell tiene alias
+// legacy → canonical si algún caller pasa el ID viejo · pero acá usamos
+// directamente los nuevos.
 function activeTabFor(app: string | undefined): ProjexTab {
     if (app === 'projex-ap')                return 'transactions'
     if (app === 'projex-order-po')          return 'transactions'
     if (app === 'projex-ack')               return 'comparisons'
-    if (app === 'projex-vendor-onboarding') return 'mac'
-    if (app === 'projex-billing')           return 'dashboard'
+    if (app === 'projex-vendor-onboarding') return 'ocr'          // was 'mac'
+    if (app === 'projex-billing')           return 'transactions' // was 'dashboard'
     return 'transactions'
 }
 
