@@ -279,13 +279,16 @@ function App() {
       : 'Schedule AI';
     const clcCompany = demoProfile.companyName;
 
-    // F74 · Projex — appName follows the active flow; company is Projex Inc.
-    const projexAppName = currentStep.app === 'projex-ap' ? 'AP Intake AI'
-      : currentStep.app === 'projex-vendor-onboarding' ? 'Vendor Onboarding AI'
-      : currentStep.app === 'projex-billing' ? 'Progress Billing AI'
-      : currentStep.app === 'projex-order-po' ? 'Order & PO AI'
-      : currentStep.app === 'projex-ack' ? 'Acknowledgement AI'
-      : 'Projex AI';
+    // F83.B · Diego 2026-08-21 · appName = experience label (`Expert Hub`
+    // or `Dealer Experience`) para match visual con producción · antes
+    // era el flow-specific label ("AP Intake AI" · etc.) que no existe
+    // en prod. Companyname stays "Projex Inc." (tenant real).
+    const isProjexExpertHubApp = isProjex && (
+        currentStep.app === 'projex-ap' ||
+        currentStep.app === 'projex-order-po' ||
+        currentStep.app === 'projex-ack'
+    );
+    const projexAppName = isProjexExpertHubApp ? 'Expert Hub' : 'Dealer Experience';
     const projexCompany = demoProfile.companyName;
 
     const resolvedAppName = isContinua ? continuaAppName
@@ -393,15 +396,35 @@ function App() {
       { name: 'Project Intake AI', page: 'clc-intake', icon: ClipboardCheckIcon },
     ];
 
-    // F74 · Projex profile: 5-tab primary nav (1 tab per flow) · fase 0 shows
-    // placeholder scenes · las scenes reales llegan en Phase 1-5.
-    const projexNav = [
-      { name: 'AP Intake', page: 'projex-ap', icon: BanknotesIcon },
-      { name: 'Vendor Onboarding', page: 'projex-vendor-onboarding', icon: UserPlusIcon },
-      { name: 'Progress Billing', page: 'projex-billing', icon: ChartBarIcon },
-      { name: 'Order & PO', page: 'projex-order-po', icon: DocumentTextIcon },
-      { name: 'ACK Processing', page: 'projex-ack', icon: TruckIcon },
-    ];
+    // F83.B · Diego 2026-08-21 · Projex navbar debe replicar el prod
+    // expert-hub Navbar (4 tabs · OCR Tracking · Transactions · Comparisons
+    // · Feedback) cuando el active step es Expert Hub · Dealer variant (4
+    // tabs · OCR · Observability · Feedback · Transactions) cuando es
+    // Dealer. Antes mostraba 5 flow-tabs (AP Intake · Vendor Onboarding
+    // · etc.) que NO existen en prod. Path switch entre flows sigue
+    // funcionando via el sidebar sub-nav (F80.2).
+    //
+    // Active tab derived from `activeTabFor(currentStep.app)` (ProjexPage
+    // F80.5 mapping) · match visual con prod ExpertHubTransactions.tsx /
+    // OCRTracking.tsx / quote-converter Dealer shell.
+    const isProjexExpertHub = isProjex && (
+        currentStep.app === 'projex-ap' ||
+        currentStep.app === 'projex-order-po' ||
+        currentStep.app === 'projex-ack'
+    );
+    const projexNav = isProjexExpertHub
+      ? [
+          { name: 'OCR Tracking', page: 'projex-ocr' as string, icon: InboxIcon },
+          { name: 'Transactions', page: 'projex-transactions' as string, icon: BanknotesIcon },
+          { name: 'Comparisons', page: 'projex-comparisons' as string, icon: FileSearchIcon },
+          { name: 'Feedback', page: 'projex-feedback' as string, icon: LayoutDashboardIcon },
+        ]
+      : [
+          { name: 'OCR', page: 'projex-ocr' as string, icon: InboxIcon },
+          { name: 'Observability', page: 'projex-observability' as string, icon: BarChart3Icon },
+          { name: 'Feedback', page: 'projex-feedback' as string, icon: LayoutDashboardIcon },
+          { name: 'Transactions', page: 'projex-transactions' as string, icon: BanknotesIcon },
+        ];
 
     const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : isOfficeworks ? officeworksNav : isClc ? clcNav : isProjex ? projexNav : expertNav;
     return { appName: resolvedAppName, companyName: resolvedCompany, customNavigation: nav };
