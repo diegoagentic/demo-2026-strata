@@ -44,11 +44,40 @@ export default {
                 },
                 // Semantic status tokens (added 2026-04 · used by MBI + shared DS).
                 // Dark mode handled via --color-* overrides in variables-dark.css.
-                success: "rgb(from var(--color-success) r g b / <alpha-value>)",
-                warning: "rgb(from var(--color-warning) r g b / <alpha-value>)",
-                info: "rgb(from var(--color-info) r g b / <alpha-value>)",
-                ai: "rgb(from var(--color-ai) r g b / <alpha-value>)",
-                danger: "rgb(from var(--color-danger) r g b / <alpha-value>)",
+                //
+                // F80.0 · Diego 2026-08-21 · added `-light` sub-tokens (fixed
+                // 15% alpha) porque las Projex scenes usaban `bg-ai-light`
+                // etc. como si fueran tokens · pero eran phantom classes
+                // (documented in `expert-hub/DS-VIOLATIONS.md` 2026-08-19).
+                // Ahora emiten CSS válido con opacity fijo · consistente con
+                // el pattern DEFAULT + light variants usado en producción.
+                success: {
+                    DEFAULT: "rgb(from var(--color-success) r g b / <alpha-value>)",
+                    light:   "rgb(from var(--color-success) r g b / 0.15)",
+                },
+                warning: {
+                    DEFAULT: "rgb(from var(--color-warning) r g b / <alpha-value>)",
+                    light:   "rgb(from var(--color-warning) r g b / 0.15)",
+                },
+                info: {
+                    DEFAULT: "rgb(from var(--color-info) r g b / <alpha-value>)",
+                    light:   "rgb(from var(--color-info) r g b / 0.15)",
+                },
+                ai: {
+                    DEFAULT: "rgb(from var(--color-ai) r g b / <alpha-value>)",
+                    light:   "rgb(from var(--color-ai) r g b / 0.15)",
+                },
+                danger: {
+                    DEFAULT: "rgb(from var(--color-danger) r g b / <alpha-value>)",
+                    light:   "rgb(from var(--color-danger) r g b / 0.15)",
+                },
+                // Error alias · algunas scenes usaban `bg-error/text-error`
+                // (phantom · producción usa `danger`). Alias mantiene compat
+                // sin ser el token canonical.
+                error: {
+                    DEFAULT: "rgb(from var(--color-danger) r g b / <alpha-value>)",
+                    light:   "rgb(from var(--color-danger) r g b / 0.15)",
+                },
                 brand: {
                     50: "rgb(from var(--color-brand-50) r g b / <alpha-value>)",
                     100: "rgb(from var(--color-brand-100) r g b / <alpha-value>)",

@@ -19,7 +19,12 @@
 import { useEffect, type ReactNode } from 'react'
 import { User, Mail, GitCompare, FileText, MessageSquare, Package, ClipboardList } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
-import ProjexExperienceShell, { type ProjexExperience, type ProjexTab } from './ProjexExperienceShell'
+import ProjexExperienceShell, { type ProjexTab } from './ProjexExperienceShell'
+// F80.0 · single source of truth for the flow → experience mapping.
+// Antes vivía huérfano como `experienceFor()` local abajo · ahora se
+// importa del profile module para que switcher + shell + navbar
+// compartan la misma verdad.
+import { experienceOf, type ProjexExperience } from '../../config/profiles/projex'
 import ProjexArrivalStrip from './ProjexArrivalStrip'
 import ProjexPlaceholderScene from './scenes/ProjexPlaceholderScene'
 import APInboxSweepScene from './scenes/APInboxSweepScene'
@@ -57,11 +62,10 @@ import F5_p54_SentinelClearScene from './scenes/F5_p54_SentinelClearScene'
 import F5_p55_DesignerChainScene from './scenes/F5_p55_DesignerChainScene'
 import F5_p56_ShipmentTrackingScene from './scenes/F5_p56_ShipmentTrackingScene'
 
-// F75 · Experience mapping per HTML §04
-function experienceFor(app: string | undefined): ProjexExperience {
-    if (app === 'projex-vendor-onboarding' || app === 'projex-billing') return 'dealer'
-    return 'expert-hub' // F1 (ap) · F4 (order-po) · F5 (ack)
-}
+// F80.0 · `experienceFor()` replaced by imported `experienceOf()` above ·
+// mapping definition moved a src/config/profiles/projex.ts (single source
+// of truth for switcher + shell + navbar consumers).
+const experienceFor = experienceOf
 
 // F75 · Active platform tab per flow (visual-only in shell)
 function activeTabFor(app: string | undefined): ProjexTab {

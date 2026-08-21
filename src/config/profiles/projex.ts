@@ -637,3 +637,68 @@ export const PROJEX_SELF_INDICATED: string[] = [
     'p5.3', // 71 lines + 13 CRs · AI comparison
     'p5.6', // Daily ESD sweep · AI
 ];
+
+// ─── EXPERIENCE MAPPING (F80.0 · 2026-08-21) ─────────────────────────────────
+//
+// Single source of truth para el mapping flow → experience (Expert Hub vs
+// Dealer Experience) per HTML §04 Capability Paths. Antes vivía huérfano en
+// `ProjexPage.tsx:experienceFor()` · ahora se importa desde aquí para que
+// el switcher (DemoSidebar), el shell (ProjexExperienceShell) y el navbar
+// (App.tsx projexNav) compartan el mismo mapping.
+
+export type ProjexExperience = 'expert-hub' | 'dealer';
+
+export type ProjexFlowId =
+    | 'projex-ap'
+    | 'projex-vendor-onboarding'
+    | 'projex-billing'
+    | 'projex-order-po'
+    | 'projex-ack';
+
+export const PROJEX_EXPERIENCE_MAP: Record<ProjexFlowId, ProjexExperience> = {
+    'projex-ap':                'expert-hub',   // F1 · AP intake & matching
+    'projex-vendor-onboarding': 'dealer',       // F2 · Vendor onboarding & compliance
+    'projex-billing':           'dealer',       // F3 · Progress billing & collections
+    'projex-order-po':          'expert-hub',   // F4 · Order entry & PO dispatch
+    'projex-ack':               'expert-hub',   // F5 · Electronic ordering & ACK processing
+};
+
+/** Returns 'expert-hub' | 'dealer' for a given flow id. Defaults to
+ *  'expert-hub' when the app string is not a known Projex flow (defensive). */
+export function experienceOf(app: string | undefined): ProjexExperience {
+    if (!app) return 'expert-hub';
+    return PROJEX_EXPERIENCE_MAP[app as ProjexFlowId] ?? 'expert-hub';
+}
+
+/** Grouped view · used by the new 2-tab segmented switcher (F80.2). Each
+ *  entry lists the flows that belong to that experience with their labels
+ *  and step counts (computed lazily from PROJEX_STEPS). */
+export const PROJEX_EXPERIENCE_GROUPS: {
+    id: ProjexExperience;
+    label: string;
+    flows: { id: ProjexFlowId; label: string; short: string }[];
+}[] = [
+    {
+        id: 'expert-hub',
+        label: 'Expert Hub',
+        flows: [
+            { id: 'projex-ap',        label: 'AP intake & matching',                short: 'F1 · AP' },
+            { id: 'projex-order-po',  label: 'Order entry & PO dispatch',           short: 'F4 · Order/PO' },
+            { id: 'projex-ack',       label: 'Electronic ordering & ACK',           short: 'F5 · ACK' },
+        ],
+    },
+    {
+        id: 'dealer',
+        label: 'Dealer Experience',
+        flows: [
+            { id: 'projex-vendor-onboarding', label: 'Vendor onboarding & compliance', short: 'F2 · Vendor onboarding' },
+            { id: 'projex-billing',           label: 'Progress billing & collections', short: 'F3 · Billing' },
+        ],
+    },
+];
+
+/** First flow id of a given experience · used cuando el user clicka el tab
+ *  experience en el switcher · auto-select el primer path de ese grupo. */
+export function firstFlowOf(experience: ProjexExperience): ProjexFlowId {
+    return PROJEX_EXPERIENCE_GROUPS.find(g => g.id === experience)!.flows[0].id;
+}
