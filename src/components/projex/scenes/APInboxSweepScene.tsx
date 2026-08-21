@@ -343,21 +343,15 @@ export default function APInboxSweepScene() {
     return (
         <div className="relative min-h-screen">
             <OCRTrackingWrapper />
-            {/* Floating context CTA · bottom-right · Projex narrative overlay */}
-            <div className="fixed bottom-6 right-6 z-40 flex items-start gap-2 rounded-2xl bg-card border border-border shadow-2xl px-4 py-3 max-w-sm">
-                <Sparkles className="h-5 w-5 text-ai shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="flex-1 min-w-0 text-xs">
-                    <div className="text-foreground font-semibold">Overnight AP sweep · 14 vendor bills</div>
-                    <div className="text-muted-foreground text-[11px] mt-0.5">12 auto-matched exact-to-the-penny · 2 held for review (Teknion partial + Warehouse-by-Design no PO#).</div>
-                    <button
-                        onClick={() => window.dispatchEvent(new CustomEvent('projex:ap-open-teknion'))}
-                        className="mt-2 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
-                    >
-                        Review 291-line Teknion bill
-                        <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                    </button>
-                </div>
-            </div>
+            {/* F83.P · Diego 2026-08-21 · floating "Review 291-line Teknion
+                bill" toast removed · duplicaba el Action Center notif
+                ("Overnight AP sweep · 14 bills · OPEN THE TEKNION 291-LINE
+                BILL →") causando 2 CTAs simultáneas y confusión de cuál
+                dispara el flow. Canonical channel es el AC (memory
+                `feedback-notifications-action-center` · "SIEMPRE al
+                Action Center · NUNCA toasts custom"). AC CTA dispatches
+                `projex:ap-open-teknion` → scene sigue funcional. Same
+                cleanup applied to F4_p41 (F83.K). */}
         </div>
     )
 
