@@ -393,6 +393,13 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                                     Proforma Invoice
                                                 </span>
                                             )}
+                                            {/* F84.31 · Diego 2026-08-21 · same chip pattern for PIF (designer intake) docs. */}
+                                            {/PIF/i.test(doc.name) && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-info/15 text-info rounded-md px-2 py-0.5 shrink-0">
+                                                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
+                                                    PIF · Designer intake
+                                                </span>
+                                            )}
                                             <p className="text-sm text-muted-foreground truncate">{doc.vendor} · {doc.name}</p>
                                             <TransactionVerifyPill orderId={doc.id} />
                                         </div>
@@ -796,7 +803,7 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                             upstream lifecycle chain (Quote-type W-9 / Proforma).
                                             Structural adaptation to the vendor prod-import ·
                                             preserve on re-sync. */}
-                                        {(/W-?9/i.test(doc.name) || /proforma/i.test(doc.name)) && (
+                                        {(/W-?9/i.test(doc.name) || /proforma/i.test(doc.name) || /PIF/i.test(doc.name)) && (
                                             <div className="border-2 border-ai/40 rounded-xl overflow-hidden">
                                                 <div className="bg-ai-light px-4 py-2.5 flex items-center gap-2">
                                                     <Link2 className="h-4 w-4 text-ai" aria-hidden="true" />
