@@ -35,18 +35,30 @@ export default function F5_p53_AckPmoReviewScene() {
     const infoCRs = NCBA_ACK_CRS.filter(c => c.severity === 'info')
     const activeCRDetail = selectedCR ? NCBA_ACK_CRS.find(c => c.id === selectedCR) : null
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    ACK vs PMO · 71 lines + 13 CRs · Teknion taxonomy real
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Split-pane comparison · leadtime · BIFMA advisory · width change · pricer comment. AckHeroMatchPanel replaces Coordinator\'s manual PDF-vs-Excel comparison.
-                </p>
+        <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+            {/* F83.R · slim header · prod ComparisonReviewModal shape ·
+                icon + short title + status pill · muted meta strip. */}
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <GitCompare className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <h2 className="text-base font-bold text-foreground">Compare ACK vs PMO</h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
+                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                        {NCBA_ACK_CRS.length} CRs
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>ACK: <span className="font-mono text-foreground font-semibold">TEK-ACK-2026-08-14</span></span>
+                    <span aria-hidden="true">⇄</span>
+                    <span>PMO: <span className="font-mono text-foreground font-semibold">PO-2026-4421</span></span>
+                    <span>·</span>
+                    <span>NCBA</span>
+                    <span>·</span>
+                    <span className="tabular-nums">{NCBA_ACK_LINES.length} lines · {NCBA_ACK_CRS.length} CRs ({warnCRs.length} warn · {infoCRs.length} info)</span>
+                    <span>·</span>
+                    <span>Reviewer <span className="text-foreground">{isabella.fullName.split(' ')[0]}</span></span>
+                </div>
             </div>
-
-            {/* F83.A · KPI summary hero removed · prod has zero metrics ·
-                 CR counts pueden vivir en el header del split-pane si necesario. */}
 
             {/* Split-pane · ACK PDF (izq) + PMO grid (der) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">

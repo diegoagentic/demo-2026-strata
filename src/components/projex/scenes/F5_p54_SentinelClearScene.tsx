@@ -54,14 +54,29 @@ export default function F5_p54_SentinelClearScene() {
     const clearedCount = cleared.size
     const totalLines = NCBA_ACK_LINES.length
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    Clear 10/10/2050 sentinels · PMO update with real Teknion ESDs
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Watch each row\'s ESD transition · sentinel placeholder → real date. Multi-Line Edit tool bulk update disponible.
-                </p>
+        <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+            {/* F83.R · slim header · prod ComparisonReviewModal shape */}
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <h2 className="text-base font-bold text-foreground">Clear PMO sentinels · NCBA</h2>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${applyState === 'applied' ? 'bg-success/15 text-success' : applyState === 'applying' ? 'bg-ai-light text-ai' : 'bg-primary/15 text-foreground'}`}>
+                        {applyState === 'applied'
+                            ? <><CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Sentinels cleared</>
+                            : applyState === 'applying'
+                                ? <><Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" /> Applying</>
+                                : <><Wrench className="h-3 w-3" aria-hidden="true" /> Multi-Line Edit ready</>}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>PMO: <span className="font-mono text-foreground font-semibold">PO-2026-4421</span></span>
+                    <span>·</span>
+                    <span>Placeholder: <span className="font-mono text-foreground">10/10/2050</span> → real Teknion ESDs</span>
+                    <span>·</span>
+                    <span className="tabular-nums">{clearedCount}/{totalLines} cleared</span>
+                    <span>·</span>
+                    <span>Reviewer <span className="text-foreground">{isabella.fullName.split(' ')[0]}</span></span>
+                </div>
             </div>
 
             {/* Multi-Line Edit callout */}

@@ -50,14 +50,26 @@ export default function F5_p51_SifUploadScene() {
 
     const emailVendors = VENDOR_ACK_CONF.filter(v => v.vendorCode !== 'TEK')
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    Teknion Online SIF upload · 70% of the volume + email tail 30%
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    PO-2026-4421 (NCBA · 71 lines) via SIF · rest via email PDF with SourceBadge per vendor.
-                </p>
+        <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+            {/* F83.R · slim header · prod ComparisonReviewModal shape · row 1
+                icon + short title + status pill · row 2 muted meta strip. */}
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Upload className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <h2 className="text-base font-bold text-foreground">SIF dispatch · NCBA · PO-2026-4421</h2>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${done ? 'bg-success/15 text-success' : 'bg-ai-light text-ai'}`}>
+                        {done
+                            ? <><CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Uploaded · queued</>
+                            : <><Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" /> Uploading · {currentPct}%</>}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>Portal: <span className="font-mono text-foreground font-semibold">Teknion Online</span></span>
+                    <span>·</span>
+                    <span className="tabular-nums">71 lines · SIF v4.2</span>
+                    <span>·</span>
+                    <span>70% Teknion SIF path · 30% email PDF tail ({emailVendors.length} vendors)</span>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">

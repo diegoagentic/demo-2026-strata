@@ -54,24 +54,13 @@ export default function F5_p52_AckOcrScene() {
     return (
         <div className="relative min-h-screen">
             <OCRTrackingWrapper />
-            <div className="fixed bottom-6 right-6 z-40 flex items-start gap-2 rounded-2xl bg-card border border-border shadow-2xl px-4 py-3 max-w-sm">
-                <Sparkles className="h-5 w-5 text-ai shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="flex-1 min-w-0 text-xs">
-                    <div className="text-foreground font-semibold">ACK arrivals · per-vendor confidence</div>
-                    <div className="text-muted-foreground text-[11px] mt-0.5">
-                        {arrivedIdx} of {VENDOR_ACK_CONF.length} ACKs · Teknion 98% · HBF 91% · Alamir 74% (review recommended)
-                    </div>
-                    {done && (
-                        <button
-                            onClick={nextStep}
-                            className="mt-2 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
-                        >
-                            Open ACK vs PMO comparison
-                            <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                        </button>
-                    )}
-                </div>
-            </div>
+            {/* F83.R · Diego 2026-08-21 · floating context CTA removed ·
+                mismo pattern que F83.K (F4_p41) y F83.P (F1_p1.1) · el AC
+                notif ya carrega la narrativa "ACK arrivals · per-vendor
+                confidence" y el CTA "Open ACK vs PMO comparison". Canonical
+                channel único = Action Center (memory
+                `feedback-notifications-action-center`). Silence unused
+                setters (choreography sigue disparando el AC event). */}
         </div>
     )
     // Legacy hand-rolled per-vendor arrival · behind false gate · restore
