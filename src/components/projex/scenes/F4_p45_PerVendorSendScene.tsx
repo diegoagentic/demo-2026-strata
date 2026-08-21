@@ -135,7 +135,7 @@ export default function F4_p45_PerVendorSendScene() {
 
             {/* Per-vendor Send modal overlay · Projex-specific · not a prod page */}
             <div
-                className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+                className="fixed inset-0 z-[400] bg-background/70 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 md:pl-[336px] overflow-y-auto"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="per-vendor-send-title"
@@ -293,11 +293,11 @@ export default function F4_p45_PerVendorSendScene() {
 
             {/* Review + edit modal · opens per PO row · Send/Hold/Cancel */}
             <Transition show={reviewPO !== null} as={Fragment}>
-                <Dialog onClose={handleCloseReview} className="relative z-[350]">
+                <Dialog onClose={handleCloseReview} className="relative z-[450]">
                     <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
                         <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm" aria-hidden="true" />
                     </TransitionChild>
-                    <div className="fixed inset-0 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 flex items-center justify-center p-4 md:pl-[336px]">
                         <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
                             <DialogPanel className="w-full max-w-3xl max-h-[90vh] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
                                 {/* Header */}

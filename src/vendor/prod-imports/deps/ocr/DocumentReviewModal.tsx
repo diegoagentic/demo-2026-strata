@@ -311,7 +311,14 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
     return (
         <>
         <Transition show={isOpen} as={Fragment}>
-            <Dialog onClose={onClose} className="relative z-[200]">
+            {/* F83.S · Diego 2026-08-21 · z-index raised from z-[200] to z-[400]
+                so the modal renders above the demo tour sidebar (w-80 · z-[300]).
+                Left inset offset applied to the panel container below so the
+                modal centers in the visible content area, not covered by the
+                sidebar. This is a demo-tour structural adaptation · not a
+                business-logic change · re-sync from prod DocumentReviewModal
+                keeps this override in place. */}
+            <Dialog onClose={onClose} className="relative z-[400]">
                 <TransitionChild
                     as={Fragment}
                     enter="ease-out duration-200"
@@ -324,7 +331,7 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                     <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed inset-0 flex items-center justify-center p-4">
+                <div className="fixed inset-0 flex items-center justify-center p-4 md:pl-[336px]">
                     <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-200"

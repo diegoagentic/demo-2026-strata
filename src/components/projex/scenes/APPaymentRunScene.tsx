@@ -147,7 +147,7 @@ export default function APPaymentRunScene() {
 
             {/* Payment run modal overlay · Projex-specific · not a prod page */}
             <div
-                className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+                className="fixed inset-0 z-[400] bg-background/70 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 md:pl-[336px] overflow-y-auto"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="payment-run-title"
