@@ -29,17 +29,24 @@ export default function F1_p3_PaymentApproval() {
                 in Dealer Experience or the other Expert Hub tabs. Uses the
                 sidebar to switch · zero auto-cross-experience jump. */}
             {!open && (
-                <div className="fixed top-32 right-6 z-40 w-[360px] bg-card border border-border rounded-2xl shadow-2xl p-4 space-y-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <CheckCircle2 className="h-4 w-4 text-success shrink-0" aria-hidden="true" />
-                        <h3 className="text-sm font-bold text-foreground">AP path complete</h3>
+                <div className="fixed top-32 right-6 z-40 w-[380px] bg-card border-2 border-success/50 rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="bg-success/10 px-4 py-3 flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-full bg-success/20 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-bold text-success uppercase tracking-wider">Flow complete</h3>
+                            <p className="text-xs text-foreground font-semibold mt-0.5">AP intake & matching · Tue payment run</p>
+                        </div>
                     </div>
-                    <div className="text-xs text-muted-foreground leading-relaxed">
-                        The Tuesday ACH batch is released and the vendor bills are posted to NetSuite. To continue the walkthrough, switch to another Flow in the sidebar.
-                    </div>
-                    <div className="pt-2 border-t border-border text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
-                        <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                        Sidebar · Experiences · pick <span className="text-foreground font-semibold">Dealer</span> or another Expert Hub Flow.
+                    <div className="p-4 space-y-3">
+                        <div className="text-xs text-foreground leading-relaxed">
+                            The ACH batch is released · vendor bills posted to NetSuite · this flow is done.
+                        </div>
+                        <div className="pt-2 border-t border-border text-[11px] text-muted-foreground inline-flex items-start gap-1.5">
+                            <ArrowRight className="h-3 w-3 mt-0.5 shrink-0" aria-hidden="true" />
+                            <span>To continue, use the sidebar · Experiences → pick <span className="text-foreground font-semibold">Dealer</span> or another Expert Hub flow.</span>
+                        </div>
                     </div>
                 </div>
             )}

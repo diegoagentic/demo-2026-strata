@@ -136,15 +136,16 @@ export const PROJEX_STEPS: DemoStep[] = [
     },
 
     // ═══════════════════════════════════════════
-    // F4 · Order entry & PO dispatch
-    // Story: "PIF preview + Generate batch · Send POs by email template"
+    // F4 · Order entry & PO dispatch (F84.7 re-cut)
+    // Story: "PIF lands in the OCR funnel · Coordinator reviews the
+    // preliminary order lines · sends the PO batch by email"
     // ═══════════════════════════════════════════
     {
         id: 'p4.1',
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
-        title: 'PIF preview · Generate batch POs',
-        description: 'Lead Designer emails the MWH residential PIF (300 lines). Isabella previews it in the OCR / Document Review UI and clicks Generate batch POs to trigger the split.',
+        title: 'PIF arrives · OCR funnel · file type highlighted',
+        description: 'A 300-line PIF workbook from the Lead Designer lands in the OCR queue. The Action Center notif announces "MWH PIF ready to review" · Coordinator sees the file type (XLSX · PIF spec) highlighted in the queue before opening.',
         app: 'projex-order-po',
         role: 'Furniture Coordinator',
         flowId: 'projex-order-po',
@@ -153,8 +154,8 @@ export const PROJEX_STEPS: DemoStep[] = [
         id: 'p4.2',
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
-        title: 'Batch POs generated · 26 per-vendor drafts',
-        description: 'Strata generates 26 vendor PO drafts in one click. Per-vendor grid shows Teknion 4 · HBF 2 · Boss 2 · Alamir 3 · Nelson 2 · West Elm 2 · etc.',
+        title: 'Review line items · preliminary order lines from the PIF',
+        description: 'Isabella opens the PIF in the same Document Review UI Compliance uses for bills · Header Fields + Line Items tabs · per-cell confidence. Saving closes the review and triggers batch PO generation for the 26 vendors.',
         app: 'projex-order-po',
         role: 'Furniture Coordinator',
         flowId: 'projex-order-po',
@@ -163,8 +164,8 @@ export const PROJEX_STEPS: DemoStep[] = [
         id: 'p4.3',
         groupId: 4,
         groupTitle: 'Order entry & PO dispatch',
-        title: 'Send POs · email template + confirmation (never auto-send)',
-        description: 'Isabella opens the pre-drafted email template per vendor · reviews · sends. Send confirmation returned. FC6 constraint · human control preserved.',
+        title: 'Send PO batch · email template + confirmation (never auto-send)',
+        description: 'Coordinator opens the pre-drafted email template for the 26 vendor POs · reviews · sends. Send confirmation returned. FC6 constraint · human control preserved. Modal closes back to Expert Hub Transactions view.',
         app: 'projex-order-po',
         role: 'Furniture Coordinator',
         flowId: 'projex-order-po',
@@ -289,22 +290,22 @@ export const PROJEX_STEP_MESSAGES: Record<string, string[]> = {
         'Reminders scheduled at Net 10 + 30 days',
     ],
     'p4.1': [
-        'Lead Designer email · MWH residential PIF (300 lines)',
-        'Coordinator previews in OCR / Document Review UI',
-        'Preliminary order lines visible with confidence',
-        'Click Generate batch POs to split into 26 vendor POs',
+        'MWH residential PIF (300 lines) landed in the OCR queue',
+        'AC notif announces the PIF ready to review',
+        'File type XLSX · PIF spec highlighted in the queue card',
+        'Coordinator clicks Open to inspect the preliminary order lines',
     ],
     'p4.2': [
-        '26 vendor PO drafts generated in one click',
-        'Per-vendor grid · Teknion 4 · HBF 2 · Boss 2 · Alamir 3',
-        'Nelson 2 · West Elm 2 · rest per vendor split',
-        'Coordinator reviews per-vendor before send',
+        'PIF opened in the same Document Review UI Compliance uses',
+        'Header Fields + Line Items tabs · per-cell confidence',
+        'Coordinator reviews the 300 preliminary order lines',
+        'Save triggers batch PO generation for 26 vendors',
     ],
     'p4.3': [
-        'Email template pre-drafted per vendor',
-        'Teknion first · 4 POs bundled · $164,988',
-        'Human review · Coordinator sends',
-        'Send confirmation returned · never auto-send (FC6)',
+        'Pre-drafted email template · 26 vendor POs · $487,320',
+        'Teknion + HBF + Boss + Alamir + Nelson + West Elm + 11 more',
+        'Human review · Coordinator sends · never auto-send (FC6)',
+        'Send confirmation returned · modal closes back to Transactions',
     ],
     'p5.1': [
         'Teknion ACK arrives · MWH residential PO',
@@ -452,13 +453,13 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-order-po': {
-        tagline: 'Lead Designer emails a 300-line PIF · Strata generates 26 vendor POs in one click · Isabella sends them by email template.',
+        tagline: 'A 300-line PIF from the Lead Designer lands in the OCR funnel · Coordinator reviews the preliminary order lines and sends the 26-PO batch by email.',
         valueChip: { label: 'Reduces PO dispatch from 3 days to 30 min per project', tone: 'info' },
         heroStepId: 'p4.1',
         moments: [
-            { stepId: 'p4.1', title: 'PIF preview', description: 'Coordinator previews 300 lines · clicks Generate batch POs', estTime: '45 sec', isCore: true },
-            { stepId: 'p4.2', title: 'Batch POs generated', description: '26 vendor POs · per-vendor grid · Teknion 4 · HBF 2 · etc.', estTime: '45 sec', isCore: true },
-            { stepId: 'p4.3', title: 'Send via email', description: 'Email template per vendor · human review · send confirmation', estTime: '45 sec', isCore: true },
+            { stepId: 'p4.1', title: 'PIF arrives · OCR funnel', description: 'Notification lands · file type highlighted in the queue', estTime: '30 sec', isCore: true },
+            { stepId: 'p4.2', title: 'Review line items', description: 'Preliminary order lines from the PIF · Header + Line Items tabs', estTime: '60 sec', isCore: true },
+            { stepId: 'p4.3', title: 'Send PO batch', description: 'Email template per vendor · human review · send confirmation', estTime: '45 sec', isCore: true },
         ],
         ctaGuided: 'See the guided walkthrough',
         ctaExplore: 'Explore this experience freely',
@@ -540,18 +541,18 @@ export const PROJEX_PRESENTER_NOTES: Record<string, ProjexPresenterNote> = {
         next: 'End of Progress billing path.',
     },
 
-    // F4 · Order entry & PO dispatch
+    // F4 · Order entry & PO dispatch (F84.7 · funnel → review → send)
     'p4.1': {
-        say: 'Lead Designer just emailed a 300-line PIF for the MWH residential project. Isabella previews it in the same OCR and Document Review UI she already knows · preliminary order lines with confidence · clicks Generate batch POs to split it up.',
-        next: 'Next · 26 vendor POs generated in one click.',
+        say: 'A 300-line PIF from the Lead Designer just landed in the OCR queue · same shell Compliance uses for bills. The Action Center announces it and the file type shows XLSX · PIF spec · so Isabella knows what she\'s about to open.',
+        next: 'Click the AC notif to open the PIF for line-item review.',
     },
     'p4.2': {
-        say: 'Here are the 26 vendor POs Strata generated · one click from the PIF preview. Per-vendor grid · Teknion 4 · HBF 2 · Boss 2 · Alamir 3 · Nelson 2 · West Elm 2. Isabella reviews per-vendor before send.',
-        next: 'Next · Isabella sends the POs with an email template.',
+        say: 'The PIF opens in the same Document Review UI she already knows · Header Fields plus Line Items with per-cell confidence. Isabella scans the 300 preliminary order lines · saving triggers batch PO generation across the 26 vendors.',
+        next: 'Click Save · next · sending the PO batch by email.',
     },
     'p4.3': {
-        say: 'Email template pre-drafted per vendor. Teknion first · 4 POs bundled · Isabella reviews, sends, gets a confirmation. Never auto-send · that\'s the FC6 rule · Coordinator controls delivery.',
-        next: 'End of Order/PO path.',
+        say: 'Pre-drafted email template · 26 vendor POs bundled · $487,320. Isabella reviews the message, sends, gets a confirmation. Never auto-send · that\'s the FC6 rule. When she closes the modal the Expert Hub Transactions view stays visible.',
+        next: 'End of Order/PO path. Switch flows in the sidebar.',
     },
 
     // F5 · Electronic ACK processing

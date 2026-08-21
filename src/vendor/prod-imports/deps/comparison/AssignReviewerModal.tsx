@@ -55,7 +55,11 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
 
     return (
         <Transition show={isOpen} as={Fragment}>
-            <Dialog onClose={onClose} className="relative z-[210]">
+            {/* F84.10 · z-index raised from z-[210] to z-[450] so this nested
+                modal stacks above the parent ComparisonReviewModal (F84.1
+                lifted to z-[400] to clear the demo tour sidebar). Structural
+                adaptation · not business-logic · preserve on prod re-sync. */}
+            <Dialog onClose={onClose} className="relative z-[450]">
                 <TransitionChild
                     as={Fragment}
                     enter="ease-out duration-200"
@@ -65,10 +69,11 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" />
+                    {/* F84.10 · offset backdrop past the demo tour sidebar */}
+                    <div className="fixed inset-y-0 right-0 left-0 md:left-[320px] bg-foreground/40 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed inset-0 flex items-center justify-center p-4">
+                <div className="fixed inset-0 flex items-center justify-center p-4 md:pl-[336px]">
                     <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-200"
