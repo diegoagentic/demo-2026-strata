@@ -974,14 +974,31 @@ export default function DemoSidebar() {
                     >
                         {isPaused ? <Play size={16} /> : <Pause size={16} />}
                     </button>
-                    <button
-                        onClick={nextStep}
-                        disabled={currentStepIndex === steps.length - 1}
-                        className={`flex-[1.5] flex items-center justify-center gap-1.5 ${c.bgNext} ${c.textNext} py-2 rounded-lg text-sm font-semibold disabled:opacity-40 ${c.bgNextHover} transition-colors shadow-sm`}
-                    >
-                        Next
-                        <ChevronRight size={16} />
-                    </button>
+                    {(() => {
+                        // F84.40 · Diego 2026-08-21 · Projex only · never
+                        // auto-advance across flow boundaries. At the last
+                        // step of the current flow, disable Next so the
+                        // presenter must switch flows manually from the
+                        // sidebar list. Matches F84.5 (no auto-jump
+                        // cross-experience) and avoids the "Dealer flow 2
+                        // → Expert Hub flow 2 by accident" bug.
+                        const currFlow = steps[currentStepIndex]?.flowId
+                        const nextFlow = steps[currentStepIndex + 1]?.flowId
+                        const isEndOfFlow = isProjex && currFlow !== undefined && nextFlow !== undefined && currFlow !== nextFlow
+                        const isLastStep = currentStepIndex === steps.length - 1
+                        const disableNext = isLastStep || isEndOfFlow
+                        return (
+                            <button
+                                onClick={nextStep}
+                                disabled={disableNext}
+                                title={isEndOfFlow ? 'End of flow · pick the next flow from the list above to continue' : undefined}
+                                className={`flex-[1.5] flex items-center justify-center gap-1.5 ${c.bgNext} ${c.textNext} py-2 rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed ${c.bgNextHover} transition-colors shadow-sm`}
+                            >
+                                {isEndOfFlow ? 'End of flow' : 'Next'}
+                                <ChevronRight size={16} />
+                            </button>
+                        )
+                    })()}
                 </div>
             </div>
         </div>
