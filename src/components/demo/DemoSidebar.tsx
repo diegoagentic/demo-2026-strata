@@ -31,8 +31,12 @@ import { WORKSPACES_DATA_THREADS } from '../../config/profiles/workspaces';
 import { useOfficeworksVertical, writeVertical } from '../officeworks/shared/verticalSignal';
 // F80.2 · Projex switcher rewrite · 2-tab segmented + sub-nav. Single
 // source of truth for the experience mapping lives in the profile module.
+// F82.2 · imports adicionales para el sidebar playlist (moments tiles +
+// tagline + value chip compact) que reemplaza el linear step list para
+// Projex only.
 import {
     PROJEX_EXPERIENCE_GROUPS,
+    PROJEX_PATH_LANDINGS,
     experienceOf,
     firstFlowOf,
     type ProjexExperience,
@@ -168,6 +172,11 @@ export default function DemoSidebar() {
     // F74 · Projex 5 flows.
     type ProjexFlow = 'projex-ap' | 'projex-vendor-onboarding' | 'projex-billing' | 'projex-order-po' | 'projex-ack';
     const [activeProjexFlow, setActiveProjexFlow] = React.useState<ProjexFlow>('projex-ap');
+
+    // F82.2 · Projex-only · toggle "Show all detail" para revelar los 3
+    // secondary steps (skippable per isCoreStep filter) además de los 3
+    // core moments · default hidden.
+    const [showProjexAllDetail, setShowProjexAllDetail] = React.useState(false);
 
     // If the user lands directly on a step from a different flow (e.g. resumed
     // session), sync the tab so the active step is visible.
@@ -721,7 +730,108 @@ export default function DemoSidebar() {
                 )}
             </div>
 
-            {/* Steps List */}
+            {/* F82.2 · Projex playlist · THIS PATH + MOMENTS · replaces
+                 the linear step list for Projex only · CEO scan-friendly.
+                 Otros profiles siguen con el step list debajo. */}
+            {isProjex && (() => {
+                const landing = PROJEX_PATH_LANDINGS[activeProjexFlow]
+                if (!landing) return null
+                const visibleMoments = showProjexAllDetail
+                    ? landing.moments
+                    : landing.moments.filter(m => m.isCore)
+                const hiddenCount = landing.moments.length - visibleMoments.length
+
+                return (
+                    <div className="flex-1 overflow-y-auto p-3 pt-6 scrollbar-micro space-y-5">
+                        {/* THIS PATH · compact tagline + value chip */}
+                        <div className="space-y-2">
+                            <p className={`text-[10px] font-bold uppercase tracking-widest ${c.textDim}`}>
+                                This path
+                            </p>
+                            <p className={`text-sm font-semibold ${c.textTitle}`}>
+                                {landing.tagline.split(' · ')[0]}
+                            </p>
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-primary/15 text-foreground">
+                                <Star className="h-2.5 w-2.5" aria-hidden="true" />
+                                {landing.valueChip.label}
+                            </span>
+                        </div>
+
+                        {/* MOMENTS · compact tiles · click to jump */}
+                        <div className="space-y-2">
+                            <div className="flex items-baseline justify-between">
+                                <p className={`text-[10px] font-bold uppercase tracking-widest ${c.textDim}`}>
+                                    Moments · {visibleMoments.length}
+                                </p>
+                                {hiddenCount > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowProjexAllDetail(true)}
+                                        className={`text-[10px] font-semibold ${c.textMuted} hover:opacity-80 transition-opacity underline decoration-dotted underline-offset-2`}
+                                    >
+                                        + {hiddenCount} detail
+                                    </button>
+                                )}
+                                {hiddenCount === 0 && landing.moments.length > 3 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowProjexAllDetail(false)}
+                                        className={`text-[10px] font-semibold ${c.textMuted} hover:opacity-80 transition-opacity underline decoration-dotted underline-offset-2`}
+                                    >
+                                        show core only
+                                    </button>
+                                )}
+                            </div>
+                            <ul className="space-y-1.5">
+                                {visibleMoments.map(moment => {
+                                    const idx = steps.findIndex(s => s.id === moment.stepId)
+                                    const isActive = idx === currentStepIndex
+                                    const isDone = idx >= 0 && idx < currentStepIndex
+                                    return (
+                                        <li key={moment.stepId}>
+                                            <button
+                                                type="button"
+                                                onClick={() => idx >= 0 && goToStep(idx)}
+                                                className={`w-full text-left rounded-lg border p-2.5 transition-all cursor-pointer group ${
+                                                    isActive
+                                                        ? `${c.bgBadgeActive} ${c.textBadgeActive} border-primary/50 shadow-sm`
+                                                        : `${c.textMuted} border-transparent hover:border-white/10 hover:bg-white/5`
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="shrink-0">
+                                                        {isDone ? (
+                                                            <CheckCircle2 size={14} className={c.iconDone} />
+                                                        ) : isActive ? (
+                                                            <div className={`w-3.5 h-3.5 rounded-full border-2 ${c.iconActive} flex items-center justify-center`}>
+                                                                <div className={`w-1 h-1 rounded-full ${c.iconActiveDot}`} />
+                                                            </div>
+                                                        ) : (
+                                                            <Circle size={14} className={c.iconPending} />
+                                                        )}
+                                                    </span>
+                                                    <span className="flex-1 min-w-0 text-[12px] font-semibold leading-tight truncate">
+                                                        {moment.title}
+                                                    </span>
+                                                    <span className={`text-[9px] font-mono tabular-nums shrink-0 ${isActive ? 'opacity-80' : 'opacity-60'}`}>
+                                                        {moment.estTime}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] leading-snug mt-1 opacity-70 line-clamp-2">
+                                                    {moment.description}
+                                                </p>
+                                            </button>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        </div>
+                    </div>
+                )
+            })()}
+
+            {/* Steps List · not for Projex (F82.3 · playlist replaces it above) */}
+            {!isProjex && (
             <div className="flex-1 overflow-y-auto p-3 space-y-1 pt-6 scrollbar-micro">
                 {displayedSteps.map(({ step, originalIndex }, displayIndex) => {
                     const isActive = originalIndex === currentStepIndex;
@@ -819,6 +929,8 @@ export default function DemoSidebar() {
                     );
                 })}
             </div>
+            )}
+            {/* /F82.3 · Steps List conditional (non-Projex only) */}
 
             {/* Paused Indicator */}
             {isPaused && (
