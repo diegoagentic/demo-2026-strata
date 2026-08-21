@@ -10,11 +10,11 @@
  * positioning follows F83.S (z-[400] + md:pl-[336px]).
  */
 
-import { Fragment, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
     Wallet, CheckCircle2, ShieldAlert, AlertTriangle, X, Loader2,
-    MessageSquare, XCircle, Send,
+    MessageSquare, XCircle, Send, Check, RotateCcw,
 } from 'lucide-react'
 
 interface PaymentApprovalModalProps {
@@ -50,16 +50,52 @@ type Stage =
     | 'commenting' | 'commented'
     | 'rejecting' | 'rejected'
 
+// F84.36 · per-row decision · Compliance can approve/reject each bill
+// individually before releasing the batch. Duplicates stay `held` and
+// cannot flip. Default `pending` for the rest.
+type RowDecision = 'pending' | 'approved' | 'rejected' | 'held'
+
 export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: PaymentApprovalModalProps) {
     const [stage, setStage] = useState<Stage>('idle')
     const [comment, setComment] = useState('')
     const [rejectReason, setRejectReason] = useState('')
+    const [rowDecisions, setRowDecisions] = useState<Record<string, RowDecision>>(() =>
+        Object.fromEntries(BATCH.map(b => [b.id, b.duplicate ? 'held' as const : 'pending' as const])),
+    )
+
     const releasable = BATCH.filter(b => !b.duplicate)
-    const total = releasable.reduce((s, b) => s + b.amount, 0)
     const duplicateCount = BATCH.filter(b => b.duplicate).length
+    const counts = useMemo(() => {
+        let approved = 0, rejected = 0, pending = 0, approvedTotal = 0
+        for (const row of releasable) {
+            const d = rowDecisions[row.id]
+            if (d === 'approved') { approved += 1; approvedTotal += row.amount }
+            else if (d === 'rejected') { rejected += 1 }
+            else { pending += 1 }
+        }
+        return { approved, rejected, pending, approvedTotal }
+    }, [rowDecisions, releasable])
+    const totalReleasable = releasable.reduce((s, b) => s + b.amount, 0)
+    // If nothing was explicitly approved, treat all non-rejected pending as
+    // approved on batch release · lets Compliance skim + release without
+    // clicking every row individually.
+    const impliedApprove = counts.approved === 0 && counts.pending > 0
+    const releaseCount = counts.approved + (impliedApprove ? counts.pending : 0)
+    const releaseTotal = counts.approvedTotal + (impliedApprove
+        ? releasable.filter(r => rowDecisions[r.id] === 'pending').reduce((s, r) => s + r.amount, 0)
+        : 0)
+    const canRelease = releaseCount > 0
+
+    const setDecision = (id: string, decision: RowDecision) => {
+        if (stage !== 'idle') return
+        setRowDecisions(prev => {
+            if (prev[id] === 'held') return prev
+            return { ...prev, [id]: prev[id] === decision ? 'pending' : decision }
+        })
+    }
 
     const handleApprove = () => {
-        if (stage !== 'idle') return
+        if (stage !== 'idle' || !canRelease) return
         setStage('approving')
         setTimeout(() => {
             setStage('approved')
@@ -118,45 +154,126 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     <span>·</span>
                                     <span>{releasable.length} bills</span>
                                     <span>·</span>
-                                    <span className="tabular-nums text-foreground font-semibold">${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="tabular-nums text-foreground font-semibold">${totalReleasable.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     <span>·</span>
                                     <span className="tabular-nums text-warning inline-flex items-center gap-1">
                                         <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                                         {duplicateCount} duplicate held
                                     </span>
+                                    {(counts.approved > 0 || counts.rejected > 0) && (
+                                        <>
+                                            <span>·</span>
+                                            {counts.approved > 0 && (
+                                                <span className="tabular-nums text-success inline-flex items-center gap-1">
+                                                    <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                    {counts.approved} approved
+                                                </span>
+                                            )}
+                                            {counts.rejected > 0 && (
+                                                <span className="tabular-nums text-destructive inline-flex items-center gap-1 ml-1">
+                                                    <XCircle className="h-3 w-3" aria-hidden="true" />
+                                                    {counts.rejected} rejected
+                                                </span>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Body · payment queue table */}
+                            {/* Body · payment queue table with per-row Approve/Reject actions */}
                             <div className="flex-1 overflow-y-auto">
-                                <div className="grid grid-cols-[1fr_120px_140px_100px_100px] px-5 py-2 bg-muted/20 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                                <div className="grid grid-cols-[1fr_110px_130px_100px_110px_88px] px-5 py-2 bg-muted/20 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
                                     <span>Vendor</span>
                                     <span>Entity</span>
                                     <span>Invoice #</span>
                                     <span className="text-right">Amount</span>
                                     <span className="text-right">Status</span>
+                                    <span className="text-right">Actions</span>
                                 </div>
                                 <div className="divide-y divide-border">
-                                    {BATCH.map(row => (
-                                        <div key={row.id} className={`grid grid-cols-[1fr_120px_140px_100px_100px] px-5 py-3 text-xs items-center ${row.duplicate ? 'bg-warning/5' : ''}`}>
-                                            <div>
-                                                <div className="text-foreground font-semibold">{row.vendor}</div>
-                                                <div className="text-[10px] text-muted-foreground font-mono">{row.id}</div>
+                                    {BATCH.map(row => {
+                                        const decision = rowDecisions[row.id]
+                                        const rowClass = row.duplicate
+                                            ? 'bg-warning/5'
+                                            : decision === 'approved'
+                                                ? 'bg-success/5'
+                                                : decision === 'rejected'
+                                                    ? 'bg-destructive/5'
+                                                    : ''
+                                        const locked = stage !== 'idle' || row.duplicate
+                                        return (
+                                            <div key={row.id} className={`grid grid-cols-[1fr_110px_130px_100px_110px_88px] px-5 py-3 text-xs items-center transition-colors ${rowClass}`}>
+                                                <div>
+                                                    <div className="text-foreground font-semibold">{row.vendor}</div>
+                                                    <div className="text-[10px] text-muted-foreground font-mono">{row.id}</div>
+                                                </div>
+                                                <div className="text-muted-foreground">{row.entity}</div>
+                                                <div className="text-muted-foreground font-mono">{row.invoiceNumber}</div>
+                                                <div className={`text-right tabular-nums font-semibold ${decision === 'rejected' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                                    ${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </div>
+                                                <div className="text-right">
+                                                    {row.duplicate ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 rounded px-1.5 py-0.5">
+                                                            Held · duplicate
+                                                        </span>
+                                                    ) : decision === 'approved' ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded px-1.5 py-0.5">
+                                                            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                            Approved
+                                                        </span>
+                                                    ) : decision === 'rejected' ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive bg-destructive/10 rounded px-1.5 py-0.5">
+                                                            <XCircle className="h-3 w-3" aria-hidden="true" />
+                                                            Rejected
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] text-muted-foreground">Pending CEO</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-right">
+                                                    {row.duplicate ? (
+                                                        <span className="text-[10px] text-muted-foreground italic">—</span>
+                                                    ) : (
+                                                        <div className="inline-flex items-center gap-1 justify-end">
+                                                            {(decision === 'approved' || decision === 'rejected') ? (
+                                                                <button
+                                                                    onClick={() => setDecision(row.id, 'pending')}
+                                                                    disabled={locked}
+                                                                    aria-label={`Reset decision for ${row.vendor} ${row.invoiceNumber}`}
+                                                                    title="Reset to pending"
+                                                                    className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground bg-background hover:text-foreground hover:bg-muted border border-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                >
+                                                                    <RotateCcw className="h-3 w-3" aria-hidden="true" />
+                                                                </button>
+                                                            ) : (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => setDecision(row.id, 'approved')}
+                                                                        disabled={locked}
+                                                                        aria-label={`Approve ${row.vendor} ${row.invoiceNumber}`}
+                                                                        title="Approve this bill"
+                                                                        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-success bg-background hover:bg-success/10 border border-success/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                    >
+                                                                        <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setDecision(row.id, 'rejected')}
+                                                                        disabled={locked}
+                                                                        aria-label={`Reject ${row.vendor} ${row.invoiceNumber}`}
+                                                                        title="Reject this bill"
+                                                                        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-destructive bg-background hover:bg-destructive/10 border border-destructive/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="text-muted-foreground">{row.entity}</div>
-                                            <div className="text-muted-foreground font-mono">{row.invoiceNumber}</div>
-                                            <div className="text-right text-foreground tabular-nums font-semibold">${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                            <div className="text-right">
-                                                {row.duplicate ? (
-                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 rounded px-1.5 py-0.5">
-                                                        Held · duplicate
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[10px] text-muted-foreground">Pending CEO</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                                 <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-start gap-2 text-xs text-muted-foreground">
                                     <ShieldAlert className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" aria-hidden="true" />
@@ -171,7 +288,10 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     <div className="flex-1 min-w-0 text-xs">
                                         <div className="text-foreground font-semibold">Payment released · handoff to Dealer flows</div>
                                         <div className="text-muted-foreground mt-1">
-                                            {releasable.length} bills posted to NetSuite · ACH batch sent to the bank · vendor remittance detail queued in the Dealer Experience. Use the sidebar to switch to <span className="text-foreground font-semibold">Dealer</span> when ready to walk vendor onboarding and billing next.
+                                            {releaseCount} bills posted to NetSuite · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ACH batch sent to the bank
+                                            {counts.rejected > 0 && <> · {counts.rejected} rejected returned to Compliance for follow-up</>}
+                                            {duplicateCount > 0 && <> · {duplicateCount} duplicate still on hold</>}
+                                            . Use the sidebar to switch to <span className="text-foreground font-semibold">Dealer</span> when ready to walk vendor onboarding and billing next.
                                         </div>
                                     </div>
                                 </div>
@@ -257,10 +377,16 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         </button>
                                         <button
                                             onClick={handleApprove}
-                                            className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                                            disabled={!canRelease}
+                                            title={canRelease ? undefined : 'Approve at least one bill · or leave rows pending to release all'}
+                                            className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                            Approve ACH batch
+                                            {counts.approved > 0
+                                                ? `Release ${releaseCount} approved · $${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                : counts.rejected > 0
+                                                    ? `Release ${releaseCount} remaining · $${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                    : 'Approve ACH batch'}
                                         </button>
                                     </>
                                 )}
