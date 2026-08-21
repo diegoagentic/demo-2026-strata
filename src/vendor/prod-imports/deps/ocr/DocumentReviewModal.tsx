@@ -372,14 +372,14 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                                 path a clear "this is a W-9" anchor next to the
                                                 filename. Structural adaptation · preserve on prod
                                                 re-sync. */}
-                                            {/\bW-?9\b/i.test(doc.name) && (
+                                            {/W-?9/i.test(doc.name) && (
                                                 <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-ai/15 text-ai rounded-md px-2 py-0.5 shrink-0">
                                                     <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
                                                     IRS Form W-9
                                                 </span>
                                             )}
                                             {/* F84.19 · Diego 2026-08-21 · same chip pattern for Proforma docs. */}
-                                            {/\bproforma\b/i.test(doc.name) && (
+                                            {/proforma/i.test(doc.name) && (
                                                 <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-warning/15 text-warning rounded-md px-2 py-0.5 shrink-0">
                                                     <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/></svg>
                                                     Proforma Invoice
@@ -522,7 +522,7 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                             (tranche · deposit · balance · payment terms · due date
                                             · attachment reference). Structural adaptation to the
                                             vendor prod-import · preserve on re-sync. */}
-                                        {/\bproforma\b/i.test(doc.name) && (
+                                        {/proforma/i.test(doc.name) && (
                                             <div className="border-2 border-warning/50 rounded-xl overflow-hidden">
                                                 <div className="bg-warning/10 px-4 py-2.5 flex items-center gap-2">
                                                     <div className="h-6 w-6 rounded-md bg-warning/20 flex items-center justify-center shrink-0">
@@ -583,7 +583,7 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                             type · signed date · expiration + alert · readiness self-
                                             service status) that matter for vendor onboarding. Structural
                                             adaptation to the vendor prod-import · preserve on re-sync. */}
-                                        {/\bW-?9\b/i.test(doc.name) && (
+                                        {/W-?9/i.test(doc.name) && (
                                             <div className="border-2 border-ai/50 rounded-xl overflow-hidden">
                                                 <div className="bg-ai-light px-4 py-2.5 flex items-center gap-2">
                                                     <div className="h-6 w-6 rounded-md bg-ai/20 flex items-center justify-center shrink-0">
@@ -786,7 +786,7 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                             upstream lifecycle chain (Quote-type W-9 / Proforma).
                                             Structural adaptation to the vendor prod-import ·
                                             preserve on re-sync. */}
-                                        {(/\bW-?9\b/i.test(doc.name) || /\bproforma\b/i.test(doc.name)) && (
+                                        {(/W-?9/i.test(doc.name) || /proforma/i.test(doc.name)) && (
                                             <div className="border-2 border-ai/40 rounded-xl overflow-hidden">
                                                 <div className="bg-ai-light px-4 py-2.5 flex items-center gap-2">
                                                     <Link2 className="h-4 w-4 text-ai" aria-hidden="true" />
