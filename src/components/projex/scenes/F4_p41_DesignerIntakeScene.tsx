@@ -24,6 +24,9 @@ import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { MWH_TOTALS } from '../../../config/profiles/projex-data/mwhPif'
+// F83.C · phase 'transactions' renderea la copia prod-sync para paridad
+// con gostrata.app/expert-hub/transactions · reemplaza el hand-rolled table.
+import ExpertHubTransactionsWrapper from '../../../vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 
 // Expert Hub Transactions landing · order transactions in-flight
 interface OrderTransaction {
@@ -83,21 +86,45 @@ export default function F4_p41_DesignerIntakeScene() {
     }
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    {phase === 'transactions'
-                        ? 'Expert Hub · Transactions · MWH residential PIF just arrived'
-                        : 'Designer emails PIF + SIF · MWH residential intake detail'}
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    {phase === 'transactions'
-                        ? 'Recent order transactions across Coordinator workspaces · Lead Designer just sent a new PIF workbook + SIF export for MWH · click the highlighted row (or Action Center) to review + Ingest.'
-                        : 'Attachment metadata visible · drop-zone accept · Coordinator confirms Ingest before parse starts.'}
-                </p>
-            </div>
+            {phase === 'detail' && (
+                <div>
+                    <h1 className="text-2xl font-bold text-foreground">
+                        Designer emails PIF + SIF · MWH residential intake detail
+                    </h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Attachment metadata visible · drop-zone accept · Coordinator confirms Ingest before parse starts.
+                    </p>
+                </div>
+            )}
 
-            {/* Transactions landing · Expert Hub · Order transactions list */}
+            {/* F83.C · Diego 2026-08-21 · phase 'transactions' renderea el
+                 prod ExpertHubTransactionsWrapper (paridad total con
+                 gostrata.app/expert-hub/transactions) + floating CTA para
+                 drill-in a MWH intake detail. Reemplaza el hand-rolled
+                 6-col table custom que no matcheaba prod. */}
             {phase === 'transactions' && (
+                <div className="relative -mx-6 -my-6">
+                    <ExpertHubTransactionsWrapper />
+                    <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-2xl bg-card border border-border shadow-2xl px-4 py-3">
+                        <div className="flex-1 min-w-0 text-xs pr-2">
+                            <div className="text-foreground font-semibold">MWH residential PIF just arrived</div>
+                            <div className="text-muted-foreground text-[11px]">300 lines · 26 vendor split · needs ingest</div>
+                        </div>
+                        <button
+                            onClick={() => setPhase('detail')}
+                            className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[11px] font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                        >
+                            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                            Open MWH intake
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Legacy hand-rolled transactions list (kept behind false gate ·
+                 restore by flipping false → true if the prod wrapper isn't
+                 acceptable for some reason). Comment referenced from F83.C. */}
+            {false && phase === 'transactions' && (
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
                         <Inbox className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
