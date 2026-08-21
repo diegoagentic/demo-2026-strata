@@ -364,6 +364,13 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                                     IRS Form W-9
                                                 </span>
                                             )}
+                                            {/* F84.19 · Diego 2026-08-21 · same chip pattern for Proforma docs. */}
+                                            {/\bproforma\b/i.test(doc.name) && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-warning/15 text-warning rounded-md px-2 py-0.5 shrink-0">
+                                                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/></svg>
+                                                    Proforma Invoice
+                                                </span>
+                                            )}
                                             <p className="text-sm text-muted-foreground truncate">{doc.vendor} · {doc.name}</p>
                                             <TransactionVerifyPill orderId={doc.id} />
                                         </div>
@@ -477,6 +484,68 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                             <div className="flex-1 overflow-y-auto px-6 py-5">
                                 {tab === 'header' && (
                                     <div className="space-y-6">
+                                        {/* F84.19 · Diego 2026-08-21 · when the doc is a Proforma,
+                                            surface a highlighted "Proforma Invoice · attached"
+                                            preamble at the top of Header Fields with the billing
+                                            fields that matter for the F3 progress-billing flow
+                                            (tranche · deposit · balance · payment terms · due date
+                                            · attachment reference). Structural adaptation to the
+                                            vendor prod-import · preserve on re-sync. */}
+                                        {/\bproforma\b/i.test(doc.name) && (
+                                            <div className="border-2 border-warning/50 rounded-xl overflow-hidden">
+                                                <div className="bg-warning/10 px-4 py-2.5 flex items-center gap-2">
+                                                    <div className="h-6 w-6 rounded-md bg-warning/20 flex items-center justify-center shrink-0">
+                                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-warning" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
+                                                    </div>
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-warning">Proforma Invoice · attached</span>
+                                                    <button className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors">
+                                                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                                                        {doc.name}
+                                                    </button>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 p-4 text-xs">
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Project</span>
+                                                        <span className="text-foreground font-semibold">{doc.vendor}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Draw</span>
+                                                        <span className="text-foreground font-semibold">40% tranche · Furniture 50/40/10</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Tranche amount</span>
+                                                        <span className="text-foreground font-bold tabular-nums">$58,240.00</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Deposit applied</span>
+                                                        <span className="text-success tabular-nums">− $14,560.00</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Balance due</span>
+                                                        <span className="text-foreground font-bold tabular-nums">$43,680.00</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Payment terms</span>
+                                                        <span className="text-foreground font-semibold">Net 10 · 1.5%/mo late fee</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-muted-foreground">Milestone <span className="text-[10px] text-warning">(threshold hit)</span></span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 rounded-md px-1.5 py-0.5">
+                                                            50% ordered · W32
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-muted-foreground">Send to</span>
+                                                        <span className="text-foreground font-mono text-[11px]">ap@fairport-hq.com</span>
+                                                    </div>
+                                                </div>
+                                                <div className="px-4 py-2.5 border-t border-border bg-muted/20 text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+                                                    <svg viewBox="0 0 24 24" className="h-3 w-3 text-warning" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v6"/><path d="M12 22v-6"/><path d="M4.93 4.93l4.24 4.24"/><path d="M14.83 14.83l4.24 4.24"/><path d="M2 12h6"/><path d="M22 12h-6"/></svg>
+                                                    Save to approve and queue for Coordinator send · Cancel to return the draft to the shared queue for edits.
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* F84.17 · Diego 2026-08-21 · when the doc is a W-9, surface a
                                             highlighted "Compliance Registry Entry" preamble at the top
                                             of Header Fields · shows the indexed fields (TIN · entity
