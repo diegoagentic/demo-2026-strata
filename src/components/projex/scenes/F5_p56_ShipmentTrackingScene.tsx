@@ -11,7 +11,7 @@
 import { useState } from 'react'
 import {
     Truck, Package, CheckCircle2, Loader2, Clock, ArrowRight,
-    RotateCcw, Search, Wrench,
+    RotateCcw, Search, Wrench, Bell,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -47,18 +47,23 @@ export default function F5_p56_ShipmentTrackingScene() {
         'delivered':          NCBA_SHIPMENTS.filter(s => s.status === 'delivered').length,
     }
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    Daily ESD sweep + shipment tracking · Shipment Notifications
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    OrderTrackerScene daily · "Daily Report — From POs_Projex Inc." saved-search style · Multi-Line-Edit bulk refresh.
-                </p>
+        <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+            {/* F83.T · slim header · prod ComparisonReviewModal shape */}
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Truck className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <h2 className="text-base font-bold text-foreground">Daily ESD sweep · Shipment tracking</h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-foreground">
+                        <Bell className="h-3 w-3" aria-hidden="true" />
+                        {NCBA_SHIPMENTS.length} shipments tracked
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>Saved search: <span className="font-mono text-foreground font-semibold">Daily Report — From POs_Projex Inc.</span></span>
+                    <span>·</span>
+                    <span className="tabular-nums">{statusCounts['in-production']} in production · {statusCounts['shipping-scheduled']} scheduled · {statusCounts['shipped']} shipped · {statusCounts['delivered']} delivered</span>
+                </div>
             </div>
-
-            {/* F83.A · Status hero removed · counts pueden vivir en el filter
-                 bar debajo · match prod que no tiene KPI heroes standalone. */}
 
             {/* Search + Multi-Line Edit callout */}
             <div className="rounded-2xl border border-border bg-card p-3 flex items-center gap-3 flex-wrap">

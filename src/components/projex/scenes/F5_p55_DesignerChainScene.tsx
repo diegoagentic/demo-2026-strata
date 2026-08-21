@@ -32,14 +32,25 @@ export default function F5_p55_DesignerChainScene() {
         }
     }, [revealed, pauseAwareTimeout])
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    Designer chain assembly · Lead Designer → Spec Designer → PM Coordinator (FC8 net-new)
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Auto-assembled thread with attachments + replies + timestamps. Replaces Coordinator\'s manual Excel assembly.
-                </p>
+        <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+            {/* F83.T · slim header · prod ComparisonReviewModal shape */}
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Users className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <h2 className="text-base font-bold text-foreground">Designer chain · NCBA ACK review</h2>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${revealed >= DESIGNER_CHAIN.length ? 'bg-success/15 text-success' : 'bg-ai-light text-ai'}`}>
+                        {revealed >= DESIGNER_CHAIN.length
+                            ? <><CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Chain complete</>
+                            : <><Clock className="h-3 w-3" aria-hidden="true" /> Assembling</>}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>Lead Designer → Spec Designer → PM Coordinator</span>
+                    <span>·</span>
+                    <span className="tabular-nums">{revealed}/{DESIGNER_CHAIN.length} entries assembled</span>
+                    <span>·</span>
+                    <span>FC8 net-new · replaces manual Excel assembly</span>
+                </div>
             </div>
 
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
