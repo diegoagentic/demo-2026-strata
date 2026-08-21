@@ -18,6 +18,8 @@ import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { VENDOR_ACK_CONF } from '../../../config/profiles/projex-data/teknionAck'
+// F83.D · prod OCRTracking wrapper · paridad con gostrata.app/expert-hub/ocr
+import OCRTrackingWrapper from '../../../vendor/prod-imports/wrappers/OCRTrackingWrapper'
 
 export default function F5_p52_AckOcrScene() {
     const { pauseAwareTimeout } = usePauseAware()
@@ -45,6 +47,36 @@ export default function F5_p52_AckOcrScene() {
     const avgConf = arrivedVendors.length > 0
         ? Math.round(arrivedVendors.reduce((s, v) => s + v.conf, 0) / arrivedVendors.length)
         : 0
+    void arrivedVendors; void avgConf; void PROJEX_SOURCES
+    // F83.D · Diego 2026-08-21 · scene renderea el prod OCRTracking wrapper
+    // (paridad con gostrata.app/expert-hub/ocr · kanban 6-col real) + floating
+    // context CTA con narrativa Projex-específica (per-vendor ACK confidence).
+    return (
+        <div className="relative min-h-screen">
+            <OCRTrackingWrapper />
+            <div className="fixed bottom-6 right-6 z-40 flex items-start gap-2 rounded-2xl bg-card border border-border shadow-2xl px-4 py-3 max-w-sm">
+                <Sparkles className="h-5 w-5 text-ai shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="flex-1 min-w-0 text-xs">
+                    <div className="text-foreground font-semibold">ACK arrivals · per-vendor confidence</div>
+                    <div className="text-muted-foreground text-[11px] mt-0.5">
+                        {arrivedIdx} of {VENDOR_ACK_CONF.length} ACKs · Teknion 98% · HBF 91% · Alamir 74% (review recommended)
+                    </div>
+                    {done && (
+                        <button
+                            onClick={nextStep}
+                            className="mt-2 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                        >
+                            Open ACK vs PMO comparison
+                            <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+    // Legacy hand-rolled per-vendor arrival · behind false gate · restore
+    // possible flipping false → true si el prod wrapper no funciona.
+    // eslint-disable-next-line no-unreachable
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>

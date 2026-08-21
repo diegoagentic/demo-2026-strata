@@ -35,6 +35,8 @@ import { PROJEX_BILLS_OVERNIGHT, PROJEX_MORNING_SUMMARY, type Bill } from '../..
 import { PROJEX_VENDORS, PROJEX_VENDOR_TOTALS } from '../../../config/profiles/projex-data/vendors'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
+// F83.D · prod OCRTracking wrapper · paridad con gostrata.app/expert-hub/ocr
+import OCRTrackingWrapper from '../../../vendor/prod-imports/wrappers/OCRTrackingWrapper'
 
 // ─── Column layout ─────────────────────────────────────────────────────────────
 
@@ -327,8 +329,36 @@ export default function APInboxSweepScene() {
     // Highlight the two exceptions so Accounting sees them first
     const highlightedId = phase !== 'arriving' ? 'PJX-BILL-8483' : undefined
 
-    const daniel = PROJEX_PERSONAS.daniel
-    const jacob = PROJEX_PERSONAS.jacob
+    void daniel; void jacob;
+    // F83.D · Diego 2026-08-21 · scene renderea el prod OCRTracking wrapper
+    // (paridad con gostrata.app/expert-hub/ocr · kanban 6-col real) + floating
+    // context CTA con la narrativa Projex-específica. Reemplaza el hand-rolled
+    // 4-col kanban + role banner + earnings metric strip que no matcheaba prod.
+    // AC event `projex:ap-open-teknion` sigue funcional via listener arriba.
+    return (
+        <div className="relative min-h-screen">
+            <OCRTrackingWrapper />
+            {/* Floating context CTA · bottom-right · Projex narrative overlay */}
+            <div className="fixed bottom-6 right-6 z-40 flex items-start gap-2 rounded-2xl bg-card border border-border shadow-2xl px-4 py-3 max-w-sm">
+                <Sparkles className="h-5 w-5 text-ai shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="flex-1 min-w-0 text-xs">
+                    <div className="text-foreground font-semibold">Overnight AP sweep · 14 vendor bills</div>
+                    <div className="text-muted-foreground text-[11px] mt-0.5">12 auto-matched exact-to-the-penny · 2 held for review (Teknion partial + Warehouse-by-Design no PO#).</div>
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('projex:ap-open-teknion'))}
+                        className="mt-2 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                        Review 291-line Teknion bill
+                        <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+
+    // Legacy hand-rolled kanban · preserved behind false gate · restore
+    // possible flipping false → true si el prod wrapper no funciona
+    // eslint-disable-next-line no-unreachable
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* ── Header · role banner ─────────────────────────────────────── */}
