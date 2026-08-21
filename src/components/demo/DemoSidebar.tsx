@@ -29,6 +29,15 @@ const HERO_STEP_IDS = new Set<string>([
 import { useDemoProfile } from '../../context/useDemoProfile';
 import { WORKSPACES_DATA_THREADS } from '../../config/profiles/workspaces';
 import { useOfficeworksVertical, writeVertical } from '../officeworks/shared/verticalSignal';
+// F80.2 · Projex switcher rewrite · 2-tab segmented + sub-nav. Single
+// source of truth for the experience mapping lives in the profile module.
+import {
+    PROJEX_EXPERIENCE_GROUPS,
+    experienceOf,
+    firstFlowOf,
+    type ProjexExperience,
+    type ProjexFlowId,
+} from '../../config/profiles/projex';
 
 // Apps belonging to Expert Hub — System steps in these show as "Expert"
 const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quote-detail'];
@@ -571,74 +580,106 @@ export default function DemoSidebar() {
                     )
                 })()}
 
-                {/* F74 · Projex · Flow dropdown selector (AP · Vendor onboarding · Progress billing · Order & PO · Electronic ordering & ACK) */}
+                {/* F80.2 · Projex · Experience-first selector · 2-tab segmented
+                     (Expert Hub | Dealer Experience) + sub-nav debajo con los
+                     paths del active tab. Reemplaza el Popover dropdown F74 que
+                     mostraba los 5 flows planos sin agrupación. */}
                 {isProjex && (() => {
-                    const FLOW_OPTIONS = [
-                        { id: 'projex-ap'                 as const, label: 'AP intake & matching',        count: projexFlowCounts.ap },
-                        { id: 'projex-vendor-onboarding'  as const, label: 'Vendor onboarding',           count: projexFlowCounts.vendor },
-                        { id: 'projex-billing'            as const, label: 'Progress billing',            count: projexFlowCounts.billing },
-                        { id: 'projex-order-po'           as const, label: 'Order entry & PO dispatch',   count: projexFlowCounts.orderPo },
-                        { id: 'projex-ack'                as const, label: 'Electronic ordering & ACK',   count: projexFlowCounts.ack },
-                    ]
-                    const activeOpt = FLOW_OPTIONS.find(f => f.id === activeProjexFlow) ?? FLOW_OPTIONS[0]
+                    // Map por flow id → count (existing counter memo).
+                    const flowCountMap: Record<ProjexFlowId, number> = {
+                        'projex-ap':                projexFlowCounts.ap,
+                        'projex-vendor-onboarding': projexFlowCounts.vendor,
+                        'projex-billing':           projexFlowCounts.billing,
+                        'projex-order-po':          projexFlowCounts.orderPo,
+                        'projex-ack':               projexFlowCounts.ack,
+                    }
+                    const activeExperience = experienceOf(activeProjexFlow)
+                    const activeGroup = PROJEX_EXPERIENCE_GROUPS.find(g => g.id === activeExperience)!
+
+                    const handleExperienceTabClick = (experience: ProjexExperience) => {
+                        if (experience === activeExperience) return
+                        // Auto-select the first path of the tapped experience so
+                        // the user aterriza en una scene concreta · no en un
+                        // empty state after clicking the tab.
+                        handleProjexFlowSwitch(firstFlowOf(experience))
+                    }
+
                     return (
-                        <div className="mt-4">
-                            <Popover className="relative">
-                                {({ open }) => (
-                                    <>
-                                        <PopoverButton
-                                            className={`w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${c.bgBadgeActive} ${c.textBadgeActive}`}
-                                            aria-label="Switch active Projex flow"
+                        <div className="mt-4 space-y-2">
+                            {/* Segmented 2-tab · sticky-ish top of the switcher */}
+                            <div
+                                role="tablist"
+                                aria-label="Projex experience"
+                                className="grid grid-cols-2 gap-1 p-0.5 rounded-md bg-zinc-900/5 dark:bg-white/5"
+                            >
+                                {PROJEX_EXPERIENCE_GROUPS.map(group => {
+                                    const isActive = group.id === activeExperience
+                                    const totalSteps = group.flows.reduce(
+                                        (sum, f) => sum + (flowCountMap[f.id] ?? 0),
+                                        0,
+                                    )
+                                    return (
+                                        <button
+                                            key={group.id}
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={isActive}
+                                            onClick={() => handleExperienceTabClick(group.id)}
+                                            className={`flex flex-col items-start gap-0.5 px-2.5 py-2 rounded-md text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                                                isActive
+                                                    ? `${c.bgBadgeActive} ${c.textBadgeActive} shadow-sm`
+                                                    : `${c.textMuted} hover:bg-white/5`
+                                            }`}
                                         >
-                                            <span className="truncate">{activeOpt.label}</span>
-                                            <span className="inline-flex items-center gap-1.5 shrink-0">
-                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 ${c.bgBadge} ${c.textBadge}`}>
-                                                    {activeOpt.count}
-                                                </span>
-                                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+                                            <span className="text-[9px] font-bold uppercase tracking-wider leading-none">
+                                                {group.id === 'expert-hub' ? 'Expert Hub' : 'Dealer'}
                                             </span>
-                                        </PopoverButton>
-                                        <Transition
-                                            as={React.Fragment}
-                                            enter="transition ease-out duration-150"
-                                            enterFrom="opacity-0 -translate-y-1"
-                                            enterTo="opacity-100 translate-y-0"
-                                            leave="transition ease-in duration-100"
-                                            leaveFrom="opacity-100 translate-y-0"
-                                            leaveTo="opacity-0 -translate-y-1"
-                                        >
-                                            <PopoverPanel className="absolute z-50 left-0 right-0 mt-1 rounded-md bg-card border border-border shadow-lg overflow-hidden">
-                                                {({ close }) => (
-                                                    <ul role="listbox" aria-label="Projex flows">
-                                                        {FLOW_OPTIONS.map(opt => {
-                                                            const isActive = activeProjexFlow === opt.id
-                                                            return (
-                                                                <li key={opt.id} role="option" aria-selected={isActive}>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => { handleProjexFlowSwitch(opt.id); close() }}
-                                                                        className={`w-full inline-flex items-center gap-2 px-3 py-2 text-[12px] transition-colors text-left ${
-                                                                            isActive
-                                                                                ? 'bg-primary/10 text-foreground font-semibold'
-                                                                                : 'text-foreground hover:bg-muted/50'
-                                                                        }`}
-                                                                    >
-                                                                        <span className="flex-1 truncate">{opt.label}</span>
-                                                                        <span className="text-[10px] tabular-nums rounded-full bg-zinc-900/10 dark:bg-white/10 px-1.5 text-muted-foreground">
-                                                                            {opt.count}
-                                                                        </span>
-                                                                        {isActive && <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
-                                                                    </button>
-                                                                </li>
-                                                            )
-                                                        })}
-                                                    </ul>
-                                                )}
-                                            </PopoverPanel>
-                                        </Transition>
-                                    </>
-                                )}
-                            </Popover>
+                                            <span className="inline-flex items-center gap-1.5 text-[10px] tabular-nums opacity-80">
+                                                {group.flows.length} paths
+                                                <span className="opacity-50">·</span>
+                                                {totalSteps} steps
+                                            </span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+
+                            {/* Sub-nav · paths que pertenecen al active experience */}
+                            <ul
+                                role="listbox"
+                                aria-label={`${activeGroup.label} paths`}
+                                className="space-y-0.5"
+                            >
+                                {activeGroup.flows.map(flow => {
+                                    const isActiveFlow = activeProjexFlow === flow.id
+                                    return (
+                                        <li key={flow.id} role="option" aria-selected={isActiveFlow}>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleProjexFlowSwitch(flow.id)}
+                                                className={`w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-[12px] transition-colors text-left ${
+                                                    isActiveFlow
+                                                        ? `${c.bgBadgeActive} ${c.textBadgeActive} font-semibold`
+                                                        : `${c.textMuted} hover:bg-white/5`
+                                                }`}
+                                            >
+                                                <span className="flex-1 truncate">
+                                                    <span className="opacity-60 mr-1.5">{flow.short.split(' · ')[0]}</span>
+                                                    {flow.label}
+                                                </span>
+                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 ${
+                                                    isActiveFlow
+                                                        ? `${c.bgBadge} ${c.textBadge}`
+                                                        : 'bg-zinc-900/10 dark:bg-white/10 text-muted-foreground'
+                                                }`}>
+                                                    {flowCountMap[flow.id]}
+                                                </span>
+                                                {isActiveFlow && <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                                            </button>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
                         </div>
                     )
                 })()}
