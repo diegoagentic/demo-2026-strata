@@ -137,7 +137,26 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 </div>
                             </div>
 
-                            {/* Footer · single primary approve */}
+                            {/* F84.5 · Post-approval confirmation strip (Diego
+                                 2026-08-21) · antes de aprobar se ve el batch table +
+                                 Approve; tras aprobar se pinta un mensaje explícito de
+                                 "sent to dealer for downstream flows" para que el
+                                 presentador cierre F1 en Expert Hub y switchee a
+                                 Dealer manualmente via sidebar (evita cross-experience
+                                 jump automático que confunde a los stakeholders). */}
+                            {stage === 'approved' && (
+                                <div className="px-5 py-4 border-t border-border bg-success/5 flex items-start gap-3">
+                                    <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                    <div className="flex-1 min-w-0 text-xs">
+                                        <div className="text-foreground font-semibold">Payment released · handoff to Dealer flows</div>
+                                        <div className="text-muted-foreground mt-1">
+                                            {releasable.length} bills posted to NetSuite · ACH batch sent to the bank · vendor remittance detail queued in the Dealer Experience. Use the sidebar to switch to <span className="text-foreground font-semibold">Dealer</span> when ready to walk vendor onboarding and billing next.
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer · single primary approve · post-approval close only */}
                             <div className="px-5 py-4 border-t border-border bg-muted/10 flex items-center gap-3">
                                 <div className="text-xs text-muted-foreground flex-1">
                                     Human sign-off preserved · Strata prepares ACH entries · never auto-releases.
@@ -162,8 +181,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         onClick={onClose}
                                         className="inline-flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-lg hover:opacity-80 transition-opacity"
                                     >
-                                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                        Continue
+                                        Close
                                     </button>
                                 )}
                             </div>

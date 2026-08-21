@@ -619,7 +619,7 @@ export default function DemoSidebar() {
                                  above the 2-tab segmented so non-technical
                                  stakeholders read the group before the tabs. */}
                             <div className={`text-[10px] font-bold uppercase tracking-wider ${c.textMuted} px-1`}>
-                                Experiencias
+                                Experiences
                             </div>
                             {/* Segmented 2-tab · sticky-ish top of the switcher */}
                             <div
@@ -662,7 +662,7 @@ export default function DemoSidebar() {
                             {/* F84.2 · Diego 2026-08-21 · label "FLUJOS" above the
                                  path sub-nav for the same non-technical clarity. */}
                             <div className={`pt-2 text-[10px] font-bold uppercase tracking-wider ${c.textMuted} px-1`}>
-                                Flujos
+                                Flows
                             </div>
                             {/* Sub-nav · paths que pertenecen al active experience */}
                             <ul
@@ -753,7 +753,7 @@ export default function DemoSidebar() {
                         {/* THIS PATH · compact tagline + value chip */}
                         <div className="space-y-2">
                             <p className={`text-[10px] font-bold uppercase tracking-widest ${c.textDim}`}>
-                                En este flujo
+                                In this flow
                             </p>
                             <p className={`text-sm font-semibold ${c.textTitle}`}>
                                 {landing.tagline.split(' · ')[0]}
