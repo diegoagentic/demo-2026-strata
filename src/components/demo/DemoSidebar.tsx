@@ -752,37 +752,21 @@ export default function DemoSidebar() {
                     : landing.moments.filter(m => m.isCore)
                 const hiddenCount = landing.moments.length - visibleMoments.length
 
+                // F84.39 · Diego 2026-08-21 · fold "Moments" into
+                // "In this flow". The two sections did the same job
+                // twice: MOMENTS carried the step controllers (click
+                // to navigate · done/active/pending status) but the
+                // titles were duplicative next to the tagline verbs.
+                // Now the tagline verbs ARE the tiles · one per core
+                // moment · zipped by index. Controllers keep their
+                // MOMENTS behavior · content comes from the tagline.
+                const actions = landing.tagline.split(' · ')
                 return (
-                    <div className="flex-1 overflow-y-auto p-3 pt-6 scrollbar-micro space-y-5">
-                        {/* THIS PATH · compact tagline + value chip */}
-                        <div className="space-y-2">
-                            <p className={`text-[10px] font-bold uppercase tracking-widest ${c.textDim}`}>
-                                In this flow
-                            </p>
-                            {/* F84.20 · Diego 2026-08-21 · render the tagline as a
-                                numbered action list · resalta los verbos principales
-                                del flujo · zero persona names · pure action arc. */}
-                            <ol className="space-y-1.5 list-none">
-                                {landing.tagline.split(' · ').map((action, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-sm">
-                                        <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-primary/25 text-foreground text-[10px] font-bold tabular-nums shrink-0 mt-0.5">
-                                            {i + 1}
-                                        </span>
-                                        <span className={`${c.textTitle} font-semibold leading-snug`}>{action}</span>
-                                    </li>
-                                ))}
-                            </ol>
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-primary/15 text-foreground">
-                                <Star className="h-2.5 w-2.5" aria-hidden="true" />
-                                {landing.valueChip.label}
-                            </span>
-                        </div>
-
-                        {/* MOMENTS · compact tiles · click to jump */}
+                    <div className="flex-1 overflow-y-auto p-3 pt-6 scrollbar-micro space-y-4">
                         <div className="space-y-2">
                             <div className="flex items-baseline justify-between">
                                 <p className={`text-[10px] font-bold uppercase tracking-widest ${c.textDim}`}>
-                                    Moments · {visibleMoments.length}
+                                    In this flow
                                 </p>
                                 {hiddenCount > 0 && (
                                     <button
@@ -793,7 +777,7 @@ export default function DemoSidebar() {
                                         + {hiddenCount} detail
                                     </button>
                                 )}
-                                {hiddenCount === 0 && landing.moments.length > 3 && (
+                                {hiddenCount === 0 && landing.moments.length > actions.length && (
                                     <button
                                         type="button"
                                         onClick={() => setShowProjexAllDetail(false)}
@@ -804,10 +788,14 @@ export default function DemoSidebar() {
                                 )}
                             </div>
                             <ul className="space-y-1.5">
-                                {visibleMoments.map(moment => {
+                                {visibleMoments.map((moment, i) => {
                                     const idx = steps.findIndex(s => s.id === moment.stepId)
                                     const isActive = idx === currentStepIndex
                                     const isDone = idx >= 0 && idx < currentStepIndex
+                                    // Prefer the tagline verb when we have one · fall back
+                                    // to the moment title (e.g. when + N detail is expanded
+                                    // and we run past the 3 core actions).
+                                    const primaryText = actions[i] ?? moment.title
                                     return (
                                         <li key={moment.stepId}>
                                             <button
@@ -819,7 +807,7 @@ export default function DemoSidebar() {
                                                         : `${c.textMuted} border-transparent hover:border-white/10 hover:bg-white/5`
                                                 }`}
                                             >
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2.5">
                                                     <span className="shrink-0">
                                                         {isDone ? (
                                                             <CheckCircle2 size={14} className={c.iconDone} />
@@ -831,21 +819,25 @@ export default function DemoSidebar() {
                                                             <Circle size={14} className={c.iconPending} />
                                                         )}
                                                     </span>
-                                                    <span className="flex-1 min-w-0 text-[12px] font-semibold leading-tight truncate">
-                                                        {moment.title}
+                                                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-primary/25 text-[10px] font-bold tabular-nums shrink-0">
+                                                        {i + 1}
+                                                    </span>
+                                                    <span className="flex-1 min-w-0 text-[13px] font-semibold leading-snug">
+                                                        {primaryText}
                                                     </span>
                                                     <span className={`text-[9px] font-mono tabular-nums shrink-0 ${isActive ? 'opacity-80' : 'opacity-60'}`}>
                                                         {moment.estTime}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] leading-snug mt-1 opacity-70 line-clamp-2">
-                                                    {moment.description}
-                                                </p>
                                             </button>
                                         </li>
                                     )
                                 })}
                             </ul>
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-primary/15 text-foreground">
+                                <Star className="h-2.5 w-2.5" aria-hidden="true" />
+                                {landing.valueChip.label}
+                            </span>
                         </div>
                     </div>
                 )
