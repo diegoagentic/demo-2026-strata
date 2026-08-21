@@ -27,6 +27,13 @@ import { MWH_TOTALS } from '../../../config/profiles/projex-data/mwhPif'
 // F83.C · phase 'transactions' renderea la copia prod-sync para paridad
 // con gostrata.app/expert-hub/transactions · reemplaza el hand-rolled table.
 import ExpertHubTransactionsWrapper from '../../../vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
+// F83.M · Diego 2026-08-21 · adopt prod Document Review modal shape for
+// PIF attachment preview (paridad con gostrata.app/quote-converter document
+// review) · header sparkle + title + subtitle + status pill + Report issue
+// / View Original PDF / X close · Header Fields / Line Items tabs · Field/
+// Value tables + confidence footer + Cancel/Save.
+import DocumentReviewModal from '../../../vendor/prod-imports/deps/ocr/DocumentReviewModal'
+import type { OcrDocCardData } from '../../../vendor/prod-imports/deps/ocr/OcrDocCard'
 
 // Expert Hub Transactions landing · order transactions in-flight
 interface OrderTransaction {
@@ -65,6 +72,31 @@ export default function F4_p41_DesignerIntakeScene() {
     // Two-phase · Transactions landing → email + ingest detail
     const [phase, setPhase] = useState<'transactions' | 'detail'>('transactions')
     const [state, setState] = useState<'landing' | 'ingesting' | 'ingested'>('landing')
+    // F83.M · prod DocumentReviewModal state · null when closed
+    const [previewDoc, setPreviewDoc] = useState<OcrDocCardData | null>(null)
+
+    const openPifPreview = () => {
+        setPreviewDoc({
+            id: 'MWH-PIF-2026-08-14',
+            name: 'MWH_PIF_2026-08-14.xlsx',
+            vendor: 'Aspire Design · Lead Designer',
+            type: 'Purchase Order',
+            status: 'capturing',
+            lineItems: MWH_TOTALS.productLines,
+            date: '2026-08-14',
+        })
+    }
+    const openSifPreview = () => {
+        setPreviewDoc({
+            id: 'MWH-CET-SIF-2026-08-14',
+            name: 'MWH_CET_export.sif',
+            vendor: 'Aspire Design · Lead Designer',
+            type: 'Purchase Order',
+            status: 'capturing',
+            lineItems: MWH_TOTALS.productLines,
+            date: '2026-08-14',
+        })
+    }
 
     // Action Center CTA `Open Coordinator inbox →` OR MWH row click → drill-in
     useEffect(() => {
@@ -226,7 +258,17 @@ export default function F4_p41_DesignerIntakeScene() {
                         </div>
                         <div className="pt-3 border-t border-border space-y-2">
                             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Attachments</div>
-                            <div className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2 border border-border">
+                            {/* F83.M · Diego 2026-08-21 · attachment rows abren el prod
+                                DocumentReviewModal (paridad con gostrata.app/quote-converter
+                                document review) · click en la row o en "Preview" surface los
+                                Header Fields + Line Items extractados con confidence footer +
+                                Cancel/Save · Report issue + View Original PDF. */}
+                            <button
+                                type="button"
+                                onClick={openPifPreview}
+                                className="w-full flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2 border border-border hover:border-primary/60 hover:bg-muted/60 transition-colors text-left group"
+                                aria-label="Preview MWH_PIF_2026-08-14.xlsx in Document Review"
+                            >
                                 <Paperclip className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                 <FileText className="h-4 w-4 text-foreground" aria-hidden="true" />
                                 <div className="flex-1 min-w-0">
@@ -238,8 +280,14 @@ export default function F4_p41_DesignerIntakeScene() {
                                 <span className="text-[10px] font-bold bg-ai-light text-ai rounded px-1.5 py-0.5">
                                     Parse ready
                                 </span>
-                            </div>
-                            <div className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2 border border-border">
+                                <Eye className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={openSifPreview}
+                                className="w-full flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2 border border-border hover:border-primary/60 hover:bg-muted/60 transition-colors text-left group"
+                                aria-label="Preview MWH_CET_export.sif in Document Review"
+                            >
                                 <Paperclip className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                 <FileText className="h-4 w-4 text-foreground" aria-hidden="true" />
                                 <div className="flex-1 min-w-0">
@@ -249,7 +297,8 @@ export default function F4_p41_DesignerIntakeScene() {
                                 <span className="text-[10px] font-bold bg-ai-light text-ai rounded px-1.5 py-0.5">
                                     SIF ready
                                 </span>
-                            </div>
+                                <Eye className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -331,6 +380,15 @@ export default function F4_p41_DesignerIntakeScene() {
                     </div>
                 </div>
             )}
+
+            {/* F83.M · Prod DocumentReviewModal overlay · Header Fields + Line
+                Items tabs · Field/Value tables · confidence footer + Cancel/Save.
+                Opened from attachment row click above. */}
+            <DocumentReviewModal
+                isOpen={!!previewDoc}
+                onClose={() => setPreviewDoc(null)}
+                doc={previewDoc}
+            />
 
         </div>
     )
