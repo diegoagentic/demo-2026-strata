@@ -670,7 +670,7 @@ export default function DemoSidebar() {
                                 aria-label={`${activeGroup.label} paths`}
                                 className="space-y-1.5"
                             >
-                                {activeGroup.flows.map(flow => {
+                                {activeGroup.flows.map((flow, idx) => {
                                     const isActiveFlow = activeProjexFlow === flow.id
                                     return (
                                         <li key={flow.id} role="option" aria-selected={isActiveFlow}>
@@ -686,7 +686,11 @@ export default function DemoSidebar() {
                                                 }`}
                                             >
                                                 <span className="flex-1 truncate">
-                                                    <span className="opacity-60 mr-1.5">{flow.short.split(' · ')[0]}</span>
+                                                    {/* F84.38 · Diego 2026-08-21 · drop the F-prefixed global
+                                                         ID · number the flows sequentially within the active
+                                                         experience group (Expert Hub → 1/2/3 · Dealer → 1/2)
+                                                         so numbering reads as "flow 1 of Dealer" not "F2". */}
+                                                    <span className="opacity-60 mr-1.5">{idx + 1}</span>
                                                     {flow.label}
                                                 </span>
                                                 {/* F83.A · Diego 2026-08-21 · removed [N] step counters
