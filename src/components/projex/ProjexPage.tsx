@@ -262,7 +262,14 @@ function Shell({ children }: { children: React.ReactNode }) {
     const { currentStep, nextStep } = useDemo()
     const app = currentStep?.app
     const stepId = currentStep?.id ?? ''
-    const arrival = ARRIVAL_MAP[stepId]
+
+    // F82.5.b · Diego 2026-08-21 · removed ProjexArrivalStrip render · era
+    // el 3er header layer (breadcrumb "Expert Hub › Transactions › AP inbox
+    // › Teknion TEK-2026-0847" + focus chip + hint) que competía con el
+    // real Navbar + sidebar MOMENTS. Total header layers de 4 → 2 (Navbar
+    // + scene h1). Breadcrumbs de path viven en el sidebar 2-tab F80.2.
+    // ARRIVAL_MAP se mantiene como referencia · en caso de reintroducir
+    // el strip per-step de forma opt-in en un future release.
 
     // Fallback advance · scoped to the CURRENT step's AC event only. Prevents
     // stale notifs from previous steps (still-open panels, background listeners)
@@ -278,13 +285,6 @@ function Shell({ children }: { children: React.ReactNode }) {
 
     return (
         <ProjexExperienceShell experience={experienceFor(app)} activeTab={activeTabFor(app)}>
-            {arrival && (
-                <ProjexArrivalStrip
-                    breadcrumb={arrival.breadcrumb}
-                    focus={arrival.focus}
-                    hint={arrival.hint}
-                />
-            )}
             {children}
         </ProjexExperienceShell>
     )

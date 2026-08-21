@@ -101,64 +101,20 @@ export default function ProjexExperienceShell({
     tenantLabel = 'Projex Inc.',
     children,
 }: ProjexExperienceShellProps) {
-    const tabs = experience === 'expert-hub' ? EXPERT_HUB_TABS : DEALER_TABS
-    const productLabel = experience === 'expert-hub' ? 'Strata for Expert Hub' : 'Strata for Dealer Experience'
-    const ProductIcon = experience === 'expert-hub' ? Building : Building2
-    const productTone = experience === 'expert-hub' ? 'text-ai bg-ai-light' : 'text-info bg-info/10'
-
-    // F80.5 · si el activeTab viene con un ID legacy de Dealer · re-mapear
-    // a canonical antes de comparar contra la nueva lista de 4 tabs.
-    const resolvedActiveTab: ProjexTab =
-        experience === 'dealer' && activeTab in DEALER_LEGACY_TAB_ALIAS
-            ? (DEALER_LEGACY_TAB_ALIAS[activeTab as DealerTab] ?? activeTab)
-            : activeTab
-
-    // F81.C.fix · Diego 2026-08-21 · eliminated the tenant/product row del
-    // top strip · era un "pseudo-navbar" duplicado con el Navbar real (que
-    // ya muestra `Projex Inc.` + `DEALER EXPERIENCE`/`EXPERT HUB` eyebrow).
-    // Only the secondary tabs strip stays · unique platform navigation
-    // (OCR · Observability · Feedback · Transactions para Dealer · OCR ·
-    // Transactions · Comparisons · Feedback para Expert Hub). Product tone
-    // + tenant label params conservados sin uso · pueden usarse futuros
-    // consumidores que necesiten el chip.
-    void productLabel; void ProductIcon; void productTone; void tenantLabel;
+    // F82.5.a · Diego 2026-08-21 · killed the secondary tabs strip entirely.
+    // El audit expert-hub prod vs demo confirmó · prod Navbar YA muestra la
+    // navegación · nuestro Navbar real muestra los 5 flow tabs (AP Intake ·
+    // Vendor Onboarding · etc.) · el shell strip decorativo con `OCR ·
+    // Transactions · Comparisons · Feedback` era una pseudo-navbar que
+    // Diego flag como "otra cosa que parece la navbar". Removed.
+    //
+    // El component se preserva como pass-through wrapper · consumers pueden
+    // opt-in a chrome específico via CSS class · pero no rendereamos nada
+    // por default. Todos los params (experience · activeTab · tenantLabel)
+    // se preservan en la signature para backwards-compat · void'd here.
+    void experience; void activeTab; void tenantLabel
     return (
         <div className="min-h-screen bg-background text-foreground">
-            {/* Top secondary-tabs strip · unique platform navigation · zero
-                 duplication con el real Navbar (F81.C.fix) */}
-            <div className="border-b border-border bg-card">
-                <div className="max-w-7xl mx-auto px-6 py-2">
-                    <nav
-                        className="flex items-center gap-1 overflow-x-auto -mx-1"
-                        aria-label={`${experience === 'expert-hub' ? 'Expert Hub' : 'Dealer Experience'} navigation (preview only)`}
-                    >
-                        {tabs.map(tab => {
-                            const active = tab.id === resolvedActiveTab
-                            const Icon = tab.icon
-                            return (
-                                <span
-                                    key={tab.id}
-                                    aria-disabled="true"
-                                    aria-current={active ? 'page' : undefined}
-                                    className={`
-                                        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold
-                                        whitespace-nowrap select-none cursor-default transition-colors
-                                        ${active
-                                            ? 'bg-primary/15 text-foreground'
-                                            : 'text-muted-foreground'}
-                                    `}
-                                    title={active ? `${tab.label} · active` : `${tab.label} (preview only)`}
-                                >
-                                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                                    {tab.label}
-                                </span>
-                            )
-                        })}
-                    </nav>
-                </div>
-            </div>
-
-            {/* Scene body */}
             {children}
         </div>
     )
