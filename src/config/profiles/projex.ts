@@ -417,7 +417,7 @@ export interface ProjexPathLanding {
 
 export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
     'projex-ap': {
-        tagline: 'Read bills overnight · match them to POs to the penny · release the payment batch.',
+        tagline: 'Read bills overnight · Match them to POs to the penny · Release the payment batch',
         valueChip: { label: 'Saves 4-6 hrs/week per accountant', tone: 'success' },
         heroStepId: 'p1.1',
         moments: [
@@ -429,7 +429,7 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-vendor-onboarding': {
-        tagline: 'Read a W-9 · file it in the compliance queue · sync the vendor to NetSuite.',
+        tagline: 'Read a W-9 · File it in the compliance queue · Sync the vendor to NetSuite',
         valueChip: { label: 'Cuts vendor onboarding from 2 weeks to 1 day', tone: 'ai' },
         heroStepId: 'p2.1',
         moments: [
@@ -441,7 +441,7 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-billing': {
-        tagline: 'Catch billing deadlines · review the proforma · send the invoice to the customer.',
+        tagline: 'Catch billing deadlines · Review the proforma · Send the invoice to the customer',
         valueChip: { label: 'Catches 100% of billing milestones · no revenue leaks', tone: 'warning' },
         heroStepId: 'p3.1',
         moments: [
@@ -453,7 +453,7 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-order-po': {
-        tagline: 'A 300-line PIF from the Lead Designer lands in the OCR funnel · Coordinator reviews the preliminary order lines and sends the 26-PO batch by email.',
+        tagline: 'Ingest a 300-line PIF · Review the preliminary order lines · Send the 26-PO batch by email',
         valueChip: { label: 'Reduces PO dispatch from 3 days to 30 min per project', tone: 'info' },
         heroStepId: 'p4.1',
         moments: [
@@ -465,7 +465,7 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-ack': {
-        tagline: 'Vendor sends an ACK · Strata compares it against the PO · Coordinator triggers the approval chain to the designers.',
+        tagline: 'Read a vendor ACK · Compare it against the PO · Trigger the approval chain',
         valueChip: { label: 'Cuts ACK review from 4 hrs to 20 min per PO', tone: 'ai' },
         heroStepId: 'p5.1',
         moments: [

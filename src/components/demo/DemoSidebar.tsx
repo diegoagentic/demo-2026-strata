@@ -755,9 +755,19 @@ export default function DemoSidebar() {
                             <p className={`text-[10px] font-bold uppercase tracking-widest ${c.textDim}`}>
                                 In this flow
                             </p>
-                            <p className={`text-sm font-semibold ${c.textTitle} leading-snug`}>
-                                {landing.tagline}
-                            </p>
+                            {/* F84.20 · Diego 2026-08-21 · render the tagline as a
+                                numbered action list · resalta los verbos principales
+                                del flujo · zero persona names · pure action arc. */}
+                            <ol className="space-y-1.5 list-none">
+                                {landing.tagline.split(' · ').map((action, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm">
+                                        <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-primary/25 text-foreground text-[10px] font-bold tabular-nums shrink-0 mt-0.5">
+                                            {i + 1}
+                                        </span>
+                                        <span className={`${c.textTitle} font-semibold leading-snug`}>{action}</span>
+                                    </li>
+                                ))}
+                            </ol>
                             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-primary/15 text-foreground">
                                 <Star className="h-2.5 w-2.5" aria-hidden="true" />
                                 {landing.valueChip.label}
