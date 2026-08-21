@@ -3,7 +3,8 @@
  *
  * Compliance approves the Tuesday ACH batch. Prod shape references:
  * expert-hub ComparisonReviewModal header (icon + short title + status pill
- * · muted meta strip · body scroll · footer with 3 primary actions).
+ * · muted meta strip · body scroll · footer with 3 primary actions Accept /
+ * Review / Reject · same pattern applied here).
  *
  * Zero decoration · zero KPI heros · zero warning banners. Modal overlay
  * positioning follows F83.S (z-[400] + md:pl-[336px]).
@@ -13,6 +14,7 @@ import { Fragment, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
     Wallet, CheckCircle2, ShieldAlert, AlertTriangle, X, Loader2,
+    MessageSquare, XCircle, Send,
 } from 'lucide-react'
 
 interface PaymentApprovalModalProps {
@@ -42,8 +44,16 @@ const BATCH: PaymentRow[] = [
     { id: 'PJX-DUP-8499',  vendor: 'Nelson and Company', entity: 'Projex Inc.',  invoiceNumber: 'NLC-99120',     amount:  6720.00, duplicate: true },
 ]
 
+type Stage =
+    | 'idle'
+    | 'approving' | 'approved'
+    | 'commenting' | 'commented'
+    | 'rejecting' | 'rejected'
+
 export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: PaymentApprovalModalProps) {
-    const [stage, setStage] = useState<'idle' | 'approving' | 'approved'>('idle')
+    const [stage, setStage] = useState<Stage>('idle')
+    const [comment, setComment] = useState('')
+    const [rejectReason, setRejectReason] = useState('')
     const releasable = BATCH.filter(b => !b.duplicate)
     const total = releasable.reduce((s, b) => s + b.amount, 0)
     const duplicateCount = BATCH.filter(b => b.duplicate).length
@@ -56,6 +66,24 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             onApproved?.()
         }, 1200)
     }
+
+    const handleSendComment = () => {
+        if (!comment.trim()) return
+        setStage('commented')
+    }
+
+    const handleConfirmReject = () => {
+        if (!rejectReason.trim()) return
+        setStage('rejected')
+    }
+
+    const statusPill = () => {
+        if (stage === 'approved') return { cls: 'bg-success/15 text-success', icon: <CheckCircle2 className="h-3 w-3" aria-hidden="true" />, label: 'Released' }
+        if (stage === 'commented') return { cls: 'bg-info/15 text-info', icon: <MessageSquare className="h-3 w-3" aria-hidden="true" />, label: 'Comment sent · awaiting reply' }
+        if (stage === 'rejected') return { cls: 'bg-destructive/15 text-destructive', icon: <XCircle className="h-3 w-3" aria-hidden="true" />, label: 'Rejected · returned to Compliance' }
+        return { cls: 'bg-primary/15 text-foreground', icon: <ShieldAlert className="h-3 w-3" aria-hidden="true" />, label: 'Pending CEO review' }
+    }
+    const pill = statusPill()
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -72,10 +100,9 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <Wallet className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                                         <h2 className="text-base font-bold text-foreground">Tue payment run · release ACH batch</h2>
-                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${stage === 'approved' ? 'bg-success/15 text-success' : 'bg-primary/15 text-foreground'}`}>
-                                            {stage === 'approved'
-                                                ? <><CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Released</>
-                                                : <><ShieldAlert className="h-3 w-3" aria-hidden="true" /> Pending CEO review</>}
+                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${pill.cls}`}>
+                                            {pill.icon}
+                                            {pill.label}
                                         </span>
                                     </div>
                                     <button
@@ -137,13 +164,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 </div>
                             </div>
 
-                            {/* F84.5 · Post-approval confirmation strip (Diego
-                                 2026-08-21) · antes de aprobar se ve el batch table +
-                                 Approve; tras aprobar se pinta un mensaje explícito de
-                                 "sent to dealer for downstream flows" para que el
-                                 presentador cierre F1 en Expert Hub y switchee a
-                                 Dealer manualmente via sidebar (evita cross-experience
-                                 jump automático que confunde a los stakeholders). */}
+                            {/* F84.5 · Post-approval confirmation */}
                             {stage === 'approved' && (
                                 <div className="px-5 py-4 border-t border-border bg-success/5 flex items-start gap-3">
                                     <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
@@ -156,27 +177,140 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 </div>
                             )}
 
-                            {/* Footer · single primary approve · post-approval close only */}
-                            <div className="px-5 py-4 border-t border-border bg-muted/10 flex items-center gap-3">
-                                <div className="text-xs text-muted-foreground flex-1">
+                            {/* F84.6 · Comment composer · leave note for another stakeholder */}
+                            {stage === 'commenting' && (
+                                <div className="px-5 py-4 border-t border-border bg-info/5 space-y-3">
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <MessageSquare className="h-4 w-4 text-info shrink-0" aria-hidden="true" />
+                                        <span className="text-foreground font-semibold">Leave a note for another stakeholder</span>
+                                        <span className="text-muted-foreground">· goes to Compliance thread on the batch record</span>
+                                    </div>
+                                    <textarea
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        rows={3}
+                                        placeholder="e.g. Please double-check Nelson NLC-99120 against the July remittance before we release."
+                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 placeholder:text-muted-foreground"
+                                    />
+                                </div>
+                            )}
+                            {stage === 'commented' && (
+                                <div className="px-5 py-4 border-t border-border bg-info/5 flex items-start gap-3">
+                                    <MessageSquare className="h-5 w-5 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                                    <div className="flex-1 min-w-0 text-xs">
+                                        <div className="text-foreground font-semibold">Comment sent to Compliance</div>
+                                        <div className="text-muted-foreground mt-1 line-clamp-2 italic">&ldquo;{comment}&rdquo;</div>
+                                        <div className="text-muted-foreground mt-1">Batch parked · will resume on their reply.</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* F84.6 · Reject reason capture · destructive path */}
+                            {stage === 'rejecting' && (
+                                <div className="px-5 py-4 border-t border-border bg-destructive/5 space-y-3">
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <XCircle className="h-4 w-4 text-destructive shrink-0" aria-hidden="true" />
+                                        <span className="text-foreground font-semibold">Reject the ACH batch · reason required</span>
+                                        <span className="text-muted-foreground">· returns to Compliance for adjustment</span>
+                                    </div>
+                                    <textarea
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        rows={3}
+                                        placeholder="e.g. Batch total is above the Tuesday cash-flow target · move Boss Design + one Alamir to Thursday."
+                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 placeholder:text-muted-foreground"
+                                    />
+                                </div>
+                            )}
+                            {stage === 'rejected' && (
+                                <div className="px-5 py-4 border-t border-border bg-destructive/5 flex items-start gap-3">
+                                    <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
+                                    <div className="flex-1 min-w-0 text-xs">
+                                        <div className="text-foreground font-semibold">Batch rejected · returned to Compliance</div>
+                                        <div className="text-muted-foreground mt-1 line-clamp-2 italic">&ldquo;{rejectReason}&rdquo;</div>
+                                        <div className="text-muted-foreground mt-1">Nothing released · Compliance re-cuts the batch based on the note.</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer · 3 primary actions (Reject · Comment · Approve) */}
+                            <div className="px-5 py-4 border-t border-border bg-muted/10 flex items-center gap-2 flex-wrap">
+                                <div className="text-xs text-muted-foreground flex-1 min-w-0">
                                     Human sign-off preserved · Strata prepares ACH entries · never auto-releases.
                                 </div>
+
                                 {stage === 'idle' && (
-                                    <button
-                                        onClick={handleApprove}
-                                        className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-                                    >
-                                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                        Approve ACH batch
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={() => setStage('rejecting')}
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-2 transition-colors"
+                                        >
+                                            <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Reject
+                                        </button>
+                                        <button
+                                            onClick={() => setStage('commenting')}
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-2 transition-colors"
+                                        >
+                                            <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Leave comment
+                                        </button>
+                                        <button
+                                            onClick={handleApprove}
+                                            className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                                        >
+                                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Approve ACH batch
+                                        </button>
+                                    </>
                                 )}
+
                                 {stage === 'approving' && (
                                     <div className="inline-flex items-center gap-1.5 text-xs font-bold text-ai py-2 px-4">
                                         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                                         Preparing ACH entries…
                                     </div>
                                 )}
-                                {stage === 'approved' && (
+
+                                {stage === 'commenting' && (
+                                    <>
+                                        <button
+                                            onClick={() => { setStage('idle'); setComment('') }}
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-2 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSendComment}
+                                            disabled={!comment.trim()}
+                                            className="inline-flex items-center gap-1.5 bg-info text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Send comment
+                                        </button>
+                                    </>
+                                )}
+
+                                {stage === 'rejecting' && (
+                                    <>
+                                        <button
+                                            onClick={() => { setStage('idle'); setRejectReason('') }}
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-2 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleConfirmReject}
+                                            disabled={!rejectReason.trim()}
+                                            className="inline-flex items-center gap-1.5 bg-destructive text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Confirm reject
+                                        </button>
+                                    </>
+                                )}
+
+                                {(stage === 'approved' || stage === 'commented' || stage === 'rejected') && (
                                     <button
                                         onClick={onClose}
                                         className="inline-flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-lg hover:opacity-80 transition-opacity"
