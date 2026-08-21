@@ -16,7 +16,7 @@
  *          `projex-billing` · `projex-order-po` · `projex-ack`
  */
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { User, Mail, GitCompare, FileText, MessageSquare, Package, ClipboardList } from 'lucide-react'
 import { useDemo } from '../../context/DemoContext'
 import ProjexExperienceShell, { type ProjexTab } from './ProjexExperienceShell'
@@ -24,11 +24,10 @@ import ProjexExperienceShell, { type ProjexTab } from './ProjexExperienceShell'
 // Antes vivía huérfano como `experienceFor()` local abajo · ahora se
 // importa del profile module para que switcher + shell + navbar
 // compartan la misma verdad.
-import { experienceOf, type ProjexExperience, type ProjexFlowId } from '../../config/profiles/projex'
-// F81.D · Tour intro slide · ProjexPathLanding aparece como scene 0 del path
-// cuando el user acaba de arrancar el tour · click un tile o CTA lo advances
-// al scene real.
-import ProjexPathLanding from './ProjexPathLanding'
+import { experienceOf, type ProjexExperience } from '../../config/profiles/projex'
+// F82.4 · ProjexPathLanding conservado en el codebase pero NO usado desde
+// aquí · el tour intro landing fue removido · scenes renderean directas al
+// arrancar Demo · toda la info del landing vive en el DemoSidebar (F82.2).
 import ProjexArrivalStrip from './ProjexArrivalStrip'
 import ProjexPlaceholderScene from './scenes/ProjexPlaceholderScene'
 import APInboxSweepScene from './scenes/APInboxSweepScene'
@@ -124,72 +123,21 @@ const ARRIVAL_MAP: Record<string, ArrivalContext> = {
 }
 
 export default function ProjexPage() {
-    const { currentStep, currentStepIndex, steps, goToStep } = useDemo()
+    const { currentStep } = useDemo()
     const id = currentStep?.id
     const app = currentStep?.app
 
-    // F81.D · Tour intro slide · track per-path "hasSeenLanding" en local
-    // state · cuando el user llega a un path por primera vez (activePath
-    // change), rendereamos el ProjexPathLanding como "cover page" antes del
-    // scene · click un tile o CTA marca el path como "begun" y advances.
-    // Reset per Projex profile switch (state naturally resets on unmount).
-    const [hasBegunPath, setHasBegunPath] = useState<Set<string>>(new Set())
-    const activePathId = (currentStep?.flowId ?? 'projex-ap') as ProjexFlowId
-
-    // Auto-reset landing "seen" flag cuando el user regresa a la p{path}.1
-    // via Back (retroceso deliberado · quiere ver el landing de nuevo).
-    const firstStepIdxOfPath = steps.findIndex(s => s.flowId === activePathId)
-    useEffect(() => {
-        if (currentStepIndex === firstStepIdxOfPath && hasBegunPath.has(activePathId)) {
-            // User back al primer step del path · si ya habían visto el landing
-            // no hacer nada (scene renders). Si NO habían visto · landing shows.
-            // Behavior · si el user quiere volver a ver landing · switch path
-            // afuera y adentro · resets state.
-        }
-    }, [activePathId, currentStepIndex, firstStepIdxOfPath, hasBegunPath])
-
-    // Landing gate · solo si aún no ha begun este path
-    const shouldShowLanding = !hasBegunPath.has(activePathId)
-
-    const markPathBegun = (pathId: string) => {
-        setHasBegunPath(prev => {
-            const next = new Set(prev)
-            next.add(pathId)
-            return next
-        })
-    }
-
-    if (shouldShowLanding) {
-        const experience = experienceOf(activePathId)
-        const tab = activeTabFor(activePathId)
-        return (
-            <ProjexExperienceShell experience={experience} activeTab={tab} tenantLabel="Projex Inc.">
-                <ProjexPathLanding
-                    pathId={activePathId}
-                    onStartGuided={() => {
-                        // Advance to first step of the active path · this scene
-                        // will render on next re-render because hasBegunPath now
-                        // includes activePathId.
-                        const idx = steps.findIndex(s => s.flowId === activePathId)
-                        if (idx >= 0 && idx !== currentStepIndex) goToStep(idx)
-                        markPathBegun(activePathId)
-                    }}
-                    onStartExplore={() => {
-                        // Same as guided v1 · exploreMode toggle pending Fase B.4
-                        const idx = steps.findIndex(s => s.flowId === activePathId)
-                        if (idx >= 0 && idx !== currentStepIndex) goToStep(idx)
-                        markPathBegun(activePathId)
-                    }}
-                    onJumpToMoment={(stepId: string) => {
-                        // Playlist model · click un tile · saltar a esa scene
-                        const idx = steps.findIndex(s => s.id === stepId)
-                        if (idx >= 0) goToStep(idx)
-                        markPathBegun(activePathId)
-                    }}
-                />
-            </ProjexExperienceShell>
-        )
-    }
+    // F82.4 · Diego 2026-08-21 · el tour intro landing fue removido ·
+    // toda la info del landing (tagline · value chip · moments menu) ya
+    // vive en el DemoSidebar (F82.2 · THIS PATH + MOMENTS sections) ·
+    // el intro screen quedó redundante. Al click Start Demo (FAB), el
+    // user aterriza DIRECTO en step 1 (p1.1 o el flowId active). El
+    // ProjexPathLanding component se preserva en el codebase para uso
+    // futuro (backwards-compat) · pero no se renderea desde acá ni
+    // desde App.tsx.
+    //
+    // F81.D removed · el `hasBegunPath` state + landing gate ya no
+    // aplican · scenes renderean siempre que currentStep matchee.
 
     // Phase 1 · AP flow · 6 dedicated scenes (p1.1 → p1.6)
     if (id === 'p1.1') return <Shell><APInboxSweepScene /></Shell>
