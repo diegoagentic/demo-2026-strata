@@ -24,7 +24,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { FAIRPORT_FORECAST, PROJEX_MILESTONES } from '../../../config/profiles/projex-data/arAging'
@@ -49,13 +48,6 @@ export default function F3_p31_ThresholdAlertScene() {
 
     const fairport = PROJEX_MILESTONES.find(m => m.project.includes('Fairport'))!
     const currentOrderedPct = phase === 'building' ? 49 : 52 // crossing 50 animates in
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO, PROJEX_SOURCES.NETSUITE_BILL] },
-        { sources: [PROJEX_SOURCES.STRATA_AI_PJX] },
-        { sources: [PROJEX_SOURCES.FINANCIAL_DASHBOARD] },
-    ]
-
     // Chart geometry
     const CHART_HEIGHT = 200
     const maxValue = 100 // % scale
@@ -65,15 +57,7 @@ export default function F3_p31_ThresholdAlertScene() {
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F3</span>
-                    <span>Progress billing · step 1</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Auto · live forecast
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Threshold alert · Fairport phase 2 crosses 50% ordered
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -280,7 +264,6 @@ export default function F3_p31_ThresholdAlertScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Threshold forecast · NetSuite ratio → Strata trigger → proforma draft" />
         </div>
     )
 }

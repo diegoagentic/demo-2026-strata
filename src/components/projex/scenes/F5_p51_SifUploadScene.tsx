@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { VENDOR_ACK_CONF } from '../../../config/profiles/projex-data/teknionAck'
 
@@ -50,25 +49,10 @@ export default function F5_p51_SifUploadScene() {
     const currentLabel = phaseIdx > 0 ? UPLOAD_PHASES[Math.min(phaseIdx - 1, UPLOAD_PHASES.length - 1)].label : 'Preparing…'
 
     const emailVendors = VENDOR_ACK_CONF.filter(v => v.vendorCode !== 'TEK')
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-        { sources: [PROJEX_SOURCES.TEKNION_ONLINE] },
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F5</span>
-                    <span>Electronic ordering &amp; ACK · step 1</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Auto · SIF dispatch
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Teknion Online SIF upload · 70% of the volume + email tail 30%
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -172,7 +156,6 @@ export default function F5_p51_SifUploadScene() {
                 </div>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="SIF dispatch · Teknion Online 70% + email tail 30%" />
         </div>
     )
 }

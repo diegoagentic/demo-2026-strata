@@ -32,7 +32,6 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import { ReasonDialog } from '../../shared'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_BILLS_OVERNIGHT, type BillLineItem } from '../../../config/profiles/projex-data/bills'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
@@ -161,41 +160,17 @@ export default function APLineItemMatchScene() {
     useEffect(() => {
         // no-op initial · rows animate-in por default
     }, [])
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-        { sources: [PROJEX_SOURCES.STRATA_MATCHER] },
-        { sources: [PROJEX_SOURCES.NETSUITE_BILL] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F1</span>
-                    <span>AP intake &amp; matching · step 3</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Line-item match
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Line-item match to the penny · Teknion NCBA · Accounting picks a cause
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     Compliance\'s hard rule · <strong className="text-foreground">match exact-to-the-penny</strong>. Bill 8483 · 15 sample lines representativas del 291-line PO · 12 exact · 3 need Accounting\'s eyes.
                 </p>
             </div>
-
-            {/* Breadcrumb · queue context */}
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
-                <GitCompare className="h-3 w-3 shrink-0" aria-hidden="true" />
-                <span>AP inbox · overnight sweep</span>
-                <span className="text-border">›</span>
-                <span className="font-bold text-foreground">{bill?.id} · {bill?.vendorInvoiceNumber} · line-by-line reconciliation</span>
-            </div>
-
             {/* Comparison header · PO vs Bill totals + delta chip */}
             <div className="bg-card border border-border rounded-2xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-border flex items-center gap-3">
@@ -594,7 +569,6 @@ export default function APLineItemMatchScene() {
                 </div>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="Match pipeline · Compliance\'s rule + Multi-Line Edit tool" />
 
             {/* Override reason modal · tone=neutral usa brand lime (LAW 3) · consistent con main CTAs */}
             <ReasonDialog

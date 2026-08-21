@@ -23,7 +23,6 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import AgentPipelineStrip, { type AgentStep } from '../../simulations/AgentPipelineStrip'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import VendorInvoicePreview from '../VendorInvoicePreview'
 import { PROJEX_BILLS_OVERNIGHT } from '../../../config/profiles/projex-data/bills'
 import { PROJEX_VENDORS } from '../../../config/profiles/projex-data/vendors'
@@ -128,26 +127,11 @@ export default function APBillIntakeScene() {
         const cancel = pauseAwareTimeout(() => setRevealedFields(n => n + 1), 220)
         return cancel
     }, [phase, revealedFields, pauseAwareTimeout])
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-        { sources: [PROJEX_SOURCES.STRATA_OCR_PJX, PROJEX_SOURCES.STRATA_MATCHER] },
-        { sources: [PROJEX_SOURCES.NETSUITE_PO, PROJEX_SOURCES.NETSUITE_BILL] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F1</span>
-                    <span>AP intake &amp; matching · step 2</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Agents live
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Vendor bill in the AP inbox · Teknion 291-line PO (NCBA)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -288,7 +272,6 @@ export default function APBillIntakeScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Intake pipeline · overnight" />
 
             {/* Vendor invoice preview · mock (no real PDF for fictional Teknion) */}
             {bill && (

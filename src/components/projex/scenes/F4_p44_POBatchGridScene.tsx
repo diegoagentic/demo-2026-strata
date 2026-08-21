@@ -14,7 +14,6 @@ import {
     CheckCircle2, AlertTriangle, Eye, DollarSign, Building2, User,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { MWH_PO_BATCH, MWH_TOTALS, type POBatchItem } from '../../../config/profiles/projex-data/mwhPif'
@@ -41,29 +40,11 @@ export default function F4_p44_POBatchGridScene() {
 
     const vendors = Array.from(new Set(MWH_PO_BATCH.map(p => p.vendorCode)))
     const totalBatchAmount = MWH_PO_BATCH.reduce((s, p) => s + p.amount, 0) + 76540 // + hidden POs approx
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-        { sources: [PROJEX_SOURCES.STRATA_COMPOSER] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                        <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
-                        <span>Order &amp; PO dispatch · step 4</span>
-                        <span className="text-muted-foreground/60">·</span>
-                        <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                            <Building2 className="h-3 w-3" aria-hidden="true" /> Expert Hub · Transactions
-                        </span>
-                        <span className="text-muted-foreground/60">·</span>
-                        <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
-                            <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
-                        </span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                         Expert Hub · Transactions · 26 draft POs ready for review
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -234,7 +215,6 @@ export default function F4_p44_POBatchGridScene() {
                 </button>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="PO batch · 26 draft grid → per-vendor DiffViewer" />
         </div>
     )
 }

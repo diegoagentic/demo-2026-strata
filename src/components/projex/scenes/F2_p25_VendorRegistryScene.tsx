@@ -24,7 +24,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_VENDOR_REGISTRY } from '../../../config/profiles/projex-data/w9Records'
 import { PROJEX_VENDOR_TOTALS } from '../../../config/profiles/projex-data/vendors'
@@ -67,27 +66,12 @@ export default function F2_p25_VendorRegistryScene() {
         '30-day-out': PROJEX_VENDOR_REGISTRY.filter(r => r.w9Age === '30-day-out').length,
         expired:      PROJEX_VENDOR_REGISTRY.filter(r => r.w9Age === 'expired').length,
     }
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.STRATA_AI_PJX] },
-        { sources: [PROJEX_SOURCES.NETSUITE_VENDOR] },
-        { sources: [PROJEX_SOURCES.SHAREPOINT_ACCT_PRIVATE] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                        <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F2</span>
-                        <span>Vendor onboarding · step 5</span>
-                        <span className="text-muted-foreground/60">·</span>
-                        <span className="inline-flex items-center gap-1 bg-success/10 text-success font-semibold rounded-md px-1.5 py-0.5">
-                            <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Auto · registry populate
-                        </span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                         NetSuite Vendor master · #734 lands with expiration tracking
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -264,7 +248,6 @@ export default function F2_p25_VendorRegistryScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Vendor master · NetSuite → SharePoint mirror" />
         </div>
     )
 }

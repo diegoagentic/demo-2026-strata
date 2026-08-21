@@ -14,7 +14,6 @@ import {
     RotateCcw, Search, Wrench,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { NCBA_SHIPMENTS, type ShipmentSN } from '../../../config/profiles/projex-data/teknionAck'
 
@@ -47,25 +46,10 @@ export default function F5_p56_ShipmentTrackingScene() {
         'shipped':            NCBA_SHIPMENTS.filter(s => s.status === 'shipped').length,
         'delivered':          NCBA_SHIPMENTS.filter(s => s.status === 'delivered').length,
     }
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-        { sources: [PROJEX_SOURCES.TEKNION_ONLINE, PROJEX_SOURCES.VENDOR_PORTAL_HBF] },
-        { sources: [PROJEX_SOURCES.STRATA_AI_PJX] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F5</span>
-                    <span>Electronic ordering &amp; ACK · step 6</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-success/10 text-success font-semibold rounded-md px-1.5 py-0.5">
-                        <Truck className="h-3 w-3" aria-hidden="true" /> Daily sweep
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Daily ESD sweep + shipment tracking · Shipment Notifications
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -73,24 +57,8 @@ export default function F5_p56_ShipmentTrackingScene() {
                 </p>
             </div>
 
-            {/* Status hero · 4 status counts */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {(Object.keys(STATUS_META) as ShipmentSN['status'][]).map(status => {
-                    const meta = STATUS_META[status]
-                    const Icon = meta.icon
-                    return (
-                        <div key={status} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${meta.cls}`}>
-                                <Icon className={`h-5 w-5 ${status === 'in-production' ? 'animate-spin' : ''}`} aria-hidden="true" />
-                            </div>
-                            <div>
-                                <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{statusCounts[status]}</div>
-                                <div className="text-[11px] text-muted-foreground mt-1">{meta.label}</div>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
+            {/* F83.A · Status hero removed · counts pueden vivir en el filter
+                 bar debajo · match prod que no tiene KPI heroes standalone. */}
 
             {/* Search + Multi-Line Edit callout */}
             <div className="rounded-2xl border border-border bg-card p-3 flex items-center gap-3 flex-wrap">
@@ -195,7 +163,6 @@ export default function F5_p56_ShipmentTrackingScene() {
                 <ArrowRight className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Shipment tracking · daily sweep · SN inbound events" />
         </div>
     )
 }

@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import AIEmailComposer, { type EmailPolishDirection } from '../../shared/AIEmailComposer'
 import { PROJEX_BILLS_OVERNIGHT } from '../../../config/profiles/projex-data/bills'
 import { PROJEX_VENDORS } from '../../../config/profiles/projex-data/vendors'
@@ -200,26 +199,11 @@ export default function APInstallVendorExceptionScene() {
 
     const customPolish = (_body: string, direction: EmailPolishDirection) =>
         POLISH_TONES[direction] ?? _body
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-        { sources: [PROJEX_SOURCES.STRATA_COMPOSER] },
-        { sources: [PROJEX_SOURCES.SHAREPOINT_PROJECTS, PROJEX_SOURCES.NETSUITE_PO] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F1</span>
-                    <span>AP intake &amp; matching · step 4</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> AI-drafted
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     AP inbox · install-vendor bill without PO # · Strata flags for {jeff.fullName.split(' ')[0]}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -425,7 +409,6 @@ export default function APInstallVendorExceptionScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Held bill · PM confirmation loop" />
 
             {/* Canonical AI Email Composer · slide-over */}
             <AIEmailComposer

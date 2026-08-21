@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { MWH_PO_BATCH } from '../../../config/profiles/projex-data/mwhPif'
@@ -123,29 +122,10 @@ export default function F4_p45_PerVendorSendScene() {
     const sentCount = sentIds.size
     const heldCount = heldIds.size
     const remainingCount = MWH_PO_BATCH.length - sentCount - heldCount
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-        { sources: [PROJEX_SOURCES.TEKNION_ONLINE, PROJEX_SOURCES.VENDOR_PORTAL_HBF] },
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
-                    <span>Order &amp; PO dispatch · step 5</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
-                        <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
-                    </span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-destructive/10 text-destructive font-semibold rounded-md px-1.5 py-0.5">
-                        <ShieldAlert className="h-3 w-3" aria-hidden="true" /> Never auto-send
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Per-vendor Send · Coordinator releases Teknion first · never one-batch
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -258,37 +238,8 @@ export default function F4_p45_PerVendorSendScene() {
                 })}
             </div>
 
-            {/* KPI summary + advance */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div className="rounded-2xl border border-success/40 bg-success/5 p-4 flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-success shrink-0" aria-hidden="true" />
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{sentCount}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Sent</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-warning/40 bg-warning/5 p-4 flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-warning shrink-0" aria-hidden="true" />
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{heldCount}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Held</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-muted-foreground shrink-0" aria-hidden="true" />
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{remainingCount}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Pending review</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <Sparkles className="h-5 w-5 text-ai shrink-0" aria-hidden="true" />
-                    <div>
-                        <div className="text-lg font-semibold text-foreground leading-none">100%</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Human intent per PO</div>
-                    </div>
-                </div>
-            </div>
+            {/* F83.A · KPI summary hero removed · sent/held counts pueden
+                 vivir en el header del per-vendor strip si necesario. */}
 
             {sentCount > 0 && (
                 <div className="rounded-2xl border border-success/40 bg-success/5 px-4 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -307,7 +258,6 @@ export default function F4_p45_PerVendorSendScene() {
                 </div>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="Per-vendor Send · SubmitPODialog per PO · NetSuite dispatch" />
 
             {/* Review + edit modal · opens per PO row · Send/Hold/Cancel */}
             <Transition show={reviewPO !== null} as={Fragment}>

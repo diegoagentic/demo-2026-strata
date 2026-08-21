@@ -678,13 +678,9 @@ export default function DemoSidebar() {
                                                     <span className="opacity-60 mr-1.5">{flow.short.split(' · ')[0]}</span>
                                                     {flow.label}
                                                 </span>
-                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 shrink-0 ${
-                                                    isActiveFlow
-                                                        ? `${c.bgBadge} ${c.textBadge}`
-                                                        : 'bg-zinc-900/10 dark:bg-white/10 text-muted-foreground'
-                                                }`}>
-                                                    {flowCountMap[flow.id]}
-                                                </span>
+                                                {/* F83.A · Diego 2026-08-21 · removed [N] step counters
+                                                     · scenes count no longer stable · counters engañaban.
+                                                     Sub-nav queda con path label + chevron/check solamente. */}
                                                 {isActiveFlow ? (
                                                     <Check className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
                                                 ) : (

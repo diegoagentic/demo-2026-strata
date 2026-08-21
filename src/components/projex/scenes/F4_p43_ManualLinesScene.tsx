@@ -21,7 +21,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { MWH_PIF_LINES } from '../../../config/profiles/projex-data/mwhPif'
 
@@ -139,24 +138,10 @@ export default function F4_p43_ManualLinesScene() {
     const totalPOs = selectedVendors.reduce((s, v) => s + v.pos, 0)
     const totalVendorAmount = selectedVendors.reduce((s, v) => s + v.amount, 0)
     const allSelected = selectedCodes.size === VENDOR_BREAKDOWN.length
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-        { sources: [PROJEX_SOURCES.SHAREPOINT_PROJECTS] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
-                    <span>Order &amp; PO dispatch · step 3</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
-                        <Truck className="h-3 w-3" aria-hidden="true" /> Manual entries
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     S&amp;H manual entries · freight per vendor + surcharges + design fee
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -298,7 +283,6 @@ export default function F4_p43_ManualLinesScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Manual lines · S&H per vendor → totals recompute" />
 
             {/* Generate flow modal · confirm → generating → success */}
             <Transition show={modalOpen} as={Fragment}>

@@ -31,7 +31,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { WBD_W9 } from '../../../config/profiles/projex-data/w9Records'
@@ -141,26 +140,11 @@ export default function F2_p22_W9OcrScene() {
     const decidedCount   = confirmedCount + rejectedCount
     const pendingCount   = totalFields - decidedCount
     const avgConf = Math.round(WBD_W9.fields.reduce((s, f) => s + f.conf, 0) / WBD_W9.fields.length)
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.SHAREPOINT_PROJECTS] },
-        { sources: [PROJEX_SOURCES.STRATA_OCR_PJX] },
-        { sources: [PROJEX_SOURCES.W9_REGISTRY] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F2</span>
-                    <span>Vendor onboarding · step 2</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> OCR live
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     {phase === 'queue'
                         ? 'OCR queue · vendor documents awaiting review'
                         : `W-9 upload + OCR extraction · Accounting reviews ${WBD_W9.fields.length} fields`}
@@ -566,7 +550,6 @@ export default function F2_p22_W9OcrScene() {
             </>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="W-9 OCR · source PDF → Strata OCR → field validation" />
         </div>
     )
 }

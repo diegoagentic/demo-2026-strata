@@ -15,7 +15,6 @@ import {
     Sparkles, Ruler, Zap, MessageCircle, User,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { NCBA_ACK_CRS, NCBA_ACK_LINES, type CRType } from '../../../config/profiles/projex-data/teknionAck'
@@ -35,29 +34,10 @@ export default function F5_p53_AckPmoReviewScene() {
     const warnCRs = NCBA_ACK_CRS.filter(c => c.severity === 'warn')
     const infoCRs = NCBA_ACK_CRS.filter(c => c.severity === 'info')
     const activeCRDetail = selectedCR ? NCBA_ACK_CRS.find(c => c.id === selectedCR) : null
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.TEKNION_ONLINE] },
-        { sources: [PROJEX_SOURCES.STRATA_MATCHER] },
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F5</span>
-                    <span>Electronic ordering &amp; ACK · step 3</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
-                        <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
-                    </span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Hero moment
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     ACK vs PMO · 71 lines + 13 CRs · Teknion taxonomy real
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -65,25 +45,8 @@ export default function F5_p53_AckPmoReviewScene() {
                 </p>
             </div>
 
-            {/* KPI summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="rounded-2xl border border-border bg-card p-4">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lines total</div>
-                    <div className="text-2xl font-bold text-foreground tabular-nums mt-1">71</div>
-                </div>
-                <div className="rounded-2xl border border-success/40 bg-success/5 p-4">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Match exact</div>
-                    <div className="text-2xl font-bold text-success tabular-nums mt-1">58</div>
-                </div>
-                <div className="rounded-2xl border border-warning/40 bg-warning/5 p-4">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CRs warn</div>
-                    <div className="text-2xl font-bold text-warning tabular-nums mt-1">{warnCRs.length}</div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CRs info</div>
-                    <div className="text-2xl font-bold text-foreground tabular-nums mt-1">{infoCRs.length}</div>
-                </div>
-            </div>
+            {/* F83.A · KPI summary hero removed · prod has zero metrics ·
+                 CR counts pueden vivir en el header del split-pane si necesario. */}
 
             {/* Split-pane · ACK PDF (izq) + PMO grid (der) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
@@ -209,7 +172,6 @@ export default function F5_p53_AckPmoReviewScene() {
                 </button>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="ACK vs PMO · Teknion CR taxonomy · UN-CUTTABLE hero" />
         </div>
     )
 }

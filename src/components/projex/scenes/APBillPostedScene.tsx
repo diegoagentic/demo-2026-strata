@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 
@@ -78,31 +77,11 @@ export default function APBillPostedScene() {
     // File naming: date_vendor_invoice#_amount_PO#
     const fileName = '2026-08-14_Teknion_TEK-2026-0847_47238.11_PO-2026-4421.pdf'
     const sharepointPath = 'Accounting Private / Invoices / 2026 / 08 / Projex Inc.'
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-        { sources: [PROJEX_SOURCES.STRATA_OCR_PJX] },
-        { sources: [PROJEX_SOURCES.NETSUITE_BILL, PROJEX_SOURCES.NETSUITE_GL] },
-        { sources: [PROJEX_SOURCES.SHAREPOINT_ACCT_PRIVATE] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F1</span>
-                    <span>AP intake &amp; matching · step 6</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Consequence of CEO's approval · auto
-                    </span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-success/10 text-success font-semibold rounded-md px-1.5 py-0.5">
-                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Complete
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Bill record saved in NetSuite · PDF dropped in Communications tab
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -274,7 +253,6 @@ export default function APBillPostedScene() {
                 </div>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="End-to-end data flow · overnight to save" />
         </div>
     )
 }

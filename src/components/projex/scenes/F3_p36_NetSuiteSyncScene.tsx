@@ -21,7 +21,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 
 // Dealer portal AR overview · other recent invoices for context
@@ -99,31 +98,10 @@ export default function F3_p36_NetSuiteSyncScene() {
         const first = steps.findIndex(s => s.id === 'p3.1')
         if (first >= 0) goToStep(first)
     }
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_BILL] },
-        { sources: [PROJEX_SOURCES.NETSUITE_GL] },
-        { sources: [PROJEX_SOURCES.SHAREPOINT_ACCT_PRIVATE] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F3</span>
-                    <span>Progress billing · step 6</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    {phase === 'portal' ? (
-                        <span className="inline-flex items-center gap-1 bg-info/10 text-info font-semibold rounded-md px-1.5 py-0.5">
-                            <Building2 className="h-3 w-3" aria-hidden="true" /> Dealer portal · Transactions
-                        </span>
-                    ) : (
-                        <span className="inline-flex items-center gap-1 bg-success/10 text-success font-semibold rounded-md px-1.5 py-0.5">
-                            <Database className="h-3 w-3" aria-hidden="true" /> NetSuite GL sync detail
-                        </span>
-                    )}
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     {phase === 'portal'
                         ? 'Dealer portal · Customer Invoices · just posted lands at the top'
                         : 'Customer Invoice posted · NetSuite GL journal entry created'}
@@ -392,7 +370,6 @@ export default function F3_p36_NetSuiteSyncScene() {
             </div>
             </>)}
 
-            <DataSourcesBar groups={dataGroups} label="GL sync · NetSuite Bill → NetSuite GL → SharePoint mirror" />
         </div>
     )
 }

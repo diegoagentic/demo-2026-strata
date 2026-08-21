@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { MWH_PIF_LINES, MWH_TOTALS } from '../../../config/profiles/projex-data/mwhPif'
 
@@ -47,25 +46,10 @@ export default function F4_p42_PifParseScene() {
     const revealedLines = productLines.slice(0, revealed)
     const totalSoFar = revealedLines.reduce((s, l) => s + l.totalPrice, 0)
     const walllsCount = revealedLines.filter(l => l.isAiLotLine).length
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.SHAREPOINT_PROJECTS] },
-        { sources: [PROJEX_SOURCES.STRATA_OCR_PJX, PROJEX_SOURCES.STRATA_MATCHER] },
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
-                    <span>Order &amp; PO dispatch · step 2</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> Auto · PIF parser
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     PIF-to-Order parse · vertical extraction con AI lot line (Walls WC2)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -73,47 +57,8 @@ export default function F4_p42_PifParseScene() {
                 </p>
             </div>
 
-            {/* KPI hero */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="rounded-2xl border border-ai/30 bg-ai/5 p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-ai-light flex items-center justify-center shrink-0">
-                        <FileText className="h-5 w-5 text-ai" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">
-                            {revealed} / {MWH_TOTALS.productLines}
-                        </div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Lines parsed</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-warning/10 flex items-center justify-center shrink-0">
-                        <Ruler className="h-5 w-5 text-warning" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">{walllsCount}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Walls AI lot lines</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-                        <DollarSign className="h-5 w-5 text-foreground" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">${totalSoFar.toLocaleString()}</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Subtotal so far</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                        <Zap className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground leading-none">2.5h → ~15m</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Today vs Strata</div>
-                    </div>
-                </div>
-            </div>
+            {/* F83.A · KPI hero removed · prod has zero metrics · scene queda
+                 con solo el vertical parser table (data reveal in-place). */}
 
             {/* Vertical parser table */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -210,7 +155,6 @@ export default function F4_p42_PifParseScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="PIF parser · vertical extraction · Walls AI lot line" />
         </div>
     )
 }

@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import ReasonDialog, { type ReasonPayload } from '../../shared/ReasonDialog'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -107,26 +106,11 @@ export default function F3_p32_ProformaReviewScene() {
     const clarifyReasonLabel = clarifyPayload
         ? CLARIFY_REASONS.find(r => r.id === clarifyPayload.categoryId)?.label ?? 'Other'
         : null
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_BILL] },
-        { sources: [PROJEX_SOURCES.STRATA_AI_PJX] },
-        { sources: [PROJEX_SOURCES.NETSUITE_GL] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F3</span>
-                    <span>Progress billing · step 2</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
-                        <User className="h-3 w-3" aria-hidden="true" /> {isabella.role}
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Coordinator proforma review · {isabella.fullName.split(' ')[0]} adjusts before release
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -342,7 +326,6 @@ export default function F3_p32_ProformaReviewScene() {
                 <span className="text-[10px] text-muted-foreground tabular-nums">Due 2026-08-24</span>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Proforma review · NetSuite draft → coordinator release" />
 
             {/* Request info dialog · info tone */}
             <ReasonDialog

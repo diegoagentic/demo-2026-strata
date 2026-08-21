@@ -18,7 +18,6 @@ import {
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
 import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { COLLECTION_DRAFTS, PROJEX_AR_RECORDS } from '../../../config/profiles/projex-data/arAging'
@@ -116,25 +115,10 @@ export default function F3_p35_CollectionDraftsScene() {
     }
 
     const remainingUnsent = COLLECTION_DRAFTS.filter(d => d.id !== selectedId && !sentIds.has(d.id)).length
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_BILL] },
-        { sources: [PROJEX_SOURCES.STRATA_COMPOSER] },
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F3</span>
-                    <span>Progress billing · step 5</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                        <Sparkles className="h-3 w-3" aria-hidden="true" /> AI drafts
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     AI-drafted collection emails · shared queue (Coordinator + Walls Director)
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -349,7 +333,6 @@ export default function F3_p35_CollectionDraftsScene() {
                 </div>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="Collection drafts · AI composer → shared queue → NetSuite Communications" />
 
             {/* Send confirmation modal · centered */}
             <Transition show={confirmOpen} as={Fragment}>

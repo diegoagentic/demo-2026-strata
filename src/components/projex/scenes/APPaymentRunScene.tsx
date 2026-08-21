@@ -26,7 +26,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import ReasonDialog, { type ReasonPayload } from '../../shared/ReasonDialog'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -135,26 +134,11 @@ export default function APPaymentRunScene() {
     const clarifyReasonLabel = clarifyPayload
         ? CLARIFY_REASONS.find(r => r.id === clarifyPayload.categoryId)?.label ?? 'Other'
         : null
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_BILL, PROJEX_SOURCES.NETSUITE_VENDOR] },
-        { sources: [PROJEX_SOURCES.FINANCIAL_DASHBOARD] },
-        { sources: [PROJEX_SOURCES.BANK_PORTAL] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F1</span>
-                    <span>AP intake &amp; matching · step 5</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
-                        <User className="h-3 w-3" aria-hidden="true" /> CEO gate
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Tue payment run · dashboard review · CEO approves the ACH batch
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -162,16 +146,8 @@ export default function APPaymentRunScene() {
                 </p>
             </div>
 
-            {/* CEO framing banner */}
-            <div className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/25 text-foreground flex items-center justify-center shrink-0 font-bold text-xs">
-                    {matt.initials}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CEO · CEO · verbatim</div>
-                    <div className="text-sm text-foreground italic mt-0.5">"75% AI with the human touch on it."</div>
-                </div>
-            </div>
+            {/* F83.A · CEO framing banner removed · prod has zero narrative
+                 banners · quote lives en presenter notes overlay (F81.C). */}
 
             {/* Dashboard hero · payables tab */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -439,46 +415,9 @@ export default function APPaymentRunScene() {
                 </div>
             )}
 
-            {/* Reject reason banner */}
-            {stage === 'rejected' && rejectPayload && (
-                <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 flex items-start gap-3">
-                    <Ban className="h-4 w-4 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
-                    <div className="flex-1 min-w-0 text-xs">
-                        <div className="text-foreground font-semibold">Batch rejected · returned to Accounting for rework</div>
-                        <div className="text-muted-foreground mt-0.5">
-                            <strong className="text-foreground font-semibold">Reason:</strong> {rejectReasonLabel}
-                            {rejectPayload.notes && <><span className="mx-1">·</span>{rejectPayload.notes}</>}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ACH workaround banner · preserved by design */}
-            <div className="rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 flex items-start gap-3">
-                <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="flex-1 min-w-0 text-xs">
-                    <div className="text-foreground font-semibold">ACH workaround preserved (Phase 1)</div>
-                    <div className="text-muted-foreground mt-0.5 leading-relaxed">
-                        NetSuite → bank ACH batch upload was never delivered · Compliance still enters remittance detail manually in the bank portal. Strata compares the last remittance to prevent duplicate payment (see Nelson row above). Phase 2 · consider a bank portal RPA once Compliance signs off write permissions.
-                    </div>
-                </div>
-                <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 rounded px-1.5 py-0.5">
-                    <Building2 className="h-3 w-3" aria-hidden="true" />
-                    Manual step
-                </span>
-            </div>
-
-            {/* Cadence footer */}
-            <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 flex items-center gap-3">
-                <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <div className="flex-1 min-w-0 text-xs">
-                    <span className="text-foreground font-semibold">Payment cadence · Tue big batch · Thu one-offs</span>
-                    <span className="text-muted-foreground"> · ~50 ACH per Tuesday · dashboard review with CEO twice weekly.</span>
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            </div>
-
-            <DataSourcesBar groups={dataGroups} label="Payment run · dashboard → ACH portal" />
+            {/* F83.A · Removed 3 banners (Reject reason · ACH workaround ·
+                 Cadence footer) · prod has zero narrative strips · context
+                 vive en presenter notes overlay (F81.C) o step description. */}
 
             {/* Reject reason dialog · danger tone */}
             <ReasonDialog

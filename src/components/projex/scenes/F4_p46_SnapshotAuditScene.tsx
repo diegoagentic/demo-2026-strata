@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { MWH_PO_BATCH } from '../../../config/profiles/projex-data/mwhPif'
 
@@ -50,25 +49,10 @@ export default function F4_p46_SnapshotAuditScene() {
     }
 
     const totalSent = MWH_PO_BATCH.reduce((s, p) => s + p.amount, 0)
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-        { sources: [PROJEX_SOURCES.TEKNION_ONLINE, PROJEX_SOURCES.VENDOR_PORTAL_HBF] },
-        { sources: [PROJEX_SOURCES.SHAREPOINT_ACCT_PRIVATE] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
-                    <span>Order &amp; PO dispatch · step 6</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="inline-flex items-center gap-1 bg-success/10 text-success font-semibold rounded-md px-1.5 py-0.5">
-                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Batch complete
-                    </span>
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     Coordinator release complete · SnapshotComparisonView tri-way match
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -76,45 +60,8 @@ export default function F4_p46_SnapshotAuditScene() {
                 </p>
             </div>
 
-            {/* KPI summary hero */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="rounded-2xl border border-success/40 bg-success/5 p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-success/15 flex items-center justify-center shrink-0">
-                        <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">26/26</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">POs sent</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-                        <GitCompare className="h-5 w-5 text-foreground" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">100%</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Tri-way match</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                        <FileText className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground tabular-nums leading-none">${(totalSent / 1000).toFixed(0)}k</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Dispatched · MWH</div>
-                    </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-ai-light flex items-center justify-center shrink-0">
-                        <Sparkles className="h-5 w-5 text-ai" aria-hidden="true" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold text-foreground leading-none">~15m</div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Total time (vs 2.5h)</div>
-                    </div>
-                </div>
-            </div>
+            {/* F83.A · KPI summary hero removed · summary stats pueden vivir
+                 en el header del tri-way match card si necesario. */}
 
             {/* Tri-way match snapshot */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -240,7 +187,6 @@ export default function F4_p46_SnapshotAuditScene() {
                 <ArrowRight className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="Snapshot audit · tri-way match + delivery tracking" />
         </div>
     )
 }

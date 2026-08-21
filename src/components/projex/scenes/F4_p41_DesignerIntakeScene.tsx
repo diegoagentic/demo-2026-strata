@@ -20,7 +20,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { useHighlightOnAcClick } from '../hooks/useHighlightOnAcClick'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
@@ -82,31 +81,10 @@ export default function F4_p41_DesignerIntakeScene() {
             window.dispatchEvent(new CustomEvent('projex:pif-ingested'))
         }, 1200)
     }
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-        { sources: [PROJEX_SOURCES.SHAREPOINT_PROJECTS] },
-        { sources: [PROJEX_SOURCES.NETSUITE_PO] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                    <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F4</span>
-                    <span>Order &amp; PO dispatch · step 1</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    {phase === 'transactions' ? (
-                        <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                            <Building2 className="h-3 w-3" aria-hidden="true" /> Expert Hub · Transactions
-                        </span>
-                    ) : (
-                        <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                            <Sparkles className="h-3 w-3" aria-hidden="true" /> Intake detail
-                        </span>
-                    )}
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                     {phase === 'transactions'
                         ? 'Expert Hub · Transactions · MWH residential PIF just arrived'
                         : 'Designer emails PIF + SIF · MWH residential intake detail'}
@@ -334,7 +312,6 @@ export default function F4_p41_DesignerIntakeScene() {
                 </div>
             )}
 
-            <DataSourcesBar groups={dataGroups} label="Designer intake · email → drop-zone → Ingest" />
         </div>
     )
 }

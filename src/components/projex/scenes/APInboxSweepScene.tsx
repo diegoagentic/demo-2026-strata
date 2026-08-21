@@ -31,7 +31,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import { PROJEX_BILLS_OVERNIGHT, PROJEX_MORNING_SUMMARY, type Bill } from '../../../config/profiles/projex-data/bills'
 import { PROJEX_VENDORS, PROJEX_VENDOR_TOTALS } from '../../../config/profiles/projex-data/vendors'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
@@ -330,27 +329,12 @@ export default function APInboxSweepScene() {
 
     const daniel = PROJEX_PERSONAS.daniel
     const jacob = PROJEX_PERSONAS.jacob
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.AP_INBOX_PJX] },
-        { sources: [PROJEX_SOURCES.STRATA_OCR_PJX, PROJEX_SOURCES.STRATA_MATCHER] },
-        { sources: [PROJEX_SOURCES.NETSUITE_PO, PROJEX_SOURCES.NETSUITE_BILL] },
-    ]
-
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* ── Header · role banner ─────────────────────────────────────── */}
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                        <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F1</span>
-                        <span>AP intake &amp; matching</span>
-                        <span className="text-muted-foreground/60">·</span>
-                        <span className="inline-flex items-center gap-1 bg-ai-light text-ai rounded-md px-1.5 py-0.5">
-                            <Sparkles className="h-3 w-3" aria-hidden="true" /> Live matching
-                        </span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                         AP inbox sweep · 12 overnight matches ready for {daniel.fullName.split(' ')[0]}
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -368,33 +352,9 @@ export default function APInboxSweepScene() {
                 </div>
             </div>
 
-            {/* ── KPI hero row · 4 counters · tabular-nums · animate up ─────── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <KpiCard
-                    icon={Mail}
-                    label="Bills processed overnight"
-                    value={PROJEX_MORNING_SUMMARY.totalReceived}
-                    tone="ai"
-                />
-                <KpiCard
-                    icon={CheckCircle2}
-                    label="Auto-matched · to the penny"
-                    value={PROJEX_MORNING_SUMMARY.autoMatched}
-                    tone="success"
-                />
-                <KpiCard
-                    icon={AlertTriangle}
-                    label="Exceptions · needs eyes"
-                    value={PROJEX_MORNING_SUMMARY.exceptions}
-                    tone="warning"
-                />
-                <KpiCard
-                    icon={Building2}
-                    label="Legal entities in batch"
-                    value={3}
-                    tone="default"
-                />
-            </div>
+            {/* F83.A · KPI hero row removed · prod Expert Hub OCR landing
+                 has zero metric cards (Diego audit 2026-08-21). Scene queda
+                 con solo el kanban debajo · match visual con producción. */}
 
             {/* ── Kanban card · BFI/Recent-Orders shape ─────────────────────── */}
             <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
@@ -536,7 +496,6 @@ export default function APInboxSweepScene() {
                 </div>
             </div>
 
-            <DataSourcesBar groups={dataGroups} label="AP inbox pipeline" />
         </div>
     )
 }

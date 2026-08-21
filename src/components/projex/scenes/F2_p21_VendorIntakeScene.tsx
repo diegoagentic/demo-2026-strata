@@ -22,7 +22,6 @@ import {
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import { usePauseAware } from '../../../context/usePauseAware'
-import DataSourcesBar, { type DataSourceGroup } from '../../mbi/DataSourcesBar'
 import ProjexArrivalStrip from '../ProjexArrivalStrip'
 import W9DocumentPreview from '../W9DocumentPreview'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
@@ -92,13 +91,6 @@ export default function F2_p21_VendorIntakeScene() {
             window.dispatchEvent(new CustomEvent('projex:vendor-request-submitted'))
         }, 900)
     }
-
-    const dataGroups: DataSourceGroup[] = [
-        { sources: [PROJEX_SOURCES.SHAREPOINT_PROJECTS] },
-        { sources: [PROJEX_SOURCES.STRATA_COMPOSER] },
-        { sources: [PROJEX_SOURCES.NETSUITE_VENDOR] },
-    ]
-
     // Compose the "just landed" row for the submitted state
     const justLanded: VendorRequest | null = submitState === 'submitted' ? {
         id: 'VR-2026-143',
@@ -129,15 +121,7 @@ export default function F2_p21_VendorIntakeScene() {
             <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
                 {/* Header */}
                 <div>
-                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-muted-foreground mb-1">
-                        <span className="rounded bg-primary/15 text-foreground font-semibold px-1.5 py-0.5">F2</span>
-                        <span>Vendor onboarding · step 1</span>
-                        <span className="text-muted-foreground/60">·</span>
-                        <span className="inline-flex items-center gap-1 bg-primary/15 text-foreground font-semibold rounded-md px-1.5 py-0.5">
-                            <User className="h-3 w-3" aria-hidden="true" /> {kelly.role}
-                        </span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
                         {kelly.fullName.split(' ')[0]}&apos;s vendor requests · submit new · structured intake
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -270,7 +254,6 @@ export default function F2_p21_VendorIntakeScene() {
                     </div>
                 </div>
 
-                <DataSourcesBar groups={dataGroups} label="Vendor intake · form → provenance → Accounting queue" />
             </div>
 
             {/* Centered modal · intake form */}
