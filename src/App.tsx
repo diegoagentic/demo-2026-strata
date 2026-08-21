@@ -71,6 +71,10 @@ import {
 
 import logoLightBrand from './assets/logo-light-brand.png'
 import logoDarkBrand from './assets/logo-dark-brand.png'
+// F80.3 · Projex initial-state landing · Expert Hub prod copy wrapped
+// (F19 + F43.a synced desde expert-hub@f59da74 · via lift F80.1).
+import ProjexExperienceShell from './components/projex/ProjexExperienceShell'
+import ProjexExpertHubWrapper from './vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 
 function App() {
   const { user, initialLoading, signOut, showSessionWarning, refreshSession } = useAuth()
@@ -609,6 +613,23 @@ function App() {
   };
 
   const renderCurrentPage = () => {
+    // F80.3 · Diego 2026-08-21 · Projex initial state · antes de arrancar
+    // el tour · aterriza en el Expert Hub Transactions prod copy wrapped
+    // en el Projex Expert Hub shell (no más `<Transactions />` genérico
+    // que no tenía flavor Projex). El user puede click FAB "Demo" para
+    // arrancar el tour · o click un path en el sub-nav del sidebar
+    // (F80.2) para saltar directo a un scene.
+    if (isProjex) {
+      return (
+        <ProjexExperienceShell
+          experience="expert-hub"
+          activeTab="transactions"
+          tenantLabel="Projex Inc."
+        >
+          <ProjexExpertHubWrapper />
+        </ProjexExperienceShell>
+      );
+    }
     if (currentPage === 'dashboard') return <Dashboard onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
     if (currentPage === 'inventory') return <Inventory onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
     if (currentPage === 'catalogs') return <Catalogs onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
