@@ -73,8 +73,12 @@ import logoLightBrand from './assets/logo-light-brand.png'
 import logoDarkBrand from './assets/logo-dark-brand.png'
 // F80.3 · Projex initial-state landing · Expert Hub prod copy wrapped
 // (F19 + F43.a synced desde expert-hub@f59da74 · via lift F80.1).
-import ProjexExperienceShell from './components/projex/ProjexExperienceShell'
-import ProjexExpertHubWrapper from './vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
+import ProjexExperienceShell, { type ProjexTab } from './components/projex/ProjexExperienceShell'
+// F81.B · CEO-friendly landing (playlist moments + hero inline).
+// ProjexExpertHubWrapper still lifted en /vendor/prod-imports/ · disponible
+// para uso futuro · pero el landing default ahora es ProjexPathLanding.
+import ProjexPathLanding from './components/projex/ProjexPathLanding'
+import { experienceOf, type ProjexFlowId } from './config/profiles/projex'
 
 function App() {
   const { user, initialLoading, signOut, showSessionWarning, refreshSession } = useAuth()
@@ -613,20 +617,58 @@ function App() {
   };
 
   const renderCurrentPage = () => {
-    // F80.3 · Diego 2026-08-21 · Projex initial state · antes de arrancar
-    // el tour · aterriza en el Expert Hub Transactions prod copy wrapped
-    // en el Projex Expert Hub shell (no más `<Transactions />` genérico
-    // que no tenía flavor Projex). El user puede click FAB "Demo" para
-    // arrancar el tour · o click un path en el sub-nav del sidebar
-    // (F80.2) para saltar directo a un scene.
+    // F81.B.3 · Diego 2026-08-21 · Projex initial state (pre-demo) · renders
+    // path-specific landing en vez del generic ExpertHubTransactions (F80.3).
+    // Landing muestra tagline + value chip + playlist moments menu + hero
+    // scene inline + 2 CTAs (guided walkthrough | explore freely).
+    // Derives active path from currentStep?.flowId · defaults a 'projex-ap'
+    // cuando el user acaba de abrir el profile.
     if (isProjex) {
+      const activePathId = (currentStep?.flowId ?? 'projex-ap') as ProjexFlowId;
+      const experience = experienceOf(activePathId);
+      const projexTab: ProjexTab =
+        activePathId === 'projex-ap' ? 'transactions'
+        : activePathId === 'projex-order-po' ? 'transactions'
+        : activePathId === 'projex-ack' ? 'comparisons'
+        : activePathId === 'projex-vendor-onboarding' ? 'ocr'
+        : 'transactions';
+
+      const handleStartGuided = () => {
+        // Jump to first step of the active path · then start the tour
+        const idx = steps.findIndex(s => s.flowId === activePathId);
+        if (idx >= 0) goToStep(idx);
+        setIsDemoActive(true);
+      };
+
+      const handleStartExplore = () => {
+        // Same as guided but explore mode · v1 · same as guided (banner
+        // hide toggle deferred to Fase B.4 · scene affordances usable
+        // in current model since scenes have their own choreography).
+        const idx = steps.findIndex(s => s.flowId === activePathId);
+        if (idx >= 0) goToStep(idx);
+        setIsDemoActive(true);
+      };
+
+      const handleJumpToMoment = (stepId: string) => {
+        // Playlist model · click a tile · goToStep to that specific scene
+        // + arranca el demo · CEO puede saltar donde quiera según audiencia.
+        const idx = steps.findIndex(s => s.id === stepId);
+        if (idx >= 0) goToStep(idx);
+        setIsDemoActive(true);
+      };
+
       return (
         <ProjexExperienceShell
-          experience="expert-hub"
-          activeTab="transactions"
+          experience={experience}
+          activeTab={projexTab}
           tenantLabel="Projex Inc."
         >
-          <ProjexExpertHubWrapper />
+          <ProjexPathLanding
+            pathId={activePathId}
+            onStartGuided={handleStartGuided}
+            onStartExplore={handleStartExplore}
+            onJumpToMoment={handleJumpToMoment}
+          />
         </ProjexExperienceShell>
       );
     }
