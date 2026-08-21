@@ -162,57 +162,34 @@ export default function APLineItemMatchScene() {
     }, [])
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
-            {/* Header */}
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    Line-item match to the penny · Teknion NCBA · Accounting picks a cause
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Compliance\'s hard rule · <strong className="text-foreground">match exact-to-the-penny</strong>. Bill 8483 · 15 sample lines representativas del 291-line PO · 12 exact · 3 need Accounting\'s eyes.
-                </p>
-            </div>
-            {/* Comparison header · PO vs Bill totals + delta chip */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border flex items-center gap-3">
-                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${diff < 0 ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
-                        <GitCompare className="h-4 w-4" aria-hidden="true" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-bold text-foreground">{bill?.projectName}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground">{bill?.id}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground">·</span>
-                            <span className="text-[10px] font-mono text-muted-foreground">{bill?.poNumber}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success">
-                                <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
-                                12 auto-matched
-                            </span>
-                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-warning/10 text-warning">
-                                <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-                                {flaggedRows.length} awaiting Accounting
-                            </span>
-                        </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                        <div className="flex items-center gap-2 justify-end">
-                            <span className="text-sm font-bold text-muted-foreground tabular-nums">${totalPO.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" aria-hidden="true" />
-                            <span className={`text-sm font-bold tabular-nums ${diff < 0 ? 'text-success' : 'text-warning'}`}>
-                                ${totalBill.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </span>
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${diff < 0 ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
-                                {diff < 0 ? '−' : '+'}${Math.abs(diff).toFixed(2)}
-                            </span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">PO vs bill · {flaggedRows.length} lines flagged</div>
-                    </div>
+            {/* F83.I · Diego 2026-08-21 · header slim to prod pattern
+                (expert-hub/quote-converter ComparisonReviewModal) · row 1 =
+                icon + title + status pill · row 2 = doc refs + vendor + match
+                score meta strip. Legacy h1 + long subtitle + NCBA card +
+                Multi-Line Edit strip removed · info folded into the meta
+                strip. */}
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <GitCompare className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <h2 className="text-base font-bold text-foreground">Compare PO vs Bill</h2>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${flaggedRows.length - acceptedCount - overriddenCount > 0 ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'}`}>
+                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                        {flaggedRows.length - acceptedCount - overriddenCount} need review
+                    </span>
                 </div>
-
-                <div className="px-4 py-2 bg-muted/20 flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-foreground">Line-by-line comparison · Teknion Multi-Line Edit tool workaround</span>
-                    <span className="text-[10px] text-muted-foreground">· line # · item code · qty · unit price · delta · action</span>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>Purchase Order: <span className="font-mono text-foreground font-semibold">{bill?.poNumber}</span></span>
+                    <span aria-hidden="true">⇄</span>
+                    <span>Bill: <span className="font-mono text-foreground font-semibold">{bill?.id}</span></span>
+                    <span>·</span>
+                    <span>{bill?.projectName}</span>
+                    <span>·</span>
+                    <span className="tabular-nums">{exactRows.length}/{lines.length} match</span>
+                    <span>·</span>
+                    <span className="tabular-nums">Bill <span className={`font-semibold ${diff < 0 ? 'text-success' : 'text-warning'}`}>${totalBill.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></span>
+                    <span className={`font-semibold tabular-nums ${diff < 0 ? 'text-success' : 'text-warning'}`}>
+                        ({diff < 0 ? '−' : '+'}${Math.abs(diff).toFixed(2)})
+                    </span>
                 </div>
             </div>
 
