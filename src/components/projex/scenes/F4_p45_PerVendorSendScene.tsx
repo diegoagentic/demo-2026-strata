@@ -20,6 +20,11 @@ import { usePauseAware } from '../../../context/usePauseAware'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { MWH_PO_BATCH } from '../../../config/profiles/projex-data/mwhPif'
+// F83.O · Diego 2026-08-21 · per-vendor Send es Projex-specific · no
+// existe como page dedicada en Expert Hub prod · se muestra como modal
+// overlay sobre prod Transactions view (backdrop) · activated from a
+// PO-batch transaction row. Same pattern as F83.J (F1_p1.5 payment run).
+import ExpertHubTransactionsWrapper from '../../../vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 
 // Sample PO line items · used when the preview modal opens for any PO
 interface POLine {
@@ -123,30 +128,57 @@ export default function F4_p45_PerVendorSendScene() {
     const heldCount = heldIds.size
     const remainingCount = MWH_PO_BATCH.length - sentCount - heldCount
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    Per-vendor Send · Coordinator releases Teknion first · never one-batch
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    SubmitPODialog per PO · Teknion (SIF fast) primero · HBF hold for tomorrow · Boss review before send. FC6 human control preserved.
-                </p>
-            </div>
+        <div className="relative min-h-screen">
+            {/* Prod backdrop · Transactions view · PO batch appears as
+                Draft POs row · Coordinator opens dispatch modal from there. */}
+            <ExpertHubTransactionsWrapper />
 
-            {/* Banner · never auto */}
-            <div className="rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-3 flex items-start gap-3">
-                <ShieldAlert className="h-5 w-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="flex-1 min-w-0 text-xs">
-                    <div className="text-foreground font-semibold">Banner · Never auto-send (FC6 fix)</div>
-                    <div className="text-muted-foreground mt-0.5">
-                        Coordinator never trusts auto-send (SOT §12b). Every PO release is intentional act · SubmitPODialog gate per vendor. Coordinator controls delivery timing per vendor SLA.
+            {/* Per-vendor Send modal overlay · Projex-specific · not a prod page */}
+            <div
+                className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="per-vendor-send-title"
+            >
+                <div className="bg-card border border-border rounded-2xl w-full max-w-6xl my-auto shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-4rem)]">
+                    {/* Modal header · prod ComparisonReviewModal shape */}
+                    <div className="p-5 border-b border-border">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Send className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                                <h2 id="per-vendor-send-title" className="text-base font-bold text-foreground">Dispatch PO batch · MWH residential</h2>
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${sentCount === MWH_PO_BATCH.length ? 'bg-success/15 text-success' : sentCount > 0 ? 'bg-ai-light text-ai' : 'bg-primary/15 text-foreground'}`}>
+                                    {sentCount === MWH_PO_BATCH.length
+                                        ? <><CheckCircle2 className="h-3 w-3" aria-hidden="true" /> All sent</>
+                                        : sentCount > 0
+                                            ? <><Loader2 className="h-3 w-3" aria-hidden="true" /> In progress</>
+                                            : <><ShieldAlert className="h-3 w-3" aria-hidden="true" /> Never auto-send · Coordinator releases</>}
+                                </span>
+                            </div>
+                            <button
+                                onClick={nextStep}
+                                aria-label="Close dispatch modal"
+                                className="rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0"
+                            >
+                                <X className="h-5 w-5" aria-hidden="true" />
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                            <span>Source: <span className="font-mono text-foreground font-semibold">MWH_PIF_2026-08-14.xlsx</span></span>
+                            <span>·</span>
+                            <span className="tabular-nums">{MWH_PO_BATCH.length} PO drafts · 6 vendors</span>
+                            <span>·</span>
+                            <span className="tabular-nums text-success">{sentCount} sent</span>
+                            <span>·</span>
+                            <span className="tabular-nums text-warning">{heldCount} held</span>
+                            <span>·</span>
+                            <span className="tabular-nums">{remainingCount} pending</span>
+                            <span className="ml-auto">FC6 · human control preserved (SOT §12b)</span>
+                        </div>
                     </div>
-                </div>
-                <div className="text-right shrink-0">
-                    <div className="text-lg font-semibold text-foreground tabular-nums">{sentCount} / {MWH_PO_BATCH.length}</div>
-                    <div className="text-[10px] text-muted-foreground">Sent</div>
-                </div>
-            </div>
+
+                    {/* Modal body · scrollable · per-vendor strips */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-4">
 
             {/* Per-vendor strips */}
             <div className="space-y-3">
@@ -412,6 +444,9 @@ export default function F4_p45_PerVendorSendScene() {
                     </div>
                 </Dialog>
             </Transition>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
