@@ -34,6 +34,10 @@ import { usePauseAware } from '../../../context/usePauseAware'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
 import { WBD_W9 } from '../../../config/profiles/projex-data/w9Records'
+// F83.F · Diego 2026-08-21 · Path 2 (F2 · Vendor onboarding) usa la
+// misma extracción OCR pattern que Expert Hub · per Diego "misma extracción
+// con los mismos modules pero en dealer · adaptada al contexto".
+import OCRTrackingWrapper from '../../../vendor/prod-imports/wrappers/OCRTrackingWrapper'
 
 // OCR queue landing · 6 mock tickets en distintos estados
 type QueueStatus = 'in-queue' | 'extracting' | 'needs-review' | 'approved'
@@ -140,6 +144,42 @@ export default function F2_p22_W9OcrScene() {
     const decidedCount   = confirmedCount + rejectedCount
     const pendingCount   = totalFields - decidedCount
     const avgConf = Math.round(WBD_W9.fields.reduce((s, f) => s + f.conf, 0) / WBD_W9.fields.length)
+    void daniel; void kelly; void allRevealed; void confirmedCount; void rejectedCount
+    void decidedCount; void pendingCount; void avgConf; void totalFields
+    void handleDecision; void handleUndoDecision; void handleSave
+    // F83.F · Diego 2026-08-21 · Path 2 (F2 · Vendor onboarding) usa la
+    // misma extracción OCR pattern que Expert Hub (per Diego "misma extracción
+    // con los mismos modules pero en dealer · adaptada al contexto"). Scene
+    // renderea el prod OCRTracking wrapper (paridad con gostrata.app/expert-hub/ocr
+    // · kanban 6-col real) + floating context CTA con narrativa Dealer/vendor
+    // onboarding-específica (W-9 requests · Warehouse-by-Design ready for
+    // compliance preflight). AC event `projex:w9-ocr-open` preserved · advance
+    // via context CTA once user reviews.
+    return (
+        <div className="relative min-h-screen">
+            <OCRTrackingWrapper />
+            <div className="fixed bottom-6 right-6 z-40 flex items-start gap-2 rounded-2xl bg-card border border-border shadow-2xl px-4 py-3 max-w-sm">
+                <Sparkles className="h-5 w-5 text-ai shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="flex-1 min-w-0 text-xs">
+                    <div className="text-foreground font-semibold">Vendor onboarding · W-9 OCR review</div>
+                    <div className="text-muted-foreground text-[11px] mt-0.5">
+                        Warehouse-by-Design W-9 just landed · {WBD_W9.fields.length} fields extracted · avg confidence {avgConf}%
+                    </div>
+                    <button
+                        onClick={nextStep}
+                        className="mt-2 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                        Continue to compliance preflight
+                        <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+    // Legacy hand-rolled queue landing + split-pane OCR review · behind false
+    // gate · restore possible flipping the guard if the prod wrapper needs to
+    // roll back.
+    // eslint-disable-next-line no-unreachable
     return (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
             {/* Header */}
