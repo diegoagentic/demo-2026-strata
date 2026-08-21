@@ -1,6 +1,6 @@
 import { Fragment, useState, useMemo, useEffect } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, ExternalLink, CheckCircle2, ChevronDown, Download, FileText, Pencil, Plus, Trash2, Box, Info, Eye, Link2, CornerDownRight } from 'lucide-react'
+import { X, ExternalLink, CheckCircle2, ChevronDown, Download, FileText, Pencil, Plus, Trash2, Box, Info, Eye, Link2, CornerDownRight, Loader2, Sparkles } from 'lucide-react'
 import type { OcrDocCardData, OcrDocType } from './OcrDocCard'
 import CatalogVerifyPill from './CatalogVerifyPill'
 import AITrainingConsentModal from './AITrainingConsentModal'
@@ -228,6 +228,16 @@ function EditableValue({ value, editable, onChange }: { value: string; editable?
 
 export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSendFeedback, onDownloadOriginal, initialTab = 'header' }: DocumentReviewModalProps) {
     const [tab, setTab] = useState<'header' | 'lineItems' | 'linked'>(initialTab)
+    /** F84.23 · Diego 2026-08-21 · quick "loading extracted fields" overlay
+     *  every time the modal opens · gives a tangible sense of Strata
+     *  processing the doc before the panels reveal. */
+    const [processing, setProcessing] = useState(false)
+    useEffect(() => {
+        if (!isOpen) return
+        setProcessing(true)
+        const t = setTimeout(() => setProcessing(false), 900)
+        return () => clearTimeout(t)
+    }, [isOpen, doc?.id])
     const [exportOpen, setExportOpen] = useState(false)
     const [previewDoc, setPreviewDoc] = useState<LinkedDoc | null>(null)
 
@@ -484,7 +494,24 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                 </div>
                             </div>
 
+                            {/* F84.23 · quick processing overlay on open · fades out
+                                after ~900ms so the panels reveal with a tangible
+                                "Strata just processed the doc" feel. */}
+                            {processing && (
+                                <div className="flex-1 overflow-hidden flex flex-col items-center justify-center py-16 gap-3 animate-in fade-in duration-200">
+                                    <div className="h-12 w-12 rounded-full bg-ai/15 flex items-center justify-center">
+                                        <Loader2 className="h-6 w-6 text-ai animate-spin" aria-hidden="true" />
+                                    </div>
+                                    <div className="text-sm font-semibold text-foreground inline-flex items-center gap-1.5">
+                                        <Sparkles className="h-4 w-4 text-ai" aria-hidden="true" />
+                                        Loading document data
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">Extracting fields · resolving linked records…</div>
+                                </div>
+                            )}
+
                             {/* Body */}
+                            {!processing && (
                             <div className="flex-1 overflow-y-auto px-6 py-5">
                                 {tab === 'header' && (
                                     <div className="space-y-6">
@@ -717,8 +744,60 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                 )}
 
                                 {tab === 'linked' && (
-                                    <div className="max-w-3xl">
-                                        <div className="flex items-start gap-2 mb-5">
+                                    <div className="max-w-3xl space-y-5">
+                                        {/* F84.24 · Diego 2026-08-21 · attached files section for W-9
+                                            and Proforma docs · shows the source PDF as linked plus
+                                            the compliance folder link · gives the Linked Documents
+                                            tab something to render for docs that don't have an
+                                            upstream lifecycle chain (Quote-type W-9 / Proforma).
+                                            Structural adaptation to the vendor prod-import ·
+                                            preserve on re-sync. */}
+                                        {(/\bW-?9\b/i.test(doc.name) || /\bproforma\b/i.test(doc.name)) && (
+                                            <div className="border-2 border-ai/40 rounded-xl overflow-hidden">
+                                                <div className="bg-ai-light px-4 py-2.5 flex items-center gap-2">
+                                                    <Link2 className="h-4 w-4 text-ai" aria-hidden="true" />
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-ai">Attached files</span>
+                                                    <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-success/15 text-success">
+                                                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                        Linked · date-indexed
+                                                    </span>
+                                                </div>
+                                                <div className="divide-y divide-border">
+                                                    <div className="flex items-center gap-3 px-4 py-3">
+                                                        <div className="h-10 w-10 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
+                                                            <FileText className="h-5 w-5 text-foreground" aria-hidden="true" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="text-sm font-bold text-foreground truncate">{doc.name}</div>
+                                                            <div className="text-[11px] text-muted-foreground">Source PDF · {doc.date} · OCR confidence 92%</div>
+                                                        </div>
+                                                        <button className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-md px-2 py-1 transition-colors">
+                                                            <Eye className="h-3 w-3" aria-hidden="true" />
+                                                            Preview
+                                                        </button>
+                                                        <button className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-md px-2 py-1 transition-colors">
+                                                            <Download className="h-3 w-3" aria-hidden="true" />
+                                                            Download
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 px-4 py-3">
+                                                        <div className="h-10 w-10 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
+                                                            <Link2 className="h-5 w-5 text-foreground" aria-hidden="true" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="text-sm font-bold text-foreground truncate">Compliance folder · {doc.vendor}</div>
+                                                            <div className="text-[11px] text-muted-foreground">SharePoint mirror · index this doc · expiration alerts scheduled</div>
+                                                        </div>
+                                                        <button className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-md px-2 py-1 transition-colors">
+                                                            <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                                                            Open folder
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-start gap-2">
                                             <Link2 className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                             <div>
                                                 <h3 className="text-sm font-bold text-foreground">Document lifecycle</h3>
@@ -806,6 +885,7 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                     </div>
                                 )}
                             </div>
+                            )}
 
                             {/* Footer · Send feedback se movió al header como prominent action */}
                             <div className="border-t border-border px-6 py-4 flex items-center justify-between">
