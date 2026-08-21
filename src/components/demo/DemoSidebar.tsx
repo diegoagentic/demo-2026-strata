@@ -648,33 +648,39 @@ export default function DemoSidebar() {
                             <ul
                                 role="listbox"
                                 aria-label={`${activeGroup.label} paths`}
-                                className="space-y-0.5"
+                                className="space-y-1.5"
                             >
                                 {activeGroup.flows.map(flow => {
                                     const isActiveFlow = activeProjexFlow === flow.id
                                     return (
                                         <li key={flow.id} role="option" aria-selected={isActiveFlow}>
+                                            {/* F81.A · tile-shape path row · bordered · chevron on hover ·
+                                                 cursor-pointer explicit · signals clickable affordance clearly */}
                                             <button
                                                 type="button"
                                                 onClick={() => handleProjexFlowSwitch(flow.id)}
-                                                className={`w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-[12px] transition-colors text-left ${
+                                                className={`group w-full inline-flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] transition-all text-left cursor-pointer border ${
                                                     isActiveFlow
-                                                        ? `${c.bgBadgeActive} ${c.textBadgeActive} font-semibold`
-                                                        : `${c.textMuted} hover:bg-white/5`
+                                                        ? `${c.bgBadgeActive} ${c.textBadgeActive} font-semibold border-primary/50 shadow-sm`
+                                                        : `${c.textMuted} border-transparent hover:border-white/10 hover:bg-white/5 hover:shadow-sm hover:translate-x-0.5`
                                                 }`}
                                             >
                                                 <span className="flex-1 truncate">
                                                     <span className="opacity-60 mr-1.5">{flow.short.split(' · ')[0]}</span>
                                                     {flow.label}
                                                 </span>
-                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 ${
+                                                <span className={`text-[10px] tabular-nums rounded-full px-1.5 shrink-0 ${
                                                     isActiveFlow
                                                         ? `${c.bgBadge} ${c.textBadge}`
                                                         : 'bg-zinc-900/10 dark:bg-white/10 text-muted-foreground'
                                                 }`}>
                                                     {flowCountMap[flow.id]}
                                                 </span>
-                                                {isActiveFlow && <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                                                {isActiveFlow ? (
+                                                    <Check className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
+                                                ) : (
+                                                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                                                )}
                                             </button>
                                         </li>
                                     )

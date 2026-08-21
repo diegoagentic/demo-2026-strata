@@ -702,3 +702,247 @@ export const PROJEX_EXPERIENCE_GROUPS: {
 export function firstFlowOf(experience: ProjexExperience): ProjexFlowId {
     return PROJEX_EXPERIENCE_GROUPS.find(g => g.id === experience)!.flows[0].id;
 }
+
+// ─── PATH LANDINGS (F81.B · 2026-08-21) ──────────────────────────────────────
+//
+// El CEO abre Projex + click un path · aterriza en un landing pre-demo que
+// resume qué hace ese path en 3 elementos: tagline (1 oración pitch) · value
+// chip (métrica ROI) · hero scene renderizada inline (el "aha moment"). Con
+// 2 CTAs · guided tour (arranca los 6 steps del path) · explore freely
+// (isDemoActive true pero sin step banner · para clientes que quieren manipular).
+//
+// Reduce visible complexity 30→5 (5 landings · uno por path) manteniendo los
+// 30 steps disponibles como depth opcional.
+
+export interface ProjexPathMoment {
+    /** Step id · click el tile · jump directo a esa scene */
+    stepId: string;
+    /** Título corto · 3-5 palabras · aparece en el tile */
+    title: string;
+    /** 1-oración pitch · qué hace este moment · POV del cliente */
+    description: string;
+    /** Tiempo estimado en presentar · "30 sec" · "2 min" · ayuda al CEO a
+        priorizar según length de la reunión */
+    estTime: string;
+    /** True = uno de los 15 core moments (Setup · AI · Payoff arc). False =
+        detail step (edge case · audit trail · derivable). Default false. */
+    isCore?: boolean;
+}
+
+export interface ProjexPathLanding {
+    /** 1-oración pitch narrativo · qué hace este path · POV del cliente */
+    tagline: string;
+    /** Valor cuantificado · métrica ROI para el chip visual */
+    valueChip: { label: string; tone: 'success' | 'ai' | 'warning' | 'info' };
+    /** Step id (e.g. 'p1.1') · scene a renderizar como hero inline en el landing.
+        Debe matchear al step con `isCore: true` marcado como "hero" del path. */
+    heroStepId: string;
+    /** Menu de moments · playlist model · lista completa de las scenes del path
+        con tile+label · click un tile · jump directo a esa scene · el CEO
+        selecciona el starting point según audiencia (no linear forzado). */
+    moments: ProjexPathMoment[];
+    /** Label del CTA que arranca el tour guiado (guided narrative) */
+    ctaGuided: string;
+    /** Label del CTA que arranca el explore mode (isDemoActive + step banner oculto) */
+    ctaExplore: string;
+}
+
+export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
+    'projex-ap': {
+        tagline: 'Accounting opens Strata at 8 AM and sees 12 of 14 vendor bills already matched exactly to POs · she only reviews the 2 exceptions at the top.',
+        valueChip: { label: 'Saves 4-6 hrs/week per accountant', tone: 'success' },
+        heroStepId: 'p1.1',
+        moments: [
+            { stepId: 'p1.1', title: 'Overnight AP sweep', description: '12 of 14 bills auto-matched · ready before Accounting starts', estTime: '90 sec', isCore: true },
+            { stepId: 'p1.2', title: 'Teknion 291-line bill lands', description: 'Agent pipeline reads header + line items at 97% confidence', estTime: '60 sec' },
+            { stepId: 'p1.3', title: 'Line-item match to the penny', description: 'AI compares 291 lines · 12 match · 2 qty · 1 price · reason from taxonomy', estTime: '2 min', isCore: true },
+            { stepId: 'p1.4', title: 'Install-vendor no PO # · PM email', description: 'Strata drafts the PM double-check email · one click sends · bill held', estTime: '90 sec' },
+            { stepId: 'p1.5', title: 'Tue payment run · CEO approves', description: 'Human touch preserved · CEO reviews the ACH batch · never auto-release', estTime: '2 min', isCore: true },
+            { stepId: 'p1.6', title: 'Bill saved to NetSuite', description: 'PDF in Communications tab · SharePoint mirror · audit trail complete', estTime: '30 sec' },
+        ],
+        ctaGuided: 'See the guided walkthrough',
+        ctaExplore: 'Explore this experience freely',
+    },
+    'projex-vendor-onboarding': {
+        tagline: 'Coordinator submits a new vendor with W-9 attached · Strata runs OCR + 5-check compliance preflight · Compliance signs off in one click instead of chasing emails for weeks.',
+        valueChip: { label: 'Cuts vendor onboarding from 2 weeks to 1 day', tone: 'ai' },
+        heroStepId: 'p2.3',
+        moments: [
+            { stepId: 'p2.1', title: 'Coordinator submits new vendor', description: 'Structured intake form + W-9 attached · replaces free-text email', estTime: '60 sec', isCore: true },
+            { stepId: 'p2.2', title: 'W-9 OCR extraction', description: 'AI reads TIN · entity type · signed date · address · with confidence per field', estTime: '90 sec' },
+            { stepId: 'p2.3', title: '5-check compliance preflight', description: 'W-9 <12mo · 1099 · ACH · W-8 BEN-E · OFAC · all in 3 seconds', estTime: '90 sec', isCore: true },
+            { stepId: 'p2.4', title: 'Compliance sign-off gate', description: 'Human decides · release approves vendor · reject sends back with reason', estTime: '60 sec', isCore: true },
+            { stepId: 'p2.5', title: 'Vendor master registry entry', description: 'NetSuite receives vendor · row animate-in · expiration chip per row', estTime: '30 sec' },
+            { stepId: 'p2.6', title: 'Dealer readiness self-service', description: 'Coordinator sees vendor status per project · pre-drafted refresh emails', estTime: '60 sec' },
+        ],
+        ctaGuided: 'See the guided walkthrough',
+        ctaExplore: 'Explore this experience freely',
+    },
+    'projex-billing': {
+        tagline: 'Fairport crosses the 50% ordered threshold · Strata drafts the proforma automatically and alerts Coordinator · no more billing running on Coordinator\'s memory.',
+        valueChip: { label: 'Catches 100% of billing milestones · no revenue leaks', tone: 'warning' },
+        heroStepId: 'p3.1',
+        moments: [
+            { stepId: 'p3.1', title: 'Threshold trigger · proforma drafted', description: 'Fairport crosses 50% ordered · Strata drafts $24.5K proforma automatically', estTime: '90 sec', isCore: true },
+            { stepId: 'p3.2', title: 'Coordinator proforma review', description: 'Print-style modal · adjust lines · deposit deducted · approve for release', estTime: '60 sec', isCore: true },
+            { stepId: 'p3.3', title: 'Walls PM-review gate (WC9)', description: 'Walls 60/30/10 · 30% draw needs PM install-complete confirmation', estTime: '60 sec' },
+            { stepId: 'p3.4', title: 'AR aging board · shared queue', description: '4-column kanban by bucket · notes per row · ownership per record', estTime: '90 sec', isCore: true },
+            { stepId: 'p3.5', title: 'AI-drafted collection emails', description: '5 drafts staged by bucket · Friendlier/Firmer/Shorter tone polish', estTime: '90 sec' },
+            { stepId: 'p3.6', title: 'Customer Invoice posted', description: 'Proforma → Invoice · NetSuite GL journal entry · state transition log', estTime: '30 sec' },
+        ],
+        ctaGuided: 'See the guided walkthrough',
+        ctaExplore: 'Explore this experience freely',
+    },
+    'projex-order-po': {
+        tagline: 'Lead Designer emails a 300-line PIF · Strata parses it and drafts 26 vendor POs in a batch grid · Coordinator reviews per-vendor · never one-batch send.',
+        valueChip: { label: 'Reduces PO dispatch from 3 days to 30 min per project', tone: 'info' },
+        heroStepId: 'p4.4',
+        moments: [
+            { stepId: 'p4.1', title: 'Designer emails PIF + SIF', description: 'Coordinator opens the email · confirms Ingest · drop-zone accepts', estTime: '60 sec', isCore: true },
+            { stepId: 'p4.2', title: 'PIF-to-Order parse', description: '300 lines vertical parser · AI lot line for Walls · confidence per cell', estTime: '90 sec' },
+            { stepId: 'p4.3', title: 'Manual S&H line editor', description: '26 shipping-and-handling entries · Alamir $19 flat · Nelson prepaid+add', estTime: '60 sec' },
+            { stepId: 'p4.4', title: '26 vendor PO batch grid', description: 'Flat 26-tile grid · DiffViewer per card · never one-batch button', estTime: '2 min', isCore: true },
+            { stepId: 'p4.5', title: 'Per-vendor Send · Teknion first', description: 'SubmitPODialog per PO · Review before send · Coordinator never trusts auto', estTime: '90 sec', isCore: true },
+            { stepId: 'p4.6', title: 'Release complete · tri-way match', description: 'SnapshotComparisonView · ActivityTimeline audit · Tracking chips per vendor', estTime: '30 sec' },
+        ],
+        ctaGuided: 'See the guided walkthrough',
+        ctaExplore: 'Explore this experience freely',
+    },
+    'projex-ack': {
+        tagline: 'Teknion returns a 71-line acknowledgement with 13 change requests · Strata splits the ACK PDF against the PMO grid · Coordinator sees leadtime shifts + BIFMA advisories in one view.',
+        valueChip: { label: 'Cuts ACK review from 4 hrs to 20 min per PO', tone: 'ai' },
+        heroStepId: 'p5.3',
+        moments: [
+            { stepId: 'p5.1', title: 'SIF upload · 70% Teknion Online', description: '70% direct-bill volume · 30% email tail with SourceBadge per vendor', estTime: '60 sec', isCore: true },
+            { stepId: 'p5.2', title: 'ACK received · per-vendor confidence', description: 'AcknowledgementUploadModal OCR · Teknion 98% · Alamir 74% review-recommended', estTime: '60 sec' },
+            { stepId: 'p5.3', title: 'ACK vs PMO · 71 lines · 13 CRs', description: 'Split-pane hero · Teknion CR taxonomy real (leadtime · BIFMA · width · pricer)', estTime: '2 min', isCore: true },
+            { stepId: 'p5.4', title: 'Clear 10/10/2050 sentinel', description: 'Multi-Line Edit tool bulk-clears 12 sample lines in one click', estTime: '60 sec' },
+            { stepId: 'p5.5', title: 'Designer chain auto-assembly (FC8)', description: 'Lead → Spec → PM · attachments + replies + timestamps preserved', estTime: '90 sec', isCore: true },
+            { stepId: 'p5.6', title: 'Daily ESD sweep + tracking', description: 'OrderTrackerScene · SN inbound events · TrackingModal per shipment', estTime: '60 sec' },
+        ],
+        ctaGuided: 'See the guided walkthrough',
+        ctaExplore: 'Explore this experience freely',
+    },
+};
+
+/** Returns the 15 core step IDs across all paths · used by the guided-tour
+ *  simplification (default view · hides 15 skippable detail steps unless
+ *  the user toggles "Show all detail"). */
+export const PROJEX_CORE_STEP_IDS: Set<string> = new Set(
+    Object.values(PROJEX_PATH_LANDINGS).flatMap(l =>
+        l.moments.filter(m => m.isCore).map(m => m.stepId)
+    )
+);
+
+/** Helper · is this step a core moment (hero · setup · human-gate arc)? */
+export function isCoreStep(stepId: string): boolean {
+    return PROJEX_CORE_STEP_IDS.has(stepId);
+}
+
+// ─── PRESENTER NOTES (F81.C · 2026-08-21) ────────────────────────────────────
+//
+// Overlay opcional para el CEO/presenter · muestra script + anticipated
+// questions + what to click next per scene actual. Toggle via URL param
+// `?presenter=1` o keyboard `Cmd/Ctrl+Shift+P`. Persistente por session.
+//
+// v1 · empezamos con los 5 hero steps + los 6 AP steps (F1 más presentada).
+// Expand iterativo per feedback del CEO.
+
+export interface ProjexPresenterNote {
+    /** 30-sec script · lo que el presenter debe decir en voz alta */
+    say: string;
+    /** 2-3 anticipated audience questions with concise answers */
+    ask?: { q: string; a: string }[];
+    /** What to click next (or "wait for auto-advance"). Optional. */
+    next?: string;
+    /** Things to avoid mentioning · internal caveats · not for the client */
+    dontSay?: string[];
+}
+
+export const PROJEX_PRESENTER_NOTES: Record<string, ProjexPresenterNote> = {
+    // ─── F1 · AP intake & matching (6 steps · most-presented path) ───
+    'p1.1': {
+        say: 'This is what Strata does at 3 AM. Accounting opens the AP inbox at 8 AM and sees 12 of 14 vendor bills already matched · exactly · to the penny · against POs in NetSuite. She only reviews the 2 exceptions surfaced at the top.',
+        ask: [
+            { q: 'What about OCR mistakes?', a: 'Every bill shows a confidence score · anything under 95% surfaces as an exception · human review required.' },
+            { q: 'How much time does this save?', a: 'Accounting used to key ~20 bills/hour on easy vendors · 5/hour on tough ones · this reduces her AP time by 4-6 hours per week.' },
+        ],
+        next: 'Click Next to see the Teknion bill · a 291-line PO that Strata handles line-by-line.',
+    },
+    'p1.2': {
+        say: 'A Teknion vendor invoice just landed in the AP inbox · 291 lines. Watch Strata\'s agent pipeline · Email Intake, then OCR reading the header at 97% confidence, then the PO Matcher reconciling against NetSuite.',
+        ask: [
+            { q: 'Does this work for other vendors too?', a: 'Yes · same pipeline for every vendor bill · we tune only per document type (invoice vs credit memo · etc.)' },
+        ],
+        next: 'Click Next to see line-item matching · 291 lines compared to the PO to the penny.',
+    },
+    'p1.3': {
+        say: 'Line-item comparison · 15 sample lines representative of the 291-line total · 12 match exactly, 2 quantity mismatches (partial shipment), 1 price mismatch (penny rounding). Accounting picks the reason from Compliance\'s taxonomy and moves on.',
+        ask: [
+            { q: 'What if we have custom mismatch reasons?', a: 'The taxonomy is per-tenant · Compliance owns it · we configure it during onboarding.' },
+        ],
+        next: 'Click Next to see the install-vendor exception · a bill without a PO # attached.',
+    },
+    'p1.4': {
+        say: 'Install-vendor bills often arrive with project name only · no PO #. Strata drafts the PM double-check email verbatim: which PO does this match, is work complete, approved to pay? Accounting reviews the draft · one click sends · bill queued as Held until PM responds.',
+        ask: [
+            { q: 'What happens while it\'s Held?', a: 'It sits in a Held queue · counter shows days waiting · escalation rules can auto-remind after N days.' },
+        ],
+        next: 'Click Next to see the Tuesday payment run · CEO approval.',
+    },
+    'p1.5': {
+        say: 'Tuesday payment run · 47 bills queued in the ACH batch. Compliance\'s dashboard surfaces the batch to the CEO for approval. CEO clicks Approve · but Strata does NOT auto-release · that\'s the "75% AI + human touch" principle · CEO stays the payment gatekeeper.',
+        ask: [
+            { q: 'Why not full auto-release?', a: 'CEO wants final approval on cash out · never auto-pay · that\'s their rule · we respect it.' },
+            { q: 'How does the CEO know what to approve?', a: 'The dashboard shows total · vendor count · flags any anomaly · CEO makes an informed call in 30 seconds.' },
+        ],
+        next: 'Click Next to see the bill saved to NetSuite · audit trail complete.',
+    },
+    'p1.6': {
+        say: 'Bill record saved in NetSuite · PDF dropped in the Communications tab using Compliance\'s existing naming convention · SharePoint mirror. Full audit trail: extracted by OCR · matched by Strata · approved by CEO · saved by user.',
+        ask: [
+            { q: 'Do we still need to log into NetSuite?', a: 'No · Strata does it for you · but everything is visible in NetSuite too for audit.' },
+        ],
+        next: 'End of AP path. Click Expert Hub tab to see other paths, or click another path in the sidebar.',
+    },
+
+    // ─── F4 · Order/PO dispatch (hero p4.4) ───
+    'p4.4': {
+        say: 'Coordinator sent a PIF · a 300-line spec from the Lead Designer. Strata parsed it and drafted 26 vendor POs · you\'re looking at the batch grid · 6 anchor vendors visible, 14 batched below. Per-card review before send · never one-batch button. That\'s the FC6 constraint · Coordinator never trusts auto-send.',
+        ask: [
+            { q: 'How long did the parse take?', a: 'About 90 seconds for 300 lines · vs 3 days manual keying today.' },
+            { q: 'What if I don\'t like a draft PO?', a: 'Click the card · DiffViewer shows auto-draft vs prior baseline · edit inline · re-save.' },
+        ],
+        next: 'Click a PO tile to open the DiffViewer, or click Next to see the per-vendor send flow.',
+    },
+
+    // ─── F5 · Electronic ACK (hero p5.3) ───
+    'p5.3': {
+        say: 'Teknion returned a 71-line acknowledgement with 13 change requests. This is the split-pane view · ACK PDF on the left, PMO grid on the right, row-by-row diff. Teknion CR taxonomy is real: leadtime shifts, BIFMA advisories, width changes, pricer comments. Coordinator processes 13 CRs in 20 minutes instead of 4 hours.',
+        ask: [
+            { q: 'What if the ACK confidence is low?', a: 'Per-vendor confidence · Teknion is 98%, Alamir is 74% · low-confidence ACKs surface a "review recommended" flag before Coordinator commits time.' },
+            { q: 'What if a CR needs designer approval?', a: 'That\'s the next step · designer chain auto-assembly · Lead Designer, Spec Designer, PM Coordinator all get looped in the thread.' },
+        ],
+        next: 'Click Next to see the sentinel clear · 10/10/2050 placeholder replaced with real Teknion ESDs.',
+    },
+
+    // ─── F2 · Vendor onboarding (hero p2.3) ───
+    'p2.3': {
+        say: 'Strata runs the 5-check compliance preflight · W-9 signed date freshness, 1099-NEC flag for individuals, ACH bank routing verified, W-8 BEN-E N/A for US vendors, OFAC sanction check. All 5 pass in under 3 seconds. Compliance reviews the result · one click to release the vendor.',
+        ask: [
+            { q: 'What if a check fails?', a: 'The specific check surfaces with a clear reason · Compliance can override with reason capture · full audit trail.' },
+            { q: 'Do we manage the compliance rules?', a: 'Yes · rules are per-tenant · Compliance owns them · we configure during onboarding.' },
+        ],
+        next: 'Click Next to see Compliance\'s sign-off gate.',
+    },
+
+    // ─── F3 · Progress billing (hero p3.1) ───
+    'p3.1': {
+        say: 'Fairport phase 2 just crossed the 50% ordered threshold. Strata\'s live billing forecast fires and drafts proforma PJX-INV-3421 automatically · $24,500 · 40% draw. The threshold trigger surfaces in the Action Center · Coordinator receives the alert immediately · instead of tracking milestones from memory.',
+        ask: [
+            { q: 'What if the threshold varies per project?', a: 'Furniture is 50/40/10, Walls is 60/30/10 · project-specific · Strata knows the pattern from the project setup.' },
+            { q: 'What if the milestone is wrong?', a: 'Coordinator reviews the draft proforma · edits line items · adjusts before releasing to the customer.' },
+        ],
+        next: 'Click Next to see Coordinator reviewing the proforma.',
+    },
+};
