@@ -51,7 +51,11 @@ export default function SyncConfirmation({
     }, [revealed, done, steps.length])
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-6 md:pl-[336px]">
+        {/* F84.30 · Diego 2026-08-21 · dropped `md:pl-[336px]` sidebar
+             offset · the tour sidebar is a fixed overlay · scene content
+             should center on the viewport, not double-offset for the
+             sidebar (that only applied to overlay modals via F83.S). */}
+        <div className="min-h-screen bg-background flex items-center justify-center p-6">
             <div className="w-full max-w-lg bg-card border border-border rounded-2xl shadow-sm p-6 space-y-5">
                 {/* Header · icon + short title + status pill · muted meta */}
                 <div className="space-y-2">
