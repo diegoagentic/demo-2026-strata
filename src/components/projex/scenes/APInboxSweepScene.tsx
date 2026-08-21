@@ -329,6 +329,11 @@ export default function APInboxSweepScene() {
     // Highlight the two exceptions so Accounting sees them first
     const highlightedId = phase !== 'arriving' ? 'PJX-BILL-8483' : undefined
 
+    // F83.L.fix · restore persona refs · dropped during F83.A cleanup but still
+    // referenced by the legacy hand-rolled kanban block (behind false gate ·
+    // wired to `daniel.fullName` / `jacob.fullName` in narrative rows).
+    const daniel = PROJEX_PERSONAS.daniel
+    const jacob = PROJEX_PERSONAS.jacob
     void daniel; void jacob;
     // F83.D · Diego 2026-08-21 · scene renderea el prod OCRTracking wrapper
     // (paridad con gostrata.app/expert-hub/ocr · kanban 6-col real) + floating

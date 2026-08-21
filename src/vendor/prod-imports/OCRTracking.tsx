@@ -251,7 +251,9 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                 ]} />
             </div>
 
-            <Navbar onLogout={onLogout} activeTab="OCR" onNavigateToWorkspace={() => onNavigate('ocr-tracking')} onNavigate={onNavigate} />
+            {/* F83.L.fix2 · Navbar render removed · wrapper mounts inside our
+                own Projex shell (Navbar rendered outside). Import already stripped ·
+                this leftover render was crashing OCRTracking at runtime. */}
 
             {/* Main Content — wider container to fit 8 tabs without horizontal scroll */}
             <div className="pt-24 px-4 max-w-screen-2xl mx-auto space-y-6">
