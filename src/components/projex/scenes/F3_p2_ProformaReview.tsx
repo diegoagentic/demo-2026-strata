@@ -35,11 +35,15 @@ export default function F3_p2_ProformaReview() {
     return (
         <div className="relative min-h-screen">
             <ExpertHubTransactionsWrapper />
+            {/* F84.28 · Diego 2026-08-21 · reverted initialTab to 'header' ·
+                Proforma preamble (F84.19) reads better as the entry view ·
+                presenter starts on the billing snapshot. Linked Documents
+                tab still available on click · attached files section (F84.24)
+                renders there when the tab is switched. */}
             <DocumentReviewModal
                 isOpen={open}
                 onClose={() => { setOpen(false); nextStep() }}
                 doc={PROFORMA_DOC}
-                initialTab="linked"
             />
         </div>
     )

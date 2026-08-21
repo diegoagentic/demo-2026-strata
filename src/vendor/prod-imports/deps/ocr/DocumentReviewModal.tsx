@@ -235,9 +235,17 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
     useEffect(() => {
         if (!isOpen) return
         setProcessing(true)
+        setRequestStage('idle')
+        setRequestNote('')
         const t = setTimeout(() => setProcessing(false), 900)
         return () => clearTimeout(t)
     }, [isOpen, doc?.id])
+    /** F84.27 · Diego 2026-08-21 · footer actions before Save · Approve
+     *  (commits + closes) or Request review (opens inline note field to
+     *  send to another stakeholder). Tracks stage so the footer swaps to
+     *  the appropriate control set. */
+    const [requestStage, setRequestStage] = useState<'idle' | 'requesting' | 'sent'>('idle')
+    const [requestNote, setRequestNote] = useState('')
     const [exportOpen, setExportOpen] = useState(false)
     const [previewDoc, setPreviewDoc] = useState<LinkedDoc | null>(null)
 
@@ -921,27 +929,99 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                             </div>
                             )}
 
-                            {/* Footer · Send feedback se movió al header como prominent action */}
-                            <div className="border-t border-border px-6 py-4 flex items-center justify-between">
+                            {/* F84.27 · Diego 2026-08-21 · Request review inline composer ·
+                                appears above the footer when the user clicks "Request review"
+                                · lets them send a note to another stakeholder before saving. */}
+                            {requestStage === 'requesting' && (
+                                <div className="border-t border-border bg-info/5 px-6 py-4 space-y-3">
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <Info className="h-4 w-4 text-info shrink-0" aria-hidden="true" />
+                                        <span className="text-foreground font-semibold">Request review from another stakeholder</span>
+                                        <span className="text-muted-foreground">· goes to the doc thread · save stays pending until they reply</span>
+                                    </div>
+                                    <textarea
+                                        value={requestNote}
+                                        onChange={(e) => setRequestNote(e.target.value)}
+                                        rows={3}
+                                        placeholder="e.g. Compliance · please double-check TIN masking before I approve."
+                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 placeholder:text-muted-foreground"
+                                    />
+                                </div>
+                            )}
+                            {requestStage === 'sent' && (
+                                <div className="border-t border-border bg-info/5 px-6 py-4 flex items-start gap-3 text-xs">
+                                    <CheckCircle2 className="h-4 w-4 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-foreground font-semibold">Review request sent</div>
+                                        <div className="text-muted-foreground mt-0.5 italic line-clamp-2">&ldquo;{requestNote}&rdquo;</div>
+                                        <div className="text-muted-foreground mt-0.5">Doc parked pending reply · save stays available.</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer · Cancel · Request review · Approve · Save */}
+                            <div className="border-t border-border px-6 py-4 flex items-center justify-between gap-2 flex-wrap">
                                 <span className="text-xs text-muted-foreground font-medium">{confidence}% confidence</span>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={onClose}
-                                        className="px-4 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSave}
-                                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                                    >
-                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                                            <polyline points="17 21 17 13 7 13 7 21"/>
-                                            <polyline points="7 3 7 8 15 8"/>
-                                        </svg>
-                                        Save
-                                    </button>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {requestStage === 'idle' && (
+                                        <>
+                                            <button
+                                                onClick={onClose}
+                                                className="px-4 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={() => setRequestStage('requesting')}
+                                                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg transition-colors"
+                                            >
+                                                <Info className="h-4 w-4" aria-hidden="true" />
+                                                Request review
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                                            >
+                                                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                                                Approve &amp; save
+                                            </button>
+                                        </>
+                                    )}
+                                    {requestStage === 'requesting' && (
+                                        <>
+                                            <button
+                                                onClick={() => { setRequestStage('idle'); setRequestNote('') }}
+                                                className="px-4 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={() => setRequestStage('sent')}
+                                                disabled={!requestNote.trim()}
+                                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-info text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                <Info className="h-4 w-4" aria-hidden="true" />
+                                                Send request
+                                            </button>
+                                        </>
+                                    )}
+                                    {requestStage === 'sent' && (
+                                        <>
+                                            <button
+                                                onClick={onClose}
+                                                className="px-4 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            >
+                                                Close · wait for reply
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                                            >
+                                                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                                                Approve anyway
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </DialogPanel>
