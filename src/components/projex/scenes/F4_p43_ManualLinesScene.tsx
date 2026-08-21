@@ -139,14 +139,27 @@ export default function F4_p43_ManualLinesScene() {
     const totalVendorAmount = selectedVendors.reduce((s, v) => s + v.amount, 0)
     const allSelected = selectedCodes.size === VENDOR_BREAKDOWN.length
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    S&amp;H manual entries · freight per vendor + surcharges + design fee
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    26 shipping-and-handling lines · Alamir $19 flat · Nelson prepaid+add · Teknion consolidated. Design fee 8% recomputed live.
-                </p>
+        <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+            {/* F83.N · slim header · prod ComparisonReviewModal shape · same
+                pattern as F83.I (F1_p1.3 line-item match) and F83.N (F4_p42
+                PIF parse) · big h1 + long subtitle folded into meta strip. */}
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    <h2 className="text-base font-bold text-foreground">S&amp;H manual entries · MWH residential</h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-foreground">
+                        Coordinator owns
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>Source: <span className="font-mono text-foreground font-semibold">MWH_PIF_2026-08-14.xlsx</span></span>
+                    <span>·</span>
+                    <span className="tabular-nums">{activeSnH.length + customLines.length}/{snhLines.length + customLines.length} S&amp;H lines active</span>
+                    <span>·</span>
+                    <span>Alamir $19 flat · Nelson prepaid+add · Teknion consolidated</span>
+                    <span>·</span>
+                    <span className="tabular-nums">Design fee 8% · S&amp;H subtotal <span className="text-foreground font-semibold">${snhTotal.toLocaleString()}</span></span>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4 items-start">
