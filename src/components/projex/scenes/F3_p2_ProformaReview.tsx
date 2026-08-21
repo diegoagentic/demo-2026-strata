@@ -1,7 +1,14 @@
 /**
  * F84 · F3 p3.2 · Review proforma.
- * Story · "Isabella reviews the Fairport 40% proforma draft · $58,240."
- * UI · prod DocumentReviewModal over Transactions backdrop.
+ * Story · "Coordinator reviews the Fairport 40% proforma draft · $58,240 ·
+ * ready to send to the customer."
+ * UI · prod DocumentReviewModal over ExpertHubTransactionsWrapper backdrop.
+ *
+ * F84.22 · Diego 2026-08-21 · mirror F84.21 pattern applied to F2 p2.2 ·
+ * open the modal on the Linked Documents tab so the proforma PDF shows as
+ * attached · and mark doc.status='processed' so the file signals "loaded
+ * / ready to send" instead of "still capturing." Removes the "nothing
+ * changed" perception between p3.1 (deadline alert) and this step.
  */
 
 import { useState } from 'react'
@@ -15,7 +22,9 @@ const PROFORMA_DOC: OcrDocCardData = {
     name: 'Fairport_40pct_Proforma.pdf',
     vendor: 'Fairport HQ · phase 2',
     type: 'Quote',
-    status: 'in_progress',
+    // F84.22 · processed status signals the proforma is loaded and ready
+    // to send · matches the "billing preamble" narrative added in F84.19.
+    status: 'processed',
     lineItems: 12,
     date: '2026-08-21',
 }
@@ -30,6 +39,7 @@ export default function F3_p2_ProformaReview() {
                 isOpen={open}
                 onClose={() => { setOpen(false); nextStep() }}
                 doc={PROFORMA_DOC}
+                initialTab="linked"
             />
         </div>
     )
