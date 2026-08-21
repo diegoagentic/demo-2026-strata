@@ -477,6 +477,69 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                             <div className="flex-1 overflow-y-auto px-6 py-5">
                                 {tab === 'header' && (
                                     <div className="space-y-6">
+                                        {/* F84.17 · Diego 2026-08-21 · when the doc is a W-9, surface a
+                                            highlighted "Compliance Registry Entry" preamble at the top
+                                            of Header Fields · shows the indexed fields (TIN · entity
+                                            type · signed date · expiration + alert · readiness self-
+                                            service status) that matter for vendor onboarding. Structural
+                                            adaptation to the vendor prod-import · preserve on re-sync. */}
+                                        {/\bW-?9\b/i.test(doc.name) && (
+                                            <div className="border-2 border-ai/50 rounded-xl overflow-hidden">
+                                                <div className="bg-ai-light px-4 py-2.5 flex items-center gap-2">
+                                                    <div className="h-6 w-6 rounded-md bg-ai/20 flex items-center justify-center shrink-0">
+                                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-ai" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                                    </div>
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-ai">Compliance Registry Entry · indexed</span>
+                                                    <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-success/15 text-success">
+                                                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                                        Readiness self-service · live
+                                                    </span>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 p-4 text-xs">
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Legal name</span>
+                                                        <span className="text-foreground font-semibold">{doc.vendor}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">TIN (masked)</span>
+                                                        <span className="text-foreground font-mono">••-•••4728</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Entity type</span>
+                                                        <span className="text-foreground font-semibold">LLC · single-member</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">1099 flag</span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
+                                                            Yes · 1099-NEC eligible
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Signed date <span className="text-[10px] text-ai">(indexed)</span></span>
+                                                        <span className="text-foreground font-semibold">2026-03-12</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground">Expires</span>
+                                                        <span className="inline-flex items-center gap-1 text-warning font-semibold">
+                                                            2027-03-12
+                                                            <span className="text-[10px] font-bold text-warning bg-warning/10 rounded-md px-1.5 py-0.5">Alert 30d before</span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-muted-foreground">OFAC screen</span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
+                                                            Clear · last check 08:14 AM
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-muted-foreground">ACH routing</span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
+                                                            Verified · Plaid handshake
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                         {sections.map(section => (
                                             <div key={section.title}>
                                                 <div className="flex items-center gap-1.5 mb-2">
