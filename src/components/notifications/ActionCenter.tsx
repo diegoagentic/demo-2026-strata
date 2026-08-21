@@ -458,189 +458,77 @@ type ProjexStepNotif = BfiStepNotif
 // necesita más tiempo para que el user scan/scroll antes de que aparezca el
 // notif. Steps NO listados heredan el default global (2000ms). Todo el
 // delay corre pause-aware · si el user pausa el demo el timer se congela.
+// F84 · MVP · only 5 notifs (one per path arrival step) · scan-time delay
+// scaled to give presenter time to explain before the AC panel appears.
 const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
-    // F3 · progress billing · dashboards + reviews con context to scan
-    'p3.1': 5000,  // threshold alert · scene shows live forecast chart moving
-    // p3.2 · no notif
-    // p3.3 · no notif
-    'p3.4': 5000,  // AR kanban · 4-col exploration across buckets
-    'p3.5': 4500,  // collection drafts · shared queue + tone toolbar
-    'p3.6': 4000,  // invoice posted · dealer portal landing to scan first
-    // F4 · order/PO dispatch · transactions landing needs scan time
-    'p4.1': 4500,  // Expert Hub Transactions · MWH PIF just arrived · scan list first
+    'p1.1': 3000,
+    'p2.1': 3000,
+    'p3.1': 3000,
+    'p4.1': 3000,
+    'p5.1': 3000,
 }
 
 const PROJEX_NOTIF_DEFAULT_DELAY_MS = 2000
 
+
+// F84 · MVP · 5 notifications only (one per path arrival step p*.1).
+// Zero notifs in intermediate/final steps · presenter advances via Next.
+// Kill the noisy F3/F5 4-notif chains by cutting the intermediate steps.
 const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
     'p1.1': {
-        badge: '2 need eyes', badgeColor: 'ai',
-        title: 'Overnight AP sweep · 14 bills · 12 auto-matched · 2 held',
-        desc: 'Good morning Accounting · Strata swept the AP inbox overnight and matched 12/14 bills exact-to-the-penny against NetSuite POs. 2 held for review: 1 Teknion partial-ship variance on NCBA (bill 8483) + 1 Warehouse-by-Design install invoice without PO # (AP9 pattern).',
+        badge: '14 bills · 3 need eyes', badgeColor: 'ai',
+        title: 'F1 · AP inbox · Strata OCR filed 14 vendor bills overnight',
+        desc: 'Overnight sweep of ap@projex-inc.com · 14 vendor bills ingested and filed in the OCR queue. Teknion NCBA (bill 8483) and Warehouse-by-Design install invoice both flagged for review · walkthrough starts here.',
         sender: 'Strata AI · ap@projex-inc.com · sweep 02:14 → 08:11',
-        re: 'AP inbox · 14 vendor bills · 3 legal entities · ready for Accounting',
-        cta: 'Open the Teknion 291-line bill →',
-        event: 'projex:ap-open-teknion',
-        footerText: 'Waiting for Accounting',
-    },
-    'p1.4': {
-        badge: 'Held bill · needs PM', badgeColor: 'warning',
-        title: 'AP9 install-vendor exception · Warehouse by Design bill without PO #',
-        desc: 'A Warehouse by Design install invoice landed at ap@projex-inc.com with project name only (no PO # on the vendor\'s copy · classic AP9 pattern shared with Clear Space + Digital Interior). Accounting drafts a PM double-check email · bill stays held until PM confirms which PO it matches and whether install is complete.',
-        sender: 'Strata AI · flagged from AP inbox',
-        re: 'WBD-2026-0812 · $3,200 · Denver Financial install (Aug 12-13)',
-        cta: 'Draft PM double-check →',
-        event: 'projex:pm-double-check-open',
-        footerText: 'Bill held until PM replies with PO #',
+        re: 'AP inbox · 14 bills · 3 legal entities · ready for Compliance',
+        cta: 'Open the AP queue →',
+        event: 'projex:ap-open',
+        footerText: 'Path 1 · Vendor bill intake & matching',
     },
     'p2.1': {
-        badge: 'Open ticket', badgeColor: 'ai',
-        title: 'F2 · Vendor onboarding · Coordinator submits structured intake',
-        desc: 'Coordinator is opening the structured intake form to onboard Warehouse by Design (install vendor · AP9 pattern · Denver Financial project). Free-text email to Accounting is being replaced by structured form + W-9 upfront.',
-        sender: 'Coordinator · Furniture',
-        re: 'Vendor onboarding · structured intake · start step',
-        cta: 'Open intake form →',
-        event: 'projex:vendor-intake-open',
-        footerText: 'Coordinator typing · will attach W-9',
-    },
-    'p2.2': {
-        badge: 'Ticket received', badgeColor: 'ai',
-        title: 'New vendor request · Warehouse by Design · W-9 attached',
-        desc: 'Coordinator submitted structured intake for Warehouse by Design (LLC single-member · install vendor for Denver Financial · $3,200 quote · Aug 12-13). W-9 attached signed 2026-03-12. Strata is ready to run OCR extraction on the source PDF and validate 5 key fields with per-field confidence.',
-        sender: 'Coordinator · Furniture Coordinator · via intake form',
-        re: 'TKT-P2-2026-08-14-001 · Warehouse by Design · install vendor request',
+        badge: 'W-9 ready', badgeColor: 'ai',
+        title: 'F2 · New vendor · W-9 attached for OCR review',
+        desc: 'Coordinator uploaded Warehouse-by-Design W-9 (signed 2026-03-12). Strata OCR is ready to extract 5 fields (legal name · TIN · entity type · signed date · address) with confidence per field · walkthrough starts here.',
+        sender: 'Coordinator · Furniture Coordinator · via structured intake',
+        re: 'WBD W-9 · Warehouse by Design · install vendor',
         attachment: 'WarehouseByDesign_W-9_signed.pdf',
-        cta: 'Open OCR review →',
-        event: 'projex:w9-ocr-open',
-        footerText: 'Accounting to review 5 fields',
+        cta: 'Open W-9 review →',
+        event: 'projex:w9-open',
+        footerText: 'Path 2 · Vendor onboarding & compliance',
     },
-    // p2.3 · AUTO step (Strata runs compliance preflight) · no AC notif needed ·
-    // user does not have an action to take here · scene auto-advances on chain complete.
-    // p2.4 · INTERACTIVE step (compliance sign-off gate) · no AC notif needed ·
-    // scene UI muestra Release/Reject buttons directamente · self-explanatory.
-    // p2.5 · AUTO step (row #734 animates in · 3.5s) · no AC notif needed.
-    // p2.6 · INTERACTIVE step (dealer readiness · refresh emails) · no AC notif ·
-    // scene UI muestra expiration reminders + Send button directamente.
     'p3.1': {
         badge: '1 threshold', badgeColor: 'warning',
-        title: 'F3 · Threshold trigger · Fairport phase 2 crosses 50%',
-        desc: 'Live billing forecast fires · Fairport HQ phase 2 ordered % crosses 50 in W32. Strata drafts proforma PJX-INV-3421 ($24,500 · 40% draw) for Coordinator review. Chart animates threshold crossing · alert lands in the Action Center.',
+        title: 'F3 · Fairport crosses 50% ordered · proforma release flagged',
+        desc: 'Live billing forecast fires · Fairport HQ phase 2 crossed 50% ordered in W32 and the deposit is already received. Strata flags the proforma release deadline in the Transactions list · walkthrough starts here.',
         sender: 'Strata AI · live billing forecast · just now',
-        re: 'Fairport HQ · Furniture 50/40/10 · 40% draw fires',
-        cta: 'Open forecast + draft →',
-        event: 'projex:threshold-open',
-        footerText: 'Proforma draft ready',
-    },
-    // p3.2 · INTERACTIVE step (proforma review) · no AC notif needed ·
-    // scene UI muestra proforma modal + Approve/Reject/Request info directamente.
-    // p3.3 · INTERACTIVE step (Walls PM WC9 gate) · no AC notif needed ·
-    // scene UI muestra handoff banner + Confirm installation-complete button
-    // directamente · self-explanatory.
-    'p3.4': {
-        badge: '7 overdue', badgeColor: 'warning',
-        title: 'AR aging board · 7 accounts past due across 3 buckets',
-        desc: 'Shared AR aging kanban 4-col replaces dead-tracker (AR3). 3 accounts in 31-60 bucket ($55,170 total) · 2 in 61-90 ($49,050 · $1,679 late fee) · 2 in 90+ ($18,650 · $930 late fee). Net 10 + 1.5%/mo late fee. Filter by owner Coordinator/Walls/Compliance.',
-        sender: 'Strata AI · AR aging tracker',
-        re: 'AR aging board · shared queue · dead-tracker replaced',
-        cta: 'Open AR board →',
-        event: 'projex:ar-board-open',
-        footerText: 'Coordinator + Walls + Compliance shared view',
-    },
-    'p3.5': {
-        badge: '5 drafts', badgeColor: 'ai',
-        title: 'Collection emails drafted · shared queue Furniture + Walls',
-        desc: 'Strata drafted 5 collection emails staged by bucket · 3 friendly (31-60) · 1 firm (61-90) · 1 escalation (90+). Shared queue shows Coordinator + Walls drafts together (FC12 fix vs personal Outlook). AIEmailComposer with Friendlier/Firmer/Shorter tone polish · per-draft send.',
-        sender: 'Strata AI · email composer',
-        re: 'Collection queue · 5 drafts · tone polish available',
-        cta: 'Review + send drafts →',
-        event: 'projex:drafts-open',
-        footerText: 'Never batch auto-send · per-draft control',
-    },
-    'p3.6': {
-        badge: 'Invoice posted', badgeColor: 'success',
-        title: 'Invoice PJX-INV-3421 posted to NetSuite GL · review in Dealer portal',
-        desc: 'Customer Invoice created + journaled to GL (PJX-JE-2026-0842 · $24,500 AR debit / $24,500 sales credit). PDF attached to Communications tab · SharePoint mirror complete. AR aging tracker + Dealer portal update in real-time · click to drill into the GL journal + audit trail from the sync detail.',
-        sender: 'Strata AI · NetSuite GL sync complete',
-        re: 'PJX-INV-3421 · Fairport 40% draw · $24,500 · due 2026-08-24',
-        cta: 'Open GL sync detail →',
-        event: 'projex:invoice-posted-open',
-        footerText: 'Auto · consequence of proforma approval',
+        re: 'Fairport HQ · Furniture 50/40/10 · 40% draw ready',
+        cta: 'Open the billing alert →',
+        event: 'projex:billing-open',
+        footerText: 'Path 3 · Progress billing & collections',
     },
     'p4.1': {
-        badge: 'Designer email', badgeColor: 'ai',
+        badge: 'PIF · 300 lines', badgeColor: 'ai',
         title: 'F4 · Lead Designer emails MWH PIF · 300 lines · 26 vendor split',
-        desc: 'Lead Designer (Aspire Design) emails Coordinator the MWH residential PIF workbook + SIF export. 300 product lines · 26 vendor POs expected · Walls partitions include AI lot line. Coordinator opens email · previews attachments · confirms Ingest to start the parse.',
+        desc: 'Lead Designer (Aspire Design) emailed the MWH residential PIF workbook · 300 product lines expected to split into 26 vendor POs. Isabella will preview it in the OCR / Document Review UI and trigger the batch · walkthrough starts here.',
         sender: 'Lead Designer · aspire-design.example',
-        re: 'MWH residential · PIF + SIF · 300 lines · 26 vendor split',
-        attachment: 'MWH_PIF_2026-08-14.xlsx · MWH_CET_export.sif',
-        cta: 'Open Coordinator inbox →',
-        event: 'projex:pif-email-open',
-        footerText: 'Never auto-ingest · human confirm',
+        re: 'MWH residential · PIF · 300 lines · 26 vendor split',
+        attachment: 'MWH_PIF_2026-08-14.xlsx',
+        cta: 'Open PIF preview →',
+        event: 'projex:pif-open',
+        footerText: 'Path 4 · Order entry & PO dispatch',
     },
-    // p4.2 · AUTO step (staged 14-line reveal · 5.5s) · no AC notif needed ·
-    // parse continues from p4.1 Ingest click; scene reveals lines with confidence.
-    // p4.3 · INTERACTIVE step (S&H manual entries + Generate flow) · no AC notif ·
-    // scene UI muestra editable table + Generate CTA con confirmation modal.
-    'p4.4': {
-        badge: '26 draft POs', badgeColor: 'ai',
-        title: '26 vendor POs drafted · DiffViewer per card',
-        desc: 'Strata drafted 26 vendor POs in the flat batch grid · 6 anchor vendors visible (Teknion 3 · HBF 2 · Boss 2 · Alamir 2 · Nelson 1 · West Elm 1 + 14 batched). Per-card DiffViewer shows auto-draft vs prior human baseline · ConversionStatusBadge (draft/ready/needs-review). Never one-batch button.',
-        sender: 'Strata AI · PO composer',
-        re: 'MWH · 26 PO batch · per-vendor split · DiffViewer inline',
-        cta: 'Open batch grid →',
-        event: 'projex:batch-grid-open',
-        footerText: 'Click cards for DiffViewer',
-    },
-    // p4.5 · INTERACTIVE step (per-vendor Send) · no AC notif needed ·
-    // scene UI muestra per-vendor strip with SubmitPODialog + Send/Hold buttons ·
-    // Coordinator decides send order manually (FC6 "never auto-send" preserved).
-    // p4.6 · AUTO step (audit trail reveal · 4s) · no AC notif needed ·
-    // consequence of p4.5 send; scene auto-timelines the snapshot.
-    // p5.1 · AUTO step (3-phase SIF upload · 4.5s) · no AC notif needed ·
-    // scene runs the SIF dispatch animation start-to-finish.
-    // p5.2 · AUTO step (drip-drip 6-vendor ACK arrival · 5s) · no AC notif needed ·
-    // scene shows arrival cards with per-vendor confidence chips.
-    'p5.3': {
-        badge: '13 CRs', badgeColor: 'warning',
-        title: 'ACK vs PMO · 71 lines + 13 CRs · Teknion taxonomy real',
-        desc: 'AckHeroMatchPanel UN-CUTTABLE hero. Split-pane ACK PDF left · PMO grid right. 13 CRs Teknion taxonomy: 5 warn (leadtime shifts + width changes) + 8 info (BIFMA advisories + pricer). 58/71 exact match · 13 CRs identified. ThreeWayMatchView per line with status.',
-        sender: 'Strata AI · PMO comparator',
-        re: 'PO-2026-4421 · 71 lines · 13 CRs · CR taxonomy',
-        cta: 'Open PMO comparison →',
-        event: 'projex:pmo-comparison-open',
-        footerText: '5 warn + 8 info CRs',
-    },
-    'p5.4': {
-        badge: 'Sentinels ready', badgeColor: 'ai',
-        title: 'Clear 10/10/2050 sentinels · Multi-Line Edit tool bulk',
-        desc: 'PMO lines have 10/10/2050 placeholder sentinels · Teknion ACK returned real ESDs (2026-09-10 · 09-15 · 09-24 · 10-02). Multi-Line Edit tool (NetSuite artifact) allows bulk-clear of the 12 sample lines in one click · Coordinator confirms each CR-affected row first.',
-        sender: 'Strata AI · sentinel manager',
-        re: 'NCBA PMO · 10/10/2050 → real Teknion dates',
-        cta: 'Open sentinel clear →',
-        event: 'projex:sentinel-clear-open',
-        footerText: 'Bulk update available',
-    },
-    'p5.5': {
-        badge: 'Chain ready', badgeColor: 'ai',
-        title: 'Designer chain auto-assembly · Lead → Spec → PM (FC8)',
-        desc: 'Strata auto-assembles designer chain thread · Lead Designer reviews CR-01 leadtime · Spec Designer confirms width changes CR-03/07/12 with client · PM Coordinator signs off. Attachments + replies + timestamps preserved. Replaces Coordinator\'s Excel manual assembly (FC8 net-new).',
-        sender: 'Strata AI · chain composer',
-        re: 'NCBA designer chain · Lead Designer · Spec Designer · PM Coordinator sign-off',
-        cta: 'Open chain thread →',
-        event: 'projex:chain-open',
-        footerText: 'FC8 net-new · replaces Excel',
-    },
-    'p5.6': {
-        badge: 'Daily sweep', badgeColor: 'success',
-        title: 'F5 complete · daily ESD sweep + shipment tracking',
-        desc: 'OrderTrackerScene daily sweep · 6 shipments across 6 vendors · SN inbound events. Alamir SN-4505 already shipped via UPS Freight · rest in production or scheduling. Multi-Line-Edit tool bulk refresh available. Coordinator closes the MWH cycle · monitor deliveries · next threshold coming.',
-        sender: 'Strata AI · daily sweep · 08:00 AM',
-        re: 'NCBA · 6 shipments tracking · Daily Report saved-search',
-        cta: 'Open tracking grid →',
-        event: 'projex:tracking-open',
-        footerText: 'Coordinator monitors · next Tue Aug 19',
+    'p5.1': {
+        badge: 'Teknion ACK', badgeColor: 'ai',
+        title: 'F5 · Teknion returned the ACK · per-vendor OCR confidence',
+        desc: 'Teknion sent the ACK for the MWH residential PO. Strata OCR filed it in the queue with per-vendor confidence badges (Teknion 98% · HBF 91% · Alamir 74% flagged for review). Coordinator will compare it against the PO next · walkthrough starts here.',
+        sender: 'Strata AI · ACK inbox',
+        re: 'Teknion · PO-DC-0009642 · 71 lines · 13 CRs expected',
+        cta: 'Open the ACK queue →',
+        event: 'projex:ack-open',
+        footerText: 'Path 5 · Electronic ACK processing',
     },
 }
+
 
 // Officeworks Step sc1.0 — MANATT intake (parallel to BFI a1.1 ingest pattern)
 const OFFICEWORKS_SC10_NOTIFICATIONS: Notification[] = [
