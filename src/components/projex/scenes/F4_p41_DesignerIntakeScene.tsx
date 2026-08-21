@@ -99,25 +99,18 @@ export default function F4_p41_DesignerIntakeScene() {
 
             {/* F83.C · Diego 2026-08-21 · phase 'transactions' renderea el
                  prod ExpertHubTransactionsWrapper (paridad total con
-                 gostrata.app/expert-hub/transactions) + floating CTA para
-                 drill-in a MWH intake detail. Reemplaza el hand-rolled
-                 6-col table custom que no matcheaba prod. */}
+                 gostrata.app/expert-hub/transactions).
+                 F83.K · Diego 2026-08-21 · floating "Open MWH intake" toast
+                 removido · duplicaba el Action Center notif (F4 · Lead Designer
+                 emails MWH PIF · OPEN COORDINATOR INBOX) causando confusión
+                 sobre cuál CTA disparaba el drill-in. Canonical channel es
+                 el AC (memory `feedback-notifications-action-center` ·
+                 "SIEMPRE al Action Center · NUNCA toasts custom"). El AC CTA
+                 dispatches `projex:pif-email-open` → useEffect L71-73 →
+                 setPhase('detail'). Single source of intent. */}
             {phase === 'transactions' && (
                 <div className="relative -mx-6 -my-6">
                     <ExpertHubTransactionsWrapper />
-                    <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-2xl bg-card border border-border shadow-2xl px-4 py-3">
-                        <div className="flex-1 min-w-0 text-xs pr-2">
-                            <div className="text-foreground font-semibold">MWH residential PIF just arrived</div>
-                            <div className="text-muted-foreground text-[11px]">300 lines · 26 vendor split · needs ingest</div>
-                        </div>
-                        <button
-                            onClick={() => setPhase('detail')}
-                            className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[11px] font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-                        >
-                            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                            Open MWH intake
-                        </button>
-                    </div>
                 </div>
             )}
 
