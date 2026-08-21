@@ -755,8 +755,8 @@ export default function DemoSidebar() {
                             <p className={`text-[10px] font-bold uppercase tracking-widest ${c.textDim}`}>
                                 In this flow
                             </p>
-                            <p className={`text-sm font-semibold ${c.textTitle}`}>
-                                {landing.tagline.split(' · ')[0]}
+                            <p className={`text-sm font-semibold ${c.textTitle} leading-snug`}>
+                                {landing.tagline}
                             </p>
                             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-primary/15 text-foreground">
                                 <Star className="h-2.5 w-2.5" aria-hidden="true" />

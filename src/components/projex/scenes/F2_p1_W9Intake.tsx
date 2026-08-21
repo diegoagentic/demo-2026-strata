@@ -1,10 +1,19 @@
 /**
- * F84 · F2 p2.1 · Read W-9 (structured intake · Document Review).
- * Story · "Kelly uploads a W-9 · Strata reads 5 fields with confidence."
- * UI · prod DocumentReviewModal over OCR queue backdrop.
+ * F84 · F2 p2.1 · Read W-9 (structured intake · OCR list → notif → Document Review).
+ *
+ * F84.12 · Diego 2026-08-21 · 3-beat scene inside one step:
+ *   1. OCR queue in list mode (prod OCRTrackingWrapper) · presenter sees
+ *      the same shell Compliance uses for bills.
+ *   2. Action Center notif fires (single canonical channel · zero custom
+ *      floating callouts here · Diego F84.13 dedup).
+ *   3. AC notif CTA dispatches `projex:w9-open` · scene opens the prod
+ *      DocumentReviewModal · Save/Cancel advances to p2.2.
+ *
+ * ProjexPage Shell skips its own advance for `projex:w9-open` via
+ * SCENE_HANDLED_EVENTS so we don't double-fire.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDemo } from '../../../context/DemoContext'
 import OCRTrackingWrapper from '../../../vendor/prod-imports/wrappers/OCRTrackingWrapper'
 import DocumentReviewModal from '../../../vendor/prod-imports/deps/ocr/DocumentReviewModal'
@@ -22,7 +31,14 @@ const W9_DOC: OcrDocCardData = {
 
 export default function F2_p1_W9Intake() {
     const { nextStep } = useDemo()
-    const [open, setOpen] = useState(true)
+    const [open, setOpen] = useState(false)
+
+    useEffect(() => {
+        const handler = () => setOpen(true)
+        window.addEventListener('projex:w9-open', handler)
+        return () => window.removeEventListener('projex:w9-open', handler)
+    }, [])
+
     return (
         <div className="relative min-h-screen">
             <OCRTrackingWrapper />

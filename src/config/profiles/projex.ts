@@ -417,7 +417,7 @@ export interface ProjexPathLanding {
 
 export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
     'projex-ap': {
-        tagline: 'Vendor bills flow into Strata overnight · the AI matches them to POs to the penny · Compliance approves the batch.',
+        tagline: 'Read bills overnight · match them to POs to the penny · release the payment batch.',
         valueChip: { label: 'Saves 4-6 hrs/week per accountant', tone: 'success' },
         heroStepId: 'p1.1',
         moments: [
@@ -429,7 +429,7 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-vendor-onboarding': {
-        tagline: 'Kelly uploads a W-9 · Strata reads it and files it in the compliance registry with expiration alerts.',
+        tagline: 'Read a W-9 · file it in the compliance queue · sync the vendor to NetSuite.',
         valueChip: { label: 'Cuts vendor onboarding from 2 weeks to 1 day', tone: 'ai' },
         heroStepId: 'p2.1',
         moments: [
@@ -441,7 +441,7 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-billing': {
-        tagline: 'A billing deadline arrives · Isabella reviews the proforma · sends it to the customer.',
+        tagline: 'Catch billing deadlines · review the proforma · send the invoice to the customer.',
         valueChip: { label: 'Catches 100% of billing milestones · no revenue leaks', tone: 'warning' },
         heroStepId: 'p3.1',
         moments: [

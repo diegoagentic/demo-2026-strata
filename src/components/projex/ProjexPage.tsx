@@ -90,17 +90,27 @@ const STEP_TO_AC_EVENT: Record<string, string> = {
     'p5.1': 'projex:ack-open',
 }
 
+/** F84.12 · Events the scene handles directly (opens a modal instead of
+ *  auto-advancing). Shell skips its own listener for these · avoids
+ *  double-firing when the scene needs the notif click to reveal a modal
+ *  in the SAME step (advance happens on modal close). */
+const SCENE_HANDLED_EVENTS = new Set<string>([
+    'projex:w9-open',   // F2 p2.1 · OCR list → notif → DocumentReviewModal opens in-place
+])
+
 function Shell({ children }: { children: React.ReactNode }) {
     const { currentStep, nextStep } = useDemo()
     const app = currentStep?.app
     const stepId = currentStep?.id ?? ''
 
     /** F84 · If the current step's AC event fires (from clicking the notif),
-     *  advance the demo. Scenes that need custom behavior can call
-     *  event.preventDefault() or attach their own listener first. */
+     *  advance the demo. Scenes that need custom behavior register their
+     *  event in SCENE_HANDLED_EVENTS above · we skip the Shell listener
+     *  for those so the scene can open a modal without racing. */
     useEffect(() => {
         const evt = STEP_TO_AC_EVENT[stepId]
         if (!evt) return
+        if (SCENE_HANDLED_EVENTS.has(evt)) return
         const advance = () => nextStep()
         window.addEventListener(evt, advance)
         return () => window.removeEventListener(evt, advance)
