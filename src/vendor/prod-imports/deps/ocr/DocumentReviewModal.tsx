@@ -596,45 +596,79 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                                     </span>
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 p-4 text-xs">
-                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                                                        <span className="text-muted-foreground">Legal name</span>
-                                                        <span className="text-foreground font-semibold">{doc.vendor}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                                                        <span className="text-muted-foreground">TIN (masked)</span>
-                                                        <span className="text-foreground font-mono">••-•••4728</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                                                        <span className="text-muted-foreground">Entity type</span>
-                                                        <span className="text-foreground font-semibold">LLC · single-member</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                                                        <span className="text-muted-foreground">1099 flag</span>
-                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
-                                                            Yes · 1099-NEC eligible
+                                                    <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground shrink-0">Legal name</span>
+                                                        <span className="text-right min-w-0">
+                                                            <span className="text-foreground font-semibold block truncate">{doc.vendor}</span>
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-success bg-success/10 rounded-md px-1 py-0.5 mt-0.5">
+                                                                <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                                                Extracted · 98%
+                                                            </span>
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                                                        <span className="text-muted-foreground">Signed date <span className="text-[10px] text-ai">(indexed)</span></span>
-                                                        <span className="text-foreground font-semibold">2026-03-12</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                                                        <span className="text-muted-foreground">Expires</span>
-                                                        <span className="inline-flex items-center gap-1 text-warning font-semibold">
-                                                            2027-03-12
-                                                            <span className="text-[10px] font-bold text-warning bg-warning/10 rounded-md px-1.5 py-0.5">Alert 30d before</span>
+                                                    <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground shrink-0">TIN (masked)</span>
+                                                        <span className="text-right min-w-0">
+                                                            <span className="text-foreground font-mono block">••-•••4728</span>
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-success bg-success/10 rounded-md px-1 py-0.5 mt-0.5">
+                                                                <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                                                Extracted · 96%
+                                                            </span>
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-muted-foreground">OFAC screen</span>
-                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
-                                                            Clear · last check 08:14 AM
+                                                    <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground shrink-0">Entity type</span>
+                                                        <span className="text-right min-w-0">
+                                                            <span className="text-foreground font-semibold block">LLC · single-member</span>
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-success bg-success/10 rounded-md px-1 py-0.5 mt-0.5">
+                                                                <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                                                Extracted · 94%
+                                                            </span>
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-muted-foreground">ACH routing</span>
+                                                    <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground shrink-0">1099 flag</span>
+                                                        <span className="text-right min-w-0">
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
+                                                                Yes · 1099-NEC eligible
+                                                            </span>
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-ai bg-ai/10 rounded-md px-1 py-0.5 mt-0.5 ml-1">
+                                                                <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                                                Derived
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground shrink-0">Signed date <span className="text-[10px] text-ai">(indexed)</span></span>
+                                                        <span className="text-right min-w-0">
+                                                            <span className="text-foreground font-semibold block">2026-03-12</span>
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-success bg-success/10 rounded-md px-1 py-0.5 mt-0.5">
+                                                                <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                                                                Extracted · 92%
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-2">
+                                                        <span className="text-muted-foreground shrink-0">Expires</span>
+                                                        <span className="text-right min-w-0">
+                                                            <span className="text-warning font-semibold block">2027-03-12</span>
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-warning bg-warning/10 rounded-md px-1 py-0.5 mt-0.5">
+                                                                Alert 30d before
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <span className="text-muted-foreground shrink-0">OFAC screen</span>
                                                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
-                                                            Verified · Plaid handshake
+                                                            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                            Clear · 08:14 AM
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <span className="text-muted-foreground shrink-0">ACH routing</span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 rounded-md px-1.5 py-0.5">
+                                                            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                            Verified · Plaid
                                                         </span>
                                                     </div>
                                                 </div>
