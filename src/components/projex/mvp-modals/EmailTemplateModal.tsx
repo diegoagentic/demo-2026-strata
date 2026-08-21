@@ -60,7 +60,7 @@ export default function EmailTemplateModal({
         <Transition show={isOpen} as={Fragment}>
             <Dialog onClose={onClose} className="relative z-[400]">
                 <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
-                    <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm" aria-hidden="true" />
+                    <div className="fixed inset-y-0 right-0 left-0 md:left-[320px] bg-foreground/50 backdrop-blur-sm" aria-hidden="true" />
                 </TransitionChild>
                 <div className="fixed inset-0 flex items-start justify-center p-4 sm:p-8 md:pl-[336px] overflow-y-auto">
                     <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">

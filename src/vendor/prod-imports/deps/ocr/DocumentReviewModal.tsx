@@ -328,7 +328,9 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm" />
+                    {/* F84.3 · backdrop offset so it doesn't cover the demo
+                        tour sidebar (w-80 · fixed left-0 · z-[300]). */}
+                    <div className="fixed inset-y-0 right-0 left-0 md:left-[320px] bg-foreground/40 backdrop-blur-sm" />
                 </TransitionChild>
 
                 <div className="fixed inset-0 flex items-center justify-center p-4 md:pl-[336px]">

@@ -14,14 +14,16 @@ import { PROJEX_F1_PO_BILL_REPORT } from '../../../config/profiles/projex-data/c
 export default function F1_p2_PoBillCompare() {
     const { nextStep } = useDemo()
     const [open, setOpen] = useState(true)
+    const dismiss = () => { setOpen(false); nextStep() }
     return (
         <div className="relative min-h-screen">
             <OCRTrackingWrapper />
             <ComparisonReviewModal
                 isOpen={open}
-                onClose={() => { setOpen(false); nextStep() }}
+                onClose={dismiss}
                 report={PROJEX_F1_PO_BILL_REPORT}
                 processing={false}
+                onDecision={dismiss}
             />
         </div>
     )

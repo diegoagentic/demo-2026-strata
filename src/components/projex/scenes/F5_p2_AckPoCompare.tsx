@@ -14,14 +14,16 @@ import { PROJEX_F5_ACK_PO_REPORT } from '../../../config/profiles/projex-data/co
 export default function F5_p2_AckPoCompare() {
     const { nextStep } = useDemo()
     const [open, setOpen] = useState(true)
+    const dismiss = () => { setOpen(false); nextStep() }
     return (
         <div className="relative min-h-screen">
             <OCRTrackingWrapper />
             <ComparisonReviewModal
                 isOpen={open}
-                onClose={() => { setOpen(false); nextStep() }}
+                onClose={dismiss}
                 report={PROJEX_F5_ACK_PO_REPORT}
                 processing={false}
+                onDecision={dismiss}
             />
         </div>
     )
