@@ -71,14 +71,11 @@ import {
 
 import logoLightBrand from './assets/logo-light-brand.png'
 import logoDarkBrand from './assets/logo-dark-brand.png'
-// F80.3 · Projex initial-state landing · Expert Hub prod copy wrapped
+// F80.3 · Projex pre-demo · Expert Hub Transactions prod copy wrapped
 // (F19 + F43.a synced desde expert-hub@f59da74 · via lift F80.1).
-import ProjexExperienceShell, { type ProjexTab } from './components/projex/ProjexExperienceShell'
-// F81.B · CEO-friendly landing (playlist moments + hero inline).
-// ProjexExpertHubWrapper still lifted en /vendor/prod-imports/ · disponible
-// para uso futuro · pero el landing default ahora es ProjexPathLanding.
-import ProjexPathLanding from './components/projex/ProjexPathLanding'
-import { experienceOf, type ProjexFlowId } from './config/profiles/projex'
+// F81.C.fix · reverted to raw wrapper (no ProjexExperienceShell chrome
+// para evitar pseudo-navbar duplicate con el real Navbar).
+import ProjexExpertHubWrapper from './vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 // F81.C · Presenter notes overlay · discreet · presenter-only · Cmd+Shift+P
 import PresenterNotesOverlay from './components/projex/PresenterNotesOverlay'
 
@@ -619,60 +616,16 @@ function App() {
   };
 
   const renderCurrentPage = () => {
-    // F81.B.3 · Diego 2026-08-21 · Projex initial state (pre-demo) · renders
-    // path-specific landing en vez del generic ExpertHubTransactions (F80.3).
-    // Landing muestra tagline + value chip + playlist moments menu + hero
-    // scene inline + 2 CTAs (guided walkthrough | explore freely).
-    // Derives active path from currentStep?.flowId · defaults a 'projex-ap'
-    // cuando el user acaba de abrir el profile.
+    // F81.C.fix · Diego 2026-08-21 · Projex pre-demo state simplified.
+    // Antes (F81.B.3) el pre-demo mostraba el rich ProjexPathLanding con
+    // playlist + hero + CTAs · user flagged como "demasiados elementos
+    // para el inicio" + pseudo-navbar duplicado. Ahora pre-demo = raw
+    // Expert Hub Transactions prod copy · minimal · alineado con lo que
+    // el user ve como CEO al abrir la plataforma real. El rich landing
+    // (ProjexPathLanding) queda disponible como componente · su new home
+    // en el tour se define en Fase B.4 next iteration.
     if (isProjex) {
-      const activePathId = (currentStep?.flowId ?? 'projex-ap') as ProjexFlowId;
-      const experience = experienceOf(activePathId);
-      const projexTab: ProjexTab =
-        activePathId === 'projex-ap' ? 'transactions'
-        : activePathId === 'projex-order-po' ? 'transactions'
-        : activePathId === 'projex-ack' ? 'comparisons'
-        : activePathId === 'projex-vendor-onboarding' ? 'ocr'
-        : 'transactions';
-
-      const handleStartGuided = () => {
-        // Jump to first step of the active path · then start the tour
-        const idx = steps.findIndex(s => s.flowId === activePathId);
-        if (idx >= 0) goToStep(idx);
-        setIsDemoActive(true);
-      };
-
-      const handleStartExplore = () => {
-        // Same as guided but explore mode · v1 · same as guided (banner
-        // hide toggle deferred to Fase B.4 · scene affordances usable
-        // in current model since scenes have their own choreography).
-        const idx = steps.findIndex(s => s.flowId === activePathId);
-        if (idx >= 0) goToStep(idx);
-        setIsDemoActive(true);
-      };
-
-      const handleJumpToMoment = (stepId: string) => {
-        // Playlist model · click a tile · goToStep to that specific scene
-        // + arranca el demo · CEO puede saltar donde quiera según audiencia.
-        const idx = steps.findIndex(s => s.id === stepId);
-        if (idx >= 0) goToStep(idx);
-        setIsDemoActive(true);
-      };
-
-      return (
-        <ProjexExperienceShell
-          experience={experience}
-          activeTab={projexTab}
-          tenantLabel="Projex Inc."
-        >
-          <ProjexPathLanding
-            pathId={activePathId}
-            onStartGuided={handleStartGuided}
-            onStartExplore={handleStartExplore}
-            onJumpToMoment={handleJumpToMoment}
-          />
-        </ProjexExperienceShell>
-      );
+      return <ProjexExpertHubWrapper />;
     }
     if (currentPage === 'dashboard') return <Dashboard onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
     if (currentPage === 'inventory') return <Inventory onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;

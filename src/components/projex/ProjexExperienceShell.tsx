@@ -113,25 +113,24 @@ export default function ProjexExperienceShell({
             ? (DEALER_LEGACY_TAB_ALIAS[activeTab as DealerTab] ?? activeTab)
             : activeTab
 
+    // F81.C.fix · Diego 2026-08-21 · eliminated the tenant/product row del
+    // top strip · era un "pseudo-navbar" duplicado con el Navbar real (que
+    // ya muestra `Projex Inc.` + `DEALER EXPERIENCE`/`EXPERT HUB` eyebrow).
+    // Only the secondary tabs strip stays · unique platform navigation
+    // (OCR · Observability · Feedback · Transactions para Dealer · OCR ·
+    // Transactions · Comparisons · Feedback para Expert Hub). Product tone
+    // + tenant label params conservados sin uso · pueden usarse futuros
+    // consumidores que necesiten el chip.
+    void productLabel; void ProductIcon; void productTone; void tenantLabel;
     return (
         <div className="min-h-screen bg-background text-foreground">
-            {/* Top platform strip · tenant + product + secondary tabs */}
+            {/* Top secondary-tabs strip · unique platform navigation · zero
+                 duplication con el real Navbar (F81.C.fix) */}
             <div className="border-b border-border bg-card">
-                <div className="max-w-7xl mx-auto px-6 py-3 space-y-3">
-                    {/* Tenant + product row */}
-                    <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider">
-                        <span className="text-muted-foreground font-semibold">{tenantLabel}</span>
-                        <span className="text-muted-foreground/50" aria-hidden="true">·</span>
-                        <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-semibold ${productTone}`}>
-                            <ProductIcon className="h-3 w-3" aria-hidden="true" />
-                            {productLabel}
-                        </span>
-                    </div>
-
-                    {/* Secondary nav tabs · visual-only mimic of the platform */}
+                <div className="max-w-7xl mx-auto px-6 py-2">
                     <nav
                         className="flex items-center gap-1 overflow-x-auto -mx-1"
-                        aria-label={`${productLabel} navigation (preview only)`}
+                        aria-label={`${experience === 'expert-hub' ? 'Expert Hub' : 'Dealer Experience'} navigation (preview only)`}
                     >
                         {tabs.map(tab => {
                             const active = tab.id === resolvedActiveTab
