@@ -453,7 +453,7 @@ export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
         ctaExplore: 'Explore this experience freely',
     },
     'projex-order-po': {
-        tagline: 'Ingest a 300-line PIF · Review the preliminary order lines · Send the 26-PO batch by email',
+        tagline: 'Ingest the PIF · Review the preliminary order lines · Send the PO batch by email',
         valueChip: { label: 'Reduces PO dispatch from 3 days to 30 min per project', tone: 'info' },
         heroStepId: 'p4.1',
         moments: [
