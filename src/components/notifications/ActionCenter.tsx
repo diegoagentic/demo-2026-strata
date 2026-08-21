@@ -458,11 +458,14 @@ type ProjexStepNotif = BfiStepNotif
 // necesita más tiempo para que el user scan/scroll antes de que aparezca el
 // notif. Steps NO listados heredan el default global (2000ms). Todo el
 // delay corre pause-aware · si el user pausa el demo el timer se congela.
-// F84 · MVP · only 5 notifs (one per path arrival step) · scan-time delay
-// scaled to give presenter time to explain before the AC panel appears.
+// F84 · MVP · one notif per path arrival step · scan-time delay scaled
+// to give presenter time to explain before the AC panel appears.
+// F84.16 · added p2.2 (Diego 2026-08-21 · W-9 registry needs its own AC
+// notif · replaces the custom overlay we removed).
 const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
     'p1.1': 3000,
     'p2.1': 3000,
+    'p2.2': 3000,
     'p3.1': 3000,
     'p4.1': 3000,
     'p5.1': 3000,
@@ -495,6 +498,19 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         cta: 'Open W-9 review →',
         event: 'projex:w9-open',
         footerText: 'Path 2 · Vendor onboarding & compliance',
+    },
+    // F84.16 · Diego 2026-08-21 · single canonical channel for the W-9
+    // registry step · replaces the previous custom pinned card overlay
+    // in F2_p2_W9Registry.
+    'p2.2': {
+        badge: 'Ready to Sync', badgeColor: 'success',
+        title: 'W-9 registered · Warehouse by Design · ready to sync',
+        desc: 'Strata filed the WBD W-9 in the OCR queue as a first-class taxonomy transaction · 5 of 5 fields extracted at 92% confidence · signed 2026-03-12 · expires 2027-03-12 (alert scheduled 30 days before). Same shell Compliance already uses for bills. Ready to sync the vendor to the NetSuite compliance registry.',
+        sender: 'Strata AI · OCR queue',
+        re: 'WBD W-9 · date-indexed · expiration flagged',
+        cta: 'Sync vendor to NetSuite →',
+        event: 'projex:w9-registered',
+        footerText: 'Path 2 · step 2 of 3',
     },
     'p3.1': {
         badge: '1 threshold', badgeColor: 'warning',

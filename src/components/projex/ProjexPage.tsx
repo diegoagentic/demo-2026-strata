@@ -85,6 +85,7 @@ export default function ProjexPage() {
 const STEP_TO_AC_EVENT: Record<string, string> = {
     'p1.1': 'projex:ap-open',
     'p2.1': 'projex:w9-open',
+    'p2.2': 'projex:w9-registered', // F84.16 · replaces custom overlay in F2_p2
     'p3.1': 'projex:billing-open',
     'p4.1': 'projex:pif-open',
     'p5.1': 'projex:ack-open',

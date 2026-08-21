@@ -352,7 +352,18 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                     </div>
                                     <div className="min-w-0">
                                         <h2 className="text-xl font-bold text-foreground">Document Review</h2>
-                                        <div className="flex items-center gap-2 min-w-0">
+                                        <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                            {/* F84.15 · Diego 2026-08-21 · highlight the doc type when
+                                                the file is a W-9 form · gives the vendor onboarding
+                                                path a clear "this is a W-9" anchor next to the
+                                                filename. Structural adaptation · preserve on prod
+                                                re-sync. */}
+                                            {/\bW-?9\b/i.test(doc.name) && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-ai/15 text-ai rounded-md px-2 py-0.5 shrink-0">
+                                                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                                                    IRS Form W-9
+                                                </span>
+                                            )}
                                             <p className="text-sm text-muted-foreground truncate">{doc.vendor} · {doc.name}</p>
                                             <TransactionVerifyPill orderId={doc.id} />
                                         </div>
