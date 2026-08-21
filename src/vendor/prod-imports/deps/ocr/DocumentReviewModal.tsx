@@ -16,6 +16,10 @@ interface DocumentReviewModalProps {
     /** FB-06a / FB-10 · opens the feedback composer with this doc as auto-attached context. */
     onSendFeedback?: (doc: OcrDocCardData) => void
     onDownloadOriginal?: (doc: OcrDocCardData) => void
+    /** F84.21 · Diego 2026-08-21 · optional initial tab · lets the caller
+     *  land the user on Linked Documents (e.g. F2 p2.2 · post-registration
+     *  the linked list is the point of the visit). Defaults to 'header'. */
+    initialTab?: 'header' | 'lineItems' | 'linked'
 }
 
 interface FieldRow {
@@ -222,8 +226,8 @@ function EditableValue({ value, editable, onChange }: { value: string; editable?
     )
 }
 
-export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSendFeedback, onDownloadOriginal }: DocumentReviewModalProps) {
-    const [tab, setTab] = useState<'header' | 'lineItems' | 'linked'>('header')
+export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSendFeedback, onDownloadOriginal, initialTab = 'header' }: DocumentReviewModalProps) {
+    const [tab, setTab] = useState<'header' | 'lineItems' | 'linked'>(initialTab)
     const [exportOpen, setExportOpen] = useState(false)
     const [previewDoc, setPreviewDoc] = useState<LinkedDoc | null>(null)
 
