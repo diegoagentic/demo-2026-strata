@@ -417,7 +417,7 @@ export interface ProjexPathLanding {
 
 export const PROJEX_PATH_LANDINGS: Record<ProjexFlowId, ProjexPathLanding> = {
     'projex-ap': {
-        tagline: 'Read bills overnight · Match them to POs to the penny · Release the payment batch',
+        tagline: 'Read bills · Match them to POs · Release the payment batch',
         valueChip: { label: 'Saves 4-6 hrs/week per accountant', tone: 'success' },
         heroStepId: 'p1.1',
         moments: [
