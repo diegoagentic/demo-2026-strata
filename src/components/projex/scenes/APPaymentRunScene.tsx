@@ -29,6 +29,10 @@ import { usePauseAware } from '../../../context/usePauseAware'
 import ReasonDialog, { type ReasonPayload } from '../../shared/ReasonDialog'
 import { PROJEX_PERSONAS } from '../../../config/profiles/projex-data/personas'
 import { PROJEX_SOURCES } from '../../../config/profiles/projex-data/netsuiteSources'
+// F83.J · Diego 2026-08-21 · payment run es Projex-specific · no existe
+// como page en Expert Hub prod · lo mostramos como modal overlay sobre
+// prod Transactions (backdrop) · activado desde una row Ready-to-pay.
+import ExpertHubTransactionsWrapper from '../../../vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 
 interface PaymentRow {
     id: string
@@ -74,7 +78,7 @@ export default function APPaymentRunScene() {
     const { pauseAwareTimeout } = usePauseAware()
     const { nextStep } = useDemo()
     const matt = PROJEX_PERSONAS.matt
-    const jacob = PROJEX_PERSONAS.jacob
+    const jacob = PROJEX_PERSONAS.jacob; void jacob // preserved for narrative reuse
 
     // Approval choreography · idle → approving → approved · rejected also possible
     const [stage, setStage] = useState<'idle' | 'approving' | 'approved' | 'rejected'>('idle')
@@ -135,19 +139,55 @@ export default function APPaymentRunScene() {
         ? CLARIFY_REASONS.find(r => r.id === clarifyPayload.categoryId)?.label ?? 'Other'
         : null
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-            {/* Header */}
-            <div>
-            <h1 className="text-2xl font-bold text-foreground">
-                    Tue payment run · dashboard review · CEO approves the ACH batch
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Tuesday = big batch · Thursday = one-offs. {jacob.fullName.split(' ')[0]}'s twice-weekly financial dashboard surfaces the queue to {matt.fullName.split(' ')[0]} · human sign-off is preserved on purpose.
-                </p>
-            </div>
+        <div className="relative min-h-screen">
+            {/* Prod backdrop · Transactions view · the batch appears as N
+                bills in Ready-to-pay status · CEO opened the payment run
+                modal from that row. */}
+            <ExpertHubTransactionsWrapper />
 
-            {/* F83.A · CEO framing banner removed · prod has zero narrative
-                 banners · quote lives en presenter notes overlay (F81.C). */}
+            {/* Payment run modal overlay · Projex-specific · not a prod page */}
+            <div
+                className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="payment-run-title"
+            >
+                <div className="bg-card border border-border rounded-2xl w-full max-w-6xl my-auto shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-4rem)]">
+                    {/* Modal header · prod ComparisonReviewModal shape · row 1 icon + title + status · row 2 muted meta strip */}
+                    <div className="p-5 border-b border-border">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Wallet className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                                <h2 id="payment-run-title" className="text-base font-bold text-foreground">Tue payment run · release ACH batch</h2>
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${stage === 'approved' ? 'bg-success/15 text-success' : stage === 'rejected' ? 'bg-warning/15 text-warning' : 'bg-primary/15 text-foreground'}`}>
+                                    {stage === 'approved' ? <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> : stage === 'rejected' ? <Ban className="h-3 w-3" aria-hidden="true" /> : <ShieldCheck className="h-3 w-3" aria-hidden="true" />}
+                                    {stage === 'approved' ? 'Released' : stage === 'rejected' ? 'On hold' : 'Pending CEO review'}
+                                </span>
+                            </div>
+                            <button
+                                onClick={nextStep}
+                                aria-label="Close payment run"
+                                className="rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0"
+                            >
+                                <XIcon className="h-5 w-5" aria-hidden="true" />
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                            <span>Financial dashboard · Payables tab</span>
+                            <span>·</span>
+                            <span>{PAYMENT_QUEUE.length} bills</span>
+                            <span>·</span>
+                            <span className="tabular-nums">${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span>·</span>
+                            <span className="tabular-nums text-success">{cleanCount} clean</span>
+                            <span>·</span>
+                            <span className="tabular-nums text-warning">{dupCount} duplicate flag</span>
+                            <span className="ml-auto">Tue 08:15 AM · {matt.fullName} review</span>
+                        </div>
+                    </div>
+
+                    {/* Modal body · scrollable · contains original queue + duplicate control + approve choreography */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
             {/* Dashboard hero · payables tab */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -466,6 +506,9 @@ export default function APPaymentRunScene() {
                 confirmLabel="Send question"
                 confirmLabelWhenNotifying="Send + ping on Teams"
             />
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
