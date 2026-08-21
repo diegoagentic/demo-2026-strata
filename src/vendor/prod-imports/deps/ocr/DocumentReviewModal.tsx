@@ -786,7 +786,9 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                 )}
 
                                 {tab === 'linked' && (
-                                    <div className="max-w-3xl space-y-5">
+                                    /* F84.29 · Diego 2026-08-21 · dropped `max-w-3xl` cap ·
+                                        content now fills the modal width like the other tabs. */
+                                    <div className="space-y-5">
                                         {/* F84.24 · Diego 2026-08-21 · attached files section for W-9
                                             and Proforma docs · shows the source PDF as linked plus
                                             the compliance folder link · gives the Linked Documents
