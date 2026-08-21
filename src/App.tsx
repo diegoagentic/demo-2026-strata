@@ -79,6 +79,8 @@ import ProjexExperienceShell, { type ProjexTab } from './components/projex/Proje
 // para uso futuro · pero el landing default ahora es ProjexPathLanding.
 import ProjexPathLanding from './components/projex/ProjexPathLanding'
 import { experienceOf, type ProjexFlowId } from './config/profiles/projex'
+// F81.C · Presenter notes overlay · discreet · presenter-only · Cmd+Shift+P
+import PresenterNotesOverlay from './components/projex/PresenterNotesOverlay'
 
 function App() {
   const { user, initialLoading, signOut, showSessionWarning, refreshSession } = useAuth()
@@ -715,6 +717,12 @@ function App() {
           <DemoStepBanner />
         </>
       )}
+
+      {/* F81.C · Presenter notes overlay · siempre mounted · el component
+           decide internamente si renderea (solo Projex + demo activo +
+           notes disponibles). Toggle via `?presenter=1` o `Cmd/Ctrl+Shift+P`.
+           Persistente por session · client-hostile design (small · bottom-left). */}
+      <PresenterNotesOverlay />
 
       {/* FIXED NAVBAR (Unified) — hidden for email simulation, WRG Estimator routes & workspace/detail */}
       {/* isBFIMobile: hide navbar for BFI mobile-frame steps (r1.6) so the phone renders full-screen */}
