@@ -193,33 +193,23 @@ export default function APLineItemMatchScene() {
                 </div>
             </div>
 
-            {/* Line-by-line diff table · 8-col grid canonical NonEDIReconciler shape */}
+            {/* Line-by-line diff table · F83.Q · row shape adopts prod
+                DocumentReviewModal Line Items tab (quote-converter /
+                expert-hub) density · single-line uppercase column headers ·
+                keeps 8-col grid aligned with row cells · Projex Accept/Override
+                actions preserved en la última col (adapted to comparison
+                context vs prod pencil/trash). */}
             <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                {/* Column headers */}
-                <div className="px-5 py-3 border-b border-border bg-muted/20 grid grid-cols-[3rem_1fr_3.5rem_3.5rem_5.5rem_5.5rem_5.5rem_11rem] gap-4 items-end">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Line</div>
-                    <div>
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Item · code · spec</div>
-                        <div className="text-[9px] text-muted-foreground/60 mt-0.5">Line # · code · unit price only</div>
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">
-                        <div>PO</div>
-                        <div className="text-[9px] font-normal">qty</div>
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">
-                        <div>Bill</div>
-                        <div className="text-[9px] font-normal">qty</div>
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">
-                        <div>Unit $</div>
-                        <div className="text-[9px] font-normal">PO</div>
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">
-                        <div>Unit $</div>
-                        <div className="text-[9px] font-normal">Bill</div>
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Delta</div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Action</div>
+                {/* Column headers · prod DocumentReviewModal density · 8-col grid */}
+                <div className="px-5 py-2.5 border-b border-border bg-muted/20 grid grid-cols-[3rem_1fr_3.5rem_3.5rem_5.5rem_5.5rem_5.5rem_11rem] gap-4 items-center">
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Line</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">SKU · Description</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right">PO Qty</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right">Bill Qty</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right">Unit $ PO</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right">Unit $ Bill</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right">Delta</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right">Action</div>
                 </div>
 
                 {/* ═══ SECTION 1 · NEEDS YOUR EYES ═══════════════════════════ */}
