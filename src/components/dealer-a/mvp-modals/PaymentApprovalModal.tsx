@@ -29,19 +29,25 @@ interface PaymentRow {
     entity: 'Dealer A' | 'Dealer A Corp.' | 'Culture LLC'
     invoiceNumber: string
     amount: number
+    /** F86.6 · Diego 2026-08-21 · CEO ask · surface Order GP ($ + %) so the
+        Approver reviewing this batch has margin context per bill, not just
+        the payable amount. Values reflect the underlying order's gross
+        profit dollars and percentage. */
+    orderGpAmount: number
+    orderGpPct: number
     duplicate?: boolean
 }
 
 const BATCH: PaymentRow[] = [
-    { id: 'PJX-BILL-8483', vendor: 'Teknion',            entity: 'Dealer A',  invoiceNumber: 'TEK-2026-0847', amount: 24429.06 },
-    { id: 'PJX-BILL-8472', vendor: 'HBF',                entity: 'Dealer A',  invoiceNumber: 'HBF-24911',     amount: 12420.00 },
-    { id: 'PJX-BILL-8473', vendor: 'Boss Design',        entity: 'Dealer A',  invoiceNumber: 'BDG-00-1928',   amount:  3855.40 },
-    { id: 'PJX-BILL-8474', vendor: 'Alamir',             entity: 'Dealer A Corp.', invoiceNumber: 'AL-2026-08-0033', amount:  892.00 },
-    { id: 'PJX-BILL-8475', vendor: 'Nelson and Company', entity: 'Dealer A',  invoiceNumber: 'NLC-99120',     amount:  6720.00 },
-    { id: 'PJX-BILL-8476', vendor: 'Teknion',            entity: 'Dealer A Corp.', invoiceNumber: 'TEK-2026-0851', amount: 18240.55 },
-    { id: 'PJX-BILL-8477', vendor: 'HBF',                entity: 'Dealer A',  invoiceNumber: 'HBF-24915',     amount:  2140.00 },
-    { id: 'PJX-BILL-8480', vendor: 'Alamir',             entity: 'Culture LLC',  invoiceNumber: 'AL-2026-08-0041', amount:  445.00 },
-    { id: 'PJX-DUP-8499',  vendor: 'Nelson and Company', entity: 'Dealer A',  invoiceNumber: 'NLC-99120',     amount:  6720.00, duplicate: true },
+    { id: 'PJX-BILL-8483', vendor: 'Teknion',            entity: 'Dealer A',      invoiceNumber: 'TEK-2026-0847',   amount: 24429.06, orderGpAmount:  5133, orderGpPct: 21 },
+    { id: 'PJX-BILL-8472', vendor: 'HBF',                entity: 'Dealer A',      invoiceNumber: 'HBF-24911',       amount: 12420.00, orderGpAmount:  3105, orderGpPct: 25 },
+    { id: 'PJX-BILL-8473', vendor: 'Boss Design',        entity: 'Dealer A',      invoiceNumber: 'BDG-00-1928',     amount:  3855.40, orderGpAmount:   848, orderGpPct: 22 },
+    { id: 'PJX-BILL-8474', vendor: 'Alamir',             entity: 'Dealer A Corp.', invoiceNumber: 'AL-2026-08-0033', amount:   892.00, orderGpAmount:   214, orderGpPct: 24 },
+    { id: 'PJX-BILL-8475', vendor: 'Nelson and Company', entity: 'Dealer A',      invoiceNumber: 'NLC-99120',       amount:  6720.00, orderGpAmount:  1546, orderGpPct: 23 },
+    { id: 'PJX-BILL-8476', vendor: 'Teknion',            entity: 'Dealer A Corp.', invoiceNumber: 'TEK-2026-0851',   amount: 18240.55, orderGpAmount:  3648, orderGpPct: 20 },
+    { id: 'PJX-BILL-8477', vendor: 'HBF',                entity: 'Dealer A',      invoiceNumber: 'HBF-24915',       amount:  2140.00, orderGpAmount:   535, orderGpPct: 25 },
+    { id: 'PJX-BILL-8480', vendor: 'Alamir',             entity: 'Culture LLC',   invoiceNumber: 'AL-2026-08-0041', amount:   445.00, orderGpAmount:   107, orderGpPct: 24 },
+    { id: 'PJX-DUP-8499',  vendor: 'Nelson and Company', entity: 'Dealer A',      invoiceNumber: 'NLC-99120',       amount:  6720.00, orderGpAmount:  1546, orderGpPct: 23, duplicate: true },
 ]
 
 type Stage =
@@ -117,7 +123,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         if (stage === 'approved') return { cls: 'bg-success/15 text-success', icon: <CheckCircle2 className="h-3 w-3" aria-hidden="true" />, label: 'Released' }
         if (stage === 'commented') return { cls: 'bg-info/15 text-info', icon: <MessageSquare className="h-3 w-3" aria-hidden="true" />, label: 'Comment sent · awaiting reply' }
         if (stage === 'rejected') return { cls: 'bg-destructive/15 text-destructive', icon: <XCircle className="h-3 w-3" aria-hidden="true" />, label: 'Rejected · returned to Compliance' }
-        return { cls: 'bg-primary/15 text-foreground', icon: <ShieldAlert className="h-3 w-3" aria-hidden="true" />, label: 'Pending CEO review' }
+        return { cls: 'bg-primary/15 text-foreground', icon: <ShieldAlert className="h-3 w-3" aria-hidden="true" />, label: 'Pending Approver review' }
     }
     const pill = statusPill()
 
@@ -182,11 +188,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
 
                             {/* Body · payment queue table with per-row Approve/Reject actions */}
                             <div className="flex-1 overflow-y-auto">
-                                <div className="grid grid-cols-[1fr_110px_130px_100px_110px_88px] px-5 py-2 bg-muted/20 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                                <div className="grid grid-cols-[1fr_110px_130px_100px_120px_110px_88px] px-5 py-2 bg-muted/20 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
                                     <span>Vendor</span>
                                     <span>Entity</span>
                                     <span>Invoice #</span>
                                     <span className="text-right">Amount</span>
+                                    <span className="text-right">Order GP</span>
                                     <span className="text-right">Status</span>
                                     <span className="text-right">Actions</span>
                                 </div>
@@ -202,7 +209,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                     : ''
                                         const locked = stage !== 'idle' || row.duplicate
                                         return (
-                                            <div key={row.id} className={`grid grid-cols-[1fr_110px_130px_100px_110px_88px] px-5 py-3 text-xs items-center transition-colors ${rowClass}`}>
+                                            <div key={row.id} className={`grid grid-cols-[1fr_110px_130px_100px_120px_110px_88px] px-5 py-3 text-xs items-center transition-colors ${rowClass}`}>
                                                 <div>
                                                     <div className="text-foreground font-semibold">{row.vendor}</div>
                                                     <div className="text-[10px] text-muted-foreground font-mono">{row.id}</div>
@@ -211,6 +218,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                 <div className="text-muted-foreground font-mono">{row.invoiceNumber}</div>
                                                 <div className={`text-right tabular-nums font-semibold ${decision === 'rejected' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                                                     ${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </div>
+                                                {/* F86.6 · Order GP · dollars + % on one line */}
+                                                <div className={`text-right tabular-nums ${decision === 'rejected' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                                    <div className="text-xs font-semibold">${row.orderGpAmount.toLocaleString()}</div>
+                                                    <div className="text-[10px] text-muted-foreground">{row.orderGpPct}%</div>
                                                 </div>
                                                 <div className="text-right">
                                                     {row.duplicate ? (
@@ -228,7 +240,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             Rejected
                                                         </span>
                                                     ) : (
-                                                        <span className="text-[10px] text-muted-foreground">Pending CEO</span>
+                                                        <span className="text-[10px] text-muted-foreground">Pending Approver</span>
                                                     )}
                                                 </div>
                                                 <div className="text-right">
