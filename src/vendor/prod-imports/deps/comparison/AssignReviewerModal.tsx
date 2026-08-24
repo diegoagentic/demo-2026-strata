@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { Fragment, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Sparkles, ArrowRight, UserCircle, Check } from 'lucide-react'
+import { X, Sparkles, ArrowRight, UserCircle, Check, Database } from 'lucide-react'
 import { TEAM_MEMBERS, avatarGradient, type TeamMember } from '../team/teamMembers'
 import type { ComparisonReport } from './comparisonTypes'
 
@@ -19,22 +19,47 @@ interface AssignReviewerModalProps {
 }
 
 /**
- * Picks an AI-recommended reviewer based on the report. The logic is mocked
- * but explainable: route critical-severity issues to a senior Expert Hub
- * member, lighter ones to whoever is available. The rationale text is
- * report-specific so the demo doesn't feel canned.
+ * F86.5 · Diego 2026-08-21 · Recommendation source.
+ *  · When the report carries `po_owner` (sourced from NetSuite · the
+ *    coordinator who sent the PO to the vendor), that person is the
+ *    recommended reviewer · CEO ask: route review back to the PO
+ *    owner, not to an AI availability heuristic.
+ *  · When `po_owner` is absent, fall back to the original AI heuristic
+ *    (Sarah for critical, Marcus for the rest).
  */
-function aiRecommendation(report: ComparisonReport | null): { member: TeamMember; rationale: string } | null {
+type ReviewerRecommendation = {
+    member: TeamMember
+    rationale: string
+    /** Where the recommendation came from · drives the banner header. */
+    source: 'netsuite' | 'ai'
+    /** Display-only override when the actual role label isn't in the strict
+        TeamMember role union (e.g. 'Furniture Coordination Lead' from NetSuite). */
+    displayRole?: string
+}
+
+function aiRecommendation(report: ComparisonReport | null): ReviewerRecommendation | null {
     if (!report) return null
+    // Prefer the PO owner from NetSuite when present.
+    if (report.po_owner) {
+        return {
+            member: {
+                id: report.po_owner.id,
+                name: report.po_owner.name,
+                initials: report.po_owner.initials,
+                role: 'User',
+            },
+            rationale: report.po_owner.rationale,
+            source: 'netsuite',
+            displayRole: report.po_owner.role,
+        }
+    }
     const isCritical = report.derived_status === 'CRITICAL_ISSUES'
-    // For critical issues, prefer Sarah (Expert Hub senior). For lighter
-    // routes, prefer Marcus (Expert Hub mid). Both are deterministic for demo.
     const targetId = isCritical ? 'sarah' : 'marcus'
     const member = TEAM_MEMBERS.find(m => m.id === targetId) ?? TEAM_MEMBERS[1]
     const rationale = isCritical
         ? `Sarah has resolved 4 similar ${report.vendor} escalations this quarter — strongest match for unauthorized product substitutions.`
         : `Marcus is currently available and has handled ${report.vendor} reviews before. Average turn-around: 2.4 hours.`
-    return { member, rationale }
+    return { member, rationale, source: 'ai' }
 }
 
 export default function AssignReviewerModal({ isOpen, onClose, onAssign, report }: AssignReviewerModalProps) {
@@ -104,7 +129,7 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                                 </button>
                             </div>
 
-                            {/* AI recommendation banner */}
+                            {/* Recommendation banner · source-aware */}
                             {ai && (
                                 <button
                                     onClick={() => setSelectedId(ai.member.id)}
@@ -115,8 +140,17 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                                     }`}
                                 >
                                     <div className="flex items-center gap-1.5 mb-2">
-                                        <Sparkles className="h-3.5 w-3.5 text-zinc-800 dark:text-zinc-200" />
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Strata AI recommends</span>
+                                        {ai.source === 'netsuite' ? (
+                                            <>
+                                                <Database className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">From NetSuite · PO owner</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="h-3.5 w-3.5 text-zinc-800 dark:text-zinc-200" />
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Strata AI recommends</span>
+                                            </>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${avatarGradient(ai.member.id)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
@@ -125,7 +159,13 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="text-sm font-bold text-foreground truncate">{ai.member.name}</span>
-                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground uppercase tracking-wider">{ai.member.role}</span>
+                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground uppercase tracking-wider">{ai.displayRole ?? ai.member.role}</span>
+                                                {ai.source === 'netsuite' && (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                                                        <Database className="h-2.5 w-2.5" />
+                                                        NetSuite
+                                                    </span>
+                                                )}
                                             </div>
                                             <p className="text-[12px] text-muted-foreground leading-relaxed mt-0.5">{ai.rationale}</p>
                                         </div>

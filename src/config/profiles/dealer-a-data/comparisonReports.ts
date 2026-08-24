@@ -19,6 +19,17 @@ export const DEALER_A_F1_PO_BILL_REPORT: ComparisonReport = {
     run_number: 1,
     is_latest: true,
     created_at: '2026-08-21T08:14:00Z',
+    // F86.5 · Diego 2026-08-21 · PO owner from NetSuite · account coordinator
+    // who sent this PO to Teknion (Aug 5). AssignReviewerModal uses this as
+    // the default reviewer instead of the AI availability heuristic.
+    po_owner: {
+        id: 'isabella-bressler',
+        name: 'Isabella Bressler',
+        initials: 'IB',
+        role: 'Furniture Coordination Lead',
+        sourceSystem: 'NetSuite',
+        rationale: 'Sent this PO to Teknion on Aug 5 · owns the record in NetSuite. Fastest path to a decision on the NCBA partial-ship pattern.',
+    },
     summary: {
         what_changed_summary:
             'Teknion invoice matches the PO on 12 of 15 lines exactly to the penny. Three lines need Accounting eyes: 2 partial-ship quantity variances + 1 penny rounding on a finish sample.',

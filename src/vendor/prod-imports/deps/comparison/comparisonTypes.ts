@@ -116,6 +116,18 @@ export interface ComparisonReport {
         rationale: string
         suggested_action?: DecisionAction
     }
+    /** F86.5 · Diego 2026-08-21 · account coordinator who sent this PO to
+        the vendor · sourced from NetSuite. When present, AssignReviewerModal
+        pre-selects this person as the default reviewer (CEO ask · route
+        review back to the PO owner instead of an AI availability heuristic). */
+    po_owner?: {
+        id: string
+        name: string
+        initials: string
+        role: string
+        sourceSystem: 'NetSuite'
+        rationale: string
+    }
     created_at: string                  // ISO 8601
 }
 
