@@ -78,6 +78,13 @@ import logoDarkBrand from './assets/logo-dark-brand.png'
 import ProjexExpertHubWrapper from './vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 // F81.C · Presenter notes overlay · discreet · presenter-only · Cmd+Shift+P
 import PresenterNotesOverlay from './components/projex/PresenterNotesOverlay'
+// F85.1 · Diego 2026-08-21 · dedicated Projex topbar mirroring expert-hub +
+// quote-converter production Navbars. Ships MessageSquarePlus feedback
+// dropdown + PD-to-SIF center-nav pill · replaces the shared Navbar for
+// Projex only. See ProjexNavbar.tsx provenance header.
+import ProjexNavbar from './vendor/prod-imports/ProjexNavbar'
+import FeedbackComposerModal from './vendor/prod-imports/deps/feedback/FeedbackComposerModal'
+import { PDtoSIF } from './components/vendor/UI-Dealer/pd-to-sif'
 
 function App() {
   const { user, initialLoading, signOut, showSessionWarning, refreshSession } = useAuth()
@@ -94,6 +101,12 @@ function App() {
   const [bfiDashboardActive, setBfiDashboardActive] = useState(false)
   const [officeworksDashboardActive, setOfficeworksDashboardActive] = useState(false)
   const [clcDashboardActive, setClcDashboardActive] = useState(false)
+  // F85.1 · Diego 2026-08-21 · Projex overlay pages · when set, replaces the
+  // demo scene with a full-page module (PD-to-SIF wizard or Feedback status
+  // stub). Clicking any other Projex nav pill clears this back to null so
+  // the current demo scene resumes.
+  const [projexOverlayPage, setProjexOverlayPage] = useState<'pd-to-sif' | 'feedback-status' | null>(null)
+  const [isProjexFeedbackOpen, setIsProjexFeedbackOpen] = useState(false)
 
   // Set initial page for CRM steps
   useEffect(() => {
@@ -133,7 +146,30 @@ function App() {
     if (officeworksDashboardActive) setOfficeworksDashboardActive(false)
   }, [currentStep?.id])
 
+  // F85.1 · Reset Projex overlay when the demo step changes · the presenter
+  // moved on so any prior PD-to-SIF / feedback-status detour should close.
+  useEffect(() => {
+    if (projexOverlayPage) setProjexOverlayPage(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep?.id])
+
   const handleNavigate = (page: string) => {
+    // F85.1 · Projex nav pill routing.
+    //   'projex-pd-to-sif' / 'projex-feedback-status' → open the overlay
+    //   over the current demo scene. Any other projex-* pill clears the
+    //   overlay so the running scene comes back into focus.
+    if (page === 'projex-pd-to-sif') {
+      setProjexOverlayPage('pd-to-sif')
+      return
+    }
+    if (page === 'projex-feedback-status') {
+      setProjexOverlayPage('feedback-status')
+      return
+    }
+    if (page.startsWith('projex-')) {
+      setProjexOverlayPage(null)
+      return
+    }
     // CRM demo · pills internas (Pipeline/Forecast/Intake) navegan vía custom
     // pages 'crm:pipeline' etc · no cambian currentPage · solo el view interno.
     // 'crm:notes' y 'crm:messages' son placeholders icon-only del header (parity
@@ -714,24 +750,81 @@ function App() {
         : currentPage !== 'detail' && currentPage !== 'workspace'
       ) && (
         <div className="fixed top-0 left-0 right-0 z-[100]">
-          <Navbar
-            onLogout={handleLogout}
-            onNavigateToWorkspace={() => setCurrentPage('workspace')}
-            onOpenDemoGuide={() => setIsDemoGuideOpen(true)}
-            activeTab={getActiveTab()}
-            onNavigate={handleNavigate}
-            appName={appName}
-            companyName={companyName}
-            customNavigation={customNavigation}
-          />
+          {isProjex ? (
+            /* F85.1 · Projex-only topbar · mirrors expert-hub + quote-converter
+               prod Navbar shapes · ships Feedback dropdown + PD-to-SIF pill. */
+            <ProjexNavbar
+              experience={(isDemoActive && currentStep && (
+                currentStep.app === 'projex-ap' ||
+                currentStep.app === 'projex-order-po' ||
+                currentStep.app === 'projex-ack'
+              )) ? 'expert-hub' : 'dealer'}
+              activeTab={projexOverlayPage === 'pd-to-sif' ? 'projex-pd-to-sif' : getActiveTab()}
+              onNavigate={handleNavigate}
+              onOpenFeedback={() => setIsProjexFeedbackOpen(true)}
+              onLogout={handleLogout}
+              tenantLabel={companyName || 'Projex Inc.'}
+            />
+          ) : (
+            <Navbar
+              onLogout={handleLogout}
+              onNavigateToWorkspace={() => setCurrentPage('workspace')}
+              onOpenDemoGuide={() => setIsDemoGuideOpen(true)}
+              activeTab={getActiveTab()}
+              onNavigate={handleNavigate}
+              appName={appName}
+              companyName={companyName}
+              customNavigation={customNavigation}
+            />
+          )}
         </div>
       )}
 
       {/* MAIN CONTENT VIEWPORT */}
       <main className={`transition-all duration-300 ${(isDemoActive ? currentStep.app !== 'email-marketplace' && currentStep.app !== 'wrg-estimator' && currentStep.app !== 'workspaces-submit' && !bfiLoginActive && !(isBFI && ['r1.6', 'a1.0', 'a1.2'].includes(currentStep.id)) : currentPage !== 'detail' && currentPage !== 'workspace') ? 'pt-16' : ''} ${isDemoActive ? (isSidebarCollapsed ? 'pl-0' : 'pl-80') + ' animate-in fade-in duration-500' : ''} min-h-screen bg-background`}>
-        {isDemoActive && <DemoAIIndicator />}
-        {isDemoActive ? renderSimulation() : renderCurrentPage()}
+        {isDemoActive && !projexOverlayPage && <DemoAIIndicator />}
+        {isProjex && projexOverlayPage === 'pd-to-sif' ? (
+          /* F85.1 · PD-to-SIF wizard opened from the Projex topbar pill · overlays
+             the current demo scene · clears when the demo advances or another pill
+             is clicked. */
+          <div className="px-6 py-6">
+            <PDtoSIF />
+          </div>
+        ) : isProjex && projexOverlayPage === 'feedback-status' ? (
+          <div className="px-6 py-16 max-w-2xl mx-auto text-center space-y-4">
+            <h2 className="text-2xl font-bold text-foreground">My feedback status</h2>
+            <p className="text-sm text-muted-foreground">
+              This is where you would see the status of your submitted feedback and any
+              replies from the Strata team. Empty for the demo · production surfaces
+              live tickets, replies, and unread badges here.
+            </p>
+            <button
+              onClick={() => setProjexOverlayPage(null)}
+              className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Back to the demo
+            </button>
+          </div>
+        ) : isDemoActive ? renderSimulation() : renderCurrentPage()}
       </main>
+
+      {/* F85.1 · Projex Feedback composer · lifted prod modal · wired from the
+          MessageSquarePlus dropdown in the Projex topbar. onSubmit is a no-op
+          for the demo (real prod persists to localStorage + surfaces on
+          FeedbackStatusPage). */}
+      {isProjex && (
+        <FeedbackComposerModal
+          isOpen={isProjexFeedbackOpen}
+          onClose={() => setIsProjexFeedbackOpen(false)}
+          onSubmit={() => setIsProjexFeedbackOpen(false)}
+          experienceLabel={isDemoActive && currentStep && (
+            currentStep.app === 'projex-ap' ||
+            currentStep.app === 'projex-order-po' ||
+            currentStep.app === 'projex-ack'
+          ) ? 'Expert Hub' : 'Dealer Experience'}
+          workspaceLabel="Projex Inc."
+        />
+      )}
 
       <DemoGuide
         isOpen={isDemoGuideOpen}
