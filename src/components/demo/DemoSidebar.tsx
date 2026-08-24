@@ -29,19 +29,19 @@ const HERO_STEP_IDS = new Set<string>([
 import { useDemoProfile } from '../../context/useDemoProfile';
 import { WORKSPACES_DATA_THREADS } from '../../config/profiles/workspaces';
 import { useOfficeworksVertical, writeVertical } from '../officeworks/shared/verticalSignal';
-// F80.2 · Acme Dealer switcher rewrite · 2-tab segmented + sub-nav. Single
+// F80.2 · Dealer A switcher rewrite · 2-tab segmented + sub-nav. Single
 // source of truth for the experience mapping lives in the profile module.
 // F82.2 · imports adicionales para el sidebar playlist (moments tiles +
 // tagline + value chip compact) que reemplaza el linear step list para
-// Acme Dealer only.
+// Dealer A only.
 import {
-    ACME_DEALER_EXPERIENCE_GROUPS,
-    ACME_DEALER_PATH_LANDINGS,
+    DEALER_A_EXPERIENCE_GROUPS,
+    DEALER_A_PATH_LANDINGS,
     experienceOf,
     firstFlowOf,
-    type AcmeDealerExperience,
-    type AcmeDealerFlowId,
-} from '../../config/profiles/acme-dealer';
+    type DealerAExperience,
+    type DealerAFlowId,
+} from '../../config/profiles/dealer-a';
 
 // Apps belonging to Expert Hub — System steps in these show as "Expert"
 const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quote-detail'];
@@ -156,9 +156,9 @@ export default function DemoSidebar() {
     const isLeland = activeProfile.id === 'leland';
     const isOfficeworks = activeProfile.id === 'officeworks';
     const isClc = activeProfile.id === 'clc';
-    // F74 · Acme Dealer demo · 5 flows en paralelo (AP · Vendor onboarding ·
+    // F74 · Dealer A demo · 5 flows en paralelo (AP · Vendor onboarding ·
     // Progress billing · Order entry/PO · Electronic ordering & ACK).
-    const isAcmeDealer = activeProfile.id === 'acme-dealer';
+    const isDealerA = activeProfile.id === 'dealer-a';
 
     // Officeworks runs three flows in parallel (Spec Check & Design ·
     // Labor & Delivery · Sales). Tab toggle filters the sidebar to one flow.
@@ -169,14 +169,14 @@ export default function DemoSidebar() {
     type ClcFlow = 'calendar' | 'sharepoint' | 'intake' | 'data-lake';
     const [activeClcFlow, setActiveClcFlow] = React.useState<ClcFlow>('calendar');
 
-    // F74 · Acme Dealer 5 flows.
-    type AcmeDealerFlow = 'acme-dealer-bills' | 'acme-dealer-vendor-onboarding' | 'acme-dealer-billing' | 'acme-dealer-order-po' | 'acme-dealer-ack';
-    const [activeAcmeDealerFlow, setActiveAcmeDealerFlow] = React.useState<AcmeDealerFlow>('acme-dealer-bills');
+    // F74 · Dealer A 5 flows.
+    type DealerAFlow = 'dealer-a-bills' | 'dealer-a-vendor-onboarding' | 'dealer-a-billing' | 'dealer-a-order-po' | 'dealer-a-ack';
+    const [activeDealerAFlow, setActiveDealerAFlow] = React.useState<DealerAFlow>('dealer-a-bills');
 
-    // F82.2 · Acme Dealer-only · toggle "Show all detail" para revelar los 3
+    // F82.2 · Dealer A-only · toggle "Show all detail" para revelar los 3
     // secondary steps (skippable per isCoreStep filter) además de los 3
     // core moments · default hidden.
-    const [showAcmeDealerAllDetail, setShowAcmeDealerAllDetail] = React.useState(false);
+    const [showDealerAAllDetail, setShowDealerAAllDetail] = React.useState(false);
 
     // If the user lands directly on a step from a different flow (e.g. resumed
     // session), sync the tab so the active step is visible.
@@ -196,23 +196,23 @@ export default function DemoSidebar() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isClc, activeProfile.id, currentStepIndex]);
 
-    // F74 · Acme Dealer sync flow tab ↔ current step (resume-session friendly).
+    // F74 · Dealer A sync flow tab ↔ current step (resume-session friendly).
     React.useEffect(() => {
-        if (!isAcmeDealer) return;
+        if (!isDealerA) return;
         const curr = steps[currentStepIndex];
-        const f = (curr?.flowId ?? 'acme-dealer-bills') as AcmeDealerFlow;
-        if (f !== activeAcmeDealerFlow) setActiveAcmeDealerFlow(f);
+        const f = (curr?.flowId ?? 'dealer-a-bills') as DealerAFlow;
+        if (f !== activeDealerAFlow) setActiveDealerAFlow(f);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAcmeDealer, activeProfile.id, currentStepIndex]);
+    }, [isDealerA, activeProfile.id, currentStepIndex]);
 
     // Filtered + original-index-preserving step list for the render loop.
     const displayedSteps = React.useMemo(() => {
         const indexed = steps.map((step, originalIndex) => ({ step, originalIndex }));
         if (isOfficeworks) return indexed.filter(({ step }) => (step.flowId ?? 'spec-check') === activeFlow);
         if (isClc) return indexed.filter(({ step }) => (step.flowId ?? 'calendar') === activeClcFlow);
-        if (isAcmeDealer) return indexed.filter(({ step }) => (step.flowId ?? 'acme-dealer-bills') === activeAcmeDealerFlow);
+        if (isDealerA) return indexed.filter(({ step }) => (step.flowId ?? 'dealer-a-bills') === activeDealerAFlow);
         return indexed;
-    }, [steps, isOfficeworks, activeFlow, isClc, activeClcFlow, isAcmeDealer, activeAcmeDealerFlow]);
+    }, [steps, isOfficeworks, activeFlow, isClc, activeClcFlow, isDealerA, activeDealerAFlow]);
 
     const flowCounts = React.useMemo(() => {
         if (!isOfficeworks) return { specCheck: 0, laborDelivery: 0, sales: 0 };
@@ -239,20 +239,20 @@ export default function DemoSidebar() {
         return { calendar: c, sharepoint: sp, intake: i, dataLake: dl };
     }, [steps, isClc]);
 
-    // F74 · Acme Dealer 5-flow counts.
-    const acmeDealerFlowCounts = React.useMemo(() => {
-        if (!isAcmeDealer) return { ap: 0, vendor: 0, billing: 0, orderPo: 0, ack: 0 };
+    // F74 · Dealer A 5-flow counts.
+    const dealerAFlowCounts = React.useMemo(() => {
+        if (!isDealerA) return { ap: 0, vendor: 0, billing: 0, orderPo: 0, ack: 0 };
         let ap = 0, vendor = 0, billing = 0, orderPo = 0, ack = 0;
         for (const step of steps) {
-            const f = step.flowId ?? 'acme-dealer-bills';
-            if (f === 'acme-dealer-bills') ap++;
-            else if (f === 'acme-dealer-vendor-onboarding') vendor++;
-            else if (f === 'acme-dealer-billing') billing++;
-            else if (f === 'acme-dealer-order-po') orderPo++;
-            else if (f === 'acme-dealer-ack') ack++;
+            const f = step.flowId ?? 'dealer-a-bills';
+            if (f === 'dealer-a-bills') ap++;
+            else if (f === 'dealer-a-vendor-onboarding') vendor++;
+            else if (f === 'dealer-a-billing') billing++;
+            else if (f === 'dealer-a-order-po') orderPo++;
+            else if (f === 'dealer-a-ack') ack++;
         }
         return { ap, vendor, billing, orderPo, ack };
-    }, [steps, isAcmeDealer]);
+    }, [steps, isDealerA]);
 
     // L&D vertical sub-toggle (Furniture vs Walls) · only meaningful inside L&D tab.
     const activeVertical = useOfficeworksVertical()
@@ -277,11 +277,11 @@ export default function DemoSidebar() {
         if (firstIdx >= 0) goToStep(firstIdx);
     };
 
-    // F74 · Acme Dealer flow switch handler · jumps to first step of the target flow.
-    const handleAcmeDealerFlowSwitch = (flow: AcmeDealerFlow) => {
-        if (flow === activeAcmeDealerFlow) return;
-        setActiveAcmeDealerFlow(flow);
-        const firstIdx = steps.findIndex(s => (s.flowId ?? 'acme-dealer-bills') === flow);
+    // F74 · Dealer A flow switch handler · jumps to first step of the target flow.
+    const handleDealerAFlowSwitch = (flow: DealerAFlow) => {
+        if (flow === activeDealerAFlow) return;
+        setActiveDealerAFlow(flow);
+        const firstIdx = steps.findIndex(s => (s.flowId ?? 'dealer-a-bills') === flow);
         if (firstIdx >= 0) goToStep(firstIdx);
     };
     const isWorkspaces = activeProfile.id === 'workspaces';
@@ -589,28 +589,28 @@ export default function DemoSidebar() {
                     )
                 })()}
 
-                {/* F80.2 · Acme Dealer · Experience-first selector · 2-tab segmented
+                {/* F80.2 · Dealer A · Experience-first selector · 2-tab segmented
                      (Expert Hub | Dealer Experience) + sub-nav debajo con los
                      paths del active tab. Reemplaza el Popover dropdown F74 que
                      mostraba los 5 flows planos sin agrupación. */}
-                {isAcmeDealer && (() => {
+                {isDealerA && (() => {
                     // Map por flow id → count (existing counter memo).
-                    const flowCountMap: Record<AcmeDealerFlowId, number> = {
-                        'acme-dealer-bills':                acmeDealerFlowCounts.ap,
-                        'acme-dealer-vendor-onboarding': acmeDealerFlowCounts.vendor,
-                        'acme-dealer-billing':           acmeDealerFlowCounts.billing,
-                        'acme-dealer-order-po':          acmeDealerFlowCounts.orderPo,
-                        'acme-dealer-ack':               acmeDealerFlowCounts.ack,
+                    const flowCountMap: Record<DealerAFlowId, number> = {
+                        'dealer-a-bills':                dealerAFlowCounts.ap,
+                        'dealer-a-vendor-onboarding': dealerAFlowCounts.vendor,
+                        'dealer-a-billing':           dealerAFlowCounts.billing,
+                        'dealer-a-order-po':          dealerAFlowCounts.orderPo,
+                        'dealer-a-ack':               dealerAFlowCounts.ack,
                     }
-                    const activeExperience = experienceOf(activeAcmeDealerFlow)
-                    const activeGroup = ACME_DEALER_EXPERIENCE_GROUPS.find(g => g.id === activeExperience)!
+                    const activeExperience = experienceOf(activeDealerAFlow)
+                    const activeGroup = DEALER_A_EXPERIENCE_GROUPS.find(g => g.id === activeExperience)!
 
-                    const handleExperienceTabClick = (experience: AcmeDealerExperience) => {
+                    const handleExperienceTabClick = (experience: DealerAExperience) => {
                         if (experience === activeExperience) return
                         // Auto-select the first path of the tapped experience so
                         // the user aterriza en una scene concreta · no en un
                         // empty state after clicking the tab.
-                        handleAcmeDealerFlowSwitch(firstFlowOf(experience))
+                        handleDealerAFlowSwitch(firstFlowOf(experience))
                     }
 
                     return (
@@ -624,10 +624,10 @@ export default function DemoSidebar() {
                             {/* Segmented 2-tab · sticky-ish top of the switcher */}
                             <div
                                 role="tablist"
-                                aria-label="Acme Dealer experience"
+                                aria-label="Dealer A experience"
                                 className="grid grid-cols-2 gap-1 p-0.5 rounded-md bg-zinc-900/5 dark:bg-white/5"
                             >
-                                {ACME_DEALER_EXPERIENCE_GROUPS.map(group => {
+                                {DEALER_A_EXPERIENCE_GROUPS.map(group => {
                                     const isActive = group.id === activeExperience
                                     const totalSteps = group.flows.reduce(
                                         (sum, f) => sum + (flowCountMap[f.id] ?? 0),
@@ -671,14 +671,14 @@ export default function DemoSidebar() {
                                 className="space-y-1.5"
                             >
                                 {activeGroup.flows.map((flow, idx) => {
-                                    const isActiveFlow = activeAcmeDealerFlow === flow.id
+                                    const isActiveFlow = activeDealerAFlow === flow.id
                                     return (
                                         <li key={flow.id} role="option" aria-selected={isActiveFlow}>
                                             {/* F81.A · tile-shape path row · bordered · chevron on hover ·
                                                  cursor-pointer explicit · signals clickable affordance clearly */}
                                             <button
                                                 type="button"
-                                                onClick={() => handleAcmeDealerFlowSwitch(flow.id)}
+                                                onClick={() => handleDealerAFlowSwitch(flow.id)}
                                                 className={`group w-full inline-flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] transition-all text-left cursor-pointer border ${
                                                     isActiveFlow
                                                         ? `${c.bgBadgeActive} ${c.textBadgeActive} font-semibold border-primary/50 shadow-sm`
@@ -741,13 +741,13 @@ export default function DemoSidebar() {
                 )}
             </div>
 
-            {/* F82.2 · Acme Dealer playlist · THIS PATH + MOMENTS · replaces
-                 the linear step list for Acme Dealer only · CEO scan-friendly.
+            {/* F82.2 · Dealer A playlist · THIS PATH + MOMENTS · replaces
+                 the linear step list for Dealer A only · CEO scan-friendly.
                  Otros profiles siguen con el step list debajo. */}
-            {isAcmeDealer && (() => {
-                const landing = ACME_DEALER_PATH_LANDINGS[activeAcmeDealerFlow]
+            {isDealerA && (() => {
+                const landing = DEALER_A_PATH_LANDINGS[activeDealerAFlow]
                 if (!landing) return null
-                const visibleMoments = showAcmeDealerAllDetail
+                const visibleMoments = showDealerAAllDetail
                     ? landing.moments
                     : landing.moments.filter(m => m.isCore)
                 const hiddenCount = landing.moments.length - visibleMoments.length
@@ -771,7 +771,7 @@ export default function DemoSidebar() {
                                 {hiddenCount > 0 && (
                                     <button
                                         type="button"
-                                        onClick={() => setShowAcmeDealerAllDetail(true)}
+                                        onClick={() => setShowDealerAAllDetail(true)}
                                         className={`text-[10px] font-semibold ${c.textMuted} hover:opacity-80 transition-opacity underline decoration-dotted underline-offset-2`}
                                     >
                                         + {hiddenCount} detail
@@ -780,7 +780,7 @@ export default function DemoSidebar() {
                                 {hiddenCount === 0 && landing.moments.length > actions.length && (
                                     <button
                                         type="button"
-                                        onClick={() => setShowAcmeDealerAllDetail(false)}
+                                        onClick={() => setShowDealerAAllDetail(false)}
                                         className={`text-[10px] font-semibold ${c.textMuted} hover:opacity-80 transition-opacity underline decoration-dotted underline-offset-2`}
                                     >
                                         show core only
@@ -843,8 +843,8 @@ export default function DemoSidebar() {
                 )
             })()}
 
-            {/* Steps List · not for Acme Dealer (F82.3 · playlist replaces it above) */}
-            {!isAcmeDealer && (
+            {/* Steps List · not for Dealer A (F82.3 · playlist replaces it above) */}
+            {!isDealerA && (
             <div className="flex-1 overflow-y-auto p-3 space-y-1 pt-6 scrollbar-micro">
                 {displayedSteps.map(({ step, originalIndex }, displayIndex) => {
                     const isActive = originalIndex === currentStepIndex;
@@ -943,7 +943,7 @@ export default function DemoSidebar() {
                 })}
             </div>
             )}
-            {/* /F82.3 · Steps List conditional (non-Acme-Dealer only) */}
+            {/* /F82.3 · Steps List conditional (non-Dealer-A only) */}
 
             {/* Paused Indicator */}
             {isPaused && (
@@ -975,7 +975,7 @@ export default function DemoSidebar() {
                         {isPaused ? <Play size={16} /> : <Pause size={16} />}
                     </button>
                     {(() => {
-                        // F84.40 · Diego 2026-08-21 · Acme Dealer only · never
+                        // F84.40 · Diego 2026-08-21 · Dealer A only · never
                         // auto-advance across flow boundaries. At the last
                         // step of the current flow, disable Next so the
                         // presenter must switch flows manually from the
@@ -984,7 +984,7 @@ export default function DemoSidebar() {
                         // → Expert Hub flow 2 by accident" bug.
                         const currFlow = steps[currentStepIndex]?.flowId
                         const nextFlow = steps[currentStepIndex + 1]?.flowId
-                        const isEndOfFlow = isAcmeDealer && currFlow !== undefined && nextFlow !== undefined && currFlow !== nextFlow
+                        const isEndOfFlow = isDealerA && currFlow !== undefined && nextFlow !== undefined && currFlow !== nextFlow
                         const isLastStep = currentStepIndex === steps.length - 1
                         const disableNext = isLastStep || isEndOfFlow
                         return (

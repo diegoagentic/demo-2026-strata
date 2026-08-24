@@ -151,50 +151,50 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
         role: 'Sales · Mid-Atlantic · Furniture + Walls',
         photo: 'https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=80&h=80&fit=crop&crop=face',
     },
-    // Acme Dealer demo personas · F74/F75 · verbatim role labels from acme-dealer-data/personas.ts
-    'Acme Dealer CEO': {
+    // Dealer A demo personas · F74/F75 · verbatim role labels from dealer-a-data/personas.ts
+    'Dealer A CEO': {
         name: 'Matt Magrann',
-        role: 'CEO · Acme Dealer Inc.',
+        role: 'CEO · Dealer A Inc.',
         photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer Dir Accounting': {
+    'Dealer A Dir Accounting': {
         name: 'Jacob Swearingen',
         role: 'Director of Accounting',
         photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer Sr Accountant': {
+    'Dealer A Sr Accountant': {
         name: 'Daniel Louw',
         role: 'Senior Accountant',
         photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer Coord Isabella': {
+    'Dealer A Coord Isabella': {
         name: 'Isabella Bressler',
         role: 'Furniture Coordination Lead',
         photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer Coord Kelly': {
+    'Dealer A Coord Kelly': {
         name: 'Kelly Endres',
         role: 'Furniture Coordinator',
         photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer Walls Director': {
+    'Dealer A Walls Director': {
         name: 'Alec Gieser',
         role: 'Walls Director',
         photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer Walls Coord': {
+    'Dealer A Walls Coord': {
         name: 'Stacy Aiuppy',
         role: 'Walls Coordinator',
         photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer PM': {
+    'Dealer A PM': {
         name: 'Jeff Smith',
         role: 'Project Manager',
         photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
     },
-    'Acme Dealer System': {
+    'Dealer A System': {
         name: 'Strata',
-        role: 'AI Assistant · Acme Dealer Inc.',
+        role: 'AI Assistant · Dealer A Inc.',
         photo: 'https://images.unsplash.com/photo-1618044733300-9472054094ee?w=80&h=80&fit=crop&crop=face',
     },
 };
@@ -203,22 +203,22 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
 const EXPERT_HUB_APPS = ['expert-hub', 'ack-detail', 'transactions', 'mac', 'quote-detail'];
 
 function resolveProfileKey(role: string | undefined, app: string | undefined): string {
-    // Acme Dealer demo · F1 Expert Hub · F2/F3 Dealer Experience · F4/F5 Expert Hub
-    // role labels come verbatim from config/profiles/acme-dealer-data/personas.ts
-    if (app?.startsWith('acme-dealer-')) {
-        if (role === 'CEO')                       return 'Acme Dealer CEO';           // Matt
-        if (role === 'Director of Accounting')    return 'Acme Dealer Dir Accounting'; // Jacob
-        if (role === 'Senior Accountant')         return 'Acme Dealer Sr Accountant'; // Daniel
-        if (role === 'Walls Director')            return 'Acme Dealer Walls Director'; // Alec
-        if (role === 'Walls Coordinator (sole)')  return 'Acme Dealer Walls Coord';   // Stacy
-        if (role === 'Project Manager')           return 'Acme Dealer PM';            // Jeff
+    // Dealer A demo · F1 Expert Hub · F2/F3 Dealer Experience · F4/F5 Expert Hub
+    // role labels come verbatim from config/profiles/dealer-a-data/personas.ts
+    if (app?.startsWith('dealer-a-')) {
+        if (role === 'CEO')                       return 'Dealer A CEO';           // Matt
+        if (role === 'Director of Accounting')    return 'Dealer A Dir Accounting'; // Jacob
+        if (role === 'Senior Accountant')         return 'Dealer A Sr Accountant'; // Daniel
+        if (role === 'Walls Director')            return 'Dealer A Walls Director'; // Alec
+        if (role === 'Walls Coordinator (sole)')  return 'Dealer A Walls Coord';   // Stacy
+        if (role === 'Project Manager')           return 'Dealer A PM';            // Jeff
         if (role === 'Furniture Coordinator') {
             // Both Kelly (F2) and Isabella (F3/F4/F5) use this role label · disambiguate by app
-            if (app === 'acme-dealer-vendor-onboarding') return 'Acme Dealer Coord Kelly';
-            return 'Acme Dealer Coord Isabella';
+            if (app === 'dealer-a-vendor-onboarding') return 'Dealer A Coord Kelly';
+            return 'Dealer A Coord Isabella';
         }
-        if (role === 'System')                    return 'Acme Dealer System';
-        return 'Acme Dealer Coord Isabella'; // safe default within Acme Dealer
+        if (role === 'System')                    return 'Dealer A System';
+        return 'Dealer A Coord Isabella'; // safe default within Dealer A
     }
     if (app?.startsWith('bfi-')) {
         if (role === 'Project Manager')      return 'BFI Project Manager';

@@ -14,12 +14,12 @@ export interface DemoProfileContextType {
 export const DemoProfileContext = createContext<DemoProfileContextType | undefined>(undefined);
 
 export function DemoProfileProvider({ children }: { children: ReactNode }) {
-    // F85.1 · Diego 2026-08-21 · flipped default from 'acme' to 'acme-dealer' so
-    // fresh sessions land on the Acme Dealer demo without a profile-switch step.
+    // F85.1 · Diego 2026-08-21 · flipped default from 'acme' to 'dealer-a' so
+    // fresh sessions land on the Dealer A demo without a profile-switch step.
     // Existing sessions keep whatever they had (fallback only kicks in when
     // localStorage is empty).
     const [activeProfileId, setActiveProfileId] = useState<DemoProfileId>(
-        () => (localStorage.getItem('demo-profile') as DemoProfileId) || 'acme-dealer'
+        () => (localStorage.getItem('demo-profile') as DemoProfileId) || 'dealer-a'
     );
 
     useEffect(() => {
