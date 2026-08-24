@@ -3,7 +3,10 @@ import { getTeamMember, avatarGradient } from '../team/teamMembers'
 import DocTypeChip from './DocTypeChip'
 
 export type OcrDocStatus = 'identified' | 'capturing' | 'inconsistencies' | 'in_progress' | 'processed' | 'completed' | 'deprecated'
-export type OcrDocType = 'Purchase Order' | 'Acknowledgment' | 'Invoice' | 'Quote'
+// F86.7 · Diego 2026-08-21 · CEO ask · added Bill · Proforma · Shipment
+// Notification so the Upload Document picker covers the AP + progress
+// billing + inbound-logistics document families the team actually handles.
+export type OcrDocType = 'Purchase Order' | 'Acknowledgment' | 'Invoice' | 'Quote' | 'Bill' | 'Proforma' | 'Shipment Notification'
 
 export interface OcrDocCardData {
     id: string

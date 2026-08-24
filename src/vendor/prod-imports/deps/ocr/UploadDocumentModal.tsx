@@ -1,6 +1,6 @@
 import { Fragment, useRef, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
-import { X, Upload, Package, FileText, Clipboard, ChevronLeft, Loader2, CheckCircle2 } from 'lucide-react'
+import { X, Upload, Package, FileText, Clipboard, ChevronLeft, Loader2, CheckCircle2, Receipt, FileSpreadsheet, Truck } from 'lucide-react'
 import type { OcrDocType } from './OcrDocCard'
 
 type UploadStep = 'select' | 'dropzone' | 'review' | 'uploading' | 'complete'
@@ -27,9 +27,16 @@ interface DocTypeOption {
 }
 
 const DOC_TYPES: DocTypeOption[] = [
-    { type: 'Purchase Order', label: 'Purchase Order', description: 'PO document from vendor', icon: Package },
-    { type: 'Acknowledgment', label: 'Acknowledgment', description: 'ACK confirmation document', icon: FileText },
-    { type: 'Quote', label: 'Quote', description: 'Vendor quote document', icon: Clipboard },
+    { type: 'Purchase Order',        label: 'Purchase Order',        description: 'PO document from vendor',                 icon: Package },
+    { type: 'Acknowledgment',        label: 'Acknowledgment',        description: 'ACK confirmation document',               icon: FileText },
+    { type: 'Quote',                 label: 'Quote',                 description: 'Vendor quote document',                   icon: Clipboard },
+    // F86.7 · Diego 2026-08-21 · new families requested by the CEO ·
+    // Bill · Proforma · Shipment Notification. Same wizard flow (upload
+    // → review → confirm) · the type just tags the doc as it enters the
+    // OCR queue so the downstream review reads the right label.
+    { type: 'Bill',                  label: 'Bill',                  description: 'Vendor invoice · payable',                icon: Receipt },
+    { type: 'Proforma',              label: 'Proforma',              description: 'Progress billing proforma',               icon: FileSpreadsheet },
+    { type: 'Shipment Notification', label: 'Shipment Notification', description: 'Advance shipment notice from vendor',     icon: Truck },
 ]
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  // 10 MB

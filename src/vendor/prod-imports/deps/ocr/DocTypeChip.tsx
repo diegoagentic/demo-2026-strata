@@ -24,6 +24,13 @@ function chipClasses(type: OcrDocType): string {
             return 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300'
         case 'Invoice':
             return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+        // F86.7 · Diego 2026-08-21 · new families requested by the CEO.
+        case 'Bill':
+            return 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+        case 'Proforma':
+            return 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
+        case 'Shipment Notification':
+            return 'bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300'
         default:
             return 'bg-muted text-muted-foreground'
     }
@@ -34,11 +41,14 @@ function chipClasses(type: OcrDocType): string {
     matches the customer-facing copy. */
 export function docTypeLabel(type: OcrDocType): string {
     switch (type) {
-        case 'Purchase Order': return 'Purchase Order'
-        case 'Acknowledgment': return 'Acknowledgement'
-        case 'Quote':          return 'Quote'
-        case 'Invoice':        return 'Invoice'
-        default:               return String(type)
+        case 'Purchase Order':        return 'Purchase Order'
+        case 'Acknowledgment':        return 'Acknowledgement'
+        case 'Quote':                 return 'Quote'
+        case 'Invoice':               return 'Invoice'
+        case 'Bill':                  return 'Bill'
+        case 'Proforma':              return 'Proforma'
+        case 'Shipment Notification': return 'Shipment Notification'
+        default:                      return String(type)
     }
 }
 
