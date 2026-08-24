@@ -50,8 +50,8 @@ import BFIPage, { BFIDashboardPage } from "./components/bfi/BFIPage"
 import WorkspacesPage from "./components/workspaces/WorkspacesPage"
 import OfficeworksPage, { OfficeworksDashboardPage } from "./components/officeworks/OfficeworksPage"
 import CLCPage, { CLCDashboardPage } from "./components/clc/CLCPage"
-// F74 · Projex demo · shell + 5 placeholder scenes
-import ProjexPage from "./components/projex/ProjexPage"
+// F74 · Acme Dealer demo · shell + 5 placeholder scenes
+import AcmeDealerPage from "./components/acme-dealer/AcmeDealerPage"
 import { Calculator as CalculatorIcon, Receipt as ReceiptIcon, FileSearch as FileSearchIcon, Palette as PaletteIcon, Sparkles as SparklesIcon, Mail as MailIcon, Database as DatabaseIcon, ShieldCheck as ShieldCheckIcon, Building2 as Building2Icon, LayoutDashboard as LayoutDashboardIcon, Inbox as InboxIcon, Pencil as PencilIcon, ClipboardCheck as ClipboardCheckIcon, Send as SendIcon, Calendar as CalendarIcon, Folder as FolderIcon, KanbanSquare as KanbanSquareIcon, BarChart3 as BarChart3Icon } from 'lucide-react'
 
 // Leland Demo — 4 app shells (Phase L0 · expanded in L1-L5)
@@ -71,18 +71,18 @@ import {
 
 import logoLightBrand from './assets/logo-light-brand.png'
 import logoDarkBrand from './assets/logo-dark-brand.png'
-// F80.3 · Projex pre-demo · Expert Hub Transactions prod copy wrapped
+// F80.3 · Acme Dealer pre-demo · Expert Hub Transactions prod copy wrapped
 // (F19 + F43.a synced desde expert-hub@f59da74 · via lift F80.1).
-// F81.C.fix · reverted to raw wrapper (no ProjexExperienceShell chrome
+// F81.C.fix · reverted to raw wrapper (no AcmeDealerExperienceShell chrome
 // para evitar pseudo-navbar duplicate con el real Navbar).
-import ProjexExpertHubWrapper from './vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
+import AcmeDealerExpertHubWrapper from './vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 // F81.C · Presenter notes overlay · discreet · presenter-only · Cmd+Shift+P
-import PresenterNotesOverlay from './components/projex/PresenterNotesOverlay'
-// F85.1 · Diego 2026-08-21 · dedicated Projex topbar mirroring expert-hub +
+import PresenterNotesOverlay from './components/acme-dealer/PresenterNotesOverlay'
+// F85.1 · Diego 2026-08-21 · dedicated Acme Dealer topbar mirroring expert-hub +
 // quote-converter production Navbars. Ships MessageSquarePlus feedback
 // dropdown + PD-to-SIF center-nav pill · replaces the shared Navbar for
-// Projex only. See ProjexNavbar.tsx provenance header.
-import ProjexNavbar from './vendor/prod-imports/ProjexNavbar'
+// Acme Dealer only. See AcmeDealerNavbar.tsx provenance header.
+import AcmeDealerNavbar from './vendor/prod-imports/AcmeDealerNavbar'
 import FeedbackComposerModal from './vendor/prod-imports/deps/feedback/FeedbackComposerModal'
 import { PDtoSIF } from './components/vendor/UI-Dealer/pd-to-sif'
 
@@ -101,12 +101,12 @@ function App() {
   const [bfiDashboardActive, setBfiDashboardActive] = useState(false)
   const [officeworksDashboardActive, setOfficeworksDashboardActive] = useState(false)
   const [clcDashboardActive, setClcDashboardActive] = useState(false)
-  // F85.1 · Diego 2026-08-21 · Projex overlay pages · when set, replaces the
+  // F85.1 · Diego 2026-08-21 · Acme Dealer overlay pages · when set, replaces the
   // demo scene with a full-page module (PD-to-SIF wizard or Feedback status
-  // stub). Clicking any other Projex nav pill clears this back to null so
+  // stub). Clicking any other Acme Dealer nav pill clears this back to null so
   // the current demo scene resumes.
-  const [projexOverlayPage, setProjexOverlayPage] = useState<'pd-to-sif' | 'feedback-status' | null>(null)
-  const [isProjexFeedbackOpen, setIsProjexFeedbackOpen] = useState(false)
+  const [acmeDealerOverlayPage, setAcmeDealerOverlayPage] = useState<'pd-to-sif' | 'feedback-status' | null>(null)
+  const [isAcmeDealerFeedbackOpen, setIsAcmeDealerFeedbackOpen] = useState(false)
 
   // Set initial page for CRM steps
   useEffect(() => {
@@ -146,28 +146,28 @@ function App() {
     if (officeworksDashboardActive) setOfficeworksDashboardActive(false)
   }, [currentStep?.id])
 
-  // F85.1 · Reset Projex overlay when the demo step changes · the presenter
+  // F85.1 · Reset Acme Dealer overlay when the demo step changes · the presenter
   // moved on so any prior PD-to-SIF / feedback-status detour should close.
   useEffect(() => {
-    if (projexOverlayPage) setProjexOverlayPage(null)
+    if (acmeDealerOverlayPage) setAcmeDealerOverlayPage(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep?.id])
 
   const handleNavigate = (page: string) => {
-    // F85.1 · Projex nav pill routing.
-    //   'projex-pd-to-sif' / 'projex-feedback-status' → open the overlay
-    //   over the current demo scene. Any other projex-* pill clears the
+    // F85.1 · Acme Dealer nav pill routing.
+    //   'acme-dealer-pd-to-sif' / 'acme-dealer-feedback-status' → open the overlay
+    //   over the current demo scene. Any other acme-dealer-* pill clears the
     //   overlay so the running scene comes back into focus.
-    if (page === 'projex-pd-to-sif') {
-      setProjexOverlayPage('pd-to-sif')
+    if (page === 'acme-dealer-pd-to-sif') {
+      setAcmeDealerOverlayPage('pd-to-sif')
       return
     }
-    if (page === 'projex-feedback-status') {
-      setProjexOverlayPage('feedback-status')
+    if (page === 'acme-dealer-feedback-status') {
+      setAcmeDealerOverlayPage('feedback-status')
       return
     }
-    if (page.startsWith('projex-')) {
-      setProjexOverlayPage(null)
+    if (page.startsWith('acme-dealer-')) {
+      setAcmeDealerOverlayPage(null)
       return
     }
     // CRM demo · pills internas (Pipeline/Forecast/Intake) navegan vía custom
@@ -236,7 +236,7 @@ function App() {
   const isWorkspaces = demoProfile.id === 'workspaces';
   const isOfficeworks = demoProfile.id === 'officeworks';
   const isClc = demoProfile.id === 'clc';
-  const isProjex = demoProfile.id === 'projex';
+  const isAcmeDealer = demoProfile.id === 'acme-dealer';
   const getSimulationConfig = () => {
     // CRM demo (noTour) · inyectar pills internas en el Navbar global ·
     // pages 'crm:*' interceptadas en handleNavigate para cambiar crmView.
@@ -318,14 +318,14 @@ function App() {
     // F83.B · Diego 2026-08-21 · appName = experience label (`Expert Hub`
     // or `Dealer Experience`) para match visual con producción · antes
     // era el flow-specific label ("AP Intake AI" · etc.) que no existe
-    // en prod. Companyname stays "Projex Inc." (tenant real).
-    const isProjexExpertHubApp = isProjex && (
-        currentStep.app === 'projex-ap' ||
-        currentStep.app === 'projex-order-po' ||
-        currentStep.app === 'projex-ack'
+    // en prod. Companyname stays "Acme Dealer Inc." (tenant real).
+    const isAcmeDealerExpertHubApp = isAcmeDealer && (
+        currentStep.app === 'acme-dealer-bills' ||
+        currentStep.app === 'acme-dealer-order-po' ||
+        currentStep.app === 'acme-dealer-ack'
     );
-    const projexAppName = isProjexExpertHubApp ? 'Expert Hub' : 'Dealer Experience';
-    const projexCompany = demoProfile.companyName;
+    const acmeDealerAppName = isAcmeDealerExpertHubApp ? 'Expert Hub' : 'Dealer Experience';
+    const acmeDealerCompany = demoProfile.companyName;
 
     const resolvedAppName = isContinua ? continuaAppName
       : isLeland ? lelandAppName
@@ -333,7 +333,7 @@ function App() {
       : isWorkspaces ? workspacesAppName
       : isOfficeworks ? officeworksAppName
       : isClc ? clcAppName
-      : isProjex ? projexAppName
+      : isAcmeDealer ? acmeDealerAppName
       : currentStep.app === 'email-marketplace' ? (isWRG ? 'WRG Mail' : 'Wells Fargo Mail')
       : currentStep.app === 'catalog' ? 'Marketplace'
       : currentStep.app === 'service-now' ? 'ServiceNow'
@@ -351,7 +351,7 @@ function App() {
       : isWorkspaces ? workspacesCompany
       : isOfficeworks ? officeworksCompany
       : isClc ? clcCompany
-      : isProjex ? projexCompany
+      : isAcmeDealer ? acmeDealerCompany
       : isExpert || isDuplerExpert || isWrgExpert || isWrgDesigner ? 'Strata Services'
       : demoProfile.companyName;
 
@@ -432,7 +432,7 @@ function App() {
       { name: 'Project Intake AI', page: 'clc-intake', icon: ClipboardCheckIcon },
     ];
 
-    // F83.B · Diego 2026-08-21 · Projex navbar debe replicar el prod
+    // F83.B · Diego 2026-08-21 · Acme Dealer navbar debe replicar el prod
     // expert-hub Navbar (4 tabs · OCR Tracking · Transactions · Comparisons
     // · Feedback) cuando el active step es Expert Hub · Dealer variant (4
     // tabs · OCR · Observability · Feedback · Transactions) cuando es
@@ -440,29 +440,29 @@ function App() {
     // · etc.) que NO existen en prod. Path switch entre flows sigue
     // funcionando via el sidebar sub-nav (F80.2).
     //
-    // Active tab derived from `activeTabFor(currentStep.app)` (ProjexPage
+    // Active tab derived from `activeTabFor(currentStep.app)` (AcmeDealerPage
     // F80.5 mapping) · match visual con prod ExpertHubTransactions.tsx /
     // OCRTracking.tsx / quote-converter Dealer shell.
-    const isProjexExpertHub = isProjex && (
-        currentStep.app === 'projex-ap' ||
-        currentStep.app === 'projex-order-po' ||
-        currentStep.app === 'projex-ack'
+    const isAcmeDealerExpertHub = isAcmeDealer && (
+        currentStep.app === 'acme-dealer-bills' ||
+        currentStep.app === 'acme-dealer-order-po' ||
+        currentStep.app === 'acme-dealer-ack'
     );
-    const projexNav = isProjexExpertHub
+    const acmeDealerNav = isAcmeDealerExpertHub
       ? [
-          { name: 'OCR Tracking', page: 'projex-ocr' as string, icon: InboxIcon },
-          { name: 'Transactions', page: 'projex-transactions' as string, icon: BanknotesIcon },
-          { name: 'Comparisons', page: 'projex-comparisons' as string, icon: FileSearchIcon },
-          { name: 'Feedback', page: 'projex-feedback' as string, icon: LayoutDashboardIcon },
+          { name: 'OCR Tracking', page: 'acme-dealer-ocr' as string, icon: InboxIcon },
+          { name: 'Transactions', page: 'acme-dealer-transactions' as string, icon: BanknotesIcon },
+          { name: 'Comparisons', page: 'acme-dealer-comparisons' as string, icon: FileSearchIcon },
+          { name: 'Feedback', page: 'acme-dealer-feedback' as string, icon: LayoutDashboardIcon },
         ]
       : [
-          { name: 'OCR', page: 'projex-ocr' as string, icon: InboxIcon },
-          { name: 'Observability', page: 'projex-observability' as string, icon: BarChart3Icon },
-          { name: 'Feedback', page: 'projex-feedback' as string, icon: LayoutDashboardIcon },
-          { name: 'Transactions', page: 'projex-transactions' as string, icon: BanknotesIcon },
+          { name: 'OCR', page: 'acme-dealer-ocr' as string, icon: InboxIcon },
+          { name: 'Observability', page: 'acme-dealer-observability' as string, icon: BarChart3Icon },
+          { name: 'Feedback', page: 'acme-dealer-feedback' as string, icon: LayoutDashboardIcon },
+          { name: 'Transactions', page: 'acme-dealer-transactions' as string, icon: BanknotesIcon },
         ];
 
-    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : isOfficeworks ? officeworksNav : isClc ? clcNav : isProjex ? projexNav : expertNav;
+    const nav = currentStep.app === 'crm' ? crmNav : isWRG ? wrgNav : isDupler ? duplerNav : isContinua ? continuaNav : isMBI ? mbiNav : isLeland ? lelandNav : isBFI ? bfiNav : isWorkspaces ? workspacesNav : isOfficeworks ? officeworksNav : isClc ? clcNav : isAcmeDealer ? acmeDealerNav : expertNav;
     return { appName: resolvedAppName, companyName: resolvedCompany, customNavigation: nav };
   };
 
@@ -652,13 +652,13 @@ function App() {
         return <CLCPage />;
       case 'clc-dashboard':
         return <CLCDashboardPage />;
-      // F74 · Projex · 5 flows todos rutean a ProjexPage (que routea internamente por stepId)
-      case 'projex-ap':
-      case 'projex-vendor-onboarding':
-      case 'projex-billing':
-      case 'projex-order-po':
-      case 'projex-ack':
-        return <ProjexPage />;
+      // F74 · Acme Dealer · 5 flows todos rutean a AcmeDealerPage (que routea internamente por stepId)
+      case 'acme-dealer-bills':
+      case 'acme-dealer-vendor-onboarding':
+      case 'acme-dealer-billing':
+      case 'acme-dealer-order-po':
+      case 'acme-dealer-ack':
+        return <AcmeDealerPage />;
       default:
         return (
           <ExpertHubTransactions
@@ -675,16 +675,16 @@ function App() {
   };
 
   const renderCurrentPage = () => {
-    // F81.C.fix · Diego 2026-08-21 · Projex pre-demo state simplified.
-    // Antes (F81.B.3) el pre-demo mostraba el rich ProjexPathLanding con
+    // F81.C.fix · Diego 2026-08-21 · Acme Dealer pre-demo state simplified.
+    // Antes (F81.B.3) el pre-demo mostraba el rich AcmeDealerPathLanding con
     // playlist + hero + CTAs · user flagged como "demasiados elementos
     // para el inicio" + pseudo-navbar duplicado. Ahora pre-demo = raw
     // Expert Hub Transactions prod copy · minimal · alineado con lo que
     // el user ve como CEO al abrir la plataforma real. El rich landing
-    // (ProjexPathLanding) queda disponible como componente · su new home
+    // (AcmeDealerPathLanding) queda disponible como componente · su new home
     // en el tour se define en Fase B.4 next iteration.
-    if (isProjex) {
-      return <ProjexExpertHubWrapper />;
+    if (isAcmeDealer) {
+      return <AcmeDealerExpertHubWrapper />;
     }
     if (currentPage === 'dashboard') return <Dashboard onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
     if (currentPage === 'inventory') return <Inventory onLogout={handleLogout} onNavigateToDetail={() => setCurrentPage('detail')} onNavigateToWorkspace={() => setCurrentPage('workspace')} onNavigate={handleNavigate} />;
@@ -731,7 +731,7 @@ function App() {
       )}
 
       {/* F81.C · Presenter notes overlay · siempre mounted · el component
-           decide internamente si renderea (solo Projex + demo activo +
+           decide internamente si renderea (solo Acme Dealer + demo activo +
            notes disponibles). Toggle via `?presenter=1` o `Cmd/Ctrl+Shift+P`.
            Persistente por session · client-hostile design (small · bottom-left). */}
       <PresenterNotesOverlay />
@@ -750,20 +750,20 @@ function App() {
         : currentPage !== 'detail' && currentPage !== 'workspace'
       ) && (
         <div className="fixed top-0 left-0 right-0 z-[100]">
-          {isProjex ? (
-            /* F85.1 · Projex-only topbar · mirrors expert-hub + quote-converter
+          {isAcmeDealer ? (
+            /* F85.1 · Acme Dealer-only topbar · mirrors expert-hub + quote-converter
                prod Navbar shapes · ships Feedback dropdown + PD-to-SIF pill. */
-            <ProjexNavbar
+            <AcmeDealerNavbar
               experience={(isDemoActive && currentStep && (
-                currentStep.app === 'projex-ap' ||
-                currentStep.app === 'projex-order-po' ||
-                currentStep.app === 'projex-ack'
+                currentStep.app === 'acme-dealer-bills' ||
+                currentStep.app === 'acme-dealer-order-po' ||
+                currentStep.app === 'acme-dealer-ack'
               )) ? 'expert-hub' : 'dealer'}
-              activeTab={projexOverlayPage === 'pd-to-sif' ? 'projex-pd-to-sif' : getActiveTab()}
+              activeTab={acmeDealerOverlayPage === 'pd-to-sif' ? 'acme-dealer-pd-to-sif' : getActiveTab()}
               onNavigate={handleNavigate}
-              onOpenFeedback={() => setIsProjexFeedbackOpen(true)}
+              onOpenFeedback={() => setIsAcmeDealerFeedbackOpen(true)}
               onLogout={handleLogout}
-              tenantLabel={companyName || 'Projex Inc.'}
+              tenantLabel={companyName || 'Acme Dealer Inc.'}
             />
           ) : (
             <Navbar
@@ -782,15 +782,15 @@ function App() {
 
       {/* MAIN CONTENT VIEWPORT */}
       <main className={`transition-all duration-300 ${(isDemoActive ? currentStep.app !== 'email-marketplace' && currentStep.app !== 'wrg-estimator' && currentStep.app !== 'workspaces-submit' && !bfiLoginActive && !(isBFI && ['r1.6', 'a1.0', 'a1.2'].includes(currentStep.id)) : currentPage !== 'detail' && currentPage !== 'workspace') ? 'pt-16' : ''} ${isDemoActive ? (isSidebarCollapsed ? 'pl-0' : 'pl-80') + ' animate-in fade-in duration-500' : ''} min-h-screen bg-background`}>
-        {isDemoActive && !projexOverlayPage && <DemoAIIndicator />}
-        {isProjex && projexOverlayPage === 'pd-to-sif' ? (
-          /* F85.1 · PD-to-SIF wizard opened from the Projex topbar pill · overlays
+        {isDemoActive && !acmeDealerOverlayPage && <DemoAIIndicator />}
+        {isAcmeDealer && acmeDealerOverlayPage === 'pd-to-sif' ? (
+          /* F85.1 · PD-to-SIF wizard opened from the Acme Dealer topbar pill · overlays
              the current demo scene · clears when the demo advances or another pill
              is clicked. */
           <div className="px-6 py-6">
             <PDtoSIF />
           </div>
-        ) : isProjex && projexOverlayPage === 'feedback-status' ? (
+        ) : isAcmeDealer && acmeDealerOverlayPage === 'feedback-status' ? (
           <div className="px-6 py-16 max-w-2xl mx-auto text-center space-y-4">
             <h2 className="text-2xl font-bold text-foreground">My feedback status</h2>
             <p className="text-sm text-muted-foreground">
@@ -799,7 +799,7 @@ function App() {
               live tickets, replies, and unread badges here.
             </p>
             <button
-              onClick={() => setProjexOverlayPage(null)}
+              onClick={() => setAcmeDealerOverlayPage(null)}
               className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
             >
               Back to the demo
@@ -808,21 +808,21 @@ function App() {
         ) : isDemoActive ? renderSimulation() : renderCurrentPage()}
       </main>
 
-      {/* F85.1 · Projex Feedback composer · lifted prod modal · wired from the
-          MessageSquarePlus dropdown in the Projex topbar. onSubmit is a no-op
+      {/* F85.1 · Acme Dealer Feedback composer · lifted prod modal · wired from the
+          MessageSquarePlus dropdown in the Acme Dealer topbar. onSubmit is a no-op
           for the demo (real prod persists to localStorage + surfaces on
           FeedbackStatusPage). */}
-      {isProjex && (
+      {isAcmeDealer && (
         <FeedbackComposerModal
-          isOpen={isProjexFeedbackOpen}
-          onClose={() => setIsProjexFeedbackOpen(false)}
-          onSubmit={() => setIsProjexFeedbackOpen(false)}
+          isOpen={isAcmeDealerFeedbackOpen}
+          onClose={() => setIsAcmeDealerFeedbackOpen(false)}
+          onSubmit={() => setIsAcmeDealerFeedbackOpen(false)}
           experienceLabel={isDemoActive && currentStep && (
-            currentStep.app === 'projex-ap' ||
-            currentStep.app === 'projex-order-po' ||
-            currentStep.app === 'projex-ack'
+            currentStep.app === 'acme-dealer-bills' ||
+            currentStep.app === 'acme-dealer-order-po' ||
+            currentStep.app === 'acme-dealer-ack'
           ) ? 'Expert Hub' : 'Dealer Experience'}
-          workspaceLabel="Projex Inc."
+          workspaceLabel="Acme Dealer Inc."
         />
       )}
 

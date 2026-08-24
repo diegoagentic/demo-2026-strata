@@ -15,10 +15,10 @@ import { BFI_STEPS, BFI_STEP_BEHAVIOR, BFI_STEP_MESSAGES, BFI_SELF_INDICATED } f
 import { WORKSPACES_STEPS, WORKSPACES_STEP_BEHAVIOR, WORKSPACES_STEP_MESSAGES, WORKSPACES_SELF_INDICATED } from './profiles/workspaces';
 import { OFFICEWORKS_STEPS, OFFICEWORKS_STEP_BEHAVIOR, OFFICEWORKS_STEP_MESSAGES, OFFICEWORKS_SELF_INDICATED } from './profiles/officeworks';
 import { CLC_STEPS, CLC_STEP_BEHAVIOR, CLC_STEP_MESSAGES, CLC_SELF_INDICATED } from './profiles/clc';
-// F74 · Projex demo profile · 5 flows (AP · Vendor onboarding · Progress
+// F74 · Acme Dealer demo profile · 5 flows (AP · Vendor onboarding · Progress
 // billing · Order entry/PO · Electronic ordering & ACK) · fuente en
-// scratchpad/projex-notion/_SOT_projex.md (1029 líneas · single source of truth)
-import { PROJEX_STEPS, PROJEX_STEP_BEHAVIOR, PROJEX_STEP_MESSAGES, PROJEX_SELF_INDICATED } from './profiles/projex';
+// scratchpad/acme-dealer-notion/_SOT_acme-dealer.md (1029 líneas · single source of truth)
+import { ACME_DEALER_STEPS, ACME_DEALER_STEP_BEHAVIOR, ACME_DEALER_STEP_MESSAGES, ACME_DEALER_SELF_INDICATED } from './profiles/acme-dealer';
 
 export type SimulationApp =
     | 'dashboard' | 'expert-hub' | 'email-marketplace'
@@ -36,8 +36,8 @@ export type SimulationApp =
     | 'officeworks-labor'
     | 'officeworks-sales'
     | 'clc-calendar' | 'clc-sharepoint' | 'clc-intake' | 'clc-dashboard'
-    // F74 · Projex · 5 apps · 1 por flow
-    | 'projex-ap' | 'projex-vendor-onboarding' | 'projex-billing' | 'projex-order-po' | 'projex-ack';
+    // F74 · Acme Dealer · 5 apps · 1 por flow
+    | 'acme-dealer-bills' | 'acme-dealer-vendor-onboarding' | 'acme-dealer-billing' | 'acme-dealer-order-po' | 'acme-dealer-ack';
 
 export interface DemoStep {
     id: string;
@@ -47,21 +47,21 @@ export interface DemoStep {
     description: string;
     app: SimulationApp;
     role: 'Expert' | 'System' | 'Dealer' | 'End User' | 'Sales Rep' | 'Facility Manager' | 'Facility User' | 'Designer' | 'Sales Coordinator' | 'Estimator' | 'Project Manager' | 'Operations Manager' | 'AP Coordinator' | 'CFO' | 'CAO' | 'Employee' | 'Account Manager' | 'Receiving Coordinator' | 'Finance / AR' | 'Accountant' | 'BFI Manager' | 'Design Manager' | 'Peer Reviewer' | 'Sr Operations' | 'Sales Lead' | 'Director of Operations' | 'Office Director'
-        // F74 · Projex roles (SOT §1 stakeholders)
+        // F74 · Acme Dealer roles (SOT §1 stakeholders)
         | 'Director of Accounting' | 'Senior Accountant' | 'Furniture Coordinator' | 'Walls Coordinator' | 'Walls Director' | 'Walls PM' | 'CEO';
     highlightId?: string;
     /**
      * Optional flow grouping for multi-flow profiles. Read by the profile-specific
-     * flow-switcher block en DemoSidebar.tsx (Officeworks · CLC · Projex today).
+     * flow-switcher block en DemoSidebar.tsx (Officeworks · CLC · Acme Dealer today).
      * Extendé el union cuando agregues un profile multi-flow nuevo.
      */
     flowId?: 'spec-check' | 'labor-delivery' | 'sales'
         | 'calendar' | 'sharepoint' | 'intake' | 'data-lake'
-        // F74 · Projex 5 flows
-        | 'projex-ap' | 'projex-vendor-onboarding' | 'projex-billing' | 'projex-order-po' | 'projex-ack';
+        // F74 · Acme Dealer 5 flows
+        | 'acme-dealer-bills' | 'acme-dealer-vendor-onboarding' | 'acme-dealer-billing' | 'acme-dealer-order-po' | 'acme-dealer-ack';
 }
 
-export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks' | 'clc' | 'crm' | 'projex';
+export type DemoProfileId = 'acme' | 'coi' | 'dupler' | 'ops' | 'continua' | 'wrg' | 'mbi' | 'leland' | 'bfi' | 'workspaces' | 'officeworks' | 'clc' | 'crm' | 'acme-dealer';
 
 export interface DemoProfile {
     id: DemoProfileId;
@@ -90,15 +90,15 @@ export interface DemoProfile {
 // To add a new demo, prepend its entry — do not append.
 export const DEMO_PROFILES: DemoProfile[] = [
     {
-        id: 'projex',
-        name: 'Projex',
-        companyName: 'Projex Inc.',
-        description: 'AP intake · vendor onboarding · progress billing · order/PO dispatch · electronic ordering & ACK · 5 flows',
+        id: 'acme-dealer',
+        name: 'Acme Dealer',
+        companyName: 'Acme Dealer Inc.',
+        description: 'Bills intake · vendor onboarding · progress billing · order/PO dispatch · electronic ordering & ACK · 5 flows',
         icon: '📑',
-        steps: PROJEX_STEPS,
-        stepBehavior: PROJEX_STEP_BEHAVIOR,
-        stepMessages: PROJEX_STEP_MESSAGES,
-        selfIndicatedSteps: PROJEX_SELF_INDICATED,
+        steps: ACME_DEALER_STEPS,
+        stepBehavior: ACME_DEALER_STEP_BEHAVIOR,
+        stepMessages: ACME_DEALER_STEP_MESSAGES,
+        selfIndicatedSteps: ACME_DEALER_SELF_INDICATED,
     },
     {
         id: 'crm',

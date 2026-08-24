@@ -446,15 +446,15 @@ const CLC_STEP_NOTIFICATIONS: Record<string, ClcStepNotif> = {
     },
 }
 
-// ─── Projex · step notifications (F74 · parallel to BFI/Officeworks/CLC) ─────
+// ─── Acme Dealer · step notifications (F74 · parallel to BFI/Officeworks/CLC) ─────
 // Contract: add an entry here per step, then the scene listens for `event` via
 // window.addEventListener to advance state (open a modal, spotlight a card,
 // or call nextStep()). MEMORY rule · feedback-notifications-action-center ·
 // nunca crear toasts custom en la scene.
 
-type ProjexStepNotif = BfiStepNotif
+type AcmeDealerStepNotif = BfiStepNotif
 
-// F76 · Per-step notif delay override for Projex · steps donde la scene UI
+// F76 · Per-step notif delay override for Acme Dealer · steps donde la scene UI
 // necesita más tiempo para que el user scan/scroll antes de que aparezca el
 // notif. Steps NO listados heredan el default global (2000ms). Todo el
 // delay corre pause-aware · si el user pausa el demo el timer se congela.
@@ -462,7 +462,7 @@ type ProjexStepNotif = BfiStepNotif
 // to give presenter time to explain before the AC panel appears.
 // F84.16 · added p2.2 (Diego 2026-08-21 · W-9 registry needs its own AC
 // notif · replaces the custom overlay we removed).
-const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
+const ACME_DEALER_NOTIF_DELAY_MS: Record<string, number> = {
     'p1.1': 3000,
     'p2.1': 3000,
     'p2.2': 3000,
@@ -471,21 +471,21 @@ const PROJEX_NOTIF_DELAY_MS: Record<string, number> = {
     'p5.1': 3000,
 }
 
-const PROJEX_NOTIF_DEFAULT_DELAY_MS = 2000
+const ACME_DEALER_NOTIF_DEFAULT_DELAY_MS = 2000
 
 
 // F84 · MVP · 5 notifications only (one per path arrival step p*.1).
 // Zero notifs in intermediate/final steps · presenter advances via Next.
 // Kill the noisy F3/F5 4-notif chains by cutting the intermediate steps.
-const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
+const ACME_DEALER_STEP_NOTIFICATIONS: Record<string, AcmeDealerStepNotif> = {
     'p1.1': {
         badge: '14 bills · 3 need eyes', badgeColor: 'ai',
-        title: 'F1 · AP inbox · Strata OCR filed 14 vendor bills overnight',
-        desc: 'Overnight sweep of ap@projex-inc.com · 14 vendor bills ingested and filed in the OCR queue. Teknion NCBA (bill 8483) and Warehouse-by-Design install invoice both flagged for review · walkthrough starts here.',
-        sender: 'Strata AI · ap@projex-inc.com · sweep 02:14 → 08:11',
-        re: 'AP inbox · 14 bills · 3 legal entities · ready for Compliance',
-        cta: 'Open the AP queue →',
-        event: 'projex:ap-open',
+        title: 'F1 · Bills inbox · Strata OCR filed 14 vendor bills overnight',
+        desc: 'Overnight sweep of bills@acme-dealer.com · 14 vendor bills ingested and filed in the OCR queue. Teknion NCBA (bill 8483) and Warehouse-by-Design install invoice both flagged for review · walkthrough starts here.',
+        sender: 'Strata AI · bills@acme-dealer.com · sweep 02:14 → 08:11',
+        re: 'Bills inbox · 14 bills · 3 legal entities · ready for Compliance',
+        cta: 'Open the Bills queue →',
+        event: 'acme-dealer:bills-open',
         footerText: 'Path 1 · Vendor bill intake & matching',
     },
     'p2.1': {
@@ -496,7 +496,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         re: 'WBD W-9 · Warehouse by Design · install vendor',
         attachment: 'WarehouseByDesign_W-9_signed.pdf',
         cta: 'Open W-9 review →',
-        event: 'projex:w9-open',
+        event: 'acme-dealer:w9-open',
         footerText: 'Path 2 · Vendor onboarding & compliance',
     },
     // F84.16 · Diego 2026-08-21 · single canonical channel for the W-9
@@ -509,7 +509,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         sender: 'Strata AI · OCR queue',
         re: 'WBD W-9 · date-indexed · expiration flagged',
         cta: 'Sync vendor to NetSuite →',
-        event: 'projex:w9-registered',
+        event: 'acme-dealer:w9-registered',
         footerText: 'Path 2 · step 2 of 3',
     },
     'p3.1': {
@@ -519,7 +519,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         sender: 'Strata AI · live billing forecast · just now',
         re: 'Fairport HQ · Furniture 50/40/10 · 40% draw ready',
         cta: 'Open the billing alert →',
-        event: 'projex:billing-open',
+        event: 'acme-dealer:billing-open',
         footerText: 'Path 3 · Progress billing & collections',
     },
     'p4.1': {
@@ -530,7 +530,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         re: 'MWH residential · PIF · 300 lines · 26 vendor split',
         attachment: 'MWH_PIF_2026-08-14.xlsx',
         cta: 'Open PIF preview →',
-        event: 'projex:pif-open',
+        event: 'acme-dealer:pif-open',
         footerText: 'Path 4 · Order entry & PO dispatch',
     },
     'p5.1': {
@@ -540,7 +540,7 @@ const PROJEX_STEP_NOTIFICATIONS: Record<string, ProjexStepNotif> = {
         sender: 'Strata AI · ACK inbox',
         re: 'Teknion · PO-DC-0009642 · 71 lines · 13 CRs expected',
         cta: 'Open the ACK queue →',
-        event: 'projex:ack-open',
+        event: 'acme-dealer:ack-open',
         footerText: 'Path 5 · Electronic ACK processing',
     },
 }
@@ -629,12 +629,12 @@ export default function ActionCenter() {
     const [owPanelClosed, setOwPanelClosed] = useState(false);
     // CLC generic step panel (clc1.1 .. clc1.4)
     const [clcPanelClosed, setClcPanelClosed] = useState(false);
-    // Projex generic step panel (p1.1 .. p5.x · F74)
-    const [projexPanelClosed, setProjexPanelClosed] = useState(false);
+    // Acme Dealer generic step panel (p1.1 .. p5.x · F74)
+    const [acmeDealerPanelClosed, setAcmeDealerPanelClosed] = useState(false);
     // Delay before any notification panel appears (2s after step loads)
     const [notifDelayReady, setNotifDelayReady] = useState(false);
-    // F76 · Projex-specific delay ready (respects per-step delay override)
-    const [projexNotifReady, setProjexNotifReady] = useState(false);
+    // F76 · Acme Dealer-specific delay ready (respects per-step delay override)
+    const [acmeDealerNotifReady, setAcmeDealerNotifReady] = useState(false);
     // Reset all panels when step changes, then reveal after 2s (pause-aware)
     useEffect(() => {
         setA11PanelClosed(false);
@@ -649,14 +649,14 @@ export default function ActionCenter() {
         setSc10bIngestCount(0);
         setOwPanelClosed(false);
         setClcPanelClosed(false);
-        setProjexPanelClosed(false);
+        setAcmeDealerPanelClosed(false);
         setNotifDelayReady(false);
-        setProjexNotifReady(false);
+        setAcmeDealerNotifReady(false);
         const cancel = pauseAwareTimeout(() => setNotifDelayReady(true), 2000);
-        // Projex per-step delay (F3 dashboards need more scan time)
-        const projexDelay = PROJEX_NOTIF_DELAY_MS[currentStep?.id ?? ''] ?? PROJEX_NOTIF_DEFAULT_DELAY_MS;
-        const cancelProjex = pauseAwareTimeout(() => setProjexNotifReady(true), projexDelay);
-        return () => { cancel?.(); cancelProjex?.(); };
+        // Acme Dealer per-step delay (F3 dashboards need more scan time)
+        const acmeDealerDelay = ACME_DEALER_NOTIF_DELAY_MS[currentStep?.id ?? ''] ?? ACME_DEALER_NOTIF_DEFAULT_DELAY_MS;
+        const cancelAcmeDealer = pauseAwareTimeout(() => setAcmeDealerNotifReady(true), acmeDealerDelay);
+        return () => { cancel?.(); cancelAcmeDealer?.(); };
     }, [currentStep?.id, pauseAwareTimeout]);
 
     // Step 1.10: Auto-open with single notification
@@ -801,8 +801,8 @@ export default function ActionCenter() {
     const clcStepConfig = isDemoActive ? CLC_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
     const isClcStepActive = !!clcStepConfig && !clcPanelClosed && notifDelayReady;
 
-    const projexStepConfig = isDemoActive ? PROJEX_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
-    const isProjexStepActive = !!projexStepConfig && !projexPanelClosed && projexNotifReady;
+    const acmeDealerStepConfig = isDemoActive ? ACME_DEALER_STEP_NOTIFICATIONS[currentStep?.id ?? ''] : undefined;
+    const isAcmeDealerStepActive = !!acmeDealerStepConfig && !acmeDealerPanelClosed && acmeDealerNotifReady;
 
     const isStepAutoOpen =
         isStep19 || isStep27 ||
@@ -812,7 +812,7 @@ export default function ActionCenter() {
         (isStepSc10b && !sc10bPanelClosed && notifDelayReady) ||
         isOwStepActive ||
         isClcStepActive ||
-        isProjexStepActive;
+        isAcmeDealerStepActive;
 
     return (
         <>
@@ -1605,20 +1605,20 @@ export default function ActionCenter() {
             </div>
         )}
 
-        {/* Projex Steps p1.1 .. p5.x: Generic incoming-event notification panel (F74) */}
-        {isProjexStepActive && projexStepConfig && (
+        {/* Acme Dealer Steps p1.1 .. p5.x: Generic incoming-event notification panel (F74) */}
+        {isAcmeDealerStepActive && acmeDealerStepConfig && (
             <div className={clsx("fixed top-[90px] -translate-x-1/2 w-[95vw] lg:w-[520px] z-50 animate-in fade-in slide-in-from-top-2 duration-300", sidebarExpanded ? 'left-[calc(50%+10rem)]' : 'left-1/2')}>
                 <div className="bg-zinc-100 dark:bg-zinc-900/85 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden">
                     <div className="px-5 pt-5 pb-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Action Center</h3>
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                                projexStepConfig.badgeColor === 'warning' ? 'bg-warning/15 text-warning' :
-                                projexStepConfig.badgeColor === 'success' ? 'bg-success/15 text-success' :
+                                acmeDealerStepConfig.badgeColor === 'warning' ? 'bg-warning/15 text-warning' :
+                                acmeDealerStepConfig.badgeColor === 'success' ? 'bg-success/15 text-success' :
                                 'bg-foreground/10 text-foreground'
-                            }`}>{projexStepConfig.badge}</span>
+                            }`}>{acmeDealerStepConfig.badge}</span>
                         </div>
-                        <button onClick={() => setProjexPanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
+                        <button onClick={() => setAcmeDealerPanelClosed(true)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors">
                             <XMarkIcon className="w-5 h-5" />
                         </button>
                     </div>
@@ -1626,48 +1626,48 @@ export default function ActionCenter() {
                         <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-border overflow-hidden">
                             <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
                                 <SparklesIcon className="w-4 h-4 text-ai shrink-0" />
-                                <span className="text-sm font-semibold text-foreground flex-1">{projexStepConfig.title}</span>
+                                <span className="text-sm font-semibold text-foreground flex-1">{acmeDealerStepConfig.title}</span>
                                 <span className="text-[10px] text-muted-foreground shrink-0">Today · 08:14 AM</span>
                             </div>
                             <div className="px-4 py-3 border-b border-border space-y-1">
                                 <div className="flex gap-2 text-[11px]">
                                     <span className="text-muted-foreground w-10 shrink-0">From</span>
-                                    <span className="text-foreground font-medium">{projexStepConfig.sender}</span>
+                                    <span className="text-foreground font-medium">{acmeDealerStepConfig.sender}</span>
                                 </div>
-                                {projexStepConfig.re ? (
+                                {acmeDealerStepConfig.re ? (
                                     <div className="flex gap-2 text-[11px]">
                                         <span className="text-muted-foreground w-10 shrink-0">Re</span>
-                                        <span className="text-foreground">{projexStepConfig.re}</span>
+                                        <span className="text-foreground">{acmeDealerStepConfig.re}</span>
                                     </div>
                                 ) : (
                                     <div className="flex gap-2 text-[11px]">
                                         <span className="text-muted-foreground w-10 shrink-0">Info</span>
-                                        <span className="text-foreground">{projexStepConfig.desc}</span>
+                                        <span className="text-foreground">{acmeDealerStepConfig.desc}</span>
                                     </div>
                                 )}
                             </div>
-                            {projexStepConfig.attachment && (
+                            {acmeDealerStepConfig.attachment && (
                                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
                                     <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide shrink-0">Attachment:</span>
                                     <span className="flex items-center gap-1 text-[10px] text-success font-medium px-2 py-0.5 rounded bg-success/10 border border-success/20">
-                                        <DocumentTextIcon className="w-3 h-3" /> {projexStepConfig.attachment}
+                                        <DocumentTextIcon className="w-3 h-3" /> {acmeDealerStepConfig.attachment}
                                     </span>
                                 </div>
                             )}
-                            {projexStepConfig.re && (
+                            {acmeDealerStepConfig.re && (
                                 <div className="px-4 py-3 border-b border-border">
-                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{projexStepConfig.desc}</p>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{acmeDealerStepConfig.desc}</p>
                                 </div>
                             )}
                             <div className="px-4 py-4">
                                 <button
                                     onClick={() => {
-                                        setProjexPanelClosed(true);
-                                        window.dispatchEvent(new CustomEvent(projexStepConfig.event));
+                                        setAcmeDealerPanelClosed(true);
+                                        window.dispatchEvent(new CustomEvent(acmeDealerStepConfig.event));
                                     }}
                                     className="w-full py-2.5 text-[12px] font-black rounded-xl bg-foreground text-background hover:opacity-80 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
                                 >
-                                    {projexStepConfig.cta}
+                                    {acmeDealerStepConfig.cta}
                                 </button>
                             </div>
                         </div>
@@ -1676,7 +1676,7 @@ export default function ActionCenter() {
                         <p className="text-xs font-medium text-gray-500 dark:text-gray-400">1 action</p>
                         <p className="text-xs font-bold text-ai flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-ai animate-pulse" />
-                            {projexStepConfig.footerText}
+                            {acmeDealerStepConfig.footerText}
                         </p>
                     </div>
                 </div>
