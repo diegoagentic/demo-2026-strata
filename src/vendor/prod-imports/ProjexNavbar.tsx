@@ -23,12 +23,14 @@
  *   lift for the demo).
  */
 
-import { useState, useRef, useEffect } from 'react'
+import { Fragment, useState, useRef, useEffect } from 'react'
+import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
 import {
     ScanEye, Activity, Receipt, GitCompare, FileText, MessageSquarePlus,
-    ListChecks, Moon, Sun, LogOut, ChevronDown,
+    ListChecks, Moon, Sun, LogOut, ChevronDown, Check,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useDemoProfile } from '../../context/useDemoProfile'
 // F85.1.fix1 · Diego 2026-08-21 · restore the real Strata logo (same PNG
 // twins the shared Navbar uses) · earlier version rendered a placeholder
 // "S" square + "STRATA" text that lost brand parity.
@@ -88,6 +90,11 @@ export default function ProjexNavbar({
     // occupying the left 320px of the viewport (only when demo active AND
     // sidebar expanded) so we know when to apply the sidebar-offset layout.
     const { isSidebarCollapsed, isDemoActive } = useDemo()
+    // F85.4 · Diego 2026-08-21 · restore the demo profile switcher that the
+    // shared Navbar exposed via the app-name / company Popover. Mirroring
+    // the same pattern lets account teams switch demos (Projex ↔ BFI ↔
+    // Officeworks · etc.) without leaving the Projex chrome.
+    const { activeProfile, profiles, switchProfile } = useDemoProfile()
 
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
     const [isFeedbackMenuOpen, setIsFeedbackMenuOpen] = useState(false)
@@ -151,21 +158,61 @@ export default function ProjexNavbar({
         <div className={`fixed top-6 z-50 transition-all duration-300 ${positionClasses}`}>
             <div className="relative flex items-center lg:justify-between px-3 py-2 rounded-full gap-1 bg-card/80 backdrop-blur-xl border border-border shadow-lg">
 
-                {/* Left · Strata brand logo (real PNG twins) + tenant chip */}
+                {/* Left · Strata brand logo (real PNG twins) + demo-profile switcher chip */}
                 <div className="flex items-center gap-1">
                     <div className="px-2 shrink-0">
                         <img src={logoLightBrand} alt="Strata" className="h-8 w-20 object-contain block dark:hidden" />
                         <img src={logoDarkBrand} alt="Strata" className="h-8 w-20 object-contain hidden dark:block" />
                     </div>
                     <div className="w-px h-6 bg-border mx-1"></div>
-                    <div className="hidden sm:flex flex-col leading-none px-2">
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                            {experience === 'expert-hub' ? 'Expert Hub' : 'Dealer Experience'}
-                        </span>
-                        <span className="text-sm font-bold text-foreground leading-tight mt-0.5">
-                            {tenantLabel}
-                        </span>
-                    </div>
+                    {/* F85.4 · Demo profile Popover · same shape as shared Navbar's
+                        app-name/company button · click opens a Switch Demo panel
+                        listing every profile (Projex, BFI, Officeworks, etc.). */}
+                    <Popover className="relative hidden sm:block">
+                        <PopoverButton className="flex flex-col items-start text-left px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer outline-none group">
+                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider leading-none">
+                                {experience === 'expert-hub' ? 'Expert Hub' : 'Dealer Experience'}
+                            </span>
+                            <span className="text-sm font-bold text-foreground leading-tight mt-0.5 flex items-center gap-1">
+                                {tenantLabel}
+                                <ChevronDown className="w-3 h-3 text-muted-foreground group-data-[open]:rotate-180 transition-transform" aria-hidden="true" />
+                            </span>
+                        </PopoverButton>
+                        <Transition
+                            as={Fragment}
+                            enter="transition ease-out duration-200"
+                            enterFrom="opacity-0 translate-y-1"
+                            enterTo="opacity-100 translate-y-0"
+                            leave="transition ease-in duration-150"
+                            leaveFrom="opacity-100 translate-y-0"
+                            leaveTo="opacity-0 translate-y-1"
+                        >
+                            <PopoverPanel className="absolute left-0 top-full mt-2 w-64 py-2 rounded-xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl z-[200] max-h-[70vh] flex flex-col">
+                                <div className="px-3 py-2 border-b border-border mb-1 shrink-0">
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Switch Demo</p>
+                                </div>
+                                <div className="overflow-y-auto flex-1 min-h-0">
+                                    {profiles.map(profile => (
+                                        <PopoverButton
+                                            as="button"
+                                            key={profile.id}
+                                            onClick={() => switchProfile(profile.id)}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left"
+                                        >
+                                            <span className="text-lg shrink-0">{profile.icon}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-foreground">{profile.name}</p>
+                                                <p className="text-[11px] text-muted-foreground truncate">{profile.description}</p>
+                                            </div>
+                                            {activeProfile.id === profile.id && (
+                                                <Check className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+                                            )}
+                                        </PopoverButton>
+                                    ))}
+                                </div>
+                            </PopoverPanel>
+                        </Transition>
+                    </Popover>
                 </div>
 
                 {/* Center · nav tabs with expanding label on hover/active (expert-hub pattern) */}
