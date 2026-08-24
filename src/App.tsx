@@ -749,7 +749,14 @@ function App() {
           && !(currentStep.id === '3.5' && !isContinua)
         : currentPage !== 'detail' && currentPage !== 'workspace'
       ) && (
-        <div className="fixed top-0 left-0 right-0 z-[100]">
+        <div className="fixed top-0 left-0 right-0 z-40">
+          {/* F86.3 · Diego 2026-08-21 · CEO reported the topbar was covering
+             modal tops. Root cause · the navbar wrapper's z-[100] stacking
+             context outranked the Headless UI Dialogs used by every prod
+             modal (they default to z-50). Wrapper dropped to z-40 so
+             modals (z-50+) naturally paint above the navbar. Inner
+             Navbar / DealerANavbar keeps z-50 chrome so it still paints
+             above the page content when no modal is open. */}
           {isDealerA ? (
             /* F85.1 · Dealer A-only topbar · mirrors expert-hub + quote-converter
                prod Navbar shapes · ships Feedback dropdown + PD-to-SIF pill. */
