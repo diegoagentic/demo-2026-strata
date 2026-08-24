@@ -90,7 +90,7 @@ const DEALER_LEGACY_TAB_ALIAS: Partial<Record<DealerTab, DealerTab>> = {
 interface DealerAExperienceShellProps {
     experience: DealerAExperience
     activeTab: DealerATab
-    /** Defaults to "Dealer A Inc." */
+    /** Defaults to "Dealer A" */
     tenantLabel?: string
     children: ReactNode
 }
@@ -98,7 +98,7 @@ interface DealerAExperienceShellProps {
 export default function DealerAExperienceShell({
     experience,
     activeTab,
-    tenantLabel = 'Dealer A Inc.',
+    tenantLabel = 'Dealer A',
     children,
 }: DealerAExperienceShellProps) {
     // F82.5.a · Diego 2026-08-21 · killed the secondary tabs strip entirely.

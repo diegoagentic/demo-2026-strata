@@ -318,7 +318,7 @@ function App() {
     // F83.B · Diego 2026-08-21 · appName = experience label (`Expert Hub`
     // or `Dealer Experience`) para match visual con producción · antes
     // era el flow-specific label ("AP Intake AI" · etc.) que no existe
-    // en prod. Companyname stays "Dealer A Inc." (tenant real).
+    // en prod. Companyname stays "Dealer A" (tenant real).
     const isDealerAExpertHubApp = isDealerA && (
         currentStep.app === 'dealer-a-bills' ||
         currentStep.app === 'dealer-a-order-po' ||
@@ -763,7 +763,7 @@ function App() {
               onNavigate={handleNavigate}
               onOpenFeedback={() => setIsDealerAFeedbackOpen(true)}
               onLogout={handleLogout}
-              tenantLabel={companyName || 'Dealer A Inc.'}
+              tenantLabel={companyName || 'Dealer A'}
             />
           ) : (
             <Navbar
@@ -822,7 +822,7 @@ function App() {
             currentStep.app === 'dealer-a-order-po' ||
             currentStep.app === 'dealer-a-ack'
           ) ? 'Expert Hub' : 'Dealer Experience'}
-          workspaceLabel="Dealer A Inc."
+          workspaceLabel="Dealer A"
         />
       )}
 

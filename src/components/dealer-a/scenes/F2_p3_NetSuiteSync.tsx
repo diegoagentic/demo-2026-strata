@@ -15,7 +15,7 @@ export default function F2_p3_NetSuiteSync() {
             title="Sync vendor to NetSuite compliance registry"
             metaLine="Vendor · Warehouse by Design · TIN redacted · expiration 2027-03-12"
             steps={[
-                { label: 'Vendor record created', detail: 'NetSuite Vendor #734 · legal entity Dealer A Inc.' },
+                { label: 'Vendor record created', detail: 'NetSuite Vendor #734 · legal entity Dealer A' },
                 { label: 'W-9 attached to compliance folder', detail: 'SharePoint mirror · signed date indexed' },
                 { label: 'Expiration alert scheduled', detail: 'Reminds Accounting 30 days before 2027-03-12' },
             ]}

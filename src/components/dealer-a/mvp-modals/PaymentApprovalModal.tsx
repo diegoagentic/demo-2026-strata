@@ -26,22 +26,22 @@ interface PaymentApprovalModalProps {
 interface PaymentRow {
     id: string
     vendor: string
-    entity: 'Dealer A Inc.' | 'Dealer A Corp.' | 'Culture LLC'
+    entity: 'Dealer A' | 'Dealer A Corp.' | 'Culture LLC'
     invoiceNumber: string
     amount: number
     duplicate?: boolean
 }
 
 const BATCH: PaymentRow[] = [
-    { id: 'PJX-BILL-8483', vendor: 'Teknion',            entity: 'Dealer A Inc.',  invoiceNumber: 'TEK-2026-0847', amount: 24429.06 },
-    { id: 'PJX-BILL-8472', vendor: 'HBF',                entity: 'Dealer A Inc.',  invoiceNumber: 'HBF-24911',     amount: 12420.00 },
-    { id: 'PJX-BILL-8473', vendor: 'Boss Design',        entity: 'Dealer A Inc.',  invoiceNumber: 'BDG-00-1928',   amount:  3855.40 },
+    { id: 'PJX-BILL-8483', vendor: 'Teknion',            entity: 'Dealer A',  invoiceNumber: 'TEK-2026-0847', amount: 24429.06 },
+    { id: 'PJX-BILL-8472', vendor: 'HBF',                entity: 'Dealer A',  invoiceNumber: 'HBF-24911',     amount: 12420.00 },
+    { id: 'PJX-BILL-8473', vendor: 'Boss Design',        entity: 'Dealer A',  invoiceNumber: 'BDG-00-1928',   amount:  3855.40 },
     { id: 'PJX-BILL-8474', vendor: 'Alamir',             entity: 'Dealer A Corp.', invoiceNumber: 'AL-2026-08-0033', amount:  892.00 },
-    { id: 'PJX-BILL-8475', vendor: 'Nelson and Company', entity: 'Dealer A Inc.',  invoiceNumber: 'NLC-99120',     amount:  6720.00 },
+    { id: 'PJX-BILL-8475', vendor: 'Nelson and Company', entity: 'Dealer A',  invoiceNumber: 'NLC-99120',     amount:  6720.00 },
     { id: 'PJX-BILL-8476', vendor: 'Teknion',            entity: 'Dealer A Corp.', invoiceNumber: 'TEK-2026-0851', amount: 18240.55 },
-    { id: 'PJX-BILL-8477', vendor: 'HBF',                entity: 'Dealer A Inc.',  invoiceNumber: 'HBF-24915',     amount:  2140.00 },
+    { id: 'PJX-BILL-8477', vendor: 'HBF',                entity: 'Dealer A',  invoiceNumber: 'HBF-24915',     amount:  2140.00 },
     { id: 'PJX-BILL-8480', vendor: 'Alamir',             entity: 'Culture LLC',  invoiceNumber: 'AL-2026-08-0041', amount:  445.00 },
-    { id: 'PJX-DUP-8499',  vendor: 'Nelson and Company', entity: 'Dealer A Inc.',  invoiceNumber: 'NLC-99120',     amount:  6720.00, duplicate: true },
+    { id: 'PJX-DUP-8499',  vendor: 'Nelson and Company', entity: 'Dealer A',  invoiceNumber: 'NLC-99120',     amount:  6720.00, duplicate: true },
 ]
 
 type Stage =

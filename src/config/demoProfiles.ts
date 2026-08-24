@@ -92,7 +92,7 @@ export const DEMO_PROFILES: DemoProfile[] = [
     {
         id: 'dealer-a',
         name: 'Dealer A',
-        companyName: 'Dealer A Inc.',
+        companyName: 'Dealer A',
         description: 'Bills intake · vendor onboarding · progress billing · order/PO dispatch · electronic ordering & ACK · 5 flows',
         icon: '📑',
         steps: DEALER_A_STEPS,

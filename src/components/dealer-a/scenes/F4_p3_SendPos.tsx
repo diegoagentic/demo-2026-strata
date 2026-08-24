@@ -53,7 +53,7 @@ Please acknowledge with ESDs at your earliest convenience.
 
 Thanks,
 Isabella Bressler
-Furniture Coordination Lead · Dealer A Inc.`}
+Furniture Coordination Lead · Dealer A`}
                 sendLabel="Send PO batch"
                 sentMessage="Sent · ACKs expected"
             />

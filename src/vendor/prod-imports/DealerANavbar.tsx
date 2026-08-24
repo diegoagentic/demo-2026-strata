@@ -82,7 +82,7 @@ export default function DealerANavbar({
     onNavigate,
     onOpenFeedback,
     onLogout,
-    tenantLabel = 'Dealer A Inc.',
+    tenantLabel = 'Dealer A',
 }: DealerANavbarProps) {
     const { user } = useAuth()
     // F85.2 · pull isSidebarCollapsed + isDemoActive from DemoContext ·

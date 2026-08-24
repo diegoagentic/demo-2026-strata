@@ -289,7 +289,7 @@ export const DEALER_A_MORNING_SUMMARY = {
         heldNoPo: 1,        // AP9 pattern
     },
     entityBreakdown: {
-        dealerAInc: 10,      // Bills for Dealer A Inc.
+        dealerAInc: 10,      // Bills for Dealer A
         dealerACorp: 3,      // Bills for Dealer A Corp.
         cultureLlc: 1,      // Bills for Culture LLC
     },

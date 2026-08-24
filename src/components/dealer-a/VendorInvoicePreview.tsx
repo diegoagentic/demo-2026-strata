@@ -113,7 +113,7 @@ export default function VendorInvoicePreview({
                     <div>
                         <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bill to</div>
                         <div className="mt-1 text-[13px] leading-relaxed">
-                            <div className="font-semibold"><span className={boxCls}>Dealer A Inc.</span></div>
+                            <div className="font-semibold"><span className={boxCls}>Dealer A</span></div>
                             <div>Bills</div>
                             <div>bills@dealer-a.com</div>
                             <div className="text-muted-foreground text-[11px] mt-1">4820 Wynkoop St · Denver CO 80216</div>

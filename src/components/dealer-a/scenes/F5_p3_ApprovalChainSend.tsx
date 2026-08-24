@@ -82,7 +82,7 @@ Full ACK attached · reply-all to keep the chain aligned.
 
 Thanks,
 Isabella Bressler
-Furniture Coordination Lead · Dealer A Inc.`}
+Furniture Coordination Lead · Dealer A`}
                 sendLabel="Send approval request"
                 sentMessage="Sent to chain"
             />

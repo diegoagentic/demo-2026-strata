@@ -154,7 +154,7 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
     // Dealer A demo personas · F74/F75 · verbatim role labels from dealer-a-data/personas.ts
     'Dealer A CEO': {
         name: 'Matt Magrann',
-        role: 'CEO · Dealer A Inc.',
+        role: 'CEO · Dealer A',
         photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face',
     },
     'Dealer A Dir Accounting': {
@@ -194,7 +194,7 @@ const DEMO_PROFILES: Record<string, { name: string; role: string; photo: string 
     },
     'Dealer A System': {
         name: 'Strata',
-        role: 'AI Assistant · Dealer A Inc.',
+        role: 'AI Assistant · Dealer A',
         photo: 'https://images.unsplash.com/photo-1618044733300-9472054094ee?w=80&h=80&fit=crop&crop=face',
     },
 };

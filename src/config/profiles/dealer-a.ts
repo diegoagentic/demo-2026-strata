@@ -6,8 +6,8 @@
 //   Each screen = one clear action using prod-lifted UI · visual consistency
 //   with expert-hub + quote-converter.
 //
-// CLIENT: Dealer A Inc. (Denver + Seattle · ~25 employees · 3 legal entities
-//         Dealer A Inc / Dealer A Corp / Culture LLC · commercial furniture +
+// CLIENT: Dealer A (Denver + Seattle · ~25 employees · 3 legal entities
+//         Dealer A / Dealer A Corp / Culture LLC · commercial furniture +
 //         architectural walls dealership · NetSuite live since Jan 2026)
 //
 // SOURCE OF TRUTH: internal_3.html Capability Paths bullets · client-text
