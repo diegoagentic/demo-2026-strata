@@ -157,9 +157,13 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                                             {ai.member.initials}
                                         </div>
                                         <div className="flex-1 min-w-0">
+                                            {/* F86.8 · Diego 2026-08-21 · role bumped to its own line with
+                                                a primary-tinted chip so it reads as the primary attribute
+                                                (why this person) · name stays as a smaller secondary line. */}
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="text-sm font-bold text-foreground truncate">{ai.member.name}</span>
-                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground uppercase tracking-wider">{ai.displayRole ?? ai.member.role}</span>
+                                                <span className="text-sm font-bold px-2 py-0.5 rounded-md bg-primary/20 text-foreground">
+                                                    {ai.displayRole ?? ai.member.role}
+                                                </span>
                                                 {ai.source === 'netsuite' && (
                                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
                                                         <Database className="h-2.5 w-2.5" />
@@ -167,7 +171,8 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-[12px] text-muted-foreground leading-relaxed mt-0.5">{ai.rationale}</p>
+                                            <div className="text-[11px] text-muted-foreground mt-1 truncate">{ai.member.name}</div>
+                                            <p className="text-[12px] text-muted-foreground leading-relaxed mt-1">{ai.rationale}</p>
                                         </div>
                                         {selectedId === ai.member.id && (
                                             <Check className="h-4 w-4 text-foreground shrink-0" />
@@ -194,8 +199,9 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                                                         {m.initials}
                                                     </div>
                                                     <div className="flex-1 min-w-0 text-left">
-                                                        <div className="text-sm font-semibold text-foreground truncate">{m.name}</div>
-                                                        <div className="text-[11px] text-muted-foreground truncate">{m.role}</div>
+                                                        {/* F86.8 · role first · name secondary · matches the recommendation banner. */}
+                                                        <div className="text-sm font-bold text-foreground truncate">{m.role}</div>
+                                                        <div className="text-[11px] text-muted-foreground truncate">{m.name}</div>
                                                     </div>
                                                     {selectedId === m.id && <Check className="h-4 w-4 text-foreground shrink-0" />}
                                                 </button>
@@ -217,7 +223,10 @@ export default function AssignReviewerModal({ isOpen, onClose, onAssign, report 
                                     disabled={!selectedMember}
                                     className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Assign {selectedMember ? `to ${selectedMember.name.split(' ')[0]}` : ''}
+                                    {/* F86.8 · Diego 2026-08-21 · dropped the first-name suffix
+                                        from the button so the label stays neutral (no proper
+                                        names surfaced in the action layer). */}
+                                    Assign reviewer
                                     <ArrowRight className="h-4 w-4" />
                                 </button>
                             </div>
