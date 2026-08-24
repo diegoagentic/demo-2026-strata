@@ -31,6 +31,12 @@ interface ComparisonReviewModalProps {
     /** Reviewer is populated only when action === 'REQUEST_REVIEW' and the
         user picked a teammate to assign the report to. */
     onDecision?: (action: DecisionAction, reviewer?: TeamMember) => void
+    /** F86.4 · Diego 2026-08-21 · CEO flagged that the F1 bill-matching
+        step was mislabeling the second document as an "Acknowledgement"
+        when it's actually a Bill. Prop lets each caller declare what the
+        second document is called (default: Acknowledgement · used by F5
+        ACK compare · F1 passes "Bill"). */
+    secondaryDocType?: 'Acknowledgement' | 'Bill'
 }
 
 function routingLabel(routing: ComparisonReport['routing']): string {
@@ -77,7 +83,7 @@ function MatchedPill({ matched }: { matched: boolean }) {
     )
 }
 
-export default function ComparisonReviewModal({ isOpen, onClose, report, processing, onDecision }: ComparisonReviewModalProps) {
+export default function ComparisonReviewModal({ isOpen, onClose, report, processing, onDecision, secondaryDocType = 'Acknowledgement' }: ComparisonReviewModalProps) {
     const [tab, setTab] = useState<ReviewTab>('summary')
     const [showAssignReviewer, setShowAssignReviewer] = useState(false)
     const [previewDoc, setPreviewDoc] = useState<PreviewDoc | null>(null)
@@ -136,7 +142,7 @@ export default function ComparisonReviewModal({ isOpen, onClose, report, process
                                         <Loader2 className="h-7 w-7 text-zinc-800 dark:text-zinc-200 animate-spin" />
                                     </div>
                                     <h2 className="text-lg font-bold text-foreground mb-1">Comparing documents…</h2>
-                                    <p className="text-sm text-muted-foreground">Strata AI is validating a Purchase Order against an Acknowledgement — checking fields, line items, quantities, and pricing.</p>
+                                    <p className="text-sm text-muted-foreground">Strata AI is validating a Purchase Order against {secondaryDocType === 'Bill' ? 'a Bill' : 'an Acknowledgement'} — checking fields, line items, quantities, and pricing.</p>
                                 </div>
                             )}
 
@@ -163,7 +169,7 @@ export default function ComparisonReviewModal({ isOpen, onClose, report, process
                                             <span className="text-muted-foreground">Purchase Order:</span>
                                             <span className="font-mono font-semibold text-foreground">{report.po_number}</span>
                                             <ArrowLeftRight className="h-3 w-3 shrink-0" />
-                                            <span className="text-muted-foreground">Acknowledgement:</span>
+                                            <span className="text-muted-foreground">{secondaryDocType}:</span>
                                             <span className="font-mono font-semibold text-foreground">{report.ack_id}</span>
                                             <span>·</span>
                                             <span>{report.vendor}</span>
@@ -254,13 +260,13 @@ export default function ComparisonReviewModal({ isOpen, onClose, report, process
                                                             id: report.ack_id,
                                                             name: `${report.ack_id}.pdf`,
                                                             vendor: report.vendor,
-                                                            type: 'Acknowledgement',
+                                                            type: secondaryDocType,
                                                         })}
-                                                        title={`Preview the original Acknowledgement ${report.ack_id}`}
+                                                        title={`Preview the original ${secondaryDocType} ${report.ack_id}`}
                                                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-foreground border border-border rounded-lg hover:bg-muted transition-colors"
                                                     >
                                                         <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        <span className="hidden md:inline">Acknowledgement:</span>
+                                                        <span className="hidden md:inline">{secondaryDocType}:</span>
                                                         <span className="font-mono">{report.ack_id}</span>
                                                     </button>
                                                 </div>
@@ -273,7 +279,7 @@ export default function ComparisonReviewModal({ isOpen, onClose, report, process
                                         {tab === 'summary' && (
                                             <div className="space-y-5">
                                                 <AckSummaryCard summary={report.summary} discrepancies={report.discrepancies} />
-                                                <DiscrepancyList discrepancies={report.discrepancies} onPreviewDoc={setPreviewDoc} />
+                                                <DiscrepancyList discrepancies={report.discrepancies} onPreviewDoc={setPreviewDoc} secondaryDocType={secondaryDocType === 'Bill' ? 'Bill' : 'Acknowledgment'} />
                                             </div>
                                         )}
                                         {tab === 'fields' && (

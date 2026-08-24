@@ -20,6 +20,10 @@ interface DiscrepancyListProps {
     /** Optional preview opener — when set, supporting-evidence doc names
         render as hyperlinks that open the PDF preview modal. */
     onPreviewDoc?: (doc: PreviewDocLike) => void
+    /** F86.4 · Diego 2026-08-21 · what to call the second document in
+        the discrepancy column headers (default: Acknowledgment · used
+        by F5 ACK compare · F1 passes "Bill"). */
+    secondaryDocType?: 'Acknowledgment' | 'Bill'
 }
 
 type DiscrepancyDecisionMap = Record<string, DecisionAction | null>
@@ -87,12 +91,14 @@ function DiscrepancyRow({
     decision,
     onDecide,
     onPreviewDoc,
+    secondaryDocType = 'Acknowledgment',
 }: {
     d: Discrepancy
     defaultOpen: boolean
     decision: DecisionAction | null
     onDecide: (action: DecisionAction) => void
     onPreviewDoc?: (doc: PreviewDocLike) => void
+    secondaryDocType?: 'Acknowledgment' | 'Bill'
 }) {
     const [open, setOpen] = useState(defaultOpen)
     const resolved = decision !== null
@@ -146,12 +152,18 @@ function DiscrepancyRow({
                             </div>
                         </div>
 
-                        {/* Col 2 — Acknowledgement value */}
+                        {/* Col 2 — Secondary document value (Acknowledgment or Bill) */}
                         <div className="rounded-lg border border-red-200 bg-red-50/40 dark:border-red-500/30 dark:bg-red-500/10 p-3 flex flex-col relative">
-                            {/* Arrow connector — visible on lg only, points from PO to ACK */}
+                            {/* Arrow connector — visible on lg only, points from PO to the secondary doc */}
                             <ArrowRight className="hidden lg:block absolute -left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500 bg-card rounded-full p-0.5 z-10" />
                             <div className="flex items-center justify-between gap-2 mb-2">
-                                <DocTypeChip type="Acknowledgment" size="sm" />
+                                {secondaryDocType === 'Bill' ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                                        Bill
+                                    </span>
+                                ) : (
+                                    <DocTypeChip type="Acknowledgment" size="sm" />
+                                )}
                                 <span className="text-[11px] font-semibold text-red-700/80 dark:text-red-300/80">{extractFieldType(d.field_label)}</span>
                             </div>
                             <div className="text-sm font-mono font-bold text-red-700 dark:text-red-200 break-all">
@@ -301,7 +313,7 @@ function DiscrepancyRow({
     )
 }
 
-export default function DiscrepancyList({ discrepancies, onPreviewDoc }: DiscrepancyListProps) {
+export default function DiscrepancyList({ discrepancies, onPreviewDoc, secondaryDocType = 'Acknowledgment' }: DiscrepancyListProps) {
     const [decisions, setDecisions] = useState<DiscrepancyDecisionMap>({})
 
     // Reset decisions when the discrepancy set changes (new report opened).
@@ -353,6 +365,7 @@ export default function DiscrepancyList({ discrepancies, onPreviewDoc }: Discrep
                     decision={decisions[d.id] ?? null}
                     onPreviewDoc={onPreviewDoc}
                     onDecide={action => setDecisions(prev => ({ ...prev, [d.id]: action }))}
+                    secondaryDocType={secondaryDocType}
                 />
             ))}
         </div>

@@ -24,6 +24,7 @@ export default function F1_p2_PoBillCompare() {
                 report={DEALER_A_F1_PO_BILL_REPORT}
                 processing={false}
                 onDecision={dismiss}
+                secondaryDocType="Bill"
             />
         </div>
     )
