@@ -83,9 +83,11 @@ export default function ProjexNavbar({
     tenantLabel = 'Projex Inc.',
 }: ProjexNavbarProps) {
     const { user } = useAuth()
-    // F85.2 · pull isSidebarCollapsed from DemoContext · used to shift the
-    // centered pill horizontally when the 320px tour sidebar is open.
-    const { isSidebarCollapsed } = useDemo()
+    // F85.2 · pull isSidebarCollapsed + isDemoActive from DemoContext ·
+    // together they determine whether the tour sidebar is actually
+    // occupying the left 320px of the viewport (only when demo active AND
+    // sidebar expanded) so we know when to apply the sidebar-offset layout.
+    const { isSidebarCollapsed, isDemoActive } = useDemo()
 
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
     const [isFeedbackMenuOpen, setIsFeedbackMenuOpen] = useState(false)
@@ -131,17 +133,22 @@ export default function ProjexNavbar({
         return () => document.removeEventListener('mousedown', handler)
     }, [isFeedbackMenuOpen])
 
-    // F85.2 · Diego 2026-08-21 · sidebar-aware horizontal offset. When the
-    // tour sidebar is open (w-80 = 320px fixed left), shift the centered
-    // pill 160px right so its center matches the remaining viewport ·
-    // otherwise it clips under the sidebar. Mobile keeps the default
-    // centered pattern (sidebar is hidden below md anyway).
-    const positionClasses = isSidebarCollapsed
-        ? 'left-1/2 -translate-x-1/2'
-        : 'left-1/2 -translate-x-1/2 md:left-[calc(50%+160px)]'
+    // F85.2 · Diego 2026-08-21 · two layout modes for the pill.
+    //  · Demo INACTIVE or sidebar COLLAPSED · centered on the viewport with
+    //    the original width shape (`min-w-[60vw]` / `lg:w-[80vw]`) so the
+    //    pill reads as centered chrome the whole app uses.
+    //  · Demo ACTIVE + sidebar EXPANDED · anchor left of the sidebar edge
+    //    (336px = 320px sidebar + 16px gutter) and right of the viewport
+    //    (24px gutter) so the pill naturally fills the remaining space with
+    //    breathing room on both sides · no manual centering / min-widths
+    //    that would push it into either edge.
+    const sidebarOpen = isDemoActive && !isSidebarCollapsed
+    const positionClasses = sidebarOpen
+        ? 'left-4 right-4 md:left-[336px] md:right-6'
+        : 'left-1/2 -translate-x-1/2 min-w-[60vw] max-w-fit lg:min-w-0 lg:max-w-7xl lg:w-[80vw]'
 
     return (
-        <div className={`fixed top-6 z-50 min-w-[60vw] max-w-fit lg:min-w-0 lg:max-w-7xl lg:w-[80vw] transition-all duration-300 ${positionClasses}`}>
+        <div className={`fixed top-6 z-50 transition-all duration-300 ${positionClasses}`}>
             <div className="relative flex items-center lg:justify-between px-3 py-2 rounded-full gap-1 bg-card/80 backdrop-blur-xl border border-border shadow-lg">
 
                 {/* Left · Strata brand logo (real PNG twins) + tenant chip */}
