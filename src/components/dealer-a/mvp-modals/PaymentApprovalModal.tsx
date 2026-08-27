@@ -118,6 +118,9 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     const [activeWarningBillId, setActiveWarningBillId] = useState<string | null>(null)
     // F86.13 · when multi-warning · which list dropdown is open on the chip
     const [showWarningsList, setShowWarningsList] = useState(false)
+    // F86.15 · pre-flight confirmation before release · lists what's ready,
+    // what's pending, what's held. Click Continue on the footer to open.
+    const [showPreflight, setShowPreflight] = useState(false)
     // Per-vendor comments · scoped to the vendor record for audit trail
     // (F86.12 · replaces the old batch-level Leave comment button).
     const [vendorComments, setVendorComments] = useState<Record<string, string>>({})
@@ -227,6 +230,30 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         ? releasable.filter(r => rowDecisions[r.id] === 'pending').reduce((s, r) => s + r.amount, 0)
         : 0)
     const canRelease = releaseCount > 0
+
+    // F86.15 · Diego 2026-08-27 · preflight summary · what's actually about to
+    // ship, grouped by vendor for scannability. Only bills the release will
+    // include appear here (explicit approved · plus implied-approved pending
+    // when the Approver didn't touch a row). Held stays outside the release.
+    const preflightBreakdown = useMemo(() => {
+        const willRelease = releasable.filter(r => {
+            const d = rowDecisions[r.id]
+            return d === 'approved' || (impliedApprove && d === 'pending')
+        })
+        const byVendor = new Map<string, { vendor: string; count: number; total: number }>()
+        for (const r of willRelease) {
+            const cur = byVendor.get(r.vendor) ?? { vendor: r.vendor, count: 0, total: 0 }
+            cur.count += 1
+            cur.total += r.amount
+            byVendor.set(r.vendor, cur)
+        }
+        const vendors = [...byVendor.values()].sort((a, b) => b.total - a.total)
+        const heldBills = BATCH.filter(b => b.duplicate && duplicateResolution === 'held')
+        const untouchedPending = impliedApprove
+            ? releasable.filter(r => rowDecisions[r.id] === 'pending').length
+            : 0
+        return { vendors, heldBills, untouchedPending }
+    }, [releasable, rowDecisions, impliedApprove, duplicateResolution])
 
     const setDecision = (id: string, decision: RowDecision) => {
         if (stage !== 'idle') return
@@ -338,6 +365,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     const pill = statusPill()
 
     return (
+        <>
         <Transition show={isOpen} as={Fragment}>
             <Dialog onClose={onClose} className="relative z-[400]">
                 <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
@@ -1000,40 +1028,19 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                             <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
                                             Send batch back
                                         </button>
+                                        {/* F86.15 · Diego 2026-08-27 · Continue is the review trigger,
+                                            not the terminal action. Opens a preflight modal listing
+                                            what will actually ship + surfacing pending/held so nothing
+                                            releases by accident. Terminal Release CTA lives INSIDE
+                                            the preflight modal. Applies Nielsen 5 (error prevention
+                                            via confirmation) + Krug law 2 (extra click is fine when
+                                            each is confidence-building). */}
                                         <button
-                                            onClick={() => {
-                                                if (duplicateResolution === 'held') {
-                                                    const dup = BATCH.find(b => b.duplicate)
-                                                    if (dup) openWarningPopover(dup.id)
-                                                    return
-                                                }
-                                                handleApprove()
-                                            }}
-                                            disabled={!canRelease && duplicateResolution !== 'held'}
-                                            title={
-                                                duplicateResolution === 'held'
-                                                    ? 'Resolve the held duplicate before releasing'
-                                                    : canRelease
-                                                        ? undefined
-                                                        : 'Approve at least one bill first'
-                                            }
-                                            className={`inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg transition-opacity shadow-sm ${
-                                                duplicateResolution === 'held'
-                                                    ? 'bg-warning text-white hover:opacity-90'
-                                                    : 'bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed'
-                                            }`}
+                                            onClick={() => setShowPreflight(true)}
+                                            className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
                                         >
-                                            {duplicateResolution === 'held' ? (
-                                                <>
-                                                    <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-                                                    Resolve duplicate to release · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                                                    Release payment batch · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · {releaseCount} bill{releaseCount === 1 ? '' : 's'}
-                                                </>
-                                            )}
+                                            Continue
+                                            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                                         </button>
                                     </>
                                 )}
@@ -1079,5 +1086,169 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                 </div>
             </Dialog>
         </Transition>
+
+        {/* F86.15 · Diego 2026-08-27 · preflight confirmation.
+            Opens when Approver clicks Continue in the footer. Lists what
+            will ship (grouped by vendor) + surfaces any held blockers or
+            untouched pending bills so nothing releases by accident.
+            Nested Dialog · z-[460] to clear the parent modal (z-[400]). */}
+        <Transition show={showPreflight} as={Fragment}>
+            <Dialog onClose={() => setShowPreflight(false)} className="relative z-[460]">
+                <TransitionChild
+                    as={Fragment}
+                    enter="ease-out duration-200"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in duration-150"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-y-0 right-0 left-0 md:left-[320px] bg-foreground/40 backdrop-blur-sm" />
+                </TransitionChild>
+
+                <div className="fixed inset-0 flex items-center justify-center p-4 md:pl-[336px]">
+                    <TransitionChild
+                        as={Fragment}
+                        enter="ease-out duration-200"
+                        enterFrom="opacity-0 scale-95"
+                        enterTo="opacity-100 scale-100"
+                        leave="ease-in duration-150"
+                        leaveFrom="opacity-100 scale-100"
+                        leaveTo="opacity-0 scale-95"
+                    >
+                        <DialogPanel className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
+                            {/* Header */}
+                            <div className="px-5 py-4 flex items-start justify-between gap-3 border-b border-border">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                        <Send className="h-4.5 w-4.5 text-primary" aria-hidden="true" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h2 className="text-base font-bold text-foreground">Review before releasing</h2>
+                                        <p className="text-[11px] text-muted-foreground">Confirm what ships in this ACH batch</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowPreflight(false)}
+                                    aria-label="Close"
+                                    className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {/* Body · scrolls if the vendor list is long */}
+                            <div className="max-h-[60vh] overflow-y-auto">
+                                {/* Blocker · held items must be resolved first */}
+                                {preflightBreakdown.heldBills.length > 0 && (
+                                    <div className="px-5 py-4 border-b border-border bg-warning/5">
+                                        <div className="flex items-start gap-2.5">
+                                            <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-xs font-bold text-warning">
+                                                    {preflightBreakdown.heldBills.length} bill{preflightBreakdown.heldBills.length === 1 ? '' : 's'} still held · release blocked
+                                                </div>
+                                                <ul className="mt-1.5 space-y-0.5">
+                                                    {preflightBreakdown.heldBills.map(b => (
+                                                        <li key={b.id} className="text-[11px] text-foreground/80">
+                                                            <span className="font-semibold">{b.vendor}</span>
+                                                            <span className="text-muted-foreground"> · {b.invoiceNumber} · ${b.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                                                    Resolve each held item (approve override or send back) before releasing the batch.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Warning · untouched pending will be released as-is */}
+                                {preflightBreakdown.untouchedPending > 0 && preflightBreakdown.heldBills.length === 0 && (
+                                    <div className="px-5 py-3 border-b border-border bg-muted/30">
+                                        <div className="flex items-start gap-2.5">
+                                            <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden="true" />
+                                            <div className="text-[11px] text-foreground/80">
+                                                <span className="font-bold">{preflightBreakdown.untouchedPending} bill{preflightBreakdown.untouchedPending === 1 ? '' : 's'}</span> weren't explicitly approved but will be included · you didn't flag any for reject.
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Ready to release · vendor rollup */}
+                                <div className="px-5 py-4">
+                                    <div className="flex items-center justify-between gap-2 mb-3">
+                                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                            Ready to release
+                                        </div>
+                                        <div className="text-[11px] text-muted-foreground">
+                                            <span className="tabular-nums font-bold text-foreground">{releaseCount}</span> bill{releaseCount === 1 ? '' : 's'} · <span className="tabular-nums font-bold text-foreground">${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                    </div>
+                                    {preflightBreakdown.vendors.length === 0 ? (
+                                        <div className="text-[11px] text-muted-foreground italic">
+                                            No bills approved yet.
+                                        </div>
+                                    ) : (
+                                        <ul className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+                                            {preflightBreakdown.vendors.map(v => (
+                                                <li key={v.vendor} className="px-3 py-2 flex items-center justify-between gap-3 bg-background">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-xs font-bold text-foreground truncate">{v.vendor}</div>
+                                                        <div className="text-[10px] text-muted-foreground">{v.count} bill{v.count === 1 ? '' : 's'}</div>
+                                                    </div>
+                                                    <div className="text-xs font-bold text-foreground tabular-nums">
+                                                        ${v.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+
+                                {/* Returned to Compliance summary */}
+                                {counts.rejected > 0 && (
+                                    <div className="px-5 pb-4 -mt-1">
+                                        <div className="text-[11px] text-muted-foreground">
+                                            <span className="tabular-nums font-bold text-foreground">{counts.rejected}</span> bill{counts.rejected === 1 ? '' : 's'} rejected · returned to Compliance
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer */}
+                            <div className="border-t border-border px-5 py-3 flex items-center gap-2 bg-muted/20">
+                                <button
+                                    onClick={() => setShowPreflight(false)}
+                                    className="px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-lg transition-colors"
+                                >
+                                    Back to review
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowPreflight(false)
+                                        handleApprove()
+                                    }}
+                                    disabled={!canRelease || preflightBreakdown.heldBills.length > 0}
+                                    title={
+                                        preflightBreakdown.heldBills.length > 0
+                                            ? 'Resolve the held item(s) before releasing'
+                                            : !canRelease
+                                                ? 'Approve at least one bill first'
+                                                : undefined
+                                    }
+                                    className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                                    Confirm · release ACH batch
+                                </button>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </Transition>
+        </>
     )
 }
