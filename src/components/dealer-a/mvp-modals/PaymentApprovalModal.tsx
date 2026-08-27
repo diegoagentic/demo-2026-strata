@@ -15,8 +15,14 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/re
 import {
     Wallet, CheckCircle2, ShieldAlert, AlertTriangle, X, Loader2,
     MessageSquare, XCircle, Send, Check, RotateCcw, ChevronDown, ChevronRight,
-    ArrowRight,
+    ArrowRight, Eye,
 } from 'lucide-react'
+// F86.21 · Diego 2026-08-27 · bill preview reuses the already-lifted OCR
+// review modal (SOURCE: quote-converter · re-synced via strata-experiences-demo).
+// Same primitive Compliance uses on the bills-intake screen, so the field
+// layout · line-items table · linked-PO tab all come for free.
+import DocumentReviewModal from '../../../vendor/prod-imports/deps/ocr/DocumentReviewModal'
+import type { OcrDocCardData } from '../../../vendor/prod-imports/deps/ocr/OcrDocCard'
 
 interface PaymentApprovalModalProps {
     isOpen: boolean
@@ -121,6 +127,19 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // F86.15 · pre-flight confirmation before release · lists what's ready,
     // what's pending, what's held. Click Continue on the footer to open.
     const [showPreflight, setShowPreflight] = useState(false)
+    // F86.21 · which bill (if any) is being previewed inline in the OCR
+    // review modal · null = closed. Anchored to invoiceNumber so refresh
+    // of BATCH keeps the pointer stable.
+    const [previewBill, setPreviewBill] = useState<PaymentRow | null>(null)
+    const billToOcrDoc = (row: PaymentRow): OcrDocCardData => ({
+        id: row.id,
+        name: row.invoiceNumber,
+        vendor: row.vendor,
+        type: 'Bill',
+        status: row.duplicate ? 'inconsistencies' : 'in_progress',
+        lineItems: 6,
+        date: 'Today, 08:15 AM',
+    })
     // F86.19 · which vendor groups are expanded in the preflight · seeded to
     // just the first vendor on each modal open so the Approver lands on
     // detail-visible-by-default without a scroll-wall.
@@ -737,10 +756,22 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             className={`relative grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-2.5 text-xs items-center border-t border-border/60 ${rowTint} ${rowStripe}`}
                                                         >
                                                             <span></span>
+                                                            {/* F86.21 · invoice number is the preview affordance ·
+                                                                clicking opens the same OCR review modal Compliance
+                                                                uses on bills-intake · fields · line items · linked
+                                                                PO chain. Underline appears on hover so the
+                                                                affordance is discoverable without cluttering the
+                                                                default row. */}
                                                             <div className="min-w-0 pl-6">
-                                                                <div className={`font-mono text-foreground ${decision === 'rejected' ? 'line-through text-muted-foreground' : ''}`}>
-                                                                    {row.invoiceNumber}
-                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setPreviewBill(row)}
+                                                                    title={`Preview ${row.invoiceNumber}`}
+                                                                    className={`group inline-flex items-center gap-1.5 text-left font-mono ${decision === 'rejected' ? 'line-through text-muted-foreground' : 'text-foreground hover:text-primary hover:underline decoration-primary/60 underline-offset-2'} transition-colors`}
+                                                                >
+                                                                    <span>{row.invoiceNumber}</span>
+                                                                    <Eye className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                                                                </button>
                                                                 <div className="text-[10px] text-muted-foreground mt-0.5">
                                                                     {row.entity} · <span className="font-mono">{row.id}</span>
                                                                 </div>
@@ -1363,6 +1394,19 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                 </div>
             </Dialog>
         </Transition>
+
+        {/* F86.21 · Diego 2026-08-27 · bill preview · reuses the lifted OCR
+            review modal. Rendered as the LAST sibling in the fragment so it
+            paints on top of both the payment modal and the preflight ·
+            DocumentReviewModal itself is z-[400] but DOM order breaks the tie
+            when z equals the parent. Closing returns to whatever was open
+            before (payment modal or preflight). */}
+        <DocumentReviewModal
+            isOpen={previewBill !== null}
+            onClose={() => setPreviewBill(null)}
+            doc={previewBill ? billToOcrDoc(previewBill) : null}
+            initialTab="header"
+        />
         </>
     )
 }
