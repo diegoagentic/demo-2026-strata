@@ -376,6 +376,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         <>
                                             <span>·</span>
                                             <div className="relative">
+                                                {/* F86.14 · Diego 2026-08-21 · chip uses brand primary
+                                                    per Strata DS · bg-primary + text-primary-foreground
+                                                    (LAW-compliant pairing) so the trigger reads as a
+                                                    first-class CTA. Warning tone stays via the icon
+                                                    color and the popover contents. Hover pattern is
+                                                    the DS-standard opacity shift. */}
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -385,7 +391,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             setShowWarningsList(s => !s)
                                                         }
                                                     }}
-                                                    className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-warning bg-warning/15 hover:bg-warning/25 border border-warning/40 rounded-full px-2.5 py-1 transition-colors"
+                                                    className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground bg-primary hover:opacity-90 rounded-full px-3 py-1 shadow-sm transition-opacity"
                                                     title={warnings.length === 1 ? 'Jump to the flagged bill · resolve to release' : 'Show all warnings'}
                                                     aria-label={`${warnings.length} warning${warnings.length === 1 ? '' : 's'} held · resolve`}
                                                     aria-expanded={warnings.length > 1 ? showWarningsList : undefined}
@@ -712,15 +718,45 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             </div>
                                                             <div className="flex items-center gap-1 justify-end">
                                                                 {row.duplicate && duplicateResolution === 'held' ? (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => openWarningPopover(row.id)}
-                                                                        aria-label={`Open warning for ${row.invoiceNumber}`}
-                                                                        title="Open warning · resolve"
-                                                                        className="inline-flex items-center justify-center h-6 w-6 rounded-md text-warning bg-warning/10 hover:bg-warning/20 border border-warning/40 transition-colors"
-                                                                    >
-                                                                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                                                                    </button>
+                                                                    <>
+                                                                        {/* F86.14 · info trigger stays for the popover · actions
+                                                                            (Approve override / Send back) live inline in the row
+                                                                            so the user resolves without hopping to a floating panel. */}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => openWarningPopover(row.id)}
+                                                                            aria-label={`Why is ${row.invoiceNumber} held`}
+                                                                            title="Why is this held?"
+                                                                            className="inline-flex items-center justify-center h-6 w-6 rounded-md text-warning bg-warning/10 hover:bg-warning/20 border border-warning/40 transition-colors"
+                                                                        >
+                                                                            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                // F86.14.1 · pre-fill the composer with a realistic
+                                                                                // example so the field starts populated · user can
+                                                                                // edit or send as-is.
+                                                                                if (stage === 'rejecting') { setStage('idle'); setRejectReason('') }
+                                                                                setActiveWarningBillId(row.id)
+                                                                                setOverrideReason('Reissued invoice · original NLC-99120 was voided on Aug 20 · vendor confirmed the re-invoice against the same PO.')
+                                                                            }}
+                                                                            aria-label={`Approve override for ${row.invoiceNumber}`}
+                                                                            title="Approve override"
+                                                                            className="inline-flex items-center justify-center h-6 w-6 rounded-md text-success bg-background hover:bg-success/10 border border-success/40 transition-colors"
+                                                                        >
+                                                                            <Check className="h-3 w-3" aria-hidden="true" />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={handleSendDuplicateBack}
+                                                                            aria-label={`Keep held · send batch back for ${row.invoiceNumber}`}
+                                                                            title="Keep held · send back to Compliance"
+                                                                            className="inline-flex items-center justify-center h-6 w-6 rounded-md text-destructive bg-background hover:bg-destructive/10 border border-destructive/40 transition-colors"
+                                                                        >
+                                                                            <X className="h-3 w-3" aria-hidden="true" />
+                                                                        </button>
+                                                                    </>
                                                                 ) : row.duplicate ? (
                                                                     <span className="text-[10px] text-muted-foreground italic">override</span>
                                                                 ) : (decision === 'approved' || decision === 'rejected') ? (
@@ -762,79 +798,88 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                 Absolutely positioned relative to the row · slides
                                                                 in from the right on wider viewports, falls back to
                                                                 below on narrow ones (max-w constraint + hidden overflow). */}
-                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && (() => {
-                                                                const w = warningsByBill[row.id]
+                                                            {/* F86.14 · Inline override composer · slides into the same
+                                                                anchor as the info popover · appears only when the user
+                                                                clicks the Approve-override action in the row. */}
+                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && overrideReason && (() => {
                                                                 return (
                                                                     <div className="absolute right-6 top-full mt-2 z-[420] w-[380px] max-w-[calc(100vw-4rem)] bg-card border border-warning/60 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
-                                                                        {/* Arrow · points up-right to the row action */}
-                                                                        <div className="absolute -top-1.5 right-8 h-3 w-3 rotate-45 bg-card border-l border-t border-warning/60" aria-hidden="true" />
-                                                                        <div className="p-4">
+                                                                        <div className="absolute -top-1.5 right-24 h-3 w-3 rotate-45 bg-card border-l border-t border-warning/60" aria-hidden="true" />
+                                                                        <div className="p-4 space-y-3">
                                                                             <div className="flex items-start gap-2.5">
-                                                                                <div className="h-8 w-8 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
-                                                                                    <AlertTriangle className="h-4 w-4 text-warning" aria-hidden="true" />
+                                                                                <div className="h-8 w-8 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                                                                                    <Check className="h-4 w-4 text-success" aria-hidden="true" />
                                                                                 </div>
                                                                                 <div className="flex-1 min-w-0">
-                                                                                    <div className="text-sm font-bold text-foreground">{w.headline}</div>
-                                                                                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{w.detail}</p>
+                                                                                    <div className="text-sm font-bold text-foreground">Approve override · reason required</div>
+                                                                                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Compliance keeps this on the audit trail for the release record.</p>
                                                                                 </div>
                                                                                 <button
                                                                                     type="button"
-                                                                                    onClick={closeWarningPopover}
-                                                                                    aria-label="Close warning"
+                                                                                    onClick={() => setOverrideReason('')}
+                                                                                    aria-label="Cancel override"
                                                                                     className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
                                                                                 >
                                                                                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                                                                                 </button>
                                                                             </div>
-                                                                            {overrideReason === '' && !overrideReason ? (
-                                                                                <div className="flex items-center gap-2 flex-wrap mt-3">
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={() => setOverrideReason(' ')}
-                                                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-1.5 transition-colors"
-                                                                                    >
-                                                                                        <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-                                                                                        Approve override
-                                                                                    </button>
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={handleSendDuplicateBack}
-                                                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-1.5 transition-colors"
-                                                                                    >
-                                                                                        <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                                                                                        Keep held · Send back
-                                                                                    </button>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <div className="mt-3 space-y-2">
-                                                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reason for the override</label>
-                                                                                    <textarea
-                                                                                        value={overrideReason.trim()}
-                                                                                        onChange={(e) => setOverrideReason(e.target.value || ' ')}
-                                                                                        rows={2}
-                                                                                        autoFocus
-                                                                                        placeholder="e.g. Reissued invoice · original was voided · vendor confirmed Aug 20."
-                                                                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 placeholder:text-muted-foreground"
-                                                                                    />
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => setOverrideReason('')}
-                                                                                            className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
-                                                                                        >
-                                                                                            Back
-                                                                                        </button>
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={handleOverrideConfirm}
-                                                                                            disabled={!overrideReason.trim()}
-                                                                                            className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold bg-warning text-white rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                                                                                        >
-                                                                                            Confirm override
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
+                                                                            <textarea
+                                                                                value={overrideReason.trim()}
+                                                                                onChange={(e) => setOverrideReason(e.target.value || ' ')}
+                                                                                rows={2}
+                                                                                autoFocus
+                                                                                placeholder="e.g. Reissued invoice · original was voided · vendor confirmed Aug 20."
+                                                                                className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 placeholder:text-muted-foreground"
+                                                                            />
+                                                                            <div className="flex items-center gap-2">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setOverrideReason('')}
+                                                                                    className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
+                                                                                >
+                                                                                    Cancel
+                                                                                </button>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={handleOverrideConfirm}
+                                                                                    disabled={!overrideReason.trim()}
+                                                                                    className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                                >
+                                                                                    <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                                                                                    Send override
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            })()}
+
+                                                            {/* F86.14 · Row-anchored info popover · info-only now
+                                                                (actions live in the row). Opens on the AlertTriangle
+                                                                info trigger · closes with X or when the user starts
+                                                                the inline override composer. */}
+                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && !overrideReason && (() => {
+                                                                const w = warningsByBill[row.id]
+                                                                return (
+                                                                    <div className="absolute right-6 top-full mt-2 z-[420] w-[340px] max-w-[calc(100vw-4rem)] bg-card border border-warning/60 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+                                                                        <div className="absolute -top-1.5 right-24 h-3 w-3 rotate-45 bg-card border-l border-t border-warning/60" aria-hidden="true" />
+                                                                        <div className="p-4 flex items-start gap-2.5">
+                                                                            <div className="h-8 w-8 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
+                                                                                <AlertTriangle className="h-4 w-4 text-warning" aria-hidden="true" />
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="text-sm font-bold text-foreground">{w.headline}</div>
+                                                                                <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{w.detail}</p>
+                                                                                <p className="text-[10px] text-muted-foreground mt-2 italic">Use the actions in the row · approve override or send back to Compliance.</p>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={closeWarningPopover}
+                                                                                aria-label="Close info"
+                                                                                className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                                                                            >
+                                                                                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                                                            </button>
                                                                         </div>
                                                                     </div>
                                                                 )
