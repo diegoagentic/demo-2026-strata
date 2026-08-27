@@ -1005,10 +1005,16 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
     }, [selectedStatus, selectedLocation, currentDataSet, lifecycleTab])
 
     const filteredData = useMemo(() => {
-        let currentData = [];
+        // F86.25.5 · Diego 2026-08-27 · source from currentDataSet
+        // (which already handles the per-tab dispatch AND injects
+        // additionalOrders) instead of reading recentOrders directly ·
+        // otherwise the additional records show up in the tab COUNT
+        // (which uses currentDataSet) but never in the kanban COLUMNS
+        // (which uses filteredData). The `quotes` branch is unchanged
+        // because currentDataSet doesn't cover it.
+        let currentData: any[] = [];
         if (lifecycleTab === 'quotes') currentData = recentQuotes;
-        else if (lifecycleTab === 'acknowledgments') currentData = recentAcknowledgments;
-        else currentData = recentOrders;
+        else currentData = currentDataSet as any[];
 
         return currentData.filter(item => {
             const searchString = JSON.stringify(item).toLowerCase();
@@ -1032,7 +1038,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
 
             return matchesSearch && matchesStatus && matchesLocation && matchesTab
         })
-    }, [searchQuery, selectedStatus, selectedLocation, activeTab, lifecycleTab])
+    }, [searchQuery, selectedStatus, selectedLocation, activeTab, lifecycleTab, currentDataSet])
 
     const counts = useMemo(() => {
         return {
