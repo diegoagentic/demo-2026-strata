@@ -1228,6 +1228,41 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     })}
                                 </div>
 
+                                {/* F86.26 · Diego 2026-08-27 (Matt Danyliw feedback) ·
+                                    batch-total row · sticky to the bottom of the scroll
+                                    so the total stays visible when scanning the vendor
+                                    list with everything collapsed. Same 7-column grid
+                                    as the vendor rows for column alignment · muted
+                                    background + primary top-border reads as a summary
+                                    footer, not another vendor row. Numbers sum from
+                                    vendorGroups so the total matches what's visible
+                                    (includes warning bills, matches the modal header). */}
+                                {(() => {
+                                    const totalBills = vendorGroups.reduce((s, g) => s + g.billsCount, 0)
+                                    const totalAmount = vendorGroups.reduce((s, g) => s + g.amountTotal, 0)
+                                    const totalGp = vendorGroups.reduce((s, g) => s + g.gpTotal, 0)
+                                    const totalGpPct = totalAmount > 0 ? Math.round((totalGp / totalAmount) * 100) : 0
+                                    return (
+                                        <div className="sticky bottom-0 z-10 grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-3 bg-muted/60 border-t-2 border-primary/30 backdrop-blur text-xs items-center shadow-[0_-4px_12px_-6px_rgba(0,0,0,0.08)]">
+                                            <span></span>
+                                            <div className="min-w-0">
+                                                <div className="text-foreground font-bold">Batch total</div>
+                                                <div className="text-[10px] text-muted-foreground mt-0.5">All vendors · this Tue payment run</div>
+                                            </div>
+                                            <span className="text-right text-foreground tabular-nums font-bold">{totalBills}</span>
+                                            <span className="text-right text-foreground tabular-nums font-bold">
+                                                ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                            <span className="text-right tabular-nums">
+                                                <span className="text-foreground font-bold">${totalGp.toLocaleString()}</span>
+                                                <span className="text-[10px] text-muted-foreground ml-1">{totalGpPct}%</span>
+                                            </span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                    )
+                                })()}
+
                             </div>
 
                             {/* F86.12 · Post-release payoff · simplified from the old "handoff
