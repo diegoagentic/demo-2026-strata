@@ -156,9 +156,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         Object.fromEntries(BATCH.map(b => [b.id, b.warning ? 'held' as const : 'pending' as const])),
     )
     // F86.11 · Diego 2026-08-21 · CEO ask · group bills by vendor with
-    // expand-to-detail so 100+ bills per vendor stay reviewable. Default
-    // is collapsed · click a vendor row to expand its bills inline.
-    const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set())
+    // expand-to-detail so 100+ bills per vendor stay reviewable.
+    // F86.23 · Diego 2026-08-27 · seed the featured first vendor (see
+    // vendorGroups sort pin below) as expanded so the audience immediately
+    // sees the collapsible/expandable pattern with both child rows on
+    // screen · no need to click first to understand the interaction.
+    const [expandedVendors, setExpandedVendors] = useState<Set<string>>(() => new Set(['West Elm Contract']))
     const toggleVendor = (vendor: string) => {
         setExpandedVendors(prev => {
             const next = new Set(prev)
@@ -314,7 +317,16 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                 heldCount, approvedCount, rejectedCount, pendingCount,
             })
         }
-        groups.sort((a, b) => b.amountTotal - a.amountTotal)
+        // F86.23 · Diego 2026-08-27 · pin the 2-bill vendor (West Elm
+        // Contract) to the top for pedagogy · lets the audience see the
+        // collapsible/expandable pattern with a small child list without
+        // scrolling. The rest keep the amount-desc order so the risk
+        // reads first as usual.
+        groups.sort((a, b) => {
+            if (a.vendor === 'West Elm Contract') return -1
+            if (b.vendor === 'West Elm Contract') return 1
+            return b.amountTotal - a.amountTotal
+        })
         return groups
     }, [rowDecisions, warningResolutions])
     const counts = useMemo(() => {
