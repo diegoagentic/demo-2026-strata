@@ -756,21 +756,20 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             className={`relative grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-2.5 text-xs items-center border-t border-border/60 ${rowTint} ${rowStripe}`}
                                                         >
                                                             <span></span>
-                                                            {/* F86.21 · invoice number is the preview affordance ·
-                                                                clicking opens the same OCR review modal Compliance
-                                                                uses on bills-intake · fields · line items · linked
-                                                                PO chain. Underline appears on hover so the
-                                                                affordance is discoverable without cluttering the
-                                                                default row. */}
+                                                            {/* F86.21.2 · Diego 2026-08-27 · preview affordance is
+                                                                always-visible now (Eye icon persistent, dotted
+                                                                underline persistent) · the prior hover-only cue
+                                                                wasn't discoverable · users didn't know they could
+                                                                click. Nielsen 6 · recognition, not recall. */}
                                                             <div className="min-w-0 pl-6">
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setPreviewBill(row)}
                                                                     title={`Preview ${row.invoiceNumber}`}
-                                                                    className={`group inline-flex items-center gap-1.5 text-left font-mono ${decision === 'rejected' ? 'line-through text-muted-foreground' : 'text-foreground hover:text-primary hover:underline decoration-primary/60 underline-offset-2'} transition-colors`}
+                                                                    className={`group inline-flex items-center gap-1.5 text-left font-mono underline decoration-dotted decoration-muted-foreground/50 underline-offset-4 ${decision === 'rejected' ? 'line-through text-muted-foreground' : 'text-foreground hover:text-primary hover:decoration-primary hover:decoration-solid'} transition-colors`}
                                                                 >
                                                                     <span>{row.invoiceNumber}</span>
-                                                                    <Eye className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                                                                    <Eye className="h-3 w-3 text-muted-foreground/70 group-hover:text-primary transition-colors" aria-hidden="true" />
                                                                 </button>
                                                                 <div className="text-[10px] text-muted-foreground mt-0.5">
                                                                     {row.entity} · <span className="font-mono">{row.id}</span>
