@@ -23,10 +23,24 @@ import {
 // wants the raw invoice PDF as-scanned, not the extracted-fields view.
 import PdfPreviewModal from '../../../vendor/prod-imports/deps/comparison/PdfPreviewModal'
 
+// F86.25 · Diego 2026-08-27 · release payload for the parent scene ·
+// lets F1_p3 render a "new draft batch created" record after the modal
+// closes. Includes the destination so the parent can differentiate a
+// new-draft-batch card from a compliance-review notice.
+export interface ReleasePayload {
+    releaseCount: number
+    releaseTotal: number
+    pendingCount: number
+    pendingTotal: number
+    pendingDestination: 'new-draft-batch' | 'compliance-review' | null
+    escalatedCount: number
+    rejectedCount: number
+}
+
 interface PaymentApprovalModalProps {
     isOpen: boolean
     onClose: () => void
-    onApproved?: () => void
+    onApproved?: (payload: ReleasePayload) => void
 }
 
 // F86.22 · Diego 2026-08-27 · warning taxonomy · replaces the boolean
@@ -511,10 +525,22 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
 
     const handleApprove = () => {
         if (stage !== 'idle' || !canRelease) return
+        // F86.25 · snapshot the batch summary at release time so the parent
+        // scene can render a persistent "new draft batch created" record
+        // after the modal closes.
+        const payload: ReleasePayload = {
+            releaseCount,
+            releaseTotal,
+            pendingCount: counts.pending,
+            pendingTotal: releasable.filter(r => rowDecisions[r.id] === 'pending').reduce((s, r) => s + r.amount, 0),
+            pendingDestination: counts.pending > 0 ? pendingDestination : null,
+            escalatedCount: sentBackBills.length,
+            rejectedCount: counts.rejected,
+        }
         setStage('approving')
         setTimeout(() => {
             setStage('approved')
-            onApproved?.()
+            onApproved?.(payload)
         }, 1200)
     }
 
