@@ -914,11 +914,14 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                 location: "New York"
             });
         }
-        // F86.25.2 · caller-supplied entries land at the head of the list ·
-        // used by F1_p3 to inject the just-created payment run draft as a
-        // native kanban card in whichever column its `status` maps to.
+        // F86.25.2 · caller-supplied entries injected here so they appear
+        // as native kanban cards in whichever column their `status` maps to.
+        // F86.25.3 · APPEND (not unshift) · the pipeline view uses scale-y-[-1]
+        // (line ~2520) which flips the Y axis so array-last = visual top of
+        // the column. To land the injected card at the visual TOP of its
+        // column, it must be at the END of the array.
         if (additionalOrders && additionalOrders.length > 0) {
-            orders = [...additionalOrders, ...orders];
+            orders = [...orders, ...additionalOrders];
         }
         return orders;
     }, [lifecycleTab, additionalOrders]);

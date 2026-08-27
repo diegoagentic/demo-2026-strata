@@ -22,7 +22,7 @@
  */
 
 import { useMemo, useState } from 'react'
-import { CheckCircle2, ArrowRight, ShieldAlert } from 'lucide-react'
+import { CheckCircle2, ArrowRight } from 'lucide-react'
 import ExpertHubTransactionsWrapper from '../../../vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 import PaymentApprovalModal, { type ReleasePayload } from '../mvp-modals/PaymentApprovalModal'
 
@@ -41,24 +41,39 @@ export default function F1_p3_PaymentApproval() {
     const [draftId] = useState(newDraftBatchId)
 
     // F86.25.2 · Build the native-shaped kanban entry for the injected
-    // "Payment run · draft" card. Uses the same field shape as the
-    // vendor's `recentOrders` (customer · client · project · amount ·
-    // status · initials · statusColor · location). status='Received'
-    // lands it in the leftmost Received column · statusColor matches
-    // the existing Received card styling for visual consistency.
+    // record. Uses the same field shape as the vendor's `recentOrders`.
+    // F86.25.3 · both destinations now inject as native kanban cards:
+    // - new-draft-batch  → status 'Received'       · deferred payment run
+    // - compliance-review → status 'Pending Review' · Compliance re-triages,
+    //   which is the Pending Review lane in this vendor pipeline
+    //   (Received → Pending Review → In Review → Approved).
     const additionalOrders = useMemo(() => {
-        if (!release || release.pendingCount === 0 || release.pendingDestination !== 'new-draft-batch') return undefined
-        return [{
+        if (!release || release.pendingCount === 0 || !release.pendingDestination) return undefined
+        const common = {
             id: draftId,
-            customer: 'Payment run · draft',
             client: 'Dealer A',
-            project: `Tue payment run · ${release.pendingCount} bill${release.pendingCount === 1 ? '' : 's'} deferred`,
             amount: fmtUsd(release.pendingTotal),
-            status: 'Received',
             date: 'Just now',
-            initials: 'PR',
-            statusColor: 'bg-zinc-100 text-zinc-600 ring-zinc-500/20',
             location: 'System',
+        }
+        if (release.pendingDestination === 'new-draft-batch') {
+            return [{
+                ...common,
+                customer: 'Payment run · draft',
+                project: `Tue payment run · ${release.pendingCount} bill${release.pendingCount === 1 ? '' : 's'} deferred`,
+                status: 'Received',
+                initials: 'PR',
+                statusColor: 'bg-zinc-100 text-zinc-600 ring-zinc-500/20',
+            }]
+        }
+        // compliance-review
+        return [{
+            ...common,
+            customer: 'Payment run · Compliance re-triage',
+            project: `Tue payment run · ${release.pendingCount} bill${release.pendingCount === 1 ? '' : 's'} back for review`,
+            status: 'Pending Review',
+            initials: 'CR',
+            statusColor: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
         }]
     }, [release, draftId])
 
@@ -94,30 +109,10 @@ export default function F1_p3_PaymentApproval() {
                 </div>
             )}
 
-            {/* F86.25.2 · Compliance-review branch keeps its overlay ·
-                these bills LEFT the kanban (Compliance re-triage), so a
-                floating notice is the right surface. */}
-            {!open && release && release.pendingCount > 0 && release.pendingDestination === 'compliance-review' && (
-                <div className="fixed top-[240px] left-[340px] z-40 w-[380px] bg-card border-2 border-warning/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
-                    <div className="bg-warning/10 px-4 py-3 flex items-center gap-2.5">
-                        <div className="h-9 w-9 rounded-lg bg-warning/20 flex items-center justify-center shrink-0">
-                            <ShieldAlert className="h-5 w-5 text-warning" aria-hidden="true" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sent to Compliance</div>
-                            <h3 className="text-sm font-bold text-foreground mt-0.5">{release.pendingCount} bill{release.pendingCount === 1 ? '' : 's'} · re-triage in progress</h3>
-                        </div>
-                    </div>
-                    <div className="p-4 space-y-2">
-                        <div className="text-xs text-foreground leading-relaxed">
-                            Total <span className="font-bold tabular-nums">{fmtUsd(release.pendingTotal)}</span> · Compliance re-triages before they re-enter a batch.
-                        </div>
-                        <div className="pt-2 border-t border-border text-[11px] text-muted-foreground">
-                            You'll see them back in a payment run once Compliance clears them.
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* F86.25.3 · Both destination branches now render as native
+                kanban cards (see additionalOrders memo above) · no more
+                floating overlays for either. Compliance-review lands in
+                Pending Review, new-draft-batch in Received. */}
         </div>
     )
 }
