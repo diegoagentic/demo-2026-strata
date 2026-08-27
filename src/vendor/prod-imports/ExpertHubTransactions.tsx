@@ -2610,9 +2610,22 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                     expandedIds.has(order.id) ? 'border-brand-400/50 ring-1 ring-brand-400/20 shadow-lg' : 'border-border shadow-sm hover:shadow-md',
                                                                     (procPhase === 'highlight' || procPhase === 'lupa-active') && order.id === '#ORD-2055' && isContinua && "ring-2 ring-brand-400 ring-offset-2 ring-offset-background shadow-xl shadow-brand-400/20 animate-pulse scale-[1.02]",
                                                                     // Step 3.2: Knoll ACK card highlighting
-                                                                    ackPhase === 'alert' && order.id === 'Acknowledgement-8841' && isContinua && "ring-2 ring-red-500 ring-offset-2 ring-offset-background shadow-xl shadow-red-500/20 animate-pulse scale-[1.02]"
+                                                                    ackPhase === 'alert' && order.id === 'Acknowledgement-8841' && isContinua && "ring-2 ring-red-500 ring-offset-2 ring-offset-background shadow-xl shadow-red-500/20 animate-pulse scale-[1.02]",
+                                                                    // F86.25.7 · Diego 2026-08-27 · caller-injected records
+                                                                    // (via additionalOrders + highlightNew flag) get a persistent
+                                                                    // primary-brand ring so the just-created card obviously
+                                                                    // reads as new · no animate-pulse to keep it calm.
+                                                                    (order as any).highlightNew && "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-xl shadow-primary/20"
                                                                 )}
                                                             >
+                                                                {/* F86.25.7 · "NEW" ribbon badge · corner-anchored so the card
+                                                                    doesn't need vertical padding · same warning-tone vocabulary
+                                                                    used by other status pills. */}
+                                                                {(order as any).highlightNew && (
+                                                                    <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-primary-foreground bg-primary rounded-full px-2 py-0.5 shadow-sm">
+                                                                        NEW
+                                                                    </div>
+                                                                )}
                                                                 <div className="p-4">
                                                                     <div className="flex items-start justify-between gap-2 mb-3">
                                                                         <div className="flex items-start gap-2.5 min-w-0">

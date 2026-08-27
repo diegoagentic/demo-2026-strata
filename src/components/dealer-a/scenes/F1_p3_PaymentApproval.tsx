@@ -60,6 +60,10 @@ export default function F1_p3_PaymentApproval() {
             date: 'Just now',
             location: 'System',
             docTypeOverride: 'Bill' as const,
+            // F86.25.7 · flag injected records so the vendor renders a
+            // brand-primary ring + NEW badge · picks them out of the
+            // funnel at a glance as the just-created card.
+            highlightNew: true,
         }
         const billCount = release.pendingCount
         const billLabel = `${billCount} bill${billCount === 1 ? '' : 's'}`
