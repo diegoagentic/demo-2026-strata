@@ -1629,6 +1629,10 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 >
                                     Back to review
                                 </button>
+                                {/* F86.24.3 · Diego 2026-08-27 · always reserve the flex-1
+                                    slot so the Confirm button stays anchored right regardless
+                                    of whether a disable reason exists · button position was
+                                    shifting as the reason appeared/disappeared. */}
                                 {(() => {
                                     const needsDestination = canRelease && preflightBreakdown.pendingCount > 0 && pendingDestination === null
                                     const reason = preflightBreakdown.heldBills.length > 0
@@ -1638,13 +1642,14 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                             : needsDestination
                                                 ? 'Choose a destination for the pending bills'
                                                 : null
-                                    if (!reason) return null
                                     return (
                                         <div className="flex-1 min-w-0 flex items-center justify-end pr-2">
-                                            <span className="text-[11px] text-warning inline-flex items-center gap-1.5">
-                                                <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
-                                                {reason}
-                                            </span>
+                                            {reason && (
+                                                <span className="text-[11px] text-warning inline-flex items-center gap-1.5">
+                                                    <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                                    {reason}
+                                                </span>
+                                            )}
                                         </div>
                                     )
                                 })()}
