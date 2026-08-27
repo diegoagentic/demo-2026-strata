@@ -237,8 +237,17 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // that auto-released pending bills when the Approver hadn't touched
     // anything. Real ACH releases require explicit sign-off · per-row or
     // per-vendor Approve-all. Nothing ships silently.
-    const releaseCount = counts.approved
-    const releaseTotal = counts.approvedTotal
+    // F86.20 · Diego 2026-08-27 · override-cleared duplicates ARE approved
+    // for release · fold them into the release totals so they show up in the
+    // preflight and count toward the wire. Previously they were silently
+    // dropped because `releasable` filtered out all duplicates up-front.
+    const overrideBills = useMemo(
+        () => duplicateResolution === 'approved-override' ? BATCH.filter(b => b.duplicate) : [],
+        [duplicateResolution],
+    )
+    const overrideTotal = overrideBills.reduce((s, b) => s + b.amount, 0)
+    const releaseCount = counts.approved + overrideBills.length
+    const releaseTotal = counts.approvedTotal + overrideTotal
     const canRelease = releaseCount > 0
 
     // F86.15 · preflight summary · only explicitly approved bills go into the
@@ -248,7 +257,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // the Approver can see line-item detail (invoice number + amount) before
     // confirming the wire · not just a vendor rollup.
     const preflightBreakdown = useMemo(() => {
-        const willRelease = releasable.filter(r => rowDecisions[r.id] === 'approved')
+        // F86.20 · include override-cleared duplicates in the release list.
+        const willRelease = [
+            ...releasable.filter(r => rowDecisions[r.id] === 'approved'),
+            ...overrideBills,
+        ]
         const byVendor = new Map<string, { vendor: string; count: number; total: number; bills: PaymentRow[] }>()
         for (const r of willRelease) {
             const cur = byVendor.get(r.vendor) ?? { vendor: r.vendor, count: 0, total: 0, bills: [] }
@@ -264,7 +277,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             .filter(r => rowDecisions[r.id] === 'pending')
             .reduce((s, r) => s + r.amount, 0)
         return { vendors, heldBills, pendingCount, pendingTotal }
-    }, [releasable, rowDecisions, duplicateResolution])
+    }, [releasable, rowDecisions, duplicateResolution, overrideBills])
 
     // F86.19 · seed the first vendor as expanded whenever the preflight opens
     // fresh · lets the Approver see line-item detail without needing to click.
