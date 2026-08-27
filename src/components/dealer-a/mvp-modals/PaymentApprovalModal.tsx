@@ -1406,6 +1406,10 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             onClose={() => setPreviewBill(null)}
             doc={previewBill ? billToOcrDoc(previewBill) : null}
             initialTab="header"
+            /* F86.21 · elevate above the parent PaymentApprovalModal (z-[400])
+               and above the Preflight (z-[460]) so the preview lands on top
+               regardless of which surface opened it. */
+            zClass="z-[470]"
         />
         </>
     )

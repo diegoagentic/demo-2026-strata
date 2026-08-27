@@ -20,6 +20,15 @@ interface DocumentReviewModalProps {
      *  land the user on Linked Documents (e.g. F2 p2.2 · post-registration
      *  the linked list is the point of the visit). Defaults to 'header'. */
     initialTab?: 'header' | 'lineItems' | 'linked'
+    /** F86.21 · Diego 2026-08-27 · optional Tailwind z-index class to
+     *  override the default z-[400]. Set when this modal is opened FROM
+     *  inside another Dialog at z-[400] (e.g. PaymentApprovalModal) so
+     *  it stacks above rather than tying · Headless UI portals create
+     *  their own stacking context and equal z-indexes tie on DOM order,
+     *  which is unreliable across React re-renders. Structural adaptation
+     *  · not business-logic · preserve on prod re-sync. Defaults to
+     *  'z-[400]' (F83.S behaviour). */
+    zClass?: string
 }
 
 interface FieldRow {
@@ -234,7 +243,7 @@ function EditableValue({ value, editable, onChange }: { value: string; editable?
     )
 }
 
-export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSendFeedback, onDownloadOriginal, initialTab = 'header' }: DocumentReviewModalProps) {
+export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSendFeedback, onDownloadOriginal, initialTab = 'header', zClass = 'z-[400]' }: DocumentReviewModalProps) {
     const [tab, setTab] = useState<'header' | 'lineItems' | 'linked'>(initialTab)
     /** F84.23 · Diego 2026-08-21 · quick "loading extracted fields" overlay
      *  every time the modal opens · gives a tangible sense of Strata
@@ -352,7 +361,7 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                 sidebar. This is a demo-tour structural adaptation · not a
                 business-logic change · re-sync from prod DocumentReviewModal
                 keeps this override in place. */}
-            <Dialog onClose={onClose} className="relative z-[400]">
+            <Dialog onClose={onClose} className={`relative ${zClass}`}>
                 <TransitionChild
                     as={Fragment}
                     enter="ease-out duration-200"
