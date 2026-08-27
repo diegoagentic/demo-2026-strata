@@ -17,12 +17,11 @@ import {
     MessageSquare, XCircle, Send, Check, RotateCcw, ChevronDown, ChevronRight,
     ArrowRight, Eye,
 } from 'lucide-react'
-// F86.21 · Diego 2026-08-27 · bill preview reuses the already-lifted OCR
-// review modal (SOURCE: quote-converter · re-synced via strata-experiences-demo).
-// Same primitive Compliance uses on the bills-intake screen, so the field
-// layout · line-items table · linked-PO tab all come for free.
-import DocumentReviewModal from '../../../vendor/prod-imports/deps/ocr/DocumentReviewModal'
-import type { OcrDocCardData } from '../../../vendor/prod-imports/deps/ocr/OcrDocCard'
+// F86.21 · Diego 2026-08-27 · bill preview reuses the lifted iframe PDF
+// preview (SOURCE: expert-hub/PdfPreviewModal). F86.21.3 · swapped from
+// DocumentReviewModal (OCR fields modal) after live review · the Approver
+// wants the raw invoice PDF as-scanned, not the extracted-fields view.
+import PdfPreviewModal from '../../../vendor/prod-imports/deps/comparison/PdfPreviewModal'
 
 interface PaymentApprovalModalProps {
     isOpen: boolean
@@ -127,19 +126,8 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // F86.15 · pre-flight confirmation before release · lists what's ready,
     // what's pending, what's held. Click Continue on the footer to open.
     const [showPreflight, setShowPreflight] = useState(false)
-    // F86.21 · which bill (if any) is being previewed inline in the OCR
-    // review modal · null = closed. Anchored to invoiceNumber so refresh
-    // of BATCH keeps the pointer stable.
+    // F86.21 · which bill (if any) is being previewed as PDF · null = closed.
     const [previewBill, setPreviewBill] = useState<PaymentRow | null>(null)
-    const billToOcrDoc = (row: PaymentRow): OcrDocCardData => ({
-        id: row.id,
-        name: row.invoiceNumber,
-        vendor: row.vendor,
-        type: 'Bill',
-        status: row.duplicate ? 'inconsistencies' : 'in_progress',
-        lineItems: 6,
-        date: 'Today, 08:15 AM',
-    })
     // F86.19 · which vendor groups are expanded in the preflight · seeded to
     // just the first vendor on each modal open so the Approver lands on
     // detail-visible-by-default without a scroll-wall.
@@ -756,21 +744,14 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             className={`relative grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-2.5 text-xs items-center border-t border-border/60 ${rowTint} ${rowStripe}`}
                                                         >
                                                             <span></span>
-                                                            {/* F86.21.2 · Diego 2026-08-27 · preview affordance is
-                                                                always-visible now (Eye icon persistent, dotted
-                                                                underline persistent) · the prior hover-only cue
-                                                                wasn't discoverable · users didn't know they could
-                                                                click. Nielsen 6 · recognition, not recall. */}
+                                                            {/* F86.21.3 · Diego 2026-08-27 · reverted the invoice-
+                                                                number-as-hyperlink · preview lives as a proper
+                                                                Eye action button in the Actions column so ALL
+                                                                actions read as buttons in one place. */}
                                                             <div className="min-w-0 pl-6">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setPreviewBill(row)}
-                                                                    title={`Preview ${row.invoiceNumber}`}
-                                                                    className={`group inline-flex items-center gap-1.5 text-left font-mono underline decoration-dotted decoration-muted-foreground/50 underline-offset-4 ${decision === 'rejected' ? 'line-through text-muted-foreground' : 'text-foreground hover:text-primary hover:decoration-primary hover:decoration-solid'} transition-colors`}
-                                                                >
-                                                                    <span>{row.invoiceNumber}</span>
-                                                                    <Eye className="h-3 w-3 text-muted-foreground/70 group-hover:text-primary transition-colors" aria-hidden="true" />
-                                                                </button>
+                                                                <div className={`font-mono ${decision === 'rejected' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                                                                    {row.invoiceNumber}
+                                                                </div>
                                                                 <div className="text-[10px] text-muted-foreground mt-0.5">
                                                                     {row.entity} · <span className="font-mono">{row.id}</span>
                                                                 </div>
@@ -816,6 +797,19 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                 )}
                                                             </div>
                                                             <div className="flex items-center gap-1 justify-end">
+                                                                {/* F86.21.3 · always-visible preview button ·
+                                                                    opens the raw invoice PDF in a floating
+                                                                    iframe · leftmost so it sits before the
+                                                                    decision buttons in every state. */}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setPreviewBill(row)}
+                                                                    aria-label={`Preview ${row.invoiceNumber}`}
+                                                                    title="Preview bill PDF"
+                                                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground bg-background hover:text-foreground hover:bg-muted border border-border transition-colors"
+                                                                >
+                                                                    <Eye className="h-3 w-3" aria-hidden="true" />
+                                                                </button>
                                                                 {row.duplicate && duplicateResolution === 'held' ? (
                                                                     <>
                                                                         {/* F86.14 · info trigger stays for the popover · actions
@@ -1394,20 +1388,19 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             </Dialog>
         </Transition>
 
-        {/* F86.21 · Diego 2026-08-27 · bill preview · reuses the lifted OCR
-            review modal. Rendered as the LAST sibling in the fragment so it
-            paints on top of both the payment modal and the preflight ·
-            DocumentReviewModal itself is z-[400] but DOM order breaks the tie
-            when z equals the parent. Closing returns to whatever was open
-            before (payment modal or preflight). */}
-        <DocumentReviewModal
+        {/* F86.21.3 · Diego 2026-08-27 · raw invoice PDF preview · reuses
+            the lifted iframe PDF modal. Rendered as the last sibling in
+            the fragment · zClass elevates above the parent (z-[400]) and
+            the preflight (z-[460]). Closing returns to whatever was open. */}
+        <PdfPreviewModal
             isOpen={previewBill !== null}
             onClose={() => setPreviewBill(null)}
-            doc={previewBill ? billToOcrDoc(previewBill) : null}
-            initialTab="header"
-            /* F86.21 · elevate above the parent PaymentApprovalModal (z-[400])
-               and above the Preflight (z-[460]) so the preview lands on top
-               regardless of which surface opened it. */
+            doc={previewBill ? {
+                id: previewBill.id,
+                name: previewBill.invoiceNumber,
+                vendor: previewBill.vendor,
+                type: 'Bill',
+            } : null}
             zClass="z-[470]"
         />
         </>

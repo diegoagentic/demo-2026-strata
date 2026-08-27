@@ -20,6 +20,13 @@ interface PdfPreviewModalProps {
     onClose: () => void
     /** Doc descriptor to render. When null the modal stays closed. */
     doc: PdfPreviewDoc | null
+    /** F86.21.3 · Diego 2026-08-27 · optional Tailwind z-index class ·
+     *  callers embedding this from within another Dialog at higher z
+     *  (e.g. PaymentApprovalModal at z-[400], Preflight at z-[460])
+     *  must elevate above their parent. Structural adaptation · not
+     *  business-logic · preserve on prod re-sync. Defaults to
+     *  'z-[220]' (prior expert-hub value). */
+    zClass?: string
 }
 
 /**
@@ -28,7 +35,7 @@ interface PdfPreviewModalProps {
  * window — no new tabs, no losing context. The user can still pop out
  * via "Open in new tab" if they need the browser's PDF UI.
  */
-export default function PdfPreviewModal({ isOpen, onClose, doc }: PdfPreviewModalProps) {
+export default function PdfPreviewModal({ isOpen, onClose, doc, zClass = 'z-[220]' }: PdfPreviewModalProps) {
     const [url, setUrl] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
 
@@ -61,7 +68,7 @@ export default function PdfPreviewModal({ isOpen, onClose, doc }: PdfPreviewModa
 
     return (
         <Transition show={isOpen} as={Fragment}>
-            <Dialog onClose={onClose} className="relative z-[220]">
+            <Dialog onClose={onClose} className={`relative ${zClass}`}>
                 <TransitionChild
                     as={Fragment}
                     enter="ease-out duration-200"
