@@ -195,6 +195,14 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // F86.15 · pre-flight confirmation before release · lists what's ready,
     // what's pending, what's held. Click Continue on the footer to open.
     const [showPreflight, setShowPreflight] = useState(false)
+    // F86.24 · Diego 2026-08-27 · where the untouched-pending bills go
+    // after Confirm release · required choice · null blocks the confirm
+    // CTA when any pending remains. UX call · no default so nothing is
+    // routed silently (matches per-row rejected → Compliance and per-row
+    // approved → ships · this is the same explicit intentionality applied
+    // to the leftover set).
+    type PendingDestination = 'new-draft-batch' | 'compliance-review'
+    const [pendingDestination, setPendingDestination] = useState<PendingDestination | null>(null)
     // F86.21 · which bill (if any) is being previewed as PDF · null = closed.
     const [previewBill, setPreviewBill] = useState<PaymentRow | null>(null)
     // F86.19 · which vendor groups are expanded in the preflight · seeded to
@@ -1212,6 +1220,15 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                 {sentBackBills.length > 0 && <>{sentBackBills.length} warning{sentBackBills.length === 1 ? '' : 's'} escalated for re-cut</>}
                                             </div>
                                         )}
+                                        {/* F86.24 · echo the leftover destination · closes the loop
+                                            so pending bills never silently vanish from the payoff. */}
+                                        {counts.pending > 0 && pendingDestination && (
+                                            <div className="text-muted-foreground mt-1">
+                                                {pendingDestination === 'new-draft-batch'
+                                                    ? <>{counts.pending} pending bill{counts.pending === 1 ? '' : 's'} moved to a new draft batch · <span className="text-foreground font-semibold">View draft →</span></>
+                                                    : <>{counts.pending} pending bill{counts.pending === 1 ? '' : 's'} sent back to Compliance for re-review</>}
+                                            </div>
+                                        )}
                                         <div className="text-[11px] text-muted-foreground mt-1">Vendor remittance detail queued in the Dealer Experience.</div>
                                     </div>
                                 </div>
@@ -1453,9 +1470,15 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 )}
 
                                 {/* F86.16 · Pending · never auto-included. Approver must
-                                    approve rows individually or by vendor before release. */}
+                                    approve rows individually or by vendor before release.
+                                    F86.24 · Diego 2026-08-27 · destination for untouched
+                                    pending bills is an explicit REQUIRED choice · matches
+                                    per-row rejected → Compliance and per-row approved →
+                                    ships · this closes the same intentionality gap for
+                                    the leftover set (they don't vanish, they don't
+                                    silently defer). Confirm CTA is gated on a selection. */}
                                 {preflightBreakdown.pendingCount > 0 && (
-                                    <div className="px-5 py-3 border-b border-border bg-muted/30">
+                                    <div className="px-5 py-3 border-b border-border bg-muted/30 space-y-3">
                                         <div className="flex items-start gap-2.5">
                                             <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" aria-hidden="true" />
                                             <div className="text-[11px] text-foreground/80 min-w-0 flex-1">
@@ -1463,10 +1486,46 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                     <span className="font-bold">{preflightBreakdown.pendingCount} bill{preflightBreakdown.pendingCount === 1 ? '' : 's'}</span> pending review · ${preflightBreakdown.pendingTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · <span className="font-bold">not included</span> in this release.
                                                 </div>
                                                 <div className="mt-1 text-muted-foreground">
-                                                    Approve them individually (check per row) or by vendor (<span className="font-semibold text-foreground/80">Approve all</span> in each group) to include them.
+                                                    Choose where they go · you can also close this and use per-row <span className="font-semibold text-foreground/80">✓ / ✗</span> to include or reject them individually.
                                                 </div>
                                             </div>
                                         </div>
+                                        {/* Radio · no default · Confirm release stays disabled
+                                            until one is picked. Two accessible <label> wrappers
+                                            with a native radio input for keyboard + screen
+                                            reader support. */}
+                                        <fieldset className="space-y-1.5">
+                                            <legend className="sr-only">Where do the pending bills go?</legend>
+                                            {([
+                                                { value: 'new-draft-batch' as const, title: 'Create a new draft batch', hint: 'They wait in your Bills tab as a new payment run · review anytime.' },
+                                                { value: 'compliance-review' as const, title: 'Send back to Compliance', hint: 'Compliance re-triages before they re-enter a batch.' },
+                                            ]).map(opt => {
+                                                const active = pendingDestination === opt.value
+                                                return (
+                                                    <label
+                                                        key={opt.value}
+                                                        className={`flex items-start gap-2.5 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                                                            active
+                                                                ? 'border-primary bg-primary/5'
+                                                                : 'border-border bg-background hover:bg-muted/50'
+                                                        }`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name="pending-destination"
+                                                            value={opt.value}
+                                                            checked={active}
+                                                            onChange={() => setPendingDestination(opt.value)}
+                                                            className="mt-0.5 h-3.5 w-3.5 accent-primary shrink-0"
+                                                        />
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="text-[11px] font-bold text-foreground">{opt.title}</div>
+                                                            <div className="text-[10px] text-muted-foreground mt-0.5">{opt.hint}</div>
+                                                        </div>
+                                                    </label>
+                                                )
+                                            })}
+                                        </fieldset>
                                     </div>
                                 )}
 
@@ -1571,24 +1630,35 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 >
                                     Back to review
                                 </button>
-                                <button
-                                    onClick={() => {
-                                        setShowPreflight(false)
-                                        handleApprove()
-                                    }}
-                                    disabled={!canRelease || preflightBreakdown.heldBills.length > 0}
-                                    title={
-                                        preflightBreakdown.heldBills.length > 0
-                                            ? 'Resolve the held item(s) before releasing'
-                                            : !canRelease
-                                                ? 'Approve at least one bill first'
+                                {/* F86.24 · gate the confirm CTA on the leftover-destination
+                                    choice · when pendingCount > 0 the Approver must pick a
+                                    destination before shipping. Tooltip explains which gate
+                                    is active so the disabled state isn't mysterious. */}
+                                {(() => {
+                                    const needsDestination = preflightBreakdown.pendingCount > 0 && pendingDestination === null
+                                    const disabled = !canRelease || preflightBreakdown.heldBills.length > 0 || needsDestination
+                                    const title = preflightBreakdown.heldBills.length > 0
+                                        ? 'Resolve the held item(s) before releasing'
+                                        : !canRelease
+                                            ? 'Approve at least one bill first'
+                                            : needsDestination
+                                                ? 'Choose where the pending bills go before releasing'
                                                 : undefined
-                                    }
-                                    className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                                >
-                                    <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                                    Confirm release
-                                </button>
+                                    return (
+                                        <button
+                                            onClick={() => {
+                                                setShowPreflight(false)
+                                                handleApprove()
+                                            }}
+                                            disabled={disabled}
+                                            title={title}
+                                            className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                                            Confirm release
+                                        </button>
+                                    )
+                                })()}
                             </div>
                         </DialogPanel>
                     </TransitionChild>
