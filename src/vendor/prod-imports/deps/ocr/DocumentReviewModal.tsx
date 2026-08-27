@@ -154,6 +154,9 @@ const TYPE_NOUN: Record<OcrDocType, string> = {
     'Purchase Order': 'PO',
     'Acknowledgment': 'ACK',
     'Invoice': 'invoice',
+    'Bill': 'bill',
+    'Proforma': 'proforma',
+    'Shipment Notification': 'shipment notice',
 }
 
 // Returns the upstream ancestry (oldest → immediate parent) followed by the
@@ -216,12 +219,17 @@ function EditableValue({ value, editable, onChange }: { value: string; editable?
         )
     }
     return (
+        // F86.9 · Diego 2026-08-21 · bumped the pencil affordance from
+        // opacity-0 (invisible until hover) to opacity-40 so the "click
+        // to edit" affordance is discoverable at first glance · CEO
+        // couldn't tell the values were editable. Hover still fades to
+        // full opacity + adds a subtle underline for extra confidence.
         <button
             onClick={() => setIsEditing(true)}
-            className="inline-flex items-center gap-1.5 text-sm text-foreground hover:bg-muted rounded-md px-2 py-1 -my-1 -mx-2 transition-colors group"
+            className="inline-flex items-center gap-1.5 text-sm text-foreground hover:bg-muted hover:underline decoration-dotted decoration-muted-foreground/60 underline-offset-4 rounded-md px-2 py-1 -my-1 -mx-2 transition-colors group"
         >
             <span>{value}</span>
-            <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Pencil className="h-3 w-3 text-muted-foreground opacity-40 group-hover:opacity-100 transition-opacity" />
         </button>
     )
 }

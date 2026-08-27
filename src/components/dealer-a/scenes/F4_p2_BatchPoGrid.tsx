@@ -13,7 +13,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
-    ArrowRight, ChevronDown, ChevronUp, FileText, Package, Search, Send, Trash2, X,
+    ArrowRight, ChevronDown, ChevronUp, FileText, Loader2, Package, Search, Send, Sparkles, Trash2, X,
 } from 'lucide-react'
 import { useDemo } from '../../../context/DemoContext'
 import ExpertHubTransactionsWrapper from '../../../vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
@@ -86,6 +86,11 @@ export default function F4_p2_BatchPoGrid() {
     const { nextStep } = useDemo()
     const [reviewOpen, setReviewOpen] = useState(true)
     const [batchOpen, setBatchOpen] = useState(false)
+    // F86.9 · Diego 2026-08-21 · CEO reported "nothing happens" when clicking
+    // Approve & save because the modal-to-modal transition was instantaneous
+    // and looked static. Bridge state renders a "generating PO batch" toast
+    // between the two dialogs so the action reads as completed.
+    const [saving, setSaving] = useState(false)
     const [pos, setPos] = useState<DraftPO[]>(BATCH)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -134,7 +139,13 @@ export default function F4_p2_BatchPoGrid() {
 
     const handleReviewClose = () => {
         setReviewOpen(false)
-        setBatchOpen(true)
+        // F86.9 · brief "generating PO batch" overlay so the transition
+        // between the PIF review and the batch preview isn't invisible.
+        setSaving(true)
+        setTimeout(() => {
+            setSaving(false)
+            setBatchOpen(true)
+        }, 900)
     }
     const handleBatchContinue = () => {
         setBatchOpen(false)
@@ -151,6 +162,24 @@ export default function F4_p2_BatchPoGrid() {
                 onClose={handleReviewClose}
                 doc={MWH_PIF_DOC}
             />
+
+            {/* F86.9 · Phase 1.5 · brief "generating PO batch" overlay so
+                Approve & save reads as a real action (CEO reported the modal
+                swap looked static · nothing happening). */}
+            {saving && (
+                <div className="fixed inset-0 z-[420] flex items-center justify-center bg-foreground/40 backdrop-blur-sm">
+                    <div className="bg-card border border-border rounded-2xl shadow-2xl px-6 py-5 flex items-center gap-3">
+                        <div className="relative h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center">
+                            <Loader2 className="h-5 w-5 text-primary animate-spin" aria-hidden="true" />
+                            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1" aria-hidden="true" />
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold text-foreground">Approving PIF · generating PO batch</div>
+                            <div className="text-[11px] text-muted-foreground">Strata is splitting the 300 lines into per-vendor POs…</div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Phase 2 · Batch preview · modal-with-list · rows not cards */}
             <Transition show={batchOpen} as={Fragment}>
