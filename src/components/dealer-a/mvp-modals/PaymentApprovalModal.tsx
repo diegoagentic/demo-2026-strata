@@ -10,7 +10,7 @@
  * positioning follows F83.S (z-[400] + md:pl-[336px]).
  */
 
-import { Fragment, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
     Wallet, CheckCircle2, ShieldAlert, AlertTriangle, X, Loader2,
@@ -121,6 +121,18 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // F86.15 · pre-flight confirmation before release · lists what's ready,
     // what's pending, what's held. Click Continue on the footer to open.
     const [showPreflight, setShowPreflight] = useState(false)
+    // F86.19 · which vendor groups are expanded in the preflight · seeded to
+    // just the first vendor on each modal open so the Approver lands on
+    // detail-visible-by-default without a scroll-wall.
+    const [expandedPreflight, setExpandedPreflight] = useState<Set<string>>(new Set())
+    const togglePreflightVendor = (vendor: string) => {
+        setExpandedPreflight(prev => {
+            const next = new Set(prev)
+            if (next.has(vendor)) next.delete(vendor)
+            else next.add(vendor)
+            return next
+        })
+    }
     // Per-vendor comments · scoped to the vendor record for audit trail
     // (F86.12 · replaces the old batch-level Leave comment button).
     const [vendorComments, setVendorComments] = useState<Record<string, string>>({})
@@ -232,13 +244,17 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // F86.15 · preflight summary · only explicitly approved bills go into the
     // release. Held stays outside. Pending is surfaced as an unreviewed count
     // so the Approver sees exactly what they skipped.
+    // F86.18 · Diego 2026-08-27 · include the actual bill list per vendor so
+    // the Approver can see line-item detail (invoice number + amount) before
+    // confirming the wire · not just a vendor rollup.
     const preflightBreakdown = useMemo(() => {
         const willRelease = releasable.filter(r => rowDecisions[r.id] === 'approved')
-        const byVendor = new Map<string, { vendor: string; count: number; total: number }>()
+        const byVendor = new Map<string, { vendor: string; count: number; total: number; bills: PaymentRow[] }>()
         for (const r of willRelease) {
-            const cur = byVendor.get(r.vendor) ?? { vendor: r.vendor, count: 0, total: 0 }
+            const cur = byVendor.get(r.vendor) ?? { vendor: r.vendor, count: 0, total: 0, bills: [] }
             cur.count += 1
             cur.total += r.amount
+            cur.bills.push(r)
             byVendor.set(r.vendor, cur)
         }
         const vendors = [...byVendor.values()].sort((a, b) => b.total - a.total)
@@ -249,6 +265,16 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             .reduce((s, r) => s + r.amount, 0)
         return { vendors, heldBills, pendingCount, pendingTotal }
     }, [releasable, rowDecisions, duplicateResolution])
+
+    // F86.19 · seed the first vendor as expanded whenever the preflight opens
+    // fresh · lets the Approver see line-item detail without needing to click.
+    // Uses functional set to avoid clobbering a mid-session manual expansion.
+    useEffect(() => {
+        if (!showPreflight) return
+        const first = preflightBreakdown.vendors[0]?.vendor
+        if (!first) return
+        setExpandedPreflight(new Set([first]))
+    }, [showPreflight])
 
     const setDecision = (id: string, decision: RowDecision) => {
         if (stage !== 'idle') return
@@ -1128,12 +1154,17 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                         leaveFrom="opacity-100 scale-100"
                         leaveTo="opacity-0 scale-95"
                     >
-                        <DialogPanel className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
-                            {/* Header */}
+                        {/* F86.18 · bumped from max-w-lg to max-w-2xl so the vendor
+                            list has room for per-bill detail rows without feeling cramped. */}
+                        <DialogPanel className="w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
+                            {/* Header · F86.18 · icon container uses the semantic bg-primary
+                                + text-primary-foreground pairing so the icon has WCAG-safe
+                                contrast on the brand tone (prior bg-primary/10 + text-primary
+                                failed AA on our lime brand). */}
                             <div className="px-5 py-4 flex items-start justify-between gap-3 border-b border-border">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                                        <Send className="h-4.5 w-4.5 text-primary" aria-hidden="true" />
+                                    <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                                        <Send className="h-4.5 w-4.5 text-primary-foreground" aria-hidden="true" />
                                     </div>
                                     <div className="min-w-0">
                                         <h2 className="text-base font-bold text-foreground">Review before releasing</h2>
@@ -1149,8 +1180,9 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 </button>
                             </div>
 
-                            {/* Body · scrolls if the vendor list is long */}
-                            <div className="max-h-[60vh] overflow-y-auto">
+                            {/* Body · scrolls if the vendor list is long · F86.18 · 70vh
+                                so more bills fit on a laptop viewport before scrolling. */}
+                            <div className="max-h-[70vh] overflow-y-auto">
                                 {/* Blocker · held items must be resolved first */}
                                 {preflightBreakdown.heldBills.length > 0 && (
                                     <div className="px-5 py-4 border-b border-border bg-warning/5">
@@ -1213,17 +1245,52 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         </div>
                                     ) : (
                                         <ul className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-                                            {preflightBreakdown.vendors.map(v => (
-                                                <li key={v.vendor} className="px-3 py-2 flex items-center justify-between gap-3 bg-background">
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="text-xs font-bold text-foreground truncate">{v.vendor}</div>
-                                                        <div className="text-[10px] text-muted-foreground">{v.count} bill{v.count === 1 ? '' : 's'}</div>
-                                                    </div>
-                                                    <div className="text-xs font-bold text-foreground tabular-nums">
-                                                        ${v.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </div>
-                                                </li>
-                                            ))}
+                                            {preflightBreakdown.vendors.map(v => {
+                                                const isOpen = expandedPreflight.has(v.vendor)
+                                                return (
+                                                    <li key={v.vendor} className="bg-background">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => togglePreflightVendor(v.vendor)}
+                                                            aria-expanded={isOpen}
+                                                            className="w-full px-3 py-2 flex items-center justify-between gap-3 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+                                                        >
+                                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                <ChevronRight
+                                                                    className={`h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                                                                    aria-hidden="true"
+                                                                />
+                                                                <div className="min-w-0 flex-1">
+                                                                    <div className="text-xs font-bold text-foreground truncate">{v.vendor}</div>
+                                                                    <div className="text-[10px] text-muted-foreground">{v.count} bill{v.count === 1 ? '' : 's'}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-xs font-bold text-foreground tabular-nums shrink-0">
+                                                                ${v.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                            </div>
+                                                        </button>
+                                                        {isOpen && (
+                                                            <ul className="divide-y divide-border">
+                                                                {v.bills.map(b => (
+                                                                    <li key={b.id} className="pl-9 pr-3 py-1.5 grid grid-cols-[1fr_auto_auto] items-center gap-3 text-[11px]">
+                                                                        <div className="min-w-0">
+                                                                            <div className="font-mono text-foreground truncate">{b.invoiceNumber}</div>
+                                                                            <div className="text-[10px] text-muted-foreground truncate">{b.entity} · <span className="font-mono">{b.id}</span></div>
+                                                                        </div>
+                                                                        <div className="text-muted-foreground tabular-nums text-right">
+                                                                            <span className="font-semibold text-foreground/80">${b.orderGpAmount.toLocaleString()}</span>
+                                                                            <span className="ml-1 text-[10px]">{b.orderGpPct}% GP</span>
+                                                                        </div>
+                                                                        <div className="font-semibold text-foreground tabular-nums text-right min-w-[80px]">
+                                                                            ${b.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                        </div>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        )}
+                                                    </li>
+                                                )
+                                            })}
                                         </ul>
                                     )}
                                 </div>
@@ -1275,7 +1342,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                                    Confirm · release ACH batch
+                                    Confirm release
                                 </button>
                             </div>
                         </DialogPanel>
