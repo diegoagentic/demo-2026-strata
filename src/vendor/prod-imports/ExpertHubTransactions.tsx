@@ -459,9 +459,17 @@ interface TransactionsProps {
     onNavigateToWorkspace: () => void;
     onNavigate: (page: string) => void;
     convertedDoc?: ConvertedDoc | null;
+    /** F86.25.2 · Diego 2026-08-27 · optional extra order-shaped entries
+     *  prepended to `recentOrders` when the Orders tab is active. Used by
+     *  F1_p3 to inject a "new draft batch" record after the payment run
+     *  release, so the record appears as a native kanban card in the
+     *  Received column (matching the vendor card style) instead of a
+     *  floating overlay outside the kanban. Structural adaptation ·
+     *  additive · preserve on prod re-sync. */
+    additionalOrders?: Array<Record<string, any>>;
 }
 
-export default function Transactions({ onLogout, onNavigateToWorkspace, onNavigate, convertedDoc }: TransactionsProps) {
+export default function Transactions({ onLogout, onNavigateToWorkspace, onNavigate, convertedDoc, additionalOrders }: TransactionsProps) {
     const { currentStep, nextStep, isDemoActive, setLupaStep, procCompleteStep } = ({ isDemoActive: false, currentStep: null, isSidebarCollapsed: false } as any);
     const activeProfile: any = null
     const isContinua = false
@@ -906,8 +914,14 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                 location: "New York"
             });
         }
+        // F86.25.2 · caller-supplied entries land at the head of the list ·
+        // used by F1_p3 to inject the just-created payment run draft as a
+        // native kanban card in whichever column its `status` maps to.
+        if (additionalOrders && additionalOrders.length > 0) {
+            orders = [...additionalOrders, ...orders];
+        }
         return orders;
-    }, [lifecycleTab]);
+    }, [lifecycleTab, additionalOrders]);
 
     const statuses = useMemo(() => ['All Statuses', ...Array.from(new Set(currentDataSet.map(o => o.status)))], [currentDataSet]);
     const locations = useMemo(() => ['All Locations', ...Array.from(new Set(currentDataSet.map(o => o.location || ''))).filter(Boolean)], [currentDataSet]);

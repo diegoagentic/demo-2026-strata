@@ -11,16 +11,18 @@
  *
  * F86.25 · Diego 2026-08-27 · when the Approver routes untouched pending
  * bills to "Create a new draft batch" during Confirm release, this scene
- * now renders a visible record card in the Transactions area representing
- * that new draft · closes the loop so the deferred bills don't feel like
- * they vanished. The record uses the same overlay pattern as the flow-
- * complete strip · the underlying ExpertHubTransactions vendor surface
- * has no injection API and semantically the card belongs at the scene
- * level (see F86.25 exploration report).
+ * lifts the release payload from the modal so we can surface the record.
+ *
+ * F86.25.2 · Diego 2026-08-27 · the new-draft-batch record is now injected
+ * as a NATIVE kanban card at the head of the Received column (via the
+ * additive `additionalOrders` prop on the vendor Transactions surface)
+ * instead of a floating overlay that read as alien to the kanban. The
+ * compliance-review branch keeps its own overlay since those bills leave
+ * the kanban entirely (Compliance re-triage).
  */
 
-import { useState } from 'react'
-import { CheckCircle2, ArrowRight, FileText, ShieldAlert } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { CheckCircle2, ArrowRight, ShieldAlert } from 'lucide-react'
 import ExpertHubTransactionsWrapper from '../../../vendor/prod-imports/wrappers/ExpertHubTransactionsWrapper'
 import PaymentApprovalModal, { type ReleasePayload } from '../mvp-modals/PaymentApprovalModal'
 
@@ -28,12 +30,9 @@ function fmtUsd(n: number) {
     return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-// Derive a stable-looking draft batch id from the timestamp so the demo
-// reads as if the system minted a real record. Uses .now() at render only
-// — this is a demo scene, not a workflow script, so it's fine.
 function newDraftBatchId(): string {
     const stamp = Date.now().toString(36).slice(-4).toUpperCase()
-    return `PR-DRAFT-${stamp}`
+    return `#PR-DRAFT-${stamp}`
 }
 
 export default function F1_p3_PaymentApproval() {
@@ -41,9 +40,31 @@ export default function F1_p3_PaymentApproval() {
     const [release, setRelease] = useState<ReleasePayload | null>(null)
     const [draftId] = useState(newDraftBatchId)
 
+    // F86.25.2 · Build the native-shaped kanban entry for the injected
+    // "Payment run · draft" card. Uses the same field shape as the
+    // vendor's `recentOrders` (customer · client · project · amount ·
+    // status · initials · statusColor · location). status='Received'
+    // lands it in the leftmost Received column · statusColor matches
+    // the existing Received card styling for visual consistency.
+    const additionalOrders = useMemo(() => {
+        if (!release || release.pendingCount === 0 || release.pendingDestination !== 'new-draft-batch') return undefined
+        return [{
+            id: draftId,
+            customer: 'Payment run · draft',
+            client: 'Dealer A',
+            project: `Tue payment run · ${release.pendingCount} bill${release.pendingCount === 1 ? '' : 's'} deferred`,
+            amount: fmtUsd(release.pendingTotal),
+            status: 'Received',
+            date: 'Just now',
+            initials: 'PR',
+            statusColor: 'bg-zinc-100 text-zinc-600 ring-zinc-500/20',
+            location: 'System',
+        }]
+    }, [release, draftId])
+
     return (
         <div className="relative min-h-screen">
-            <ExpertHubTransactionsWrapper />
+            <ExpertHubTransactionsWrapper additionalOrders={additionalOrders} />
             <PaymentApprovalModal
                 isOpen={open}
                 onClose={() => setOpen(false)}
@@ -73,56 +94,9 @@ export default function F1_p3_PaymentApproval() {
                 </div>
             )}
 
-            {/* F86.25 · New draft batch record · anchored over the Transactions
-                surface (past the sidebar) so it reads as a transaction-level
-                artifact, not another right-corner notification.
-                F86.25.1 · Diego 2026-08-27 · moved from `left-6` (which sat
-                behind the fixed demo-tour sidebar w-80) to `left-[340px]`
-                so the card lands in the actual kanban area · vertical offset
-                lowered to `top-[240px]` so it doesn't clash with the ACTION
-                REQUIRED banner strip at the top of the transactions surface. */}
-            {!open && release && release.pendingCount > 0 && release.pendingDestination === 'new-draft-batch' && (
-                <div className="fixed top-[240px] left-[340px] z-40 w-[380px] bg-card border-2 border-primary/60 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
-                    <div className="bg-primary/10 px-4 py-3 flex items-center gap-2.5">
-                        <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                            <FileText className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">New in Transactions</div>
-                            <h3 className="text-sm font-bold text-foreground mt-0.5">Payment run · draft</h3>
-                        </div>
-                    </div>
-                    <div className="p-4 space-y-3">
-                        <div className="grid grid-cols-3 gap-3 text-xs">
-                            <div>
-                                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">ID</div>
-                                <div className="font-mono text-foreground mt-0.5">{draftId}</div>
-                            </div>
-                            <div>
-                                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Bills</div>
-                                <div className="tabular-nums font-bold text-foreground mt-0.5">{release.pendingCount}</div>
-                            </div>
-                            <div>
-                                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
-                                <div className="tabular-nums font-bold text-foreground mt-0.5">{fmtUsd(release.pendingTotal)}</div>
-                            </div>
-                        </div>
-                        <div className="pt-2 border-t border-border text-[11px] text-foreground/80 leading-relaxed">
-                            Deferred from the Tue payment run · waiting in your Bills tab · review anytime.
-                        </div>
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary-foreground bg-primary hover:opacity-90 rounded-lg px-3 py-1.5 transition-opacity shadow-sm"
-                        >
-                            Open draft
-                            <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* F86.25 · Compliance-review branch · when the Approver routed
-                the leftover to Compliance instead of the draft batch. */}
+            {/* F86.25.2 · Compliance-review branch keeps its overlay ·
+                these bills LEFT the kanban (Compliance re-triage), so a
+                floating notice is the right surface. */}
             {!open && release && release.pendingCount > 0 && release.pendingDestination === 'compliance-review' && (
                 <div className="fixed top-[240px] left-[340px] z-40 w-[380px] bg-card border-2 border-warning/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
                     <div className="bg-warning/10 px-4 py-3 flex items-center gap-2.5">
