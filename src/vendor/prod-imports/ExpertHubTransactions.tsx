@@ -916,12 +916,13 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
         }
         // F86.25.2 · caller-supplied entries injected here so they appear
         // as native kanban cards in whichever column their `status` maps to.
-        // F86.25.3 · APPEND (not unshift) · the pipeline view uses scale-y-[-1]
-        // (line ~2520) which flips the Y axis so array-last = visual top of
-        // the column. To land the injected card at the visual TOP of its
-        // column, it must be at the END of the array.
+        // F86.25.6 · PREPEND · the scale-y-[-1] on the outer container is
+        // cancelled by a second scale-y-[-1] on each column container, so
+        // array order renders top-to-bottom normally. Injected records go
+        // at the head so they read as the newest / most-recent card at the
+        // top of the column.
         if (additionalOrders && additionalOrders.length > 0) {
-            orders = [...orders, ...additionalOrders];
+            orders = [...additionalOrders, ...orders];
         }
         return orders;
     }, [lifecycleTab, additionalOrders]);
