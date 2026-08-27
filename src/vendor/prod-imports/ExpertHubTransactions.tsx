@@ -2627,7 +2627,13 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                                     <span className="text-sm font-bold text-foreground truncate">
                                                                                         {lifecycleTab === 'acknowledgments' ? (order as any).vendor : (order as any).customer}
                                                                                     </span>
-                                                                                    <DocTypeChip type={lifecycleTab === 'acknowledgments' ? 'Acknowledgment' : lifecycleTab === 'quotes' ? 'Quote' : 'Purchase Order'} size="sm" />
+                                                                                    {/* F86.25.4 · Diego 2026-08-27 · per-row type chip override
+                                                                                        · injected records (via additionalOrders) can carry a
+                                                                                        `docTypeOverride` field so a "Payment run · draft" doesn't
+                                                                                        misread as "Purchase Order". Falls back to the tab-derived
+                                                                                        default when the field is absent · zero impact on the
+                                                                                        vendor's own records. Preserve on prod re-sync. */}
+                                                                                    <DocTypeChip type={(order as any).docTypeOverride ?? (lifecycleTab === 'acknowledgments' ? 'Acknowledgment' : lifecycleTab === 'quotes' ? 'Quote' : 'Purchase Order')} size="sm" />
                                                                                     {/* Badges legacy removidos · "NEW" / "Validated ✓" / "Dispute ⚠"
                                                                                         eran del lifecycle ACK anterior · ya no aplican con los estados
                                                                                         nuevos (Received/Pending Review/Discrepancy/Approved).

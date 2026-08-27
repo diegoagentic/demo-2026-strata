@@ -30,37 +30,45 @@ function fmtUsd(n: number) {
     return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function newDraftBatchId(): string {
-    const stamp = Date.now().toString(36).slice(-4).toUpperCase()
-    return `#PR-DRAFT-${stamp}`
+function newIdStamp(): string {
+    return Date.now().toString(36).slice(-4).toUpperCase()
 }
 
 export default function F1_p3_PaymentApproval() {
     const [open, setOpen] = useState(true)
     const [release, setRelease] = useState<ReleasePayload | null>(null)
-    const [draftId] = useState(newDraftBatchId)
+    // F86.25.4 · one stamp per session shared by both destination IDs so
+    // the record is recognisably tied to this specific release.
+    const [idStamp] = useState(newIdStamp)
 
     // F86.25.2 · Build the native-shaped kanban entry for the injected
     // record. Uses the same field shape as the vendor's `recentOrders`.
-    // F86.25.3 · both destinations now inject as native kanban cards:
-    // - new-draft-batch  → status 'Received'       · deferred payment run
-    // - compliance-review → status 'Pending Review' · Compliance re-triages,
-    //   which is the Pending Review lane in this vendor pipeline
-    //   (Received → Pending Review → In Review → Approved).
+    // F86.25.4 · Diego 2026-08-27 · each destination has its OWN distinct
+    // identity so the two never read as "the same card". Four signals
+    // differentiate:
+    //   1. customer (title text)   · Draft payment run  vs  Bills returned to Compliance
+    //   2. id prefix               · #PR-DRAFT-XXXX      vs  #TRIAGE-XXXX
+    //   3. initials (avatar chip)  · PR                  vs  CT
+    //   4. docTypeOverride         · Bill                vs  Bill (both are bills · but
+    //                                overrides "Purchase Order" default which was wrong)
+    //   plus different column + status color already differentiate.
     const additionalOrders = useMemo(() => {
         if (!release || release.pendingCount === 0 || !release.pendingDestination) return undefined
         const common = {
-            id: draftId,
             client: 'Dealer A',
             amount: fmtUsd(release.pendingTotal),
             date: 'Just now',
             location: 'System',
+            docTypeOverride: 'Bill' as const,
         }
+        const billCount = release.pendingCount
+        const billLabel = `${billCount} bill${billCount === 1 ? '' : 's'}`
         if (release.pendingDestination === 'new-draft-batch') {
             return [{
                 ...common,
-                customer: 'Payment run · draft',
-                project: `Tue payment run · ${release.pendingCount} bill${release.pendingCount === 1 ? '' : 's'} deferred`,
+                id: `#PR-DRAFT-${idStamp}`,
+                customer: 'Draft payment run',
+                project: `Tue payment run · ${billLabel} deferred by Approver`,
                 status: 'Received',
                 initials: 'PR',
                 statusColor: 'bg-zinc-100 text-zinc-600 ring-zinc-500/20',
@@ -69,13 +77,14 @@ export default function F1_p3_PaymentApproval() {
         // compliance-review
         return [{
             ...common,
-            customer: 'Payment run · Compliance re-triage',
-            project: `Tue payment run · ${release.pendingCount} bill${release.pendingCount === 1 ? '' : 's'} back for review`,
+            id: `#TRIAGE-${idStamp}`,
+            customer: 'Bills returned to Compliance',
+            project: `Tue payment run · ${billLabel} sent back for triage`,
             status: 'Pending Review',
-            initials: 'CR',
+            initials: 'CT',
             statusColor: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
         }]
-    }, [release, draftId])
+    }, [release, idStamp])
 
     return (
         <div className="relative min-h-screen">
