@@ -10,11 +10,12 @@
  * positioning follows F83.S (z-[400] + md:pl-[336px]).
  */
 
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useMemo, useRef, useState } from 'react'
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react'
 import {
     Wallet, CheckCircle2, ShieldAlert, AlertTriangle, X, Loader2,
     MessageSquare, XCircle, Send, Check, RotateCcw, ChevronDown, ChevronRight,
+    ArrowRight,
 } from 'lucide-react'
 
 interface PaymentApprovalModalProps {
@@ -82,7 +83,6 @@ const BATCH: PaymentRow[] = [
 type Stage =
     | 'idle'
     | 'approving' | 'approved'
-    | 'commenting' | 'commented'
     | 'rejecting' | 'rejected'
 
 // F84.36 · per-row decision · Compliance can approve/reject each bill
@@ -92,7 +92,6 @@ type RowDecision = 'pending' | 'approved' | 'rejected' | 'held'
 
 export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: PaymentApprovalModalProps) {
     const [stage, setStage] = useState<Stage>('idle')
-    const [comment, setComment] = useState('')
     const [rejectReason, setRejectReason] = useState('')
     const [rowDecisions, setRowDecisions] = useState<Record<string, RowDecision>>(() =>
         Object.fromEntries(BATCH.map(b => [b.id, b.duplicate ? 'held' as const : 'pending' as const])),
@@ -109,6 +108,21 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             return next
         })
     }
+
+    // F86.12 · Diego 2026-08-21 · duplicate spotlight + bulk guardrail.
+    // The Compliance-held duplicate is now a first-class blocker · the
+    // Approver has to resolve it before the release CTA (or any vendor
+    // bulk approve that touches the held bill) can fire.
+    const [duplicateResolution, setDuplicateResolution] = useState<'held' | 'approved-override' | 'sent-back'>('held')
+    const [overrideReason, setOverrideReason] = useState('')
+    const [showOverride, setShowOverride] = useState(false)
+    // Per-vendor comments · scoped to the vendor record for audit trail
+    // (F86.12 · replaces the old batch-level Leave comment button).
+    const [vendorComments, setVendorComments] = useState<Record<string, string>>({})
+    const [commentingVendor, setCommentingVendor] = useState<string | null>(null)
+    const [commentDraft, setCommentDraft] = useState('')
+    // Refs per vendor row · lets the blocker card scroll to Nelson on click.
+    const vendorRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
     const releasable = BATCH.filter(b => !b.duplicate)
     const duplicateCount = BATCH.filter(b => b.duplicate).length
@@ -203,6 +217,42 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         })
     }
 
+    // F86.12 · Diego 2026-08-21 · scroll + expand a vendor group so the
+    // Approver can see the held bill they need to resolve.
+    const spotlightVendor = (vendor: string) => {
+        setExpandedVendors(prev => {
+            const next = new Set(prev)
+            next.add(vendor)
+            return next
+        })
+        requestAnimationFrame(() => {
+            const el = vendorRefs.current[vendor]
+            if (el && typeof el.scrollIntoView === 'function') {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+        })
+    }
+
+    const handleOverrideConfirm = () => {
+        if (!overrideReason.trim()) return
+        setDuplicateResolution('approved-override')
+        setShowOverride(false)
+    }
+    const handleSendDuplicateBack = () => {
+        setDuplicateResolution('sent-back')
+        // Sending the duplicate back doesn't release · the whole batch pauses
+        // until Compliance re-cuts. Fold that state into `stage = rejecting` so
+        // the existing rejecting flow captures the reason.
+        setStage('rejecting')
+        setRejectReason(`Duplicate hold on Nelson NLC-99120 · escalated to Compliance for re-cut before Tuesday release.`)
+    }
+    const handleSaveVendorComment = () => {
+        if (!commentingVendor || !commentDraft.trim()) return
+        setVendorComments(prev => ({ ...prev, [commentingVendor]: commentDraft.trim() }))
+        setCommentingVendor(null)
+        setCommentDraft('')
+    }
+
     const handleApprove = () => {
         if (stage !== 'idle' || !canRelease) return
         setStage('approving')
@@ -212,11 +262,6 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         }, 1200)
     }
 
-    const handleSendComment = () => {
-        if (!comment.trim()) return
-        setStage('commented')
-    }
-
     const handleConfirmReject = () => {
         if (!rejectReason.trim()) return
         setStage('rejected')
@@ -224,7 +269,6 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
 
     const statusPill = () => {
         if (stage === 'approved') return { cls: 'bg-success/15 text-success', icon: <CheckCircle2 className="h-3 w-3" aria-hidden="true" />, label: 'Released' }
-        if (stage === 'commented') return { cls: 'bg-info/15 text-info', icon: <MessageSquare className="h-3 w-3" aria-hidden="true" />, label: 'Comment sent · awaiting reply' }
         if (stage === 'rejected') return { cls: 'bg-destructive/15 text-destructive', icon: <XCircle className="h-3 w-3" aria-hidden="true" />, label: 'Rejected · returned to Compliance' }
         return { cls: 'bg-primary/15 text-foreground', icon: <ShieldAlert className="h-3 w-3" aria-hidden="true" />, label: 'Pending Approver review' }
     }
@@ -295,6 +339,107 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 ultra-thin dividers · muted status pastels · monospace meta ·
                                 generous whitespace · Strata DS tokens throughout. */}
                             <div className="flex-1 overflow-y-auto">
+
+                                {/* F86.12 · Duplicate blocker card · promoted from the
+                                    barely-visible footer strip to a first-class actionable
+                                    card at the top of the body · warning tone · Release CTA
+                                    is disabled while duplicateResolution === 'held'. */}
+                                {duplicateResolution === 'held' && (() => {
+                                    const duplicate = BATCH.find(b => b.duplicate)
+                                    if (!duplicate) return null
+                                    return (
+                                        <div className="mx-6 mt-5 mb-2 border border-warning/40 bg-warning/5 rounded-xl overflow-hidden">
+                                            <div className="px-5 py-4 flex items-start gap-3">
+                                                <div className="h-9 w-9 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
+                                                    <AlertTriangle className="h-5 w-5 text-warning" aria-hidden="true" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-bold text-foreground">Duplicate held · resolve to release</div>
+                                                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                        <span className="text-foreground font-semibold">{duplicate.vendor}</span> · invoice
+                                                        <span className="font-mono text-foreground"> {duplicate.invoiceNumber} </span>
+                                                        matches a remittance already sent on <span className="text-foreground font-semibold">2026-07-08</span> ·
+                                                        same amount (${duplicate.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}), same invoice number, same vendor.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => spotlightVendor(duplicate.vendor)}
+                                                    className="text-[11px] font-semibold text-foreground hover:text-primary inline-flex items-center gap-1 shrink-0"
+                                                    title={`Jump to ${duplicate.vendor} bills`}
+                                                >
+                                                    See bill
+                                                    <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                                                </button>
+                                            </div>
+
+                                            {!showOverride ? (
+                                                <div className="px-5 pb-4 pt-1 flex items-center gap-2 flex-wrap">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowOverride(true)}
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-1.5 transition-colors"
+                                                    >
+                                                        <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                                                        Approve override
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleSendDuplicateBack}
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-1.5 transition-colors"
+                                                    >
+                                                        <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                                                        Keep held · Send back to Compliance
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="px-5 pb-4 pt-1 space-y-2">
+                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reason for the override</label>
+                                                    <textarea
+                                                        value={overrideReason}
+                                                        onChange={(e) => setOverrideReason(e.target.value)}
+                                                        rows={2}
+                                                        placeholder="e.g. Reissued invoice · original was voided · vendor confirmed on Aug 20."
+                                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 placeholder:text-muted-foreground"
+                                                    />
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setShowOverride(false); setOverrideReason('') }}
+                                                            className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleOverrideConfirm}
+                                                            disabled={!overrideReason.trim()}
+                                                            className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold bg-warning text-white rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        >
+                                                            Confirm override
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })()}
+
+                                {duplicateResolution === 'approved-override' && (() => {
+                                    const duplicate = BATCH.find(b => b.duplicate)
+                                    if (!duplicate) return null
+                                    return (
+                                        <div className="mx-6 mt-5 mb-2 border border-success/40 bg-success/5 rounded-xl px-5 py-3 flex items-start gap-3">
+                                            <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                            <div className="flex-1 min-w-0 text-xs">
+                                                <div className="text-foreground font-semibold">Duplicate override approved</div>
+                                                <div className="text-muted-foreground italic line-clamp-2 mt-0.5">&ldquo;{overrideReason}&rdquo;</div>
+                                                <div className="text-muted-foreground mt-0.5">{duplicate.vendor} · {duplicate.invoiceNumber} · release cleared for this batch.</div>
+                                            </div>
+                                        </div>
+                                    )
+                                })()}
+
                                 {/* Column header · 8 columns · same grid as vendor + bill rows */}
                                 <div className="grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-3 bg-muted/40 border-b border-border text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sticky top-0 z-10">
                                     <span></span>
@@ -311,8 +456,13 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         const isExpanded = expandedVendors.has(g.vendor)
                                         const vendorLocked = stage !== 'idle'
                                         const releasableBills = g.billsCount - g.heldCount
+                                        // F86.12 · vendor is blocked from bulk-approve when it
+                                        // carries a held bill that hasn't been resolved yet.
+                                        const vendorHasBlocker = g.heldCount > 0 && duplicateResolution === 'held'
                                         // Rollup status pill · consolidated view of the vendor
                                         const rolledStatus = (() => {
+                                            if (vendorHasBlocker)
+                                                return { cls: 'bg-warning/15 text-warning', label: 'Held · needs decision' }
                                             if (g.approvedCount === releasableBills && releasableBills > 0)
                                                 return { cls: 'bg-success/10 text-success', label: 'All approved' }
                                             if (g.rejectedCount === releasableBills && releasableBills > 0)
@@ -322,7 +472,10 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                             return { cls: 'bg-muted text-muted-foreground', label: 'Pending' }
                                         })()
                                         return (
-                                            <div key={g.vendor}>
+                                            <div
+                                                key={g.vendor}
+                                                ref={(el) => { vendorRefs.current[g.vendor] = el }}
+                                            >
                                                 {/* Vendor summary row · click to expand */}
                                                 <button
                                                     type="button"
@@ -358,11 +511,20 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                         className="flex items-center gap-1 justify-end"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
+                                                        {/* F86.12 · bulk approve blocked when the vendor has a
+                                                            held bill · click scrolls to the blocker card so the
+                                                            Approver resolves it first. */}
                                                         <button
                                                             type="button"
-                                                            onClick={() => setVendorDecision(g.vendor, 'approved')}
-                                                            disabled={vendorLocked || releasableBills === 0}
-                                                            title="Approve all bills for this vendor"
+                                                            onClick={() => {
+                                                                if (vendorHasBlocker) {
+                                                                    spotlightVendor(g.vendor)
+                                                                    return
+                                                                }
+                                                                setVendorDecision(g.vendor, 'approved')
+                                                            }}
+                                                            disabled={vendorLocked || releasableBills === 0 || vendorHasBlocker}
+                                                            title={vendorHasBlocker ? 'Resolve the held bill first · see duplicate card above' : 'Approve all bills for this vendor'}
                                                             aria-label={`Approve all bills for ${g.vendor}`}
                                                             className="inline-flex items-center justify-center h-7 w-7 rounded-md text-success bg-background hover:bg-success/10 border border-success/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                         >
@@ -388,22 +550,82 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                         >
                                                             <RotateCcw className="h-3 w-3" aria-hidden="true" />
                                                         </button>
+                                                        {/* F86.12 · per-vendor comment · scoped note that
+                                                            attaches to this vendor's row for the release audit. */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setCommentingVendor(g.vendor)
+                                                                setCommentDraft(vendorComments[g.vendor] ?? '')
+                                                                setExpandedVendors(prev => new Set(prev).add(g.vendor))
+                                                            }}
+                                                            disabled={vendorLocked}
+                                                            title={vendorComments[g.vendor] ? 'Edit comment' : 'Leave a comment on this vendor'}
+                                                            aria-label={`Leave comment on ${g.vendor}`}
+                                                            className={`inline-flex items-center justify-center h-7 w-7 rounded-md border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                                                                vendorComments[g.vendor]
+                                                                    ? 'text-info bg-info/10 border-info/40'
+                                                                    : 'text-muted-foreground bg-background hover:text-foreground hover:bg-muted border-border'
+                                                            }`}
+                                                        >
+                                                            <MessageSquare className="h-3 w-3" aria-hidden="true" />
+                                                        </button>
                                                     </div>
                                                 </button>
+
+                                                {/* F86.12 · per-vendor comment composer + saved chip */}
+                                                {isExpanded && commentingVendor === g.vendor && (
+                                                    <div className="px-6 py-3 border-t border-border bg-info/5 space-y-2">
+                                                        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Comment on {g.vendor}</div>
+                                                        <textarea
+                                                            value={commentDraft}
+                                                            onChange={(e) => setCommentDraft(e.target.value)}
+                                                            rows={2}
+                                                            placeholder={`e.g. Confirmed volume discount schedule with ${g.vendor} · reviewer OK · release.`}
+                                                            className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 placeholder:text-muted-foreground"
+                                                        />
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { setCommentingVendor(null); setCommentDraft('') }}
+                                                                className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleSaveVendorComment}
+                                                                disabled={!commentDraft.trim()}
+                                                                className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold bg-info text-white rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            >
+                                                                Save comment
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {isExpanded && commentingVendor !== g.vendor && vendorComments[g.vendor] && (
+                                                    <div className="px-6 py-2 border-t border-border bg-info/5 flex items-start gap-2 text-[11px] text-muted-foreground">
+                                                        <MessageSquare className="h-3 w-3 text-info shrink-0 mt-0.5" aria-hidden="true" />
+                                                        <div className="flex-1 min-w-0 italic line-clamp-2">&ldquo;{vendorComments[g.vendor]}&rdquo;</div>
+                                                    </div>
+                                                )}
 
                                                 {/* Detail rows · indented per-bill · only when expanded */}
                                                 {isExpanded && g.bills.map(row => {
                                                     const decision = rowDecisions[row.id]
                                                     const rowTint = row.duplicate
-                                                        ? 'bg-warning/[0.04]'
+                                                        ? 'bg-warning/[0.06]'
                                                         : decision === 'approved'
                                                             ? 'bg-success/[0.04]'
                                                             : decision === 'rejected'
                                                                 ? 'bg-destructive/[0.04]'
                                                                 : 'bg-background'
                                                     const rowLocked = stage !== 'idle' || row.duplicate
+                                                    // F86.12 · red-left stripe on the held bill so it visibly
+                                                    // maps back to the blocker card at the top.
+                                                    const rowStripe = row.duplicate ? 'border-l-4 border-l-warning' : 'border-l-4 border-l-transparent'
                                                     return (
-                                                        <div key={row.id} className={`grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-2.5 text-xs items-center border-t border-border/60 ${rowTint}`}>
+                                                        <div key={row.id} className={`grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-2.5 text-xs items-center border-t border-border/60 ${rowTint} ${rowStripe}`}>
                                                             <span></span>
                                                             <div className="min-w-0 pl-6">
                                                                 <div className={`font-mono text-foreground ${decision === 'rejected' ? 'line-through text-muted-foreground' : ''}`}>
@@ -482,68 +704,44 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     })}
                                 </div>
 
-                                {/* Compliance advisory · sticky footer of the body area */}
-                                <div className="px-6 py-4 bg-muted/30 border-t border-border flex items-start gap-2 text-xs text-muted-foreground">
-                                    <ShieldAlert className="h-4 w-4 text-warning mt-0.5 shrink-0" aria-hidden="true" />
-                                    <span>
-                                        <span className="text-foreground font-semibold">Duplicate-payment control · </span>
-                                        Strata caught Nelson NLC-99120 matches last remittance (2026-07-08) · same invoice #, same amount, same vendor. Held for Compliance review before release.
-                                    </span>
-                                </div>
                             </div>
 
-                            {/* F84.5 · Post-approval confirmation */}
+                            {/* F86.12 · Post-release payoff · simplified from the old "handoff
+                                to Dealer flows" mix · confirmation first, follow-up second. */}
                             {stage === 'approved' && (
-                                <div className="px-5 py-4 border-t border-border bg-success/5 flex items-start gap-3">
+                                <div className="px-6 py-4 border-t border-border bg-success/5 flex items-start gap-3">
                                     <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
                                     <div className="flex-1 min-w-0 text-xs">
-                                        <div className="text-foreground font-semibold">Payment released · handoff to Dealer flows</div>
-                                        <div className="text-muted-foreground mt-1">
-                                            {releaseCount} bills posted to NetSuite · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ACH batch sent to the bank
-                                            {counts.rejected > 0 && <> · {counts.rejected} rejected returned to Compliance for follow-up</>}
-                                            {duplicateCount > 0 && <> · {duplicateCount} duplicate still on hold</>}
-                                            . Use the sidebar to switch to <span className="text-foreground font-semibold">Dealer</span> when ready to walk vendor onboarding and billing next.
+                                        <div className="text-sm font-bold text-foreground">
+                                            Batch released · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sent · {releaseCount} bills posted to NetSuite
                                         </div>
+                                        {(counts.rejected > 0 || duplicateCount > 0) && (
+                                            <div className="text-muted-foreground mt-1">
+                                                {counts.rejected > 0 && <>{counts.rejected} rejected returned to Compliance</>}
+                                                {counts.rejected > 0 && duplicateCount > 0 && <> · </>}
+                                                {duplicateCount > 0 && duplicateResolution === 'sent-back' && <>duplicate escalated for re-cut</>}
+                                            </div>
+                                        )}
+                                        <div className="text-[11px] text-muted-foreground mt-1">Vendor remittance detail queued in the Dealer Experience.</div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* F84.6 · Comment composer · leave note for another stakeholder */}
-                            {stage === 'commenting' && (
-                                <div className="px-5 py-4 border-t border-border bg-info/5 space-y-3">
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <MessageSquare className="h-4 w-4 text-info shrink-0" aria-hidden="true" />
-                                        <span className="text-foreground font-semibold">Leave a note for another stakeholder</span>
-                                        <span className="text-muted-foreground">· goes to Compliance thread on the batch record</span>
-                                    </div>
-                                    <textarea
-                                        value={comment}
-                                        onChange={(e) => setComment(e.target.value)}
-                                        rows={3}
-                                        placeholder="e.g. Please double-check Nelson NLC-99120 against the July remittance before we release."
-                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 placeholder:text-muted-foreground"
-                                    />
-                                </div>
-                            )}
-                            {stage === 'commented' && (
-                                <div className="px-5 py-4 border-t border-border bg-info/5 flex items-start gap-3">
-                                    <MessageSquare className="h-5 w-5 text-info shrink-0 mt-0.5" aria-hidden="true" />
-                                    <div className="flex-1 min-w-0 text-xs">
-                                        <div className="text-foreground font-semibold">Comment sent to Compliance</div>
-                                        <div className="text-muted-foreground mt-1 line-clamp-2 italic">&ldquo;{comment}&rdquo;</div>
-                                        <div className="text-muted-foreground mt-1">Batch parked · will resume on their reply.</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* F84.6 · Reject reason capture · destructive path */}
+                            {/* F86.12 · Send-back reason capture (repurposed reject flow ·
+                                covers both the top-level "send batch back" and the
+                                "keep duplicate held · send back" path from the blocker). */}
                             {stage === 'rejecting' && (
-                                <div className="px-5 py-4 border-t border-border bg-destructive/5 space-y-3">
+                                <div className="px-6 py-4 border-t border-border bg-destructive/5 space-y-3">
                                     <div className="flex items-center gap-2 text-xs">
                                         <XCircle className="h-4 w-4 text-destructive shrink-0" aria-hidden="true" />
-                                        <span className="text-foreground font-semibold">Reject the ACH batch · reason required</span>
-                                        <span className="text-muted-foreground">· returns to Compliance for adjustment</span>
+                                        <span className="text-foreground font-semibold">Send batch back to Compliance · reason required</span>
+                                        <span className="text-muted-foreground">· all per-vendor decisions in this session are discarded</span>
                                     </div>
+                                    {(counts.approved > 0 || counts.rejected > 0) && (
+                                        <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
+                                            Discarding · {counts.approved} approved · {counts.rejected} rejected · returning the full batch untouched.
+                                        </div>
+                                    )}
                                     <textarea
                                         value={rejectReason}
                                         onChange={(e) => setRejectReason(e.target.value)}
@@ -554,84 +752,116 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 </div>
                             )}
                             {stage === 'rejected' && (
-                                <div className="px-5 py-4 border-t border-border bg-destructive/5 flex items-start gap-3">
+                                <div className="px-6 py-4 border-t border-border bg-destructive/5 flex items-start gap-3">
                                     <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
                                     <div className="flex-1 min-w-0 text-xs">
-                                        <div className="text-foreground font-semibold">Batch rejected · returned to Compliance</div>
+                                        <div className="text-foreground font-semibold">Batch sent back to Compliance</div>
                                         <div className="text-muted-foreground mt-1 line-clamp-2 italic">&ldquo;{rejectReason}&rdquo;</div>
                                         <div className="text-muted-foreground mt-1">Nothing released · Compliance re-cuts the batch based on the note.</div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Footer · 3 primary actions (Reject · Comment · Approve) */}
-                            <div className="px-5 py-4 border-t border-border bg-muted/10 flex items-center gap-2 flex-wrap">
-                                <div className="text-xs text-muted-foreground flex-1 min-w-0">
-                                    Human sign-off preserved · Strata prepares ACH entries · never auto-releases.
-                                </div>
-
+                            {/* F86.12 · New footer · left decisions counter · right release CTA
+                                with dynamic label. Batch-level Leave-comment removed (moved to
+                                per-vendor). Reject renamed to Send batch back. Release button
+                                describes the actual transition (ACH send), not "approve again". */}
+                            <div className="px-6 py-4 border-t border-border bg-muted/10 flex items-center gap-3 flex-wrap">
                                 {stage === 'idle' && (
                                     <>
+                                        {/* Left · decisions counter chip */}
+                                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                                {counts.approved > 0 && (
+                                                    <span className="inline-flex items-center gap-1 text-success">
+                                                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                        <span className="tabular-nums font-semibold">{counts.approved}</span> approved
+                                                    </span>
+                                                )}
+                                                {counts.rejected > 0 && (
+                                                    <span className="inline-flex items-center gap-1 text-destructive">
+                                                        <XCircle className="h-3 w-3" aria-hidden="true" />
+                                                        <span className="tabular-nums font-semibold">{counts.rejected}</span> rejected
+                                                    </span>
+                                                )}
+                                                {counts.pending > 0 && (
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <span className="tabular-nums font-semibold">{counts.pending}</span> pending
+                                                    </span>
+                                                )}
+                                                {duplicateCount > 0 && duplicateResolution === 'held' && (
+                                                    <span className="inline-flex items-center gap-1 text-warning">
+                                                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                                                        <span className="tabular-nums font-semibold">{duplicateCount}</span> held
+                                                    </span>
+                                                )}
+                                                {duplicateCount > 0 && duplicateResolution === 'approved-override' && (
+                                                    <span className="inline-flex items-center gap-1 text-success">
+                                                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                        override cleared
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Right · destructive escalation + primary release */}
                                         <button
                                             onClick={() => setStage('rejecting')}
                                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-2 transition-colors"
                                         >
                                             <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                                            Reject
+                                            Send batch back
                                         </button>
                                         <button
-                                            onClick={() => setStage('commenting')}
-                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-2 transition-colors"
+                                            onClick={() => {
+                                                if (duplicateResolution === 'held') {
+                                                    const dup = BATCH.find(b => b.duplicate)
+                                                    if (dup) spotlightVendor(dup.vendor)
+                                                    return
+                                                }
+                                                handleApprove()
+                                            }}
+                                            disabled={!canRelease && duplicateResolution !== 'held'}
+                                            title={
+                                                duplicateResolution === 'held'
+                                                    ? 'Resolve the held duplicate before releasing'
+                                                    : canRelease
+                                                        ? undefined
+                                                        : 'Approve at least one bill first'
+                                            }
+                                            className={`inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg transition-opacity shadow-sm ${
+                                                duplicateResolution === 'held'
+                                                    ? 'bg-warning text-white hover:opacity-90'
+                                                    : 'bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed'
+                                            }`}
                                         >
-                                            <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
-                                            Leave comment
-                                        </button>
-                                        <button
-                                            onClick={handleApprove}
-                                            disabled={!canRelease}
-                                            title={canRelease ? undefined : 'Approve at least one bill · or leave rows pending to release all'}
-                                            className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                                        >
-                                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                            {counts.approved > 0
-                                                ? `Release ${releaseCount} approved · $${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                : counts.rejected > 0
-                                                    ? `Release ${releaseCount} remaining · $${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                    : 'Approve ACH batch'}
+                                            {duplicateResolution === 'held' ? (
+                                                <>
+                                                    <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                                                    Resolve duplicate to release · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                                                    Release payment batch · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · {releaseCount} bill{releaseCount === 1 ? '' : 's'}
+                                                </>
+                                            )}
                                         </button>
                                     </>
                                 )}
 
                                 {stage === 'approving' && (
-                                    <div className="inline-flex items-center gap-1.5 text-xs font-bold text-ai py-2 px-4">
+                                    <div className="inline-flex items-center gap-1.5 text-xs font-bold text-ai py-2 px-4 ml-auto">
                                         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                                        Preparing ACH entries…
+                                        Sending ACH entries to the bank…
                                     </div>
-                                )}
-
-                                {stage === 'commenting' && (
-                                    <>
-                                        <button
-                                            onClick={() => { setStage('idle'); setComment('') }}
-                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-2 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleSendComment}
-                                            disabled={!comment.trim()}
-                                            className="inline-flex items-center gap-1.5 bg-info text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                                        >
-                                            <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                                            Send comment
-                                        </button>
-                                    </>
                                 )}
 
                                 {stage === 'rejecting' && (
                                     <>
+                                        <div className="flex-1" />
                                         <button
-                                            onClick={() => { setStage('idle'); setRejectReason('') }}
+                                            onClick={() => { setStage('idle'); setRejectReason(''); if (duplicateResolution === 'sent-back') setDuplicateResolution('held') }}
                                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-2 transition-colors"
                                         >
                                             Cancel
@@ -642,15 +872,15 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                             className="inline-flex items-center gap-1.5 bg-destructive text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                                            Confirm reject
+                                            Confirm send back
                                         </button>
                                     </>
                                 )}
 
-                                {(stage === 'approved' || stage === 'commented' || stage === 'rejected') && (
+                                {(stage === 'approved' || stage === 'rejected') && (
                                     <button
                                         onClick={onClose}
-                                        className="inline-flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-lg hover:opacity-80 transition-opacity"
+                                        className="ml-auto inline-flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-lg hover:opacity-80 transition-opacity"
                                     >
                                         Close
                                     </button>
