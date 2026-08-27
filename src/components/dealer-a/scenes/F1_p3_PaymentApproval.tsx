@@ -73,11 +73,16 @@ export default function F1_p3_PaymentApproval() {
                 </div>
             )}
 
-            {/* F86.25 · New draft batch record · anchored top-left over the
-                Transactions surface so it reads as a transaction-level
-                artifact (not another right-corner notification). */}
+            {/* F86.25 · New draft batch record · anchored over the Transactions
+                surface (past the sidebar) so it reads as a transaction-level
+                artifact, not another right-corner notification.
+                F86.25.1 · Diego 2026-08-27 · moved from `left-6` (which sat
+                behind the fixed demo-tour sidebar w-80) to `left-[340px]`
+                so the card lands in the actual kanban area · vertical offset
+                lowered to `top-[240px]` so it doesn't clash with the ACTION
+                REQUIRED banner strip at the top of the transactions surface. */}
             {!open && release && release.pendingCount > 0 && release.pendingDestination === 'new-draft-batch' && (
-                <div className="fixed top-32 left-6 z-40 w-[380px] bg-card border-2 border-primary/60 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
+                <div className="fixed top-[240px] left-[340px] z-40 w-[380px] bg-card border-2 border-primary/60 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
                     <div className="bg-primary/10 px-4 py-3 flex items-center gap-2.5">
                         <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
                             <FileText className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
@@ -119,7 +124,7 @@ export default function F1_p3_PaymentApproval() {
             {/* F86.25 · Compliance-review branch · when the Approver routed
                 the leftover to Compliance instead of the draft batch. */}
             {!open && release && release.pendingCount > 0 && release.pendingDestination === 'compliance-review' && (
-                <div className="fixed top-32 left-6 z-40 w-[380px] bg-card border-2 border-warning/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
+                <div className="fixed top-[240px] left-[340px] z-40 w-[380px] bg-card border-2 border-warning/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
                     <div className="bg-warning/10 px-4 py-3 flex items-center gap-2.5">
                         <div className="h-9 w-9 rounded-lg bg-warning/20 flex items-center justify-center shrink-0">
                             <ShieldAlert className="h-5 w-5 text-warning" aria-hidden="true" />
