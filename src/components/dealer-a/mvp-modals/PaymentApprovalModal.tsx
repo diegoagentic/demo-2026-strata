@@ -29,6 +29,16 @@ interface PaymentApprovalModalProps {
     onApproved?: () => void
 }
 
+// F86.22 · Diego 2026-08-27 · warning taxonomy · replaces the boolean
+// `duplicate?: boolean` with a discriminated union so the batch can carry
+// heterogeneous warnings (currently duplicate + rate-mismatch · easy to
+// extend). Every warning carries the metadata needed to render its
+// popover, badge, and suggested override text via warningCopy() below.
+type WarningType = 'duplicate' | 'rate-mismatch'
+type WarningInfo =
+    | { type: 'duplicate' }
+    | { type: 'rate-mismatch'; poAmount: number }
+
 interface PaymentRow {
     id: string
     vendor: string
@@ -41,7 +51,11 @@ interface PaymentRow {
         profit dollars and percentage. */
     orderGpAmount: number
     orderGpPct: number
-    duplicate?: boolean
+    /** F86.22 · Diego 2026-08-27 · when set, this bill is flagged for the
+        Approver and cannot ship until resolved via the header warning chip
+        popover. Held / override-cleared / sent-back tracked per-bill in
+        `warningResolutions`. */
+    warning?: WarningInfo
 }
 
 // F86.11 · Diego 2026-08-21 · CEO ask · realistic vendor volume so the
@@ -60,7 +74,9 @@ const BATCH: PaymentRow[] = [
     { id: 'PJX-BILL-8489', vendor: 'Teknion',            entity: 'Culture LLC',   invoiceNumber: 'TEK-2026-0883',   amount:  1240.00, orderGpAmount:   260, orderGpPct: 21 },
     // HBF · 5 bills
     { id: 'PJX-BILL-8472', vendor: 'HBF',                entity: 'Dealer A',      invoiceNumber: 'HBF-24911',       amount: 12420.00, orderGpAmount:  3105, orderGpPct: 25 },
-    { id: 'PJX-BILL-8477', vendor: 'HBF',                entity: 'Dealer A',      invoiceNumber: 'HBF-24915',       amount:  2140.00, orderGpAmount:   535, orderGpPct: 25 },
+    // F86.22 · rate-mismatch warning · $2,140 invoice vs $2,000 acknowledged
+    // PO · $140 (7%) over · freight-surcharge override story.
+    { id: 'PJX-BILL-8477', vendor: 'HBF',                entity: 'Dealer A',      invoiceNumber: 'HBF-24915',       amount:  2140.00, orderGpAmount:   535, orderGpPct: 25, warning: { type: 'rate-mismatch', poAmount: 2000 } },
     { id: 'PJX-BILL-8490', vendor: 'HBF',                entity: 'Dealer A Corp.', invoiceNumber: 'HBF-24920',       amount:  5620.00, orderGpAmount:  1405, orderGpPct: 25 },
     { id: 'PJX-BILL-8491', vendor: 'HBF',                entity: 'Dealer A',      invoiceNumber: 'HBF-24924',       amount:  3180.00, orderGpAmount:   795, orderGpPct: 25 },
     { id: 'PJX-BILL-8492', vendor: 'HBF',                entity: 'Dealer A',      invoiceNumber: 'HBF-24927',       amount:  1240.00, orderGpAmount:   310, orderGpPct: 25 },
@@ -82,13 +98,51 @@ const BATCH: PaymentRow[] = [
     { id: 'PJX-BILL-8501', vendor: 'West Elm Contract',  entity: 'Dealer A',      invoiceNumber: 'WEC-2026-0311',   amount:  4820.00, orderGpAmount:  1013, orderGpPct: 21 },
     { id: 'PJX-BILL-8502', vendor: 'West Elm Contract',  entity: 'Dealer A',      invoiceNumber: 'WEC-2026-0318',   amount:  2140.00, orderGpAmount:   449, orderGpPct: 21 },
     // Duplicate held · Nelson NLC-99120 · triggers the Compliance advisory
-    { id: 'PJX-DUP-8499',  vendor: 'Nelson and Company', entity: 'Dealer A',      invoiceNumber: 'NLC-99120',       amount:  6720.00, orderGpAmount:  1546, orderGpPct: 23, duplicate: true },
+    // F86.22 · migrated from boolean `duplicate: true` to the new warning
+    // shape · same behavior · headline/detail/prefill sourced from warningCopy.
+    { id: 'PJX-DUP-8499',  vendor: 'Nelson and Company', entity: 'Dealer A',      invoiceNumber: 'NLC-99120',       amount:  6720.00, orderGpAmount:  1546, orderGpPct: 23, warning: { type: 'duplicate' } },
 ]
 
 type Stage =
     | 'idle'
     | 'approving' | 'approved'
     | 'rejecting' | 'rejected'
+
+// F86.22 · Diego 2026-08-27 · per-warning copy · one source of truth
+// for headline · detail · badge label · suggested override prefill.
+// Add a new warning type here + extend WarningInfo above · everything
+// downstream (chip label, popover, badge, prefill) picks it up.
+interface WarningCopy {
+    headline: string
+    detail: string
+    badge: string
+    suggestedOverride: string
+}
+function fmtUsd(n: number) {
+    return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+function warningCopy(row: PaymentRow): WarningCopy | null {
+    if (!row.warning) return null
+    switch (row.warning.type) {
+        case 'duplicate':
+            return {
+                headline: 'Duplicate held',
+                detail: `Matches a remittance already sent on 2026-07-08 · same amount (${fmtUsd(row.amount)}), same invoice number, same vendor.`,
+                badge: 'Duplicate',
+                suggestedOverride: `Reissued invoice · original ${row.invoiceNumber} was voided on Aug 20 · vendor confirmed the re-invoice against the same PO.`,
+            }
+        case 'rate-mismatch': {
+            const delta = row.amount - row.warning.poAmount
+            const pct = row.warning.poAmount > 0 ? Math.round((delta / row.warning.poAmount) * 100) : 0
+            return {
+                headline: 'Amount above PO',
+                detail: `Invoice ${fmtUsd(row.amount)} · PO acknowledged ${fmtUsd(row.warning.poAmount)} · ${fmtUsd(delta)} (${pct}%) over.`,
+                badge: 'Rate mismatch',
+                suggestedOverride: `Vendor confirmed the ${fmtUsd(delta)} delta as freight surcharge · matches PO change order approved Aug 22 · release as invoiced.`,
+            }
+        }
+    }
+}
 
 // F84.36 · per-row decision · Compliance can approve/reject each bill
 // individually before releasing the batch. Duplicates stay `held` and
@@ -99,7 +153,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     const [stage, setStage] = useState<Stage>('idle')
     const [rejectReason, setRejectReason] = useState('')
     const [rowDecisions, setRowDecisions] = useState<Record<string, RowDecision>>(() =>
-        Object.fromEntries(BATCH.map(b => [b.id, b.duplicate ? 'held' as const : 'pending' as const])),
+        Object.fromEntries(BATCH.map(b => [b.id, b.warning ? 'held' as const : 'pending' as const])),
     )
     // F86.11 · Diego 2026-08-21 · CEO ask · group bills by vendor with
     // expand-to-detail so 100+ bills per vendor stay reviewable. Default
@@ -114,11 +168,23 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         })
     }
 
-    // F86.12 · Diego 2026-08-21 · duplicate spotlight + bulk guardrail.
+    // F86.12 · Diego 2026-08-21 · warning spotlight + bulk guardrail.
     // F86.13 · Diego 2026-08-21 · resolution moved to a per-bill row popover
     // triggered by a warning chip in the header. The top blocker card is gone.
-    const [duplicateResolution, setDuplicateResolution] = useState<'held' | 'approved-override' | 'sent-back'>('held')
-    const [overrideReason, setOverrideReason] = useState('')
+    // F86.22 · Diego 2026-08-27 · single-value duplicateResolution replaced
+    // with a per-billId map so the batch can carry N heterogeneous warnings
+    // and each resolves independently. `resolutionFor(billId)` reads with
+    // a `'held'` default. Same for override reasons — one draft per bill.
+    type Resolution = 'held' | 'approved-override' | 'sent-back'
+    const [warningResolutions, setWarningResolutions] = useState<Record<string, Resolution>>({})
+    const [overrideReasons, setOverrideReasons] = useState<Record<string, string>>({})
+    const resolutionFor = (billId: string): Resolution => warningResolutions[billId] ?? 'held'
+    const setResolutionFor = (billId: string, r: Resolution) =>
+        setWarningResolutions(prev => ({ ...prev, [billId]: r }))
+    const setOverrideReasonFor = (billId: string, text: string) =>
+        setOverrideReasons(prev => ({ ...prev, [billId]: text }))
+    const overrideReasonFor = (billId: string | null): string =>
+        (billId && overrideReasons[billId]) || ''
     // F86.13 · which bill's warning popover is open. Only one at a time.
     const [activeWarningBillId, setActiveWarningBillId] = useState<string | null>(null)
     // F86.13 · when multi-warning · which list dropdown is open on the chip
@@ -153,33 +219,51 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // F86.13 · warnings array · supports N held / flagged bills. Currently
     // only the duplicate contributes · structure lets us add rate-mismatch,
     // CFO-held etc. later without another rewrite.
+    // F86.22 · Diego 2026-08-27 · Warning type carries per-warning copy so
+    // headline/detail/badge/suggestedOverride all live in one place
+    // (warningCopy() at module top). `warnings` is the UNRESOLVED subset ·
+    // used to drive the chip label, dropdown list, popover, and the "next"
+    // auto-advance. `allWarnings` is the full list (resolved + unresolved)
+    // used by the dropdown to keep resolved entries visible.
     type Warning = {
         billId: string
         vendor: string
         invoiceNumber: string
-        type: 'duplicate'
+        type: WarningType
         headline: string
         detail: string
+        badge: string
+        suggestedOverride: string
     }
-    const warnings: Warning[] = useMemo(() => {
-        if (duplicateResolution !== 'held') return []
-        return BATCH.filter(b => b.duplicate).map(b => ({
-            billId: b.id,
-            vendor: b.vendor,
-            invoiceNumber: b.invoiceNumber,
-            type: 'duplicate' as const,
-            headline: 'Duplicate held',
-            detail: `Matches a remittance already sent on 2026-07-08 · same amount ($${b.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}), same invoice number, same vendor.`,
-        }))
-    }, [duplicateResolution])
+    const allWarnings: Warning[] = useMemo(() => {
+        return BATCH.filter(b => b.warning).map(b => {
+            const copy = warningCopy(b)!
+            return {
+                billId: b.id,
+                vendor: b.vendor,
+                invoiceNumber: b.invoiceNumber,
+                type: b.warning!.type,
+                headline: copy.headline,
+                detail: copy.detail,
+                badge: copy.badge,
+                suggestedOverride: copy.suggestedOverride,
+            }
+        })
+    }, [])
+    const warnings: Warning[] = useMemo(
+        () => allWarnings.filter(w => resolutionFor(w.billId) === 'held'),
+        [allWarnings, warningResolutions],
+    )
     const warningsByBill = useMemo(() => {
         const map: Record<string, Warning> = {}
-        for (const w of warnings) map[w.billId] = w
+        for (const w of allWarnings) map[w.billId] = w
         return map
-    }, [warnings])
+    }, [allWarnings])
+    const warningCount = allWarnings.length
+    const heldWarningsCount = warnings.length
+    const resolvedWarningsCount = warningCount - heldWarningsCount
 
-    const releasable = BATCH.filter(b => !b.duplicate)
-    const duplicateCount = BATCH.filter(b => b.duplicate).length
+    const releasable = BATCH.filter(b => !b.warning)
 
     // F86.11 · Vendor-level aggregation · sorted by total amount desc so
     // the biggest payments read first (that's where the risk lives).
@@ -208,8 +292,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             for (const b of bills) {
                 amountTotal += b.amount
                 gpTotal += b.orderGpAmount
-                if (b.duplicate) heldCount += 1
-                else {
+                // F86.22 · heldCount is now "warning bills still held"
+                // (not "any warning bill") so the vendor pill clears once
+                // its warning is resolved (override / send-back).
+                if (b.warning) {
+                    if (resolutionFor(b.id) === 'held') heldCount += 1
+                } else {
                     const d = rowDecisions[b.id]
                     if (d === 'approved') approvedCount += 1
                     else if (d === 'rejected') rejectedCount += 1
@@ -228,7 +316,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         }
         groups.sort((a, b) => b.amountTotal - a.amountTotal)
         return groups
-    }, [rowDecisions])
+    }, [rowDecisions, warningResolutions])
     const counts = useMemo(() => {
         let approved = 0, rejected = 0, pending = 0, approvedTotal = 0
         for (const row of releasable) {
@@ -244,13 +332,17 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     // that auto-released pending bills when the Approver hadn't touched
     // anything. Real ACH releases require explicit sign-off · per-row or
     // per-vendor Approve-all. Nothing ships silently.
-    // F86.20 · Diego 2026-08-27 · override-cleared duplicates ARE approved
+    // F86.20 · Diego 2026-08-27 · override-cleared warnings ARE approved
     // for release · fold them into the release totals so they show up in the
-    // preflight and count toward the wire. Previously they were silently
-    // dropped because `releasable` filtered out all duplicates up-front.
+    // preflight and count toward the wire. F86.22 · per-warning · a bill's
+    // override is cleared iff its own resolution === 'approved-override'.
     const overrideBills = useMemo(
-        () => duplicateResolution === 'approved-override' ? BATCH.filter(b => b.duplicate) : [],
-        [duplicateResolution],
+        () => BATCH.filter(b => b.warning && resolutionFor(b.id) === 'approved-override'),
+        [warningResolutions],
+    )
+    const sentBackBills = useMemo(
+        () => BATCH.filter(b => b.warning && resolutionFor(b.id) === 'sent-back'),
+        [warningResolutions],
     )
     const overrideTotal = overrideBills.reduce((s, b) => s + b.amount, 0)
     const releaseCount = counts.approved + overrideBills.length
@@ -278,13 +370,13 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             byVendor.set(r.vendor, cur)
         }
         const vendors = [...byVendor.values()].sort((a, b) => b.total - a.total)
-        const heldBills = BATCH.filter(b => b.duplicate && duplicateResolution === 'held')
+        const heldBills = BATCH.filter(b => b.warning && resolutionFor(b.id) === 'held')
         const pendingCount = releasable.filter(r => rowDecisions[r.id] === 'pending').length
         const pendingTotal = releasable
             .filter(r => rowDecisions[r.id] === 'pending')
             .reduce((s, r) => s + r.amount, 0)
         return { vendors, heldBills, pendingCount, pendingTotal }
-    }, [releasable, rowDecisions, duplicateResolution, overrideBills])
+    }, [releasable, rowDecisions, warningResolutions, overrideBills])
 
     // F86.19 · seed the first vendor as expanded whenever the preflight opens
     // fresh · lets the Approver see line-item detail without needing to click.
@@ -311,7 +403,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         setRowDecisions(prev => {
             const next = { ...prev }
             for (const b of BATCH) {
-                if (b.vendor === vendor && !b.duplicate) next[b.id] = decision
+                if (b.vendor === vendor && !b.warning) next[b.id] = decision
             }
             return next
         })
@@ -342,7 +434,6 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
             setRejectReason('')
         }
         setShowWarningsList(false)
-        setOverrideReason('')
         const bill = BATCH.find(b => b.id === billId)
         if (!bill) return
         setExpandedVendors(prev => {
@@ -360,22 +451,36 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     }
     const closeWarningPopover = () => {
         setActiveWarningBillId(null)
-        setOverrideReason('')
     }
 
-    const handleOverrideConfirm = () => {
-        if (!overrideReason.trim()) return
-        setDuplicateResolution('approved-override')
-        setActiveWarningBillId(null)
+    // F86.22 · after a warning is resolved · auto-advance to the next
+    // unresolved warning (Nielsen 7 · efficient N>1 navigation). If none
+    // left, close the popover. Used by both override-confirm and send-back.
+    const advanceOrClose = (justResolvedBillId: string) => {
+        const next = allWarnings.find(w =>
+            w.billId !== justResolvedBillId && resolutionFor(w.billId) === 'held',
+        )
+        if (next) {
+            openWarningPopover(next.billId)
+        } else {
+            setActiveWarningBillId(null)
+        }
     }
-    const handleSendDuplicateBack = () => {
-        // F86.17 · Diego 2026-08-27 · sending the held duplicate back
-        // escalates ONLY that item to Compliance · it does NOT terminate
-        // the batch. The Approver can still continue releasing the 26
-        // other bills. Prior version flipped stage=rejecting which killed
-        // the whole flow (bug reported in F86.16 review).
-        setDuplicateResolution('sent-back')
-        setActiveWarningBillId(null)
+
+    // F86.22 · per-bill override + send-back · handlers take an explicit
+    // billId so they work with N warnings. Prior single-value state model
+    // (setDuplicateResolution) is gone.
+    const handleOverrideConfirm = (billId: string) => {
+        const text = (overrideReasons[billId] ?? '').trim()
+        if (!text) return
+        setResolutionFor(billId, 'approved-override')
+        advanceOrClose(billId)
+    }
+    const handleSendWarningBack = (billId: string) => {
+        // F86.17 · sending a held warning back escalates ONLY that item to
+        // Compliance · it does NOT terminate the batch. F86.22 · now per-bill.
+        setResolutionFor(billId, 'sent-back')
+        advanceOrClose(billId)
     }
     const handleSaveVendorComment = () => {
         if (!commentingVendor || !commentDraft.trim()) return
@@ -451,53 +556,86 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                     first-class CTA. Warning tone stays via the icon
                                                     color and the popover contents. Hover pattern is
                                                     the DS-standard opacity shift. */}
+                                                {/* F86.22 · chip label carries N>1 progress · Nielsen 1
+                                                    (system status). When at least one warning has been
+                                                    resolved, chip switches from "N HELD" to
+                                                    "{resolved} OF {total} RESOLVED · {held} LEFT" so
+                                                    the Approver sees they're making progress. */}
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        if (warnings.length === 1) {
+                                                        if (warningCount === 1) {
                                                             openWarningPopover(warnings[0].billId)
                                                         } else {
                                                             setShowWarningsList(s => !s)
                                                         }
                                                     }}
                                                     className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground bg-primary hover:opacity-90 rounded-full px-3 py-1 shadow-sm transition-opacity"
-                                                    title={warnings.length === 1 ? 'Jump to the flagged bill · resolve to release' : 'Show all warnings'}
-                                                    aria-label={`${warnings.length} warning${warnings.length === 1 ? '' : 's'} held · resolve`}
-                                                    aria-expanded={warnings.length > 1 ? showWarningsList : undefined}
-                                                    aria-haspopup={warnings.length > 1 ? 'menu' : undefined}
+                                                    title={warningCount === 1 ? 'Jump to the flagged bill · resolve to release' : 'Show all warnings'}
+                                                    aria-label={resolvedWarningsCount > 0
+                                                        ? `${resolvedWarningsCount} of ${warningCount} warnings resolved · ${heldWarningsCount} left`
+                                                        : `${heldWarningsCount} warning${heldWarningsCount === 1 ? '' : 's'} held · resolve`}
+                                                    aria-expanded={warningCount > 1 ? showWarningsList : undefined}
+                                                    aria-haspopup={warningCount > 1 ? 'menu' : undefined}
                                                 >
                                                     <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                                                    {warnings.length} warning{warnings.length === 1 ? '' : 's'} held
-                                                    {warnings.length === 1
+                                                    {resolvedWarningsCount > 0
+                                                        ? <>{resolvedWarningsCount} of {warningCount} resolved · {heldWarningsCount} left</>
+                                                        : <>{heldWarningsCount} warning{heldWarningsCount === 1 ? '' : 's'} held</>}
+                                                    {warningCount === 1
                                                         ? <ArrowRight className="h-3 w-3" aria-hidden="true" />
                                                         : <ChevronDown className={`h-3 w-3 transition-transform ${showWarningsList ? 'rotate-180' : ''}`} aria-hidden="true" />}
                                                 </button>
-                                                {warnings.length > 1 && showWarningsList && (
+                                                {warningCount > 1 && showWarningsList && (
                                                     <>
                                                         <div className="fixed inset-0 z-[419]" onClick={() => setShowWarningsList(false)} aria-hidden="true" />
                                                         <div
                                                             role="menu"
-                                                            className="absolute left-0 top-full mt-2 w-72 bg-card border border-border rounded-xl shadow-lg z-[420] p-1"
+                                                            className="absolute left-0 top-full mt-2 w-80 bg-card border border-border rounded-xl shadow-lg z-[420] p-1"
                                                         >
-                                                            <div className="px-3 py-2 border-b border-border mb-1">
-                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Warnings held</p>
+                                                            <div className="px-3 py-2 border-b border-border mb-1 flex items-center justify-between">
+                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Warnings this batch</p>
+                                                                <p className="text-[10px] tabular-nums text-muted-foreground">
+                                                                    <span className="text-foreground font-bold">{resolvedWarningsCount}</span> / {warningCount} resolved
+                                                                </p>
                                                             </div>
-                                                            {warnings.map(w => (
-                                                                <button
-                                                                    key={w.billId}
-                                                                    role="menuitem"
-                                                                    type="button"
-                                                                    onClick={() => openWarningPopover(w.billId)}
-                                                                    className="w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-muted rounded-lg transition-colors"
-                                                                >
-                                                                    <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" aria-hidden="true" />
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className="text-xs font-semibold text-foreground truncate">{w.vendor}</div>
-                                                                        <div className="text-[10px] text-muted-foreground font-mono">{w.invoiceNumber} · {w.headline.toLowerCase()}</div>
-                                                                    </div>
-                                                                    <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0 mt-1" aria-hidden="true" />
-                                                                </button>
-                                                            ))}
+                                                            {/* F86.22 · iterate ALL warnings (not just held) so the
+                                                                Approver can review what they did. Resolved entries
+                                                                get a check icon + muted styling · held entries get
+                                                                the warning icon + full color. Clicking any entry
+                                                                still opens its row popover. */}
+                                                            {allWarnings.map(w => {
+                                                                const r = resolutionFor(w.billId)
+                                                                const isResolved = r !== 'held'
+                                                                const icon = r === 'approved-override'
+                                                                    ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                                                    : r === 'sent-back'
+                                                                        ? <XCircle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
+                                                                        : <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                                                                const status = r === 'approved-override'
+                                                                    ? 'cleared'
+                                                                    : r === 'sent-back'
+                                                                        ? 'escalated'
+                                                                        : 'held'
+                                                                return (
+                                                                    <button
+                                                                        key={w.billId}
+                                                                        role="menuitem"
+                                                                        type="button"
+                                                                        onClick={() => openWarningPopover(w.billId)}
+                                                                        className={`w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-muted rounded-lg transition-colors ${isResolved ? 'opacity-70' : ''}`}
+                                                                    >
+                                                                        {icon}
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className="text-xs font-semibold text-foreground truncate">{w.vendor}</div>
+                                                                            <div className="text-[10px] text-muted-foreground font-mono">
+                                                                                {w.invoiceNumber} · <span className="uppercase tracking-wider">{w.badge}</span> · <span className="italic">{status}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0 mt-1" aria-hidden="true" />
+                                                                    </button>
+                                                                )
+                                                            })}
                                                         </div>
                                                     </>
                                                 )}
@@ -535,20 +673,26 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     row-anchored popover triggered by the header warning chip.
                                     See openWarningPopover() + the popover render below the body. */}
 
-                                {duplicateResolution === 'approved-override' && (() => {
-                                    const duplicate = BATCH.find(b => b.duplicate)
-                                    if (!duplicate) return null
-                                    return (
-                                        <div className="mx-6 mt-5 mb-2 border border-success/40 bg-success/5 rounded-xl px-5 py-3 flex items-start gap-3">
-                                            <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
-                                            <div className="flex-1 min-w-0 text-xs">
-                                                <div className="text-foreground font-semibold">Duplicate override approved</div>
-                                                <div className="text-muted-foreground italic line-clamp-2 mt-0.5">&ldquo;{overrideReason}&rdquo;</div>
-                                                <div className="text-muted-foreground mt-0.5">{duplicate.vendor} · {duplicate.invoiceNumber} · release cleared for this batch.</div>
-                                            </div>
-                                        </div>
-                                    )
-                                })()}
+                                {/* F86.22 · one card per cleared override · with N warnings
+                                    the batch may carry multiple approved overrides · each
+                                    reads back with its own reason for the audit trail. */}
+                                {overrideBills.length > 0 && (
+                                    <div className="mx-6 mt-5 mb-2 space-y-2">
+                                        {overrideBills.map(b => {
+                                            const copy = warningCopy(b)
+                                            return (
+                                                <div key={b.id} className="border border-success/40 bg-success/5 rounded-xl px-5 py-3 flex items-start gap-3">
+                                                    <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
+                                                    <div className="flex-1 min-w-0 text-xs">
+                                                        <div className="text-foreground font-semibold">{copy?.badge ?? 'Warning'} override approved</div>
+                                                        <div className="text-muted-foreground italic line-clamp-2 mt-0.5">&ldquo;{overrideReasons[b.id]}&rdquo;</div>
+                                                        <div className="text-muted-foreground mt-0.5">{b.vendor} · {b.invoiceNumber} · release cleared for this batch.</div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
 
                                 {/* Column header · 8 columns · same grid as vendor + bill rows */}
                                 <div className="grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-3 bg-muted/40 border-b border-border text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sticky top-0 z-10">
@@ -568,7 +712,10 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         const releasableBills = g.billsCount - g.heldCount
                                         // F86.12 · vendor is blocked from bulk-approve when it
                                         // carries a held bill that hasn't been resolved yet.
-                                        const vendorHasBlocker = g.heldCount > 0 && duplicateResolution === 'held'
+                                        // F86.22 · heldCount already gates on per-bill resolution
+                                        // (see vendorGroups memo) · vendor bulk-approve is blocked
+                                        // iff at least one held warning remains in the vendor.
+                                        const vendorHasBlocker = g.heldCount > 0
                                         // Rollup status pill · consolidated view of the vendor
                                         const rolledStatus = (() => {
                                             if (vendorHasBlocker)
@@ -628,7 +775,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             type="button"
                                                             onClick={() => {
                                                                 if (vendorHasBlocker) {
-                                                                    const held = g.bills.find(b => b.duplicate)
+                                                                    const held = g.bills.find(b => b.warning && resolutionFor(b.id) === 'held')
                                                                     if (held) openWarningPopover(held.id)
                                                                     return
                                                                 }
@@ -726,17 +873,17 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                 {/* Detail rows · indented per-bill · only when expanded */}
                                                 {isExpanded && g.bills.map(row => {
                                                     const decision = rowDecisions[row.id]
-                                                    const rowTint = row.duplicate
+                                                    // F86.22 · warning presence (not just 'duplicate') drives
+                                                    // the row's warning tint, stripe, and locked-decision state.
+                                                    const rowTint = row.warning
                                                         ? 'bg-warning/[0.06]'
                                                         : decision === 'approved'
                                                             ? 'bg-success/[0.04]'
                                                             : decision === 'rejected'
                                                                 ? 'bg-destructive/[0.04]'
                                                                 : 'bg-background'
-                                                    const rowLocked = stage !== 'idle' || row.duplicate
-                                                    // F86.12 · red-left stripe on the held bill so it visibly
-                                                    // maps back to the blocker card at the top.
-                                                    const rowStripe = row.duplicate ? 'border-l-4 border-l-warning' : 'border-l-4 border-l-transparent'
+                                                    const rowLocked = stage !== 'idle' || !!row.warning
+                                                    const rowStripe = row.warning ? 'border-l-4 border-l-warning' : 'border-l-4 border-l-transparent'
                                                     return (
                                                         <div
                                                             key={row.id}
@@ -765,7 +912,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                 <span className="text-[10px] text-muted-foreground ml-1">{row.orderGpPct}%</span>
                                                             </div>
                                                             <div className="text-right">
-                                                                {row.duplicate && duplicateResolution === 'held' ? (
+                                                                {/* F86.22 · row status pill · per-warning · badge label
+                                                                    picked from warningCopy so DUPLICATE vs RATE MISMATCH
+                                                                    read at a glance without opening the popover
+                                                                    (Nielsen 6 · recognition, not recall). */}
+                                                                {row.warning && resolutionFor(row.id) === 'held' ? (
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => openWarningPopover(row.id)}
@@ -773,11 +924,14 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                         title="Open warning · resolve"
                                                                     >
                                                                         <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-                                                                        Held · resolve
+                                                                        {warningCopy(row)?.badge ?? 'Warning'} · held
                                                                     </button>
-                                                                ) : row.duplicate && duplicateResolution === 'approved-override' ? (
-                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-success bg-success/10 rounded-full px-2 py-0.5">Override cleared</span>
-                                                                ) : row.duplicate && duplicateResolution === 'sent-back' ? (
+                                                                ) : row.warning && resolutionFor(row.id) === 'approved-override' ? (
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-success bg-success/10 rounded-full px-2 py-0.5">
+                                                                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                                                        {warningCopy(row)?.badge ?? 'Warning'} · cleared
+                                                                    </span>
+                                                                ) : row.warning && resolutionFor(row.id) === 'sent-back' ? (
                                                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-destructive bg-destructive/10 rounded-full px-2 py-0.5">
                                                                         <XCircle className="h-3 w-3" aria-hidden="true" />
                                                                         Sent to Compliance
@@ -810,11 +964,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                 >
                                                                     <Eye className="h-3 w-3" aria-hidden="true" />
                                                                 </button>
-                                                                {row.duplicate && duplicateResolution === 'held' ? (
+                                                                {row.warning && resolutionFor(row.id) === 'held' ? (
                                                                     <>
                                                                         {/* F86.14 · info trigger stays for the popover · actions
                                                                             (Approve override / Send back) live inline in the row
-                                                                            so the user resolves without hopping to a floating panel. */}
+                                                                            so the user resolves without hopping to a floating panel.
+                                                                            F86.22 · prefill + send handlers are per-bill. */}
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => openWarningPopover(row.id)}
@@ -827,12 +982,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => {
-                                                                                // F86.14.1 · pre-fill the composer with a realistic
-                                                                                // example so the field starts populated · user can
-                                                                                // edit or send as-is.
+                                                                                // F86.22 · prefill sourced from warningCopy per warning
+                                                                                // type · no more hardcoded NLC-99120 sentence.
                                                                                 if (stage === 'rejecting') { setStage('idle'); setRejectReason('') }
                                                                                 setActiveWarningBillId(row.id)
-                                                                                setOverrideReason('Reissued invoice · original NLC-99120 was voided on Aug 20 · vendor confirmed the re-invoice against the same PO.')
+                                                                                setOverrideReasonFor(row.id, warningCopy(row)?.suggestedOverride ?? '')
                                                                             }}
                                                                             aria-label={`Approve override for ${row.invoiceNumber}`}
                                                                             title="Approve override"
@@ -842,17 +996,17 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                         </button>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={handleSendDuplicateBack}
-                                                                            aria-label={`Keep held · send batch back for ${row.invoiceNumber}`}
-                                                                            title="Keep held · send back to Compliance"
+                                                                            onClick={() => handleSendWarningBack(row.id)}
+                                                                            aria-label={`Send ${row.invoiceNumber} back to Compliance`}
+                                                                            title="Send back to Compliance"
                                                                             className="inline-flex items-center justify-center h-6 w-6 rounded-md text-destructive bg-background hover:bg-destructive/10 border border-destructive/40 transition-colors"
                                                                         >
                                                                             <X className="h-3 w-3" aria-hidden="true" />
                                                                         </button>
                                                                     </>
-                                                                ) : row.duplicate && duplicateResolution === 'sent-back' ? (
+                                                                ) : row.warning && resolutionFor(row.id) === 'sent-back' ? (
                                                                     <span className="text-[10px] text-muted-foreground italic">escalated</span>
-                                                                ) : row.duplicate ? (
+                                                                ) : row.warning ? (
                                                                     <span className="text-[10px] text-muted-foreground italic">override</span>
                                                                 ) : (decision === 'approved' || decision === 'rejected') ? (
                                                                     <button
@@ -896,7 +1050,9 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             {/* F86.14 · Inline override composer · slides into the same
                                                                 anchor as the info popover · appears only when the user
                                                                 clicks the Approve-override action in the row. */}
-                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && overrideReason && (() => {
+                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && overrideReasons[row.id] && (() => {
+                                                                const rowIndex = allWarnings.findIndex(w => w.billId === row.id)
+                                                                const nextWarning = allWarnings.find(w => w.billId !== row.id && resolutionFor(w.billId) === 'held')
                                                                 return (
                                                                     <div className="absolute right-6 top-full mt-2 z-[420] w-[380px] max-w-[calc(100vw-4rem)] bg-card border border-warning/60 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
                                                                         <div className="absolute -top-1.5 right-24 h-3 w-3 rotate-45 bg-card border-l border-t border-warning/60" aria-hidden="true" />
@@ -911,7 +1067,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                                 </div>
                                                                                 <button
                                                                                     type="button"
-                                                                                    onClick={() => setOverrideReason('')}
+                                                                                    onClick={() => setOverrideReasonFor(row.id, '')}
                                                                                     aria-label="Cancel override"
                                                                                     className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
                                                                                 >
@@ -919,8 +1075,8 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                                 </button>
                                                                             </div>
                                                                             <textarea
-                                                                                value={overrideReason.trim()}
-                                                                                onChange={(e) => setOverrideReason(e.target.value || ' ')}
+                                                                                value={(overrideReasons[row.id] ?? '').trim()}
+                                                                                onChange={(e) => setOverrideReasonFor(row.id, e.target.value || ' ')}
                                                                                 rows={2}
                                                                                 autoFocus
                                                                                 placeholder="e.g. Reissued invoice · original was voided · vendor confirmed Aug 20."
@@ -931,21 +1087,39 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                                     an actual button next to the primary override CTA. */}
                                                                                 <button
                                                                                     type="button"
-                                                                                    onClick={() => setOverrideReason('')}
+                                                                                    onClick={() => setOverrideReasonFor(row.id, '')}
                                                                                     className="inline-flex items-center text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-1.5 transition-colors"
                                                                                 >
                                                                                     Cancel
                                                                                 </button>
                                                                                 <button
                                                                                     type="button"
-                                                                                    onClick={handleOverrideConfirm}
-                                                                                    disabled={!overrideReason.trim()}
+                                                                                    onClick={() => handleOverrideConfirm(row.id)}
+                                                                                    disabled={!(overrideReasons[row.id] ?? '').trim()}
                                                                                     className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                                                                                 >
                                                                                     <Send className="h-3.5 w-3.5" aria-hidden="true" />
                                                                                     Send override
                                                                                 </button>
                                                                             </div>
+                                                                            {/* F86.22 · N>1 progress + next-warning link.
+                                                                                Hidden when there's only one warning. Auto-advance
+                                                                                still happens on confirm via advanceOrClose · this
+                                                                                link lets the user skip to another one without resolving. */}
+                                                                            {warningCount > 1 && (
+                                                                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-border text-[10px]">
+                                                                                    <span className="text-muted-foreground tabular-nums">Warning {rowIndex + 1} of {warningCount}</span>
+                                                                                    {nextWarning && (
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => openWarningPopover(nextWarning.billId)}
+                                                                                            className="inline-flex items-center gap-1 font-semibold text-foreground hover:text-primary transition-colors"
+                                                                                        >
+                                                                                            Next → {nextWarning.invoiceNumber}
+                                                                                        </button>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 )
@@ -955,28 +1129,47 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                 (actions live in the row). Opens on the AlertTriangle
                                                                 info trigger · closes with X or when the user starts
                                                                 the inline override composer. */}
-                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && !overrideReason && (() => {
+                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && !overrideReasons[row.id] && (() => {
                                                                 const w = warningsByBill[row.id]
+                                                                const rowIndex = allWarnings.findIndex(x => x.billId === row.id)
+                                                                const nextWarning = allWarnings.find(x => x.billId !== row.id && resolutionFor(x.billId) === 'held')
                                                                 return (
                                                                     <div className="absolute right-6 top-full mt-2 z-[420] w-[340px] max-w-[calc(100vw-4rem)] bg-card border border-warning/60 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
                                                                         <div className="absolute -top-1.5 right-24 h-3 w-3 rotate-45 bg-card border-l border-t border-warning/60" aria-hidden="true" />
-                                                                        <div className="p-4 flex items-start gap-2.5">
-                                                                            <div className="h-8 w-8 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
-                                                                                <AlertTriangle className="h-4 w-4 text-warning" aria-hidden="true" />
+                                                                        <div className="p-4 space-y-3">
+                                                                            <div className="flex items-start gap-2.5">
+                                                                                <div className="h-8 w-8 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
+                                                                                    <AlertTriangle className="h-4 w-4 text-warning" aria-hidden="true" />
+                                                                                </div>
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <div className="text-sm font-bold text-foreground">{w.headline}</div>
+                                                                                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{w.detail}</p>
+                                                                                    <p className="text-[10px] text-muted-foreground mt-2 italic">Use the actions in the row · approve override or send back to Compliance.</p>
+                                                                                </div>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={closeWarningPopover}
+                                                                                    aria-label="Close info"
+                                                                                    className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                                                                                >
+                                                                                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                                                                </button>
                                                                             </div>
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <div className="text-sm font-bold text-foreground">{w.headline}</div>
-                                                                                <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{w.detail}</p>
-                                                                                <p className="text-[10px] text-muted-foreground mt-2 italic">Use the actions in the row · approve override or send back to Compliance.</p>
-                                                                            </div>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={closeWarningPopover}
-                                                                                aria-label="Close info"
-                                                                                className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-                                                                            >
-                                                                                <X className="h-3.5 w-3.5" aria-hidden="true" />
-                                                                            </button>
+                                                                            {/* F86.22 · N>1 progress + next-warning link. */}
+                                                                            {warningCount > 1 && (
+                                                                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-border text-[10px]">
+                                                                                    <span className="text-muted-foreground tabular-nums">Warning {rowIndex + 1} of {warningCount}</span>
+                                                                                    {nextWarning && (
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => openWarningPopover(nextWarning.billId)}
+                                                                                            className="inline-flex items-center gap-1 font-semibold text-foreground hover:text-primary transition-colors"
+                                                                                        >
+                                                                                            Next → {nextWarning.invoiceNumber}
+                                                                                        </button>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 )
@@ -1000,11 +1193,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         <div className="text-sm font-bold text-foreground">
                                             Batch released · ${releaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sent · {releaseCount} bills posted to NetSuite
                                         </div>
-                                        {(counts.rejected > 0 || duplicateCount > 0) && (
+                                        {(counts.rejected > 0 || sentBackBills.length > 0) && (
                                             <div className="text-muted-foreground mt-1">
                                                 {counts.rejected > 0 && <>{counts.rejected} rejected returned to Compliance</>}
-                                                {counts.rejected > 0 && duplicateCount > 0 && <> · </>}
-                                                {duplicateCount > 0 && duplicateResolution === 'sent-back' && <>duplicate escalated for re-cut</>}
+                                                {counts.rejected > 0 && sentBackBills.length > 0 && <> · </>}
+                                                {sentBackBills.length > 0 && <>{sentBackBills.length} warning{sentBackBills.length === 1 ? '' : 's'} escalated for re-cut</>}
                                             </div>
                                         )}
                                         <div className="text-[11px] text-muted-foreground mt-1">Vendor remittance detail queued in the Dealer Experience.</div>
@@ -1074,22 +1267,24 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                         <span className="tabular-nums font-semibold">{counts.pending}</span> pending
                                                     </span>
                                                 )}
-                                                {duplicateCount > 0 && duplicateResolution === 'held' && (
+                                                {/* F86.22 · per-warning counts drive the chips · the three
+                                                    resolution states can co-exist across warnings. */}
+                                                {heldWarningsCount > 0 && (
                                                     <span className="inline-flex items-center gap-1 text-warning">
                                                         <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                                                        <span className="tabular-nums font-semibold">{duplicateCount}</span> held
+                                                        <span className="tabular-nums font-semibold">{heldWarningsCount}</span> held
                                                     </span>
                                                 )}
-                                                {duplicateCount > 0 && duplicateResolution === 'approved-override' && (
+                                                {overrideBills.length > 0 && (
                                                     <span className="inline-flex items-center gap-1 text-success">
                                                         <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                                                        override cleared
+                                                        <span className="tabular-nums font-semibold">{overrideBills.length}</span> override{overrideBills.length === 1 ? '' : 's'} cleared
                                                     </span>
                                                 )}
-                                                {duplicateCount > 0 && duplicateResolution === 'sent-back' && (
+                                                {sentBackBills.length > 0 && (
                                                     <span className="inline-flex items-center gap-1 text-destructive">
                                                         <XCircle className="h-3 w-3" aria-hidden="true" />
-                                                        <span className="tabular-nums font-semibold">{duplicateCount}</span> escalated
+                                                        <span className="tabular-nums font-semibold">{sentBackBills.length}</span> escalated
                                                     </span>
                                                 )}
                                             </div>
@@ -1097,7 +1292,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
 
                                         {/* Right · destructive escalation + primary release */}
                                         <button
-                                            onClick={() => { setActiveWarningBillId(null); setOverrideReason(''); setStage('rejecting') }}
+                                            onClick={() => { setActiveWarningBillId(null); setStage('rejecting') }}
                                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-2 transition-colors"
                                         >
                                             <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1131,7 +1326,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     <>
                                         <div className="flex-1" />
                                         <button
-                                            onClick={() => { setStage('idle'); setRejectReason(''); if (duplicateResolution === 'sent-back') setDuplicateResolution('held') }}
+                                            onClick={() => { setStage('idle'); setRejectReason('') }}
                                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-2 transition-colors"
                                         >
                                             Cancel
@@ -1333,12 +1528,13 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 </div>
 
                                 {/* F86.17 · escalated-separately note · when the Approver sent
-                                    the held item to Compliance, surface that here so they see
-                                    it's already handled outside this batch. */}
-                                {duplicateResolution === 'sent-back' && (
+                                    warning items to Compliance, surface that here so they see
+                                    those are already handled outside this batch. F86.22 · counts
+                                    escalated warnings across types (not just duplicates). */}
+                                {sentBackBills.length > 0 && (
                                     <div className="px-5 pb-3 -mt-1">
                                         <div className="text-[11px] text-muted-foreground">
-                                            <span className="tabular-nums font-bold text-foreground">{duplicateCount}</span> duplicate escalated to Compliance separately · Compliance re-cuts before next run.
+                                            <span className="tabular-nums font-bold text-foreground">{sentBackBills.length}</span> warning{sentBackBills.length === 1 ? '' : 's'} escalated to Compliance separately · Compliance re-cuts before next run.
                                         </div>
                                     </div>
                                 )}
