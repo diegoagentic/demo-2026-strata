@@ -110,19 +110,51 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
     }
 
     // F86.12 · Diego 2026-08-21 · duplicate spotlight + bulk guardrail.
-    // The Compliance-held duplicate is now a first-class blocker · the
-    // Approver has to resolve it before the release CTA (or any vendor
-    // bulk approve that touches the held bill) can fire.
+    // F86.13 · Diego 2026-08-21 · resolution moved to a per-bill row popover
+    // triggered by a warning chip in the header. The top blocker card is gone.
     const [duplicateResolution, setDuplicateResolution] = useState<'held' | 'approved-override' | 'sent-back'>('held')
     const [overrideReason, setOverrideReason] = useState('')
-    const [showOverride, setShowOverride] = useState(false)
+    // F86.13 · which bill's warning popover is open. Only one at a time.
+    const [activeWarningBillId, setActiveWarningBillId] = useState<string | null>(null)
+    // F86.13 · when multi-warning · which list dropdown is open on the chip
+    const [showWarningsList, setShowWarningsList] = useState(false)
     // Per-vendor comments · scoped to the vendor record for audit trail
     // (F86.12 · replaces the old batch-level Leave comment button).
     const [vendorComments, setVendorComments] = useState<Record<string, string>>({})
     const [commentingVendor, setCommentingVendor] = useState<string | null>(null)
     const [commentDraft, setCommentDraft] = useState('')
-    // Refs per vendor row · lets the blocker card scroll to Nelson on click.
+    // Refs per vendor row · lets the warning chip scroll to the vendor.
     const vendorRefs = useRef<Record<string, HTMLDivElement | null>>({})
+    // F86.13 · refs per bill row · anchors the row-anchored warning popover.
+    const billRowRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+    // F86.13 · warnings array · supports N held / flagged bills. Currently
+    // only the duplicate contributes · structure lets us add rate-mismatch,
+    // CFO-held etc. later without another rewrite.
+    type Warning = {
+        billId: string
+        vendor: string
+        invoiceNumber: string
+        type: 'duplicate'
+        headline: string
+        detail: string
+    }
+    const warnings: Warning[] = useMemo(() => {
+        if (duplicateResolution !== 'held') return []
+        return BATCH.filter(b => b.duplicate).map(b => ({
+            billId: b.id,
+            vendor: b.vendor,
+            invoiceNumber: b.invoiceNumber,
+            type: 'duplicate' as const,
+            headline: 'Duplicate held',
+            detail: `Matches a remittance already sent on 2026-07-08 · same amount ($${b.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}), same invoice number, same vendor.`,
+        }))
+    }, [duplicateResolution])
+    const warningsByBill = useMemo(() => {
+        const map: Record<string, Warning> = {}
+        for (const w of warnings) map[w.billId] = w
+        return map
+    }, [warnings])
 
     const releasable = BATCH.filter(b => !b.duplicate)
     const duplicateCount = BATCH.filter(b => b.duplicate).length
@@ -233,13 +265,44 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         })
     }
 
+    // F86.13 · open the row-anchored warning popover on a specific bill.
+    // Guardrail · closes any batch-level escalation composer first (one
+    // composer at a time). Also auto-expands + scrolls to the row.
+    const openWarningPopover = (billId: string) => {
+        if (stage === 'rejecting') {
+            setStage('idle')
+            setRejectReason('')
+        }
+        setShowWarningsList(false)
+        setOverrideReason('')
+        const bill = BATCH.find(b => b.id === billId)
+        if (!bill) return
+        setExpandedVendors(prev => {
+            const next = new Set(prev)
+            next.add(bill.vendor)
+            return next
+        })
+        setActiveWarningBillId(billId)
+        requestAnimationFrame(() => {
+            const el = billRowRefs.current[billId] ?? vendorRefs.current[bill.vendor]
+            if (el && typeof el.scrollIntoView === 'function') {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+        })
+    }
+    const closeWarningPopover = () => {
+        setActiveWarningBillId(null)
+        setOverrideReason('')
+    }
+
     const handleOverrideConfirm = () => {
         if (!overrideReason.trim()) return
         setDuplicateResolution('approved-override')
-        setShowOverride(false)
+        setActiveWarningBillId(null)
     }
     const handleSendDuplicateBack = () => {
         setDuplicateResolution('sent-back')
+        setActiveWarningBillId(null)
         // Sending the duplicate back doesn't release · the whole batch pauses
         // until Compliance re-cuts. Fold that state into `stage = rejecting` so
         // the existing rejecting flow captures the reason.
@@ -308,11 +371,64 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     <span>{releasable.length} bills</span>
                                     <span>·</span>
                                     <span className="tabular-nums text-foreground font-semibold">${totalReleasable.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    <span>·</span>
-                                    <span className="tabular-nums text-warning inline-flex items-center gap-1">
-                                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                                        {duplicateCount} duplicate held
-                                    </span>
+                                    {/* F86.13 · warning chip · single click when N=1, dropdown list when N>1 */}
+                                    {warnings.length > 0 && (
+                                        <>
+                                            <span>·</span>
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (warnings.length === 1) {
+                                                            openWarningPopover(warnings[0].billId)
+                                                        } else {
+                                                            setShowWarningsList(s => !s)
+                                                        }
+                                                    }}
+                                                    className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-warning bg-warning/15 hover:bg-warning/25 border border-warning/40 rounded-full px-2.5 py-1 transition-colors"
+                                                    title={warnings.length === 1 ? 'Jump to the flagged bill · resolve to release' : 'Show all warnings'}
+                                                    aria-label={`${warnings.length} warning${warnings.length === 1 ? '' : 's'} held · resolve`}
+                                                    aria-expanded={warnings.length > 1 ? showWarningsList : undefined}
+                                                    aria-haspopup={warnings.length > 1 ? 'menu' : undefined}
+                                                >
+                                                    <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                                                    {warnings.length} warning{warnings.length === 1 ? '' : 's'} held
+                                                    {warnings.length === 1
+                                                        ? <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                                                        : <ChevronDown className={`h-3 w-3 transition-transform ${showWarningsList ? 'rotate-180' : ''}`} aria-hidden="true" />}
+                                                </button>
+                                                {warnings.length > 1 && showWarningsList && (
+                                                    <>
+                                                        <div className="fixed inset-0 z-[419]" onClick={() => setShowWarningsList(false)} aria-hidden="true" />
+                                                        <div
+                                                            role="menu"
+                                                            className="absolute left-0 top-full mt-2 w-72 bg-card border border-border rounded-xl shadow-lg z-[420] p-1"
+                                                        >
+                                                            <div className="px-3 py-2 border-b border-border mb-1">
+                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Warnings held</p>
+                                                            </div>
+                                                            {warnings.map(w => (
+                                                                <button
+                                                                    key={w.billId}
+                                                                    role="menuitem"
+                                                                    type="button"
+                                                                    onClick={() => openWarningPopover(w.billId)}
+                                                                    className="w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-muted rounded-lg transition-colors"
+                                                                >
+                                                                    <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="text-xs font-semibold text-foreground truncate">{w.vendor}</div>
+                                                                        <div className="text-[10px] text-muted-foreground font-mono">{w.invoiceNumber} · {w.headline.toLowerCase()}</div>
+                                                                    </div>
+                                                                    <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0 mt-1" aria-hidden="true" />
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
                                     {(counts.approved > 0 || counts.rejected > 0) && (
                                         <>
                                             <span>·</span>
@@ -340,90 +456,9 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                 generous whitespace · Strata DS tokens throughout. */}
                             <div className="flex-1 overflow-y-auto">
 
-                                {/* F86.12 · Duplicate blocker card · promoted from the
-                                    barely-visible footer strip to a first-class actionable
-                                    card at the top of the body · warning tone · Release CTA
-                                    is disabled while duplicateResolution === 'held'. */}
-                                {duplicateResolution === 'held' && (() => {
-                                    const duplicate = BATCH.find(b => b.duplicate)
-                                    if (!duplicate) return null
-                                    return (
-                                        <div className="mx-6 mt-5 mb-2 border border-warning/40 bg-warning/5 rounded-xl overflow-hidden">
-                                            <div className="px-5 py-4 flex items-start gap-3">
-                                                <div className="h-9 w-9 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
-                                                    <AlertTriangle className="h-5 w-5 text-warning" aria-hidden="true" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold text-foreground">Duplicate held · resolve to release</div>
-                                                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                                        <span className="text-foreground font-semibold">{duplicate.vendor}</span> · invoice
-                                                        <span className="font-mono text-foreground"> {duplicate.invoiceNumber} </span>
-                                                        matches a remittance already sent on <span className="text-foreground font-semibold">2026-07-08</span> ·
-                                                        same amount (${duplicate.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}), same invoice number, same vendor.
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => spotlightVendor(duplicate.vendor)}
-                                                    className="text-[11px] font-semibold text-foreground hover:text-primary inline-flex items-center gap-1 shrink-0"
-                                                    title={`Jump to ${duplicate.vendor} bills`}
-                                                >
-                                                    See bill
-                                                    <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                                                </button>
-                                            </div>
-
-                                            {!showOverride ? (
-                                                <div className="px-5 pb-4 pt-1 flex items-center gap-2 flex-wrap">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowOverride(true)}
-                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-1.5 transition-colors"
-                                                    >
-                                                        <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-                                                        Approve override
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleSendDuplicateBack}
-                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-1.5 transition-colors"
-                                                    >
-                                                        <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                                                        Keep held · Send back to Compliance
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="px-5 pb-4 pt-1 space-y-2">
-                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reason for the override</label>
-                                                    <textarea
-                                                        value={overrideReason}
-                                                        onChange={(e) => setOverrideReason(e.target.value)}
-                                                        rows={2}
-                                                        placeholder="e.g. Reissued invoice · original was voided · vendor confirmed on Aug 20."
-                                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 placeholder:text-muted-foreground"
-                                                    />
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setShowOverride(false); setOverrideReason('') }}
-                                                            className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleOverrideConfirm}
-                                                            disabled={!overrideReason.trim()}
-                                                            className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold bg-warning text-white rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                                                        >
-                                                            Confirm override
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )
-                                })()}
+                                {/* F86.13 · Top blocker card removed · resolution moved to a
+                                    row-anchored popover triggered by the header warning chip.
+                                    See openWarningPopover() + the popover render below the body. */}
 
                                 {duplicateResolution === 'approved-override' && (() => {
                                     const duplicate = BATCH.find(b => b.duplicate)
@@ -511,20 +546,21 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                         className="flex items-center gap-1 justify-end"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
-                                                        {/* F86.12 · bulk approve blocked when the vendor has a
-                                                            held bill · click scrolls to the blocker card so the
-                                                            Approver resolves it first. */}
+                                                        {/* F86.13 · bulk approve blocked when the vendor has a
+                                                            held bill · click opens the row popover on the offending
+                                                            bill so the Approver resolves it inline. */}
                                                         <button
                                                             type="button"
                                                             onClick={() => {
                                                                 if (vendorHasBlocker) {
-                                                                    spotlightVendor(g.vendor)
+                                                                    const held = g.bills.find(b => b.duplicate)
+                                                                    if (held) openWarningPopover(held.id)
                                                                     return
                                                                 }
                                                                 setVendorDecision(g.vendor, 'approved')
                                                             }}
                                                             disabled={vendorLocked || releasableBills === 0 || vendorHasBlocker}
-                                                            title={vendorHasBlocker ? 'Resolve the held bill first · see duplicate card above' : 'Approve all bills for this vendor'}
+                                                            title={vendorHasBlocker ? 'Resolve the held bill first · click to open' : 'Approve all bills for this vendor'}
                                                             aria-label={`Approve all bills for ${g.vendor}`}
                                                             className="inline-flex items-center justify-center h-7 w-7 rounded-md text-success bg-background hover:bg-success/10 border border-success/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                         >
@@ -625,7 +661,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                     // maps back to the blocker card at the top.
                                                     const rowStripe = row.duplicate ? 'border-l-4 border-l-warning' : 'border-l-4 border-l-transparent'
                                                     return (
-                                                        <div key={row.id} className={`grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-2.5 text-xs items-center border-t border-border/60 ${rowTint} ${rowStripe}`}>
+                                                        <div
+                                                            key={row.id}
+                                                            ref={(el) => { billRowRefs.current[row.id] = el }}
+                                                            className={`relative grid grid-cols-[28px_1fr_140px_140px_140px_150px_140px] px-6 py-2.5 text-xs items-center border-t border-border/60 ${rowTint} ${rowStripe}`}
+                                                        >
                                                             <span></span>
                                                             <div className="min-w-0 pl-6">
                                                                 <div className={`font-mono text-foreground ${decision === 'rejected' ? 'line-through text-muted-foreground' : ''}`}>
@@ -644,8 +684,18 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                 <span className="text-[10px] text-muted-foreground ml-1">{row.orderGpPct}%</span>
                                                             </div>
                                                             <div className="text-right">
-                                                                {row.duplicate ? (
-                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-warning bg-warning/10 rounded-full px-2 py-0.5">Held</span>
+                                                                {row.duplicate && duplicateResolution === 'held' ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openWarningPopover(row.id)}
+                                                                        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-warning bg-warning/15 hover:bg-warning/25 rounded-full px-2 py-0.5 border border-warning/40 transition-colors"
+                                                                        title="Open warning · resolve"
+                                                                    >
+                                                                        <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
+                                                                        Held · resolve
+                                                                    </button>
+                                                                ) : row.duplicate ? (
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-success bg-success/10 rounded-full px-2 py-0.5">Override cleared</span>
                                                                 ) : decision === 'approved' ? (
                                                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-success bg-success/10 rounded-full px-2 py-0.5">
                                                                         <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
@@ -661,8 +711,18 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                 )}
                                                             </div>
                                                             <div className="flex items-center gap-1 justify-end">
-                                                                {row.duplicate ? (
-                                                                    <span className="text-[10px] text-muted-foreground italic">held</span>
+                                                                {row.duplicate && duplicateResolution === 'held' ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openWarningPopover(row.id)}
+                                                                        aria-label={`Open warning for ${row.invoiceNumber}`}
+                                                                        title="Open warning · resolve"
+                                                                        className="inline-flex items-center justify-center h-6 w-6 rounded-md text-warning bg-warning/10 hover:bg-warning/20 border border-warning/40 transition-colors"
+                                                                    >
+                                                                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                                                                    </button>
+                                                                ) : row.duplicate ? (
+                                                                    <span className="text-[10px] text-muted-foreground italic">override</span>
                                                                 ) : (decision === 'approved' || decision === 'rejected') ? (
                                                                     <button
                                                                         onClick={() => setDecision(row.id, 'pending')}
@@ -696,6 +756,89 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                     </>
                                                                 )}
                                                             </div>
+
+                                                            {/* F86.13 · Row-anchored warning popover · appears
+                                                                only when this bill is the active warning target.
+                                                                Absolutely positioned relative to the row · slides
+                                                                in from the right on wider viewports, falls back to
+                                                                below on narrow ones (max-w constraint + hidden overflow). */}
+                                                            {activeWarningBillId === row.id && warningsByBill[row.id] && (() => {
+                                                                const w = warningsByBill[row.id]
+                                                                return (
+                                                                    <div className="absolute right-6 top-full mt-2 z-[420] w-[380px] max-w-[calc(100vw-4rem)] bg-card border border-warning/60 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+                                                                        {/* Arrow · points up-right to the row action */}
+                                                                        <div className="absolute -top-1.5 right-8 h-3 w-3 rotate-45 bg-card border-l border-t border-warning/60" aria-hidden="true" />
+                                                                        <div className="p-4">
+                                                                            <div className="flex items-start gap-2.5">
+                                                                                <div className="h-8 w-8 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
+                                                                                    <AlertTriangle className="h-4 w-4 text-warning" aria-hidden="true" />
+                                                                                </div>
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <div className="text-sm font-bold text-foreground">{w.headline}</div>
+                                                                                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{w.detail}</p>
+                                                                                </div>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={closeWarningPopover}
+                                                                                    aria-label="Close warning"
+                                                                                    className="p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                                                                                >
+                                                                                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                                                                </button>
+                                                                            </div>
+                                                                            {overrideReason === '' && !overrideReason ? (
+                                                                                <div className="flex items-center gap-2 flex-wrap mt-3">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => setOverrideReason(' ')}
+                                                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-1.5 transition-colors"
+                                                                                    >
+                                                                                        <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                                                                                        Approve override
+                                                                                    </button>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={handleSendDuplicateBack}
+                                                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-1.5 transition-colors"
+                                                                                    >
+                                                                                        <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                                                                                        Keep held · Send back
+                                                                                    </button>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="mt-3 space-y-2">
+                                                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reason for the override</label>
+                                                                                    <textarea
+                                                                                        value={overrideReason.trim()}
+                                                                                        onChange={(e) => setOverrideReason(e.target.value || ' ')}
+                                                                                        rows={2}
+                                                                                        autoFocus
+                                                                                        placeholder="e.g. Reissued invoice · original was voided · vendor confirmed Aug 20."
+                                                                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 placeholder:text-muted-foreground"
+                                                                                    />
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => setOverrideReason('')}
+                                                                                            className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
+                                                                                        >
+                                                                                            Back
+                                                                                        </button>
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={handleOverrideConfirm}
+                                                                                            disabled={!overrideReason.trim()}
+                                                                                            className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold bg-warning text-white rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                                        >
+                                                                                            Confirm override
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            })()}
                                                         </div>
                                                     )
                                                 })}
@@ -806,7 +949,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
 
                                         {/* Right · destructive escalation + primary release */}
                                         <button
-                                            onClick={() => setStage('rejecting')}
+                                            onClick={() => { setActiveWarningBillId(null); setOverrideReason(''); setStage('rejecting') }}
                                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-destructive bg-background hover:bg-destructive/5 border border-destructive/40 rounded-lg px-3 py-2 transition-colors"
                                         >
                                             <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
@@ -816,7 +959,7 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                             onClick={() => {
                                                 if (duplicateResolution === 'held') {
                                                     const dup = BATCH.find(b => b.duplicate)
-                                                    if (dup) spotlightVendor(dup.vendor)
+                                                    if (dup) openWarningPopover(dup.id)
                                                     return
                                                 }
                                                 handleApprove()
