@@ -254,6 +254,10 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
      *  the appropriate control set. */
     const [requestStage, setRequestStage] = useState<'idle' | 'requesting' | 'sent'>('idle')
     const [requestNote, setRequestNote] = useState('')
+    // F86.10 · Diego 2026-08-21 · role of the stakeholder that can resolve
+    // the request · CEO ask · you should be able to pick who this goes to
+    // (Compliance · Design · Purchasing · etc.).
+    const [requestRole, setRequestRole] = useState<string>('Compliance')
     const [exportOpen, setExportOpen] = useState(false)
     const [previewDoc, setPreviewDoc] = useState<LinkedDoc | null>(null)
 
@@ -949,27 +953,75 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                             {/* F84.27 · Diego 2026-08-21 · Request review inline composer ·
                                 appears above the footer when the user clicks "Request review"
                                 · lets them send a note to another stakeholder before saving. */}
-                            {requestStage === 'requesting' && (
-                                <div className="border-t border-border bg-info/5 px-6 py-4 space-y-3">
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <Info className="h-4 w-4 text-info shrink-0" aria-hidden="true" />
-                                        <span className="text-foreground font-semibold">Request review from another stakeholder</span>
-                                        <span className="text-muted-foreground">· goes to the doc thread · save stays pending until they reply</span>
+                            {/* F86.10 · Diego 2026-08-21 · role picker chips + example
+                                pre-filled in the textarea so the user sees what to send
+                                and to whom · CEO ask. */}
+                            {requestStage === 'requesting' && (() => {
+                                const REQUEST_ROLES: { id: string; example: string }[] = [
+                                    { id: 'Compliance',  example: 'Please double-check the TIN masking on the vendor W-9 before I approve the batch.' },
+                                    { id: 'Design',      example: 'Line 34 width change (96" → 94") · can you approve the substitution with Layne + Tate?' },
+                                    { id: 'Purchasing',  example: 'Teknion split-ship on Lines 13-15 · confirm the +10 day ETA is documented against PMO.' },
+                                    { id: 'Finance',     example: 'Order GP came in at 20% · confirm the discount schedule against the master agreement before release.' },
+                                    { id: 'Coordinator', example: 'Please verify the install date buffer covers the Sep 29 ESD slip on the wall panels.' },
+                                ]
+                                return (
+                                    <div className="border-t border-border bg-info/5 px-6 py-4 space-y-3">
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <Info className="h-4 w-4 text-info shrink-0" aria-hidden="true" />
+                                            <span className="text-foreground font-semibold">Request review from another stakeholder</span>
+                                            <span className="text-muted-foreground">· goes to the doc thread · save stays pending until they reply</span>
+                                        </div>
+                                        {/* Role picker · chip-style · switching the role swaps the example prefill */}
+                                        <div>
+                                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Assign to role</div>
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                {REQUEST_ROLES.map(r => {
+                                                    const active = requestRole === r.id
+                                                    return (
+                                                        <button
+                                                            key={r.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setRequestRole(r.id)
+                                                                // Only overwrite the note if the user hasn't customized
+                                                                // it (or is on the previous role's example).
+                                                                const prevExample = REQUEST_ROLES.find(x => x.id === requestRole)?.example
+                                                                if (!requestNote.trim() || requestNote === prevExample) {
+                                                                    setRequestNote(r.example)
+                                                                }
+                                                            }}
+                                                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${
+                                                                active
+                                                                    ? 'bg-info text-white'
+                                                                    : 'bg-background text-foreground border border-border hover:bg-muted'
+                                                            }`}
+                                                        >
+                                                            {r.id}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                        <textarea
+                                            value={requestNote}
+                                            onChange={(e) => setRequestNote(e.target.value)}
+                                            rows={3}
+                                            placeholder="e.g. Compliance · please double-check TIN masking before I approve."
+                                            className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 placeholder:text-muted-foreground"
+                                        />
                                     </div>
-                                    <textarea
-                                        value={requestNote}
-                                        onChange={(e) => setRequestNote(e.target.value)}
-                                        rows={3}
-                                        placeholder="e.g. Compliance · please double-check TIN masking before I approve."
-                                        className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 placeholder:text-muted-foreground"
-                                    />
-                                </div>
-                            )}
+                                )
+                            })()}
                             {requestStage === 'sent' && (
                                 <div className="border-t border-border bg-info/5 px-6 py-4 flex items-start gap-3 text-xs">
                                     <CheckCircle2 className="h-4 w-4 text-info shrink-0 mt-0.5" aria-hidden="true" />
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-foreground font-semibold">Review request sent</div>
+                                        <div className="text-foreground font-semibold flex items-center gap-2 flex-wrap">
+                                            Review request sent
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-info/15 text-info text-[10px] font-bold uppercase tracking-wider">
+                                                To · {requestRole}
+                                            </span>
+                                        </div>
                                         <div className="text-muted-foreground mt-0.5 italic line-clamp-2">&ldquo;{requestNote}&rdquo;</div>
                                         <div className="text-muted-foreground mt-0.5">Doc parked pending reply · save stays available.</div>
                                     </div>
@@ -989,7 +1041,15 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                                 Cancel
                                             </button>
                                             <button
-                                                onClick={() => setRequestStage('requesting')}
+                                                onClick={() => {
+                                                    setRequestStage('requesting')
+                                                    // F86.10 · pre-fill the note with the example that
+                                                    // matches the currently selected role so the field
+                                                    // isn't empty when the panel opens.
+                                                    if (!requestNote.trim()) {
+                                                        setRequestNote('Please double-check the TIN masking on the vendor W-9 before I approve the batch.')
+                                                    }
+                                                }}
                                                 className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg transition-colors"
                                             >
                                                 <Info className="h-4 w-4" aria-hidden="true" />
