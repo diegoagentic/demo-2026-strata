@@ -221,25 +221,19 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         return { approved, rejected, pending, approvedTotal }
     }, [rowDecisions, releasable])
     const totalReleasable = releasable.reduce((s, b) => s + b.amount, 0)
-    // If nothing was explicitly approved, treat all non-rejected pending as
-    // approved on batch release · lets Compliance skim + release without
-    // clicking every row individually.
-    const impliedApprove = counts.approved === 0 && counts.pending > 0
-    const releaseCount = counts.approved + (impliedApprove ? counts.pending : 0)
-    const releaseTotal = counts.approvedTotal + (impliedApprove
-        ? releasable.filter(r => rowDecisions[r.id] === 'pending').reduce((s, r) => s + r.amount, 0)
-        : 0)
+    // F86.16 · Diego 2026-08-27 · removed the old "impliedApprove" shortcut
+    // that auto-released pending bills when the Approver hadn't touched
+    // anything. Real ACH releases require explicit sign-off · per-row or
+    // per-vendor Approve-all. Nothing ships silently.
+    const releaseCount = counts.approved
+    const releaseTotal = counts.approvedTotal
     const canRelease = releaseCount > 0
 
-    // F86.15 · Diego 2026-08-27 · preflight summary · what's actually about to
-    // ship, grouped by vendor for scannability. Only bills the release will
-    // include appear here (explicit approved · plus implied-approved pending
-    // when the Approver didn't touch a row). Held stays outside the release.
+    // F86.15 · preflight summary · only explicitly approved bills go into the
+    // release. Held stays outside. Pending is surfaced as an unreviewed count
+    // so the Approver sees exactly what they skipped.
     const preflightBreakdown = useMemo(() => {
-        const willRelease = releasable.filter(r => {
-            const d = rowDecisions[r.id]
-            return d === 'approved' || (impliedApprove && d === 'pending')
-        })
+        const willRelease = releasable.filter(r => rowDecisions[r.id] === 'approved')
         const byVendor = new Map<string, { vendor: string; count: number; total: number }>()
         for (const r of willRelease) {
             const cur = byVendor.get(r.vendor) ?? { vendor: r.vendor, count: 0, total: 0 }
@@ -249,11 +243,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         }
         const vendors = [...byVendor.values()].sort((a, b) => b.total - a.total)
         const heldBills = BATCH.filter(b => b.duplicate && duplicateResolution === 'held')
-        const untouchedPending = impliedApprove
-            ? releasable.filter(r => rowDecisions[r.id] === 'pending').length
-            : 0
-        return { vendors, heldBills, untouchedPending }
-    }, [releasable, rowDecisions, impliedApprove, duplicateResolution])
+        const pendingCount = releasable.filter(r => rowDecisions[r.id] === 'pending').length
+        const pendingTotal = releasable
+            .filter(r => rowDecisions[r.id] === 'pending')
+            .reduce((s, r) => s + r.amount, 0)
+        return { vendors, heldBills, pendingCount, pendingTotal }
+    }, [releasable, rowDecisions, duplicateResolution])
 
     const setDecision = (id: string, decision: RowDecision) => {
         if (stage !== 'idle') return
@@ -328,13 +323,13 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
         setActiveWarningBillId(null)
     }
     const handleSendDuplicateBack = () => {
+        // F86.17 · Diego 2026-08-27 · sending the held duplicate back
+        // escalates ONLY that item to Compliance · it does NOT terminate
+        // the batch. The Approver can still continue releasing the 26
+        // other bills. Prior version flipped stage=rejecting which killed
+        // the whole flow (bug reported in F86.16 review).
         setDuplicateResolution('sent-back')
         setActiveWarningBillId(null)
-        // Sending the duplicate back doesn't release · the whole batch pauses
-        // until Compliance re-cuts. Fold that state into `stage = rejecting` so
-        // the existing rejecting flow captures the reason.
-        setStage('rejecting')
-        setRejectReason(`Duplicate hold on Nelson NLC-99120 · escalated to Compliance for re-cut before Tuesday release.`)
     }
     const handleSaveVendorComment = () => {
         if (!commentingVendor || !commentDraft.trim()) return
@@ -655,10 +650,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                             className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 placeholder:text-muted-foreground"
                                                         />
                                                         <div className="flex items-center gap-2">
+                                                            {/* F86.16 · Diego 2026-08-27 · promoted to a bordered secondary
+                                                                so it reads as an actual button, not a text link. */}
                                                             <button
                                                                 type="button"
                                                                 onClick={() => { setCommentingVendor(null); setCommentDraft('') }}
-                                                                className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
+                                                                className="inline-flex items-center text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-1.5 transition-colors"
                                                             >
                                                                 Cancel
                                                             </button>
@@ -728,8 +725,13 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                         <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
                                                                         Held · resolve
                                                                     </button>
-                                                                ) : row.duplicate ? (
+                                                                ) : row.duplicate && duplicateResolution === 'approved-override' ? (
                                                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-success bg-success/10 rounded-full px-2 py-0.5">Override cleared</span>
+                                                                ) : row.duplicate && duplicateResolution === 'sent-back' ? (
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-destructive bg-destructive/10 rounded-full px-2 py-0.5">
+                                                                        <XCircle className="h-3 w-3" aria-hidden="true" />
+                                                                        Sent to Compliance
+                                                                    </span>
                                                                 ) : decision === 'approved' ? (
                                                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-success bg-success/10 rounded-full px-2 py-0.5">
                                                                         <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
@@ -785,6 +787,8 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                             <X className="h-3 w-3" aria-hidden="true" />
                                                                         </button>
                                                                     </>
+                                                                ) : row.duplicate && duplicateResolution === 'sent-back' ? (
+                                                                    <span className="text-[10px] text-muted-foreground italic">escalated</span>
                                                                 ) : row.duplicate ? (
                                                                     <span className="text-[10px] text-muted-foreground italic">override</span>
                                                                 ) : (decision === 'approved' || decision === 'rejected') ? (
@@ -860,10 +864,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                                                 className="w-full text-xs bg-background border border-input rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 placeholder:text-muted-foreground"
                                                                             />
                                                                             <div className="flex items-center gap-2">
+                                                                                {/* F86.16 · promoted to bordered secondary so it reads as
+                                                                                    an actual button next to the primary override CTA. */}
                                                                                 <button
                                                                                     type="button"
                                                                                     onClick={() => setOverrideReason('')}
-                                                                                    className="text-xs font-medium text-foreground hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
+                                                                                    className="inline-flex items-center text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg px-3 py-1.5 transition-colors"
                                                                                 >
                                                                                     Cancel
                                                                                 </button>
@@ -1017,6 +1023,12 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                                         override cleared
                                                     </span>
                                                 )}
+                                                {duplicateCount > 0 && duplicateResolution === 'sent-back' && (
+                                                    <span className="inline-flex items-center gap-1 text-destructive">
+                                                        <XCircle className="h-3 w-3" aria-hidden="true" />
+                                                        <span className="tabular-nums font-semibold">{duplicateCount}</span> escalated
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
 
@@ -1164,13 +1176,19 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     </div>
                                 )}
 
-                                {/* Warning · untouched pending will be released as-is */}
-                                {preflightBreakdown.untouchedPending > 0 && preflightBreakdown.heldBills.length === 0 && (
+                                {/* F86.16 · Pending · never auto-included. Approver must
+                                    approve rows individually or by vendor before release. */}
+                                {preflightBreakdown.pendingCount > 0 && (
                                     <div className="px-5 py-3 border-b border-border bg-muted/30">
                                         <div className="flex items-start gap-2.5">
-                                            <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden="true" />
-                                            <div className="text-[11px] text-foreground/80">
-                                                <span className="font-bold">{preflightBreakdown.untouchedPending} bill{preflightBreakdown.untouchedPending === 1 ? '' : 's'}</span> weren't explicitly approved but will be included · you didn't flag any for reject.
+                                            <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                                            <div className="text-[11px] text-foreground/80 min-w-0 flex-1">
+                                                <div>
+                                                    <span className="font-bold">{preflightBreakdown.pendingCount} bill{preflightBreakdown.pendingCount === 1 ? '' : 's'}</span> pending review · ${preflightBreakdown.pendingTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · <span className="font-bold">not included</span> in this release.
+                                                </div>
+                                                <div className="mt-1 text-muted-foreground">
+                                                    Approve them individually (check per row) or by vendor (<span className="font-semibold text-foreground/80">Approve all</span> in each group) to include them.
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1187,8 +1205,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                         </div>
                                     </div>
                                     {preflightBreakdown.vendors.length === 0 ? (
-                                        <div className="text-[11px] text-muted-foreground italic">
-                                            No bills approved yet.
+                                        <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center">
+                                            <div className="text-xs font-bold text-foreground mb-1">Nothing approved yet</div>
+                                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                                Nothing will release. Go back and approve at least one bill · click the <Check className="inline h-3 w-3 -mt-0.5" aria-hidden="true" /> per row, or <span className="font-semibold text-foreground/80">Approve all</span> on a vendor.
+                                            </p>
                                         </div>
                                     ) : (
                                         <ul className="divide-y divide-border rounded-lg border border-border overflow-hidden">
@@ -1207,6 +1228,17 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
                                     )}
                                 </div>
 
+                                {/* F86.17 · escalated-separately note · when the Approver sent
+                                    the held item to Compliance, surface that here so they see
+                                    it's already handled outside this batch. */}
+                                {duplicateResolution === 'sent-back' && (
+                                    <div className="px-5 pb-3 -mt-1">
+                                        <div className="text-[11px] text-muted-foreground">
+                                            <span className="tabular-nums font-bold text-foreground">{duplicateCount}</span> duplicate escalated to Compliance separately · Compliance re-cuts before next run.
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Returned to Compliance summary */}
                                 {counts.rejected > 0 && (
                                     <div className="px-5 pb-4 -mt-1">
@@ -1219,9 +1251,11 @@ export default function PaymentApprovalModal({ isOpen, onClose, onApproved }: Pa
 
                             {/* Footer */}
                             <div className="border-t border-border px-5 py-3 flex items-center gap-2 bg-muted/20">
+                                {/* F86.16 · bordered secondary so the escape hatch is as easy
+                                    to see as the primary Confirm across from it. */}
                                 <button
                                     onClick={() => setShowPreflight(false)}
-                                    className="px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-lg transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border rounded-lg transition-colors"
                                 >
                                     Back to review
                                 </button>
